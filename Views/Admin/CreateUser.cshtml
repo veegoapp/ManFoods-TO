@@ -1,0 +1,76 @@
+@model MvcApp.Models.ViewModels.CreateUserViewModel
+@{
+    ViewData["Title"] = "Create User";
+    var managers = ViewBag.Managers as List<string> ?? new List<string>();
+    var consultants = ViewBag.Consultants as List<string> ?? new List<string>();
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Create User</h1>
+        <p class="page-subtitle">Add a new system user</p>
+    </div>
+    <a asp-action="Users" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+
+<div class="card-dark" style="max-width:520px">
+    <form asp-action="CreateUser" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="alert-banner alert-error-banner mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label-dark">Email</label>
+            <input asp-for="Email" class="form-control form-control-dark" placeholder="user@manfoods.com" />
+            <span asp-validation-for="Email" class="text-danger small"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label-dark">Password</label>
+            <input asp-for="Password" type="password" class="form-control form-control-dark" placeholder="Min. 6 characters" />
+            <span asp-validation-for="Password" class="text-danger small"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Role" class="form-label-dark">Role</label>
+            <select asp-for="Role" class="form-select form-select-dark" id="roleSelect">
+                <option value="">Select role...</option>
+                <option value="Admin_Full">Admin Full</option>
+                <option value="Admin_Read">Admin Read</option>
+                <option value="Operation_Manager">Operation Manager</option>
+                <option value="Operation_Consultant">Operation Consultant</option>
+            </select>
+            <span asp-validation-for="Role" class="text-danger small"></span>
+        </div>
+
+        <div class="mb-4" id="assignedNameGroup" style="display:none">
+            <label asp-for="AssignedName" class="form-label-dark">Assigned Name</label>
+            <select asp-for="AssignedName" class="form-select form-select-dark" id="assignedNameSelect">
+                <option value="">Select name...</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Create User</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        const managers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(managers));
+        const consultants = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(consultants));
+
+        document.getElementById('roleSelect').addEventListener('change', function () {
+            const group = document.getElementById('assignedNameGroup');
+            const sel = document.getElementById('assignedNameSelect');
+            sel.innerHTML = '<option value="">Select name...</option>';
+            if (this.value === 'Operation_Manager') {
+                group.style.display = '';
+                managers.forEach(n => sel.add(new Option(n, n)));
+            } else if (this.value === 'Operation_Consultant') {
+                group.style.display = '';
+                consultants.forEach(n => sel.add(new Option(n, n)));
+            } else {
+                group.style.display = 'none';
+            }
+        });
+    </script>
+}

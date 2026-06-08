@@ -1,0 +1,102 @@
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpCtx
+@{
+    var session = HttpCtx.HttpContext?.Session;
+    var userEmail = session?.GetString("Email") ?? "";
+    var userRole = session?.GetString("Role") ?? "";
+    var isAdmin = userRole == "Admin_Full" || userRole == "Admin_Read";
+    var isLoggedIn = session?.GetInt32("UserId") != null;
+    var currentPath = HttpCtx.HttpContext?.Request.Path.Value ?? "";
+    bool IsActive(string path) => currentPath.StartsWith(path, StringComparison.OrdinalIgnoreCase);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " — Manfoods" : "Manfoods")</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+</head>
+<body>
+
+@if (isLoggedIn)
+{
+    <div class="app-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">M</div>
+                <span class="brand-name">Manfoods</span>
+            </div>
+            <nav class="sidebar-nav">
+                @if (isAdmin)
+                {
+                    <a asp-controller="Admin" asp-action="Analytics" class="nav-item @(IsActive("/Admin/Analytics") ? "active" : "")">
+                        <i class="bi bi-bar-chart-line-fill"></i> Global Analytics
+                    </a>
+                    <a asp-controller="Admin" asp-action="Uploads" class="nav-item @(IsActive("/Admin/Uploads") ? "active" : "")">
+                        <i class="bi bi-cloud-upload-fill"></i> Data Management
+                    </a>
+                    <a asp-controller="Admin" asp-action="Turnover" class="nav-item @(IsActive("/Admin/Turnover") ? "active" : "")">
+                        <i class="bi bi-pie-chart-fill"></i> Turnover Analysis
+                    </a>
+                    @if (userRole == "Admin_Full")
+                    {
+                        <a asp-controller="Admin" asp-action="Users" class="nav-item @(IsActive("/Admin/Users") ? "active" : "")">
+                            <i class="bi bi-people-fill"></i> Users
+                        </a>
+                    }
+                    <a asp-controller="Admin" asp-action="Reports" class="nav-item @(IsActive("/Admin/Reports") ? "active" : "")">
+                        <i class="bi bi-file-earmark-text-fill"></i> Reports
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Dashboard" asp-action="Index" class="nav-item @(IsActive("/Dashboard") ? "active" : "")">
+                        <i class="bi bi-bar-chart-line-fill"></i> Dashboard
+                    </a>
+                }
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar"><i class="bi bi-person-fill"></i></div>
+                    <div class="user-details">
+                        <span class="user-email">@userEmail</span>
+                        <span class="user-role">@userRole.Replace("_", " ")</span>
+                    </div>
+                </div>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-logout" title="Sign Out"><i class="bi bi-box-arrow-right"></i></button>
+                </form>
+            </div>
+        </aside>
+        <main class="main-content">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert-banner alert-success-banner">
+                    <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert-banner alert-error-banner">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+                </div>
+            }
+            <div class="page-content">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+}
+else
+{
+    @RenderBody()
+}
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

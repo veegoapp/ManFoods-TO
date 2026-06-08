@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "Global Analytics";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Global Analytics</h1>
+        <p class="page-subtitle">Workforce intelligence and turnover metrics</p>
+    </div>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <select id="periodSelect" class="form-select form-select-dark" style="width:180px">
+            <option value="">Select Period</option>
+        </select>
+        <select id="storeSelect" class="form-select form-select-dark" style="width:200px">
+            <option value="">All Stores</option>
+        </select>
+    </div>
+</div>
+
+<div id="kpiCards" class="kpi-grid mb-4">
+    <div class="kpi-card"><div class="kpi-spinner"><div class="spinner-border spinner-border-sm"></div></div></div>
+</div>
+
+<div class="insight-card mb-4">
+    <div class="insight-icon"><i class="bi bi-stars"></i></div>
+    <div>
+        <div class="insight-title">AI Insights</div>
+        <div class="insight-text">Connect your AI key to enable smart workforce recommendations.</div>
+    </div>
+</div>
+
+<div class="charts-grid">
+    <div class="chart-card">
+        <div class="chart-header"><h6>Turnover by Job Title</h6><p>Resignations grouped by role</p></div>
+        <div class="chart-body"><canvas id="jobTitleChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>Turnover by Tenure</h6><p>Duration before resignation</p></div>
+        <div class="chart-body"><canvas id="tenureChart"></canvas></div>
+    </div>
+    <div class="chart-card chart-full">
+        <div class="chart-header"><h6>Gender Breakdown</h6><p>Active workforce distribution</p></div>
+        <div class="chart-body chart-body-sm"><canvas id="genderChart"></canvas></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
+}

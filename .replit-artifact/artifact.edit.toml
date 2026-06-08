@@ -1,0 +1,10 @@
+version = "1.0"
+  kind = "web"
+  title = "Manfoods Workforce Analytics"
+  previewPath = "/"
+
+  [[services]]
+  name = "web"
+  localPort = 5000
+  paths = ["/"]
+  

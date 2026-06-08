@@ -1,0 +1,179 @@
+@model List<MvcApp.Models.UploadLog>
+@{
+    ViewData["Title"] = "Data Management";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Data Management</h1>
+        <p class="page-subtitle">Upload monthly Excel files to import workforce data</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-4">
+        <div class="card-dark">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="card-icon"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <h6 class="mb-0">Active Employees</h6>
+                    <p class="text-muted-custom mb-0 small">Upload the active employees list for a given month.</p>
+                </div>
+            </div>
+            <form asp-controller="Admin" asp-action="UploadActiveEmployees" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <select name="Month" class="form-select form-select-dark form-select-sm" required>
+                            <option value="">Month</option>
+                            @for (int m = 1; m <= 12; m++) {
+                                <option value="@m">@(new DateTime(2000, m, 1).ToString("MMMM"))</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <select name="Year" class="form-select form-select-dark form-select-sm" required>
+                            <option value="">Year</option>
+                            @for (int y = DateTime.Now.Year; y >= 2022; y--) {
+                                <option value="@y">@y</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <input type="file" name="File" accept=".xlsx,.xls" class="form-control form-control-dark form-control-sm" required />
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-cloud-upload me-1"></i> Upload Active Employees
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card-dark">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="card-icon"><i class="bi bi-person-dash-fill"></i></div>
+                <div>
+                    <h6 class="mb-0">Resignations</h6>
+                    <p class="text-muted-custom mb-0 small">Upload resignation records for a given month.</p>
+                </div>
+            </div>
+            <form asp-controller="Admin" asp-action="UploadResignations" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <select name="Month" class="form-select form-select-dark form-select-sm" required>
+                            <option value="">Month</option>
+                            @for (int m = 1; m <= 12; m++) {
+                                <option value="@m">@(new DateTime(2000, m, 1).ToString("MMMM"))</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <select name="Year" class="form-select form-select-dark form-select-sm" required>
+                            <option value="">Year</option>
+                            @for (int y = DateTime.Now.Year; y >= 2022; y--) {
+                                <option value="@y">@y</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <input type="file" name="File" accept=".xlsx,.xls" class="form-control form-control-dark form-control-sm" required />
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-cloud-upload me-1"></i> Upload Resignations
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card-dark">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="card-icon"><i class="bi bi-shop"></i></div>
+                <div>
+                    <h6 class="mb-0">Store Reference</h6>
+                    <p class="text-muted-custom mb-0 small">Upload store reference with manager/consultant assignments.</p>
+                </div>
+            </div>
+            <form asp-controller="Admin" asp-action="UploadStoreReference" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <select name="Month" class="form-select form-select-dark form-select-sm" required>
+                            <option value="">Month</option>
+                            @for (int m = 1; m <= 12; m++) {
+                                <option value="@m">@(new DateTime(2000, m, 1).ToString("MMMM"))</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <select name="Year" class="form-select form-select-dark form-select-sm" required>
+                            <option value="">Year</option>
+                            @for (int y = DateTime.Now.Year; y >= 2022; y--) {
+                                <option value="@y">@y</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <input type="file" name="File" accept=".xlsx,.xls" class="form-control form-control-dark form-control-sm" required />
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-cloud-upload me-1"></i> Upload Store Reference
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="card-dark">
+    <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i>Upload History</h6>
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <p>No uploads yet</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-dark-custom">
+                <thead>
+                    <tr>
+                        <th>File Type</th>
+                        <th>File Name</th>
+                        <th>Period</th>
+                        <th>Uploaded By</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model)
+                    {
+                        <tr>
+                            <td><span class="badge-type">@log.FileType.Replace("_", " ")</span></td>
+                            <td class="text-muted-custom small">@log.FileName</td>
+                            <td>@(new DateTime(log.Year, log.Month, 1).ToString("MMMM yyyy"))</td>
+                            <td class="text-muted-custom">@log.UploadedBy</td>
+                            <td class="text-muted-custom small">@log.UploadDate.ToString("MMM dd, yyyy HH:mm")</td>
+                            <td>
+                                <form asp-action="DeleteUploadLog" method="post" onsubmit="return confirm('Delete this upload and all associated data?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@log.Id" />
+                                    <button type="submit" class="btn-danger-outline">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

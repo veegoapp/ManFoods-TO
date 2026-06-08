@@ -1,19 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
 using MvcApp.Extensions;
+using MvcApp.Filters;
 
 namespace MvcApp.Controllers;
 
-public class HomeController : Controller
+[RequireAuth]
+public class DashboardController : Controller
 {
     public IActionResult Index()
     {
-        if (HttpContext.Session.GetUserId() == null)
-            return RedirectToAction("Login", "Account");
-
         var role = HttpContext.Session.GetRole();
         if (role == "Admin_Full" || role == "Admin_Read")
             return RedirectToAction("Analytics", "Admin");
 
-        return RedirectToAction("Index", "Dashboard");
+        return View();
     }
 }

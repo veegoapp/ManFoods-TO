@@ -1,0 +1,1 @@
+- [Manfoods MVC conversion](manfoods-mvc.md) — ASP.NET Core 9 MVC, BCrypt + ClosedXML packages, PGHOST/* env vars for DB, EnsureCreated() not Migrate(), @() Razor syntax required for method-call expressions.

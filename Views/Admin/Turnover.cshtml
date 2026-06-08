@@ -1,0 +1,35 @@
+@{
+    ViewData["Title"] = "Turnover Analysis";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Turnover Analysis</h1>
+        <p class="page-subtitle">Deep-dive into resignation patterns</p>
+    </div>
+    <div class="d-flex gap-2">
+        <select id="periodSelect" class="form-select form-select-dark" style="width:180px">
+            <option value="">Select Period</option>
+        </select>
+    </div>
+</div>
+
+<div class="charts-grid">
+    <div class="chart-card">
+        <div class="chart-header"><h6>Turnover by Job Title</h6></div>
+        <div class="chart-body"><canvas id="jobTitleChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>Turnover by Tenure</h6></div>
+        <div class="chart-body"><canvas id="tenureChart"></canvas></div>
+    </div>
+    <div class="chart-card chart-full">
+        <div class="chart-header"><h6>Gender Breakdown</h6></div>
+        <div class="chart-body chart-body-sm"><canvas id="genderChart"></canvas></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
+}

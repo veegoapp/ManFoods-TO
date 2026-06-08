@@ -1,0 +1,165 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Workforce intelligence and turnover metrics</p>
+    </div>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <select id="periodSelect" class="form-select form-select-dark" style="width:180px">
+            <option value="">Select Period</option>
+        </select>
+        <select id="storeSelect" class="form-select form-select-dark" style="width:200px">
+            <option value="">All Stores</option>
+        </select>
+    </div>
+</div>
+
+<div id="kpiCards" class="kpi-grid mb-4">
+    <div class="kpi-card"><div class="kpi-spinner"><div class="spinner-border spinner-border-sm"></div></div></div>
+</div>
+
+<div class="insight-card mb-4">
+    <div class="insight-icon"><i class="bi bi-stars"></i></div>
+    <div>
+        <div class="insight-title">AI Insights</div>
+        <div class="insight-text">Connect your AI key to enable smart workforce recommendations.</div>
+    </div>
+</div>
+
+<div class="charts-grid">
+    <div class="chart-card">
+        <div class="chart-header"><h6>Turnover by Job Title</h6><p>Resignations grouped by role</p></div>
+        <div class="chart-body"><canvas id="jobTitleChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>Turnover by Tenure</h6><p>Duration before resignation</p></div>
+        <div class="chart-body"><canvas id="tenureChart"></canvas></div>
+    </div>
+    <div class="chart-card chart-full">
+        <div class="chart-header"><h6>Gender Breakdown</h6><p>Active workforce distribution</p></div>
+        <div class="chart-body chart-body-sm"><canvas id="genderChart"></canvas></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        let periodMonth, periodYear, storeFilter;
+        let jobTitleChart, tenureChart, genderChart;
+        const chartDefaults = { color: '#94a3b8', borderColor: '#2a2d35' };
+        Chart.defaults.color = chartDefaults.color;
+
+        async function fetchJson(url) {
+            const r = await fetch(url); return r.ok ? r.json() : [];
+        }
+
+        function monthName(m, y) {
+            return new Date(y, m - 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+        }
+
+        async function loadPeriods() {
+            const periods = await fetchJson('/api/dashboard/available-periods');
+            const sel = document.getElementById('periodSelect');
+            sel.innerHTML = '<option value="">Select Period</option>';
+            periods.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = `${p.month}-${p.year}`;
+                opt.textContent = monthName(p.month, p.year);
+                sel.appendChild(opt);
+            });
+            if (periods.length > 0) {
+                sel.value = `${periods[0].month}-${periods[0].year}`;
+                periodMonth = periods[0].month; periodYear = periods[0].year;
+                await loadStores(); await loadAll();
+            }
+        }
+
+        async function loadStores() {
+            if (!periodMonth || !periodYear) return;
+            const stores = await fetchJson(`/api/dashboard/stores?month=${periodMonth}&year=${periodYear}`);
+            const sel = document.getElementById('storeSelect');
+            const cur = sel.value;
+            sel.innerHTML = '<option value="">All Stores</option>';
+            stores.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.storeName; opt.textContent = s.storeName;
+                sel.appendChild(opt);
+            });
+            if (cur) sel.value = cur;
+        }
+
+        function buildQuery() {
+            const p = new URLSearchParams();
+            if (periodMonth) p.set('month', periodMonth);
+            if (periodYear) p.set('year', periodYear);
+            if (storeFilter) p.set('store', storeFilter);
+            return p.toString();
+        }
+
+        async function loadKpis() {
+            const data = await fetchJson('/api/dashboard/kpis?' + buildQuery());
+            document.getElementById('kpiCards').innerHTML = `
+                <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-people-fill"></i></div><div class="kpi-value">${data.totalHeadcount||0}</div><div class="kpi-label">Total Headcount</div></div>
+                <div class="kpi-card"><div class="kpi-icon text-success"><i class="bi bi-person-plus-fill"></i></div><div class="kpi-value text-success">${data.newHires||0}</div><div class="kpi-label">New Hires</div></div>
+                <div class="kpi-card"><div class="kpi-icon text-danger"><i class="bi bi-person-dash-fill"></i></div><div class="kpi-value text-danger">${data.totalResignations||0}</div><div class="kpi-label">Resignations</div></div>
+                <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-graph-up"></i></div><div class="kpi-value">${(data.turnoverRate||0).toFixed(1)}%</div><div class="kpi-label">Turnover Rate</div></div>
+            `;
+        }
+
+        const COLORS = ['#6366f1','#22d3ee','#f59e0b','#10b981','#f43f5e'];
+
+        function initOrUpdate(chartRef, id, cfg) {
+            if (chartRef) chartRef.destroy();
+            const ctx = document.getElementById(id).getContext('2d');
+            return new Chart(ctx, cfg);
+        }
+
+        async function loadCharts() {
+            const q = buildQuery();
+            const [jobTitle, tenure, gender] = await Promise.all([
+                fetchJson('/api/dashboard/turnover-by-job-title?' + q),
+                fetchJson('/api/dashboard/turnover-by-tenure?' + q),
+                fetchJson('/api/dashboard/gender-breakdown?' + q),
+            ]);
+
+            jobTitleChart = initOrUpdate(jobTitleChart, 'jobTitleChart', {
+                type: 'bar',
+                data: { labels: jobTitle.map(d=>d.label), datasets: [{ data: jobTitle.map(d=>d.value), backgroundColor: '#6366f1', borderRadius: 4 }] },
+                options: { indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{grid:{color:'#2a2d35'},ticks:{color:'#94a3b8'}},y:{grid:{display:false},ticks:{color:'#94a3b8'}}} }
+            });
+
+            tenureChart = initOrUpdate(tenureChart, 'tenureChart', {
+                type: 'bar',
+                data: { labels: tenure.map(d=>d.label), datasets: [{ data: tenure.map(d=>d.value), backgroundColor: '#22d3ee', borderRadius: 4 }] },
+                options: { plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},ticks:{color:'#94a3b8'}},y:{grid:{color:'#2a2d35'},ticks:{color:'#94a3b8'}}} }
+            });
+
+            genderChart = initOrUpdate(genderChart, 'genderChart', {
+                type: 'doughnut',
+                data: { labels: gender.map(d=>d.label), datasets: [{ data: gender.map(d=>d.value), backgroundColor: COLORS, borderWidth: 0 }] },
+                options: { plugins:{legend:{position:'bottom', labels:{color:'#94a3b8', padding:16}}} }
+            });
+        }
+
+        async function loadAll() { await Promise.all([loadKpis(), loadCharts()]); }
+
+        document.getElementById('periodSelect').addEventListener('change', async function() {
+            if (!this.value) return;
+            const [m, y] = this.value.split('-');
+            periodMonth = parseInt(m); periodYear = parseInt(y);
+            storeFilter = '';
+            document.getElementById('storeSelect').value = '';
+            await loadStores(); await loadAll();
+        });
+
+        document.getElementById('storeSelect').addEventListener('change', async function() {
+            storeFilter = this.value || '';
+            await loadAll();
+        });
+
+        loadPeriods();
+    </script>
+}
