@@ -82,17 +82,15 @@ public class DashboardApiController : ControllerBase
 
         var kpis = await _dashboard.GetKpisAsync(request.Month, request.Year, request.Store, role, assignedName);
 
-        // Fetch all chart breakdowns to enrich AI context
-        var jobTitleTask = _dashboard.GetTurnoverByJobTitleAsync(kpis.Month, kpis.Year, request.Store, role, assignedName);
-        var tenureTask   = _dashboard.GetTurnoverByTenureAsync(kpis.Month, kpis.Year, request.Store, role, assignedName);
-        var genderTask   = _dashboard.GetGenderBreakdownAsync(kpis.Month, kpis.Year, request.Store, role, assignedName);
+        // Run sequentially — EF Core DbContext does not support concurrent queries
+        var jobTitleData = await _dashboard.GetTurnoverByJobTitleAsync(kpis.Month, kpis.Year, request.Store, role, assignedName);
+        var tenureData   = await _dashboard.GetTurnoverByTenureAsync(kpis.Month, kpis.Year, request.Store, role, assignedName);
+        var genderData   = await _dashboard.GetGenderBreakdownAsync(kpis.Month, kpis.Year, request.Store, role, assignedName);
 
         // Per-store breakdown only when viewing all stores
-        var storeTask = string.IsNullOrEmpty(request.Store)
-            ? _dashboard.GetPerStoreTurnoverAsync(kpis.Month, kpis.Year, role, assignedName)
-            : Task.FromResult(new List<StoreBreakdown>());
-
-        await Task.WhenAll(jobTitleTask, tenureTask, genderTask, storeTask);
+        var storeData = string.IsNullOrEmpty(request.Store)
+            ? await _dashboard.GetPerStoreTurnoverAsync(kpis.Month, kpis.Year, role, assignedName)
+            : new List<StoreBreakdown>();
 
         var context = new GeminiContext
         {
@@ -103,10 +101,10 @@ public class DashboardApiController : ControllerBase
             TotalResignations = kpis.TotalResignations,
             TurnoverRate      = kpis.TurnoverRate,
             NewHires          = kpis.NewHires,
-            StoreBreakdowns   = storeTask.Result,
-            TurnoverByJobTitle = jobTitleTask.Result.Select(x => (x.Label, x.Value)).ToList(),
-            TurnoverByTenure   = tenureTask.Result.Select(x => (x.Label, x.Value)).ToList(),
-            GenderBreakdown    = genderTask.Result.Select(x => (x.Label, x.Value)).ToList()
+            StoreBreakdowns    = storeData,
+            TurnoverByJobTitle = jobTitleData.Select(x => (x.Label, x.Value)).ToList(),
+            TurnoverByTenure   = tenureData.Select(x => (x.Label, x.Value)).ToList(),
+            GenderBreakdown    = genderData.Select(x => (x.Label, x.Value)).ToList()
         };
 
         var answer = await _gemini.AskAsync(request.Question, context);
