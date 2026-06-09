@@ -51,3 +51,4 @@ channel = "stable-25_05"
 
 [userenv.shared]
 NEON_DATABASE_URL = "postgresql://neondb_owner:npg_Wqtia7cLlO2C@ep-purple-sun-aq0hpauv.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require"
+Gemini_API_Key = "AQ.Ab8RN6L_mL07berfDJXF86mf06WSA3J7bLi-G2rqjgTDnLDDtw"
