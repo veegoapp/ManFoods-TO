@@ -56,3 +56,17 @@ public class SmartInsightItem
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";
 }
+
+public class TrendMatrixRow
+{
+    public string StoreName            { get; set; } = "";
+    public string OperationConsultant  { get; set; } = "";
+    public Dictionary<string, double?> PeriodRates { get; set; } = new();
+    public double? AvgRate             { get; set; }
+}
+
+public class TrendMatrixResult
+{
+    public List<string>         Periods { get; set; } = new();
+    public List<TrendMatrixRow> Rows    { get; set; } = new();
+}

@@ -155,6 +155,39 @@
     </div>
 </div>
 
+<!-- ── Full Data Table (Trend Matrix) ─────────────────────── -->
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2">
+        <div style="width:4px;height:22px;background:linear-gradient(135deg,#c8102e,#da291c);border-radius:2px"></div>
+        <h5 class="mb-0 fw-bold">Full Data Table</h5>
+        <span class="badge ms-1" style="background:#f0f0f0;color:#555;font-size:11px">All Periods · Turnover %</span>
+    </div>
+    <input type="text" id="matrixSearch" class="form-control form-control-sm"
+           placeholder="&#xF52A; Search store or OC…" style="width:220px;border-radius:20px">
+</div>
+<div class="chart-card mb-4 p-0" style="overflow:hidden">
+    <div id="matrixScroll" style="max-height:450px;overflow:auto">
+        <table id="matrixTable" class="table table-hover mb-0" style="font-size:12.5px;min-width:600px">
+            <thead id="matrixHead" style="background:#f8f8f8;position:sticky;top:0;z-index:2">
+                <tr>
+                    <th class="px-3 py-2" style="min-width:50px;cursor:pointer" data-mcol="oc"
+                        onclick="mxSort('oc')">OC <i id="mxi-oc" class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
+                    <th class="px-3 py-2" style="min-width:160px;cursor:pointer" data-mcol="store"
+                        onclick="mxSort('store')">Store <i id="mxi-store" class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
+                    <!-- period columns injected by JS -->
+                    <th class="px-3 py-2 text-center" style="min-width:70px;cursor:pointer;background:#fff8e1" data-mcol="avg"
+                        onclick="mxSort('avg')">AVG <i id="mxi-avg" class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
+                </tr>
+            </thead>
+            <tbody id="matrixBody">
+                <tr><td colspan="3" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2" style="color:#c8102e"></div>Loading…
+                </td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="~/js/dashboard.js" asp-append-version="true"></script>
@@ -300,5 +333,115 @@ loadAll = async function () {
     await tvLoadStoreComparison();
     await tvLoadOcOmAnalysis();
 };
+
+/* ── Full Data Trend Matrix ─────────────────────────────── */
+let mxData = null;          // { periods: [], rows: [] }
+let mxSortCol  = 'avg';
+let mxSortAsc  = false;
+
+function mxRateCell(rate) {
+    if (rate === null || rate === undefined)
+        return `<td class="px-2 py-2 text-center text-muted" style="color:#ccc">—</td>`;
+    const bg = rate >= 15 ? '#c8102e'
+             : rate >= 8  ? '#e8630a'
+             : rate >= 4  ? '#FFC72C'
+             : '#28a745';
+    const fg = rate >= 4 ? (rate >= 8 ? '#fff' : '#27251F') : '#fff';
+    return `<td class="px-2 py-2 text-center">
+        <span style="background:${bg};color:${fg};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap">${rate.toFixed(1)}%</span>
+    </td>`;
+}
+
+function mxBuildHeader(periods) {
+    const tr = document.querySelector('#matrixHead tr');
+    // Remove any previously inserted period cols (between Store th and AVG th)
+    const avgTh = tr.querySelector('[data-mcol="avg"]');
+    tr.querySelectorAll('[data-mcol^="p-"]').forEach(el => el.remove());
+
+    const fmtPeriod = pk => {
+        const [y, m] = pk.split('-');
+        return new Date(+y, +m - 1, 1).toLocaleString('default', { month: 'short', year: '2-digit' });
+    };
+
+    periods.forEach(pk => {
+        const th = document.createElement('th');
+        th.className = 'px-2 py-2 text-center';
+        th.style.cssText = 'min-width:72px;cursor:pointer;white-space:nowrap';
+        th.dataset.mcol = `p-${pk}`;
+        th.innerHTML = `${fmtPeriod(pk)} <i id="mxi-${pk}" class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i>`;
+        th.onclick = () => mxSort(`p-${pk}`);
+        tr.insertBefore(th, avgTh);
+    });
+}
+
+function mxRender() {
+    if (!mxData) return;
+    const search = (document.getElementById('matrixSearch').value || '').toLowerCase();
+
+    let rows = mxData.rows.filter(r =>
+        r.storeName.toLowerCase().includes(search) ||
+        (r.operationConsultant || '').toLowerCase().includes(search)
+    );
+
+    rows.sort((a, b) => {
+        let va, vb;
+        if (mxSortCol === 'store') { va = a.storeName; vb = b.storeName; }
+        else if (mxSortCol === 'oc') { va = a.operationConsultant || ''; vb = b.operationConsultant || ''; }
+        else if (mxSortCol === 'avg') { va = a.avgRate ?? -1; vb = b.avgRate ?? -1; }
+        else {
+            va = a.periodRates[mxSortCol.replace('p-', '')] ?? -1;
+            vb = b.periodRates[mxSortCol.replace('p-', '')] ?? -1;
+        }
+        if (typeof va === 'string') return mxSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+        return mxSortAsc ? va - vb : vb - va;
+    });
+
+    const colSpan = 2 + mxData.periods.length + 1;
+    if (!rows.length) {
+        document.getElementById('matrixBody').innerHTML =
+            `<tr><td colspan="${colSpan}" class="text-center py-4 text-muted">No matching stores.</td></tr>`;
+        return;
+    }
+
+    document.getElementById('matrixBody').innerHTML = rows.map(r => {
+        const periodCells = mxData.periods.map(pk => mxRateCell(r.periodRates[pk])).join('');
+        const avgCell = r.avgRate !== null && r.avgRate !== undefined
+            ? mxRateCell(r.avgRate).replace('<td', '<td style="background:#fffde7"')
+            : `<td class="px-2 py-2 text-center text-muted" style="background:#fffde7">—</td>`;
+        return `<tr>
+            <td class="px-3 py-2" style="color:#666;white-space:nowrap">${r.operationConsultant || '<span class="text-muted">—</span>'}</td>
+            <td class="px-3 py-2 fw-semibold" style="white-space:nowrap">${r.storeName}</td>
+            ${periodCells}
+            ${avgCell}
+        </tr>`;
+    }).join('');
+}
+
+function mxSort(col) {
+    if (mxSortCol === col) { mxSortAsc = !mxSortAsc; }
+    else { mxSortCol = col; mxSortAsc = (col === 'store' || col === 'oc'); }
+    document.querySelectorAll('#matrixHead [data-mcol] i').forEach(i =>
+        i.className = 'bi bi-arrow-down-up text-muted');
+    const icon = document.querySelector(`#matrixHead [data-mcol="${col}"] i`);
+    if (icon) icon.className = mxSortAsc ? 'bi bi-sort-up text-danger' : 'bi bi-sort-down text-danger';
+    mxRender();
+}
+
+async function tvLoadTrendMatrix() {
+    const body = document.getElementById('matrixBody');
+    body.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2" style="color:#c8102e"></div>Loading…</td></tr>';
+    mxData = await fetchJson('/api/dashboard/trend-matrix');
+    if (!mxData || !mxData.rows || !mxData.rows.length) {
+        body.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No data available.</td></tr>';
+        return;
+    }
+    mxBuildHeader(mxData.periods);
+    mxRender();
+}
+
+document.getElementById('matrixSearch').addEventListener('input', mxRender);
+
+/* Load trend matrix once on page load (not period-dependent) */
+document.addEventListener('DOMContentLoaded', () => tvLoadTrendMatrix());
 </script>
 }

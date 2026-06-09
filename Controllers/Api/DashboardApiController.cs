@@ -96,6 +96,14 @@ public class DashboardApiController : ControllerBase
         return Ok(await _dashboard.GetSmartInsightsAsync(kpis.Month, kpis.Year, role, assignedName));
     }
 
+    [HttpGet("trend-matrix")]
+    public async Task<IActionResult> TrendMatrix()
+    {
+        var role = HttpContext.Session.GetRole();
+        var assignedName = HttpContext.Session.GetAssignedName();
+        return Ok(await _dashboard.GetTrendMatrixAsync(role, assignedName));
+    }
+
     public record AiChatRequest(string Question, int? Month, int? Year, string? Store);
 
     [HttpPost("ai-chat")]

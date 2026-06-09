@@ -425,4 +425,88 @@ public class DashboardService : IDashboardService
             .OrderByDescending(s => s.TurnoverRate)
             .ToList();
     }
+
+    public async Task<TrendMatrixResult> GetTrendMatrixAsync(string role, string? assignedName)
+    {
+        var accessible = await GetAccessibleStoresAsync(role, assignedName, null, null);
+
+        // All available periods ordered chronologically
+        var periods = await _db.ActiveEmployees
+            .Select(e => new { e.Month, e.Year })
+            .Distinct()
+            .OrderBy(p => p.Year).ThenBy(p => p.Month)
+            .ToListAsync();
+
+        var periodKeys = periods.Select(p => $"{p.Year:D4}-{p.Month:D2}").ToList();
+
+        // Headcounts grouped by store + period
+        var empQ = _db.ActiveEmployees.AsQueryable();
+        if (accessible != null && accessible.Count > 0)
+            empQ = empQ.Where(e => accessible.Contains(e.Store));
+
+        var headcounts = await empQ
+            .GroupBy(e => new { e.Store, e.Month, e.Year })
+            .Select(g => new { g.Key.Store, g.Key.Month, g.Key.Year, Count = g.Count() })
+            .ToListAsync();
+
+        // Resignations grouped by store + period
+        var resQ = _db.Resignations.AsQueryable();
+        if (accessible != null && accessible.Count > 0)
+            resQ = resQ.Where(r => accessible.Contains(r.Store));
+
+        var resignations = await resQ
+            .GroupBy(r => new { r.Store, r.Month, r.Year })
+            .Select(g => new { g.Key.Store, g.Key.Month, g.Key.Year, Count = g.Count() })
+            .ToListAsync();
+
+        // Latest OC assignment per store
+        var storeRefList = await _db.StoreReferences.ToListAsync();
+        var ocByStore = storeRefList
+            .GroupBy(s => s.StoreName)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(s => s.Year).ThenByDescending(s => s.Month)
+                      .First().OperationConsultant ?? "");
+
+        // Build fast lookups
+        var hcLookup  = headcounts .ToDictionary(x => $"{x.Store}|{x.Year:D4}-{x.Month:D2}", x => x.Count);
+        var resLookup = resignations.GroupBy(x => $"{x.Store}|{x.Year:D4}-{x.Month:D2}")
+                                    .ToDictionary(g => g.Key, g => g.Sum(x => x.Count));
+
+        var allStores = headcounts.Select(h => h.Store).Distinct().OrderBy(s => s).ToList();
+
+        var rows = allStores.Select(store =>
+        {
+            var periodRates = new Dictionary<string, double?>();
+            var nonNullRates = new List<double>();
+
+            foreach (var pk in periodKeys)
+            {
+                var key = $"{store}|{pk}";
+                if (hcLookup.TryGetValue(key, out var hc) && hc > 0)
+                {
+                    var res  = resLookup.TryGetValue(key, out var rc) ? rc : 0;
+                    var rate = Math.Round((double)res / hc * 100, 1);
+                    periodRates[pk] = rate;
+                    nonNullRates.Add(rate);
+                }
+                else
+                {
+                    periodRates[pk] = null;
+                }
+            }
+
+            return new TrendMatrixRow
+            {
+                StoreName           = store,
+                OperationConsultant = ocByStore.TryGetValue(store, out var oc) ? oc : "",
+                PeriodRates         = periodRates,
+                AvgRate             = nonNullRates.Count > 0
+                                        ? Math.Round(nonNullRates.Average(), 1)
+                                        : null
+            };
+        }).ToList();
+
+        return new TrendMatrixResult { Periods = periodKeys, Rows = rows };
+    }
 }
