@@ -11,87 +11,119 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('mf-theme') || 'dark');</script>
     <style>
         @@keyframes cardEntrance { 0%{opacity:0;transform:translateY(28px) scale(.97)} 100%{opacity:1;transform:translateY(0) scale(1)} }
         @@keyframes logoFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
-        @@keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
         @@keyframes floatUp { 0%{transform:translateY(0) rotate(0deg);opacity:.25} 100%{transform:translateY(-100vh) rotate(360deg);opacity:0} }
 
         .login-body {
-            background: linear-gradient(150deg, #27251f 0%, #1e1c18 50%, #0f0e0b 100%);
+            background: var(--bg);
             min-height: 100vh;
             display: flex; align-items: center; justify-content: center;
             position: relative; overflow: hidden;
         }
         .login-body::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: #ffbc0d;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--red), var(--gold));
+        }
+        [data-theme="light"] .login-body {
+            background: linear-gradient(135deg, #FFF9F0 0%, #FFF5F5 50%, #FFFBF0 100%);
         }
 
-        /* Floating orbs */
-        .bubble { position: absolute; border-radius: 50%; background: rgba(255,188,13,.1); animation: floatUp linear infinite; }
+        .bubble { position: absolute; border-radius: 50%; background: rgba(255,199,44,.06); animation: floatUp linear infinite; }
+        [data-theme="light"] .bubble { background: rgba(218,41,28,.04); }
+
+        .login-theme-toggle {
+            position: fixed; top: 16px; right: 16px; z-index: 100;
+            width: 38px; height: 38px; border-radius: 10px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg); color: var(--text-2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; cursor: pointer; transition: all .2s;
+        }
+        .login-theme-toggle:hover { border-color: var(--gold); color: var(--gold); }
+        [data-theme="light"] .login-theme-toggle:hover { border-color: var(--red); color: var(--red); }
+        .login-theme-toggle .icon-dark  { display: block; }
+        .login-theme-toggle .icon-light { display: none; }
+        [data-theme="light"] .login-theme-toggle .icon-dark  { display: none; }
+        [data-theme="light"] .login-theme-toggle .icon-light { display: block; }
 
         .login-container { width: 100%; max-width: 420px; padding: 16px; position: relative; z-index: 10; }
 
         .login-card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
             padding: 44px 40px 36px;
-            box-shadow: 0 8px 32px rgba(0,0,0,.3);
+            box-shadow: var(--shadow-lg);
             animation: cardEntrance .55s cubic-bezier(.22,1,.36,1) both;
+            position: relative; overflow: hidden;
+        }
+        .login-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--red), var(--gold));
         }
 
         .logo-wrap {
             display: inline-block;
             animation: logoFloat 3.5s ease-in-out infinite;
-            filter: drop-shadow(0 4px 12px rgba(255,188,13,.4));
+            filter: drop-shadow(0 4px 12px rgba(255,199,44,.4));
             margin-bottom: 14px;
         }
         .logo-wrap img { width: 72px; height: auto; }
 
-        .login-title { font-size: 28px; font-weight: 700; color: #292929; margin: 0; line-height: 32px; letter-spacing: -.15px; }
-        .login-title span { color: #ffbc0d; }
-        .login-subtitle { font-size: 11px; color: #9a9490; margin: 6px 0 0; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 400; }
+        .login-title { font-size: 28px; font-weight: 800; color: var(--text); margin: 0; line-height: 32px; letter-spacing: -.3px; }
+        .login-title span { color: var(--gold); }
+        [data-theme="light"] .login-title span { color: var(--red); }
+        .login-subtitle { font-size: 11px; color: var(--text-3); margin: 6px 0 0; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 400; }
 
         .divider { display: flex; align-items: center; gap: 10px; margin: 22px 0 18px; }
-        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
-        .divider span { font-size: 11px; color: #bbb; font-weight: 400; white-space: nowrap; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--card-border); }
+        .divider span { font-size: 11px; color: var(--text-3); font-weight: 400; white-space: nowrap; }
 
         .field-wrap { position: relative; margin-bottom: 16px; }
-        .field-wrap .fi { position: absolute; left: 14px; top: calc(50% + 13px); transform: translateY(-50%); color: #ccc; font-size: 15px; pointer-events: none; transition: color .2s; }
-        .field-wrap:focus-within .fi { color: #c08b00; }
-        .field-wrap label { font-size: 11px; font-weight: 700; color: #6b6b6b; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; display: block; }
+        .field-wrap .fi { position: absolute; left: 14px; top: calc(50% + 13px); transform: translateY(-50%); color: var(--text-3); font-size: 15px; pointer-events: none; transition: color .2s; }
+        .field-wrap:focus-within .fi { color: var(--gold); }
+        [data-theme="light"] .field-wrap:focus-within .fi { color: var(--red); }
+        .field-wrap label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; display: block; }
         .field-wrap input {
             padding-left: 40px; height: 48px; font-size: 15px;
-            border-radius: 8px; border: 1.5px solid #e5e7eb;
-            background: #fafafa; color: #292929; width: 100%;
-            transition: all .2s; outline: none;
-            font-family: 'Speedee', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            border-radius: 8px; border: 1.5px solid var(--card-border);
+            background: var(--card-bg-2); color: var(--text); width: 100%;
+            transition: all .2s; outline: none; font-family: inherit;
         }
-        .field-wrap input:focus { background: #fff; border-color: #ffbc0d; box-shadow: 0 0 0 3px rgba(255,188,13,.2); }
-        .field-wrap input::placeholder { color: #ccc; }
+        .field-wrap input:focus { background: var(--card-bg); border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,199,44,.12); }
+        [data-theme="light"] .field-wrap input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(218,41,28,.1); }
+        .field-wrap input::placeholder { color: var(--text-3); }
 
         .btn-signin {
             width: 100%; min-height: 50px;
-            background-color: #ffbc0d; border: 1px solid #c08b00;
-            border-radius: 48px; color: #292929;
+            background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+            border: 1px solid var(--red-dark);
+            border-radius: 48px; color: #fff;
             font-size: 16px; font-weight: 700; cursor: pointer;
-            transition: background .15s, box-shadow .15s, transform .1s;
-            margin-top: 8px;
-            font-family: 'Speedee', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            transition: all .2s; margin-top: 8px; font-family: inherit;
+            box-shadow: var(--shadow-red);
         }
-        .btn-signin:hover { background-color: #e6a800; box-shadow: 0 4px 14px rgba(255,188,13,.4); transform: translateY(-1px); }
+        .btn-signin:hover { box-shadow: 0 6px 24px rgba(218,41,28,.45); transform: translateY(-1px); }
 
-        .admin-link { display: block; text-align: center; margin-top: 16px; font-size: 12px; color: #bbb; }
-        .admin-link a { color: #c08b00; font-weight: 700; text-decoration: none; }
+        .admin-link { display: block; text-align: center; margin-top: 16px; font-size: 12px; color: var(--text-3); }
+        .admin-link a { color: var(--gold); font-weight: 700; text-decoration: none; }
+        [data-theme="light"] .admin-link a { color: var(--red); }
         .admin-link a:hover { text-decoration: underline; }
-        .login-footer { text-align: center; margin-top: 18px; font-size: 11px; color: #ccc; }
+        .login-footer { text-align: center; margin-top: 18px; font-size: 11px; color: var(--text-3); }
 
-        .alert-error-banner { background: #fff5f5; border-left: 4px solid #c8102e; color: #c8102e; padding: 11px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
+        .alert-error-banner { background: var(--danger-bg); border-left: 4px solid var(--red); color: #fca5a5; padding: 11px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
+        [data-theme="light"] .alert-error-banner { color: var(--red); }
     </style>
 </head>
 <body class="login-body">
+
+    <button class="login-theme-toggle" id="themeToggle" title="Toggle light/dark mode">
+        <i class="bi bi-moon-stars-fill icon-dark"></i>
+        <i class="bi bi-sun-fill icon-light"></i>
+    </button>
 
     <div class="bubble" style="width:60px;height:60px;left:8%;animation-duration:13s;bottom:-60px;"></div>
     <div class="bubble" style="width:30px;height:30px;left:22%;animation-duration:9s;animation-delay:2s;bottom:-30px;"></div>
@@ -152,5 +184,18 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+    (function () {
+        const btn = document.getElementById('themeToggle');
+        const root = document.documentElement;
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                root.setAttribute('data-theme', next);
+                localStorage.setItem('mf-theme', next);
+            });
+        }
+    })();
+    </script>
 </body>
 </html>
