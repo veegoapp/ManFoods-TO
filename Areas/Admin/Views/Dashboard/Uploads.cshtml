@@ -126,5 +126,45 @@
                 </tbody>
             </table>
         </div>
+
+        @{
+            var currentPage = (int)(ViewBag.CurrentPage ?? 1);
+            var totalPages = (int)(ViewBag.TotalPages ?? 1);
+            var totalCount = (int)(ViewBag.TotalCount ?? 0);
+        }
+        @if (totalPages > 1)
+        {
+            <div class="d-flex align-items-center justify-content-between mt-3">
+                <span class="text-muted-custom small">Showing page @currentPage of @totalPages (@totalCount total)</span>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0" style="gap:4px">
+                        @if (currentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link-dark" href="?page=@(currentPage-1)"><i class="bi bi-chevron-left"></i></a>
+                            </li>
+                        }
+                        @for (int p = Math.Max(1, currentPage - 2); p <= Math.Min(totalPages, currentPage + 2); p++)
+                        {
+                            <li class="page-item @(p == currentPage ? "active" : "")">
+                                <a class="page-link page-link-dark" href="?page=@p">@p</a>
+                            </li>
+                        }
+                        @if (currentPage < totalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link page-link-dark" href="?page=@(currentPage+1)"><i class="bi bi-chevron-right"></i></a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
     }
 </div>
+
+<style>
+    .page-link-dark { background: #2a2a2a; border-color: #3a3a3a; color: #ccc; border-radius: 6px !important; }
+    .page-link-dark:hover { background: #3a3a3a; color: #fff; }
+    .page-item.active .page-link-dark { background: #DA291C; border-color: #DA291C; color: #fff; }
+</style>

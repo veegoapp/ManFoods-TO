@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MvcApp.Extensions;
+using MvcApp.Filters;
 using MvcApp.Models.ViewModels;
 using MvcApp.Services;
 
@@ -20,6 +22,7 @@ public class AccountController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    [EnableRateLimiting("login")]
     public async Task<IActionResult> Login(LoginViewModel vm)
     {
         if (!ModelState.IsValid) return View(vm);
@@ -42,5 +45,22 @@ public class AccountController : Controller
     {
         HttpContext.Session.Clear();
         return RedirectToAction("Login");
+    }
+
+    [HttpGet]
+    [RequireAdminAuth]
+    public IActionResult ChangePassword() => View(new ChangePasswordViewModel());
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [RequireAdminAuth]
+    public async Task<IActionResult> ChangePassword(ChangePasswordViewModel vm)
+    {
+        if (!ModelState.IsValid) return View(vm);
+        var userId = HttpContext.Session.GetUserId();
+        if (userId == null) return RedirectToAction("Login");
+        var ok = await _auth.ChangePasswordAsync(userId.Value, vm.CurrentPassword, vm.NewPassword);
+        if (!ok) { ModelState.AddModelError("CurrentPassword", "Current password is incorrect"); return View(vm); }
+        TempData["Success"] = "Password changed successfully.";
+        return RedirectToAction("ChangePassword");
     }
 }

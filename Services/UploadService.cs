@@ -46,8 +46,19 @@ public class UploadService : IUploadService
         return null;
     }
 
+    private static void ValidateFile(IFormFile file)
+    {
+        const long maxBytes = 10 * 1024 * 1024; // 10 MB
+        if (file.Length > maxBytes)
+            throw new InvalidOperationException("File size exceeds the 10 MB limit.");
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (ext != ".xlsx" && ext != ".xls")
+            throw new InvalidOperationException("Only Excel files (.xlsx / .xls) are allowed.");
+    }
+
     public async Task<(bool, string, int)> UploadActiveEmployeesAsync(IFormFile file, int month, int year, string uploadedBy)
     {
+        ValidateFile(file);
         using var stream = file.OpenReadStream();
         using var wb = new XLWorkbook(stream);
         var ws = wb.Worksheet(1);
@@ -84,6 +95,7 @@ public class UploadService : IUploadService
 
     public async Task<(bool, string, int)> UploadResignationsAsync(IFormFile file, int month, int year, string uploadedBy)
     {
+        ValidateFile(file);
         using var stream = file.OpenReadStream();
         using var wb = new XLWorkbook(stream);
         var ws = wb.Worksheet(1);
@@ -120,6 +132,7 @@ public class UploadService : IUploadService
 
     public async Task<(bool, string, int)> UploadStoreReferenceAsync(IFormFile file, int month, int year, string uploadedBy)
     {
+        ValidateFile(file);
         using var stream = file.OpenReadStream();
         using var wb = new XLWorkbook(stream);
         var ws = wb.Worksheet(1);
@@ -151,6 +164,14 @@ public class UploadService : IUploadService
 
     public async Task<List<UploadLog>> GetLogsAsync() =>
         await _db.UploadLogs.OrderByDescending(l => l.UploadDate).ToListAsync();
+
+    public async Task<(List<UploadLog> Items, int TotalCount)> GetLogsPagedAsync(int page, int pageSize)
+    {
+        var q = _db.UploadLogs.OrderByDescending(l => l.UploadDate);
+        var total = await q.CountAsync();
+        var items = await q.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        return (items, total);
+    }
 
     public async Task DeleteLogAsync(int id)
     {

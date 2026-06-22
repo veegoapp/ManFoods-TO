@@ -1,16 +1,119 @@
+@model List<MvcApp.Models.ViewModels.PeriodItem>
 @{
     ViewData["Title"] = "Reports";
+    var months = new[] { "January","February","March","April","May","June","July","August","September","October","November","December" };
 }
 
 <div class="page-header">
     <div>
         <h1 class="page-title">Reports</h1>
-        <p class="page-subtitle">Export and schedule workforce reports</p>
+        <p class="page-subtitle">Export workforce data to Excel</p>
     </div>
 </div>
 
-<div class="card-dark text-center py-5">
-    <i class="bi bi-file-earmark-bar-graph-fill" style="font-size:3rem;color:#DA291C;display:block;margin-bottom:1rem"></i>
-    <h5 class="mb-2">Reports Coming Soon</h5>
-    <p class="text-muted-custom">Export workforce data to Excel, PDF, and scheduled email delivery.</p>
-</div>
+@if (Model == null || Model.Count == 0)
+{
+    <div class="card-dark text-center py-5">
+        <i class="bi bi-file-earmark-bar-graph-fill" style="font-size:3rem;color:#DA291C;display:block;margin-bottom:1rem"></i>
+        <h5 class="mb-2">No Data Available</h5>
+        <p class="text-muted-custom">Upload employee data first to generate reports.</p>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        <!-- Summary Report -->
+        <div class="col-md-6">
+            <div class="card-dark h-100">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="card-icon" style="background:rgba(39,174,96,.15)"><i class="bi bi-file-earmark-spreadsheet-fill" style="color:#27ae60"></i></div>
+                    <div>
+                        <h6 class="mb-0">Summary Report</h6>
+                        <p class="text-muted-custom mb-0 small">KPIs + Job Title + Tenure + Gender breakdown</p>
+                    </div>
+                </div>
+                <form method="get" action="/admin/dashboard/export">
+                    <input type="hidden" name="reportType" value="summary" />
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small text-muted-custom">Month</label>
+                            <select name="month" class="form-select form-select-dark form-select-sm">
+                                @for (int m = 1; m <= 12; m++)
+                                {
+                                    var sel = Model.Any(p => p.Month == m) ? "selected" : "";
+                                    <option value="@m" @(Model.LastOrDefault()?.Month == m ? "selected" : "")>@months[m-1]</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted-custom">Year</label>
+                            <select name="year" class="form-select form-select-dark form-select-sm">
+                                @foreach (var y in Model.Select(p => p.Year).Distinct().OrderByDescending(y => y))
+                                {
+                                    <option value="@y">@y</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 btn-sm">
+                        <i class="bi bi-download me-2"></i>Download Summary Excel
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Store Comparison Report -->
+        <div class="col-md-6">
+            <div class="card-dark h-100">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="card-icon" style="background:rgba(218,41,28,.15)"><i class="bi bi-shop-window" style="color:#DA291C"></i></div>
+                    <div>
+                        <h6 class="mb-0">Store Comparison Report</h6>
+                        <p class="text-muted-custom mb-0 small">Turnover by store with OC/OM assignments</p>
+                    </div>
+                </div>
+                <form method="get" action="/admin/dashboard/export">
+                    <input type="hidden" name="reportType" value="stores" />
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small text-muted-custom">Month</label>
+                            <select name="month" class="form-select form-select-dark form-select-sm">
+                                @for (int m = 1; m <= 12; m++)
+                                {
+                                    <option value="@m" @(Model.LastOrDefault()?.Month == m ? "selected" : "")>@months[m-1]</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted-custom">Year</label>
+                            <select name="year" class="form-select form-select-dark form-select-sm">
+                                @foreach (var y in Model.Select(p => p.Year).Distinct().OrderByDescending(y => y))
+                                {
+                                    <option value="@y">@y</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100 btn-sm">
+                        <i class="bi bi-download me-2"></i>Download Store Report Excel
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Available Periods -->
+        <div class="col-12">
+            <div class="card-dark">
+                <h6 class="mb-3"><i class="bi bi-calendar3 me-2" style="color:#DA291C"></i>Available Data Periods</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var p in Model.OrderByDescending(x => x.Year).ThenByDescending(x => x.Month))
+                    {
+                        <span class="badge" style="background:rgba(218,41,28,.15);color:#DA291C;border:1px solid rgba(218,41,28,.3);padding:6px 12px;border-radius:6px;font-size:12px">
+                            @months[p.Month - 1] @p.Year
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}

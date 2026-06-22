@@ -12,23 +12,112 @@ public class DashboardController : Controller
 {
     private readonly IUploadService _uploads;
     private readonly IUserService _users;
+    private readonly IDashboardService _dashboard;
 
-    public DashboardController(IUploadService uploads, IUserService users)
+    public DashboardController(IUploadService uploads, IUserService users, IDashboardService dashboard)
     {
         _uploads = uploads;
         _users = users;
+        _dashboard = dashboard;
     }
 
     public IActionResult Analytics() => View();
 
     public IActionResult Turnover() => View();
 
-    public IActionResult Reports() => View();
-
-    public async Task<IActionResult> Uploads()
+    public async Task<IActionResult> Reports()
     {
-        var logs = await _uploads.GetLogsAsync();
-        return View(logs);
+        var periods = await _dashboard.GetAvailablePeriodsAsync();
+        return View(periods);
+    }
+
+    [HttpGet("admin/dashboard/export")]
+    public async Task<IActionResult> Export(int month, int year, string reportType = "summary")
+    {
+        var role = HttpContext.Session.GetRole() ?? "Admin_Full";
+        var assignedName = HttpContext.Session.GetAssignedName();
+
+        using var wb = new XLWorkbook();
+        string fileName;
+
+        if (reportType == "stores")
+        {
+            fileName = $"Store_Comparison_{year}_{month:D2}.xlsx";
+            var rows = await _dashboard.GetStoreComparisonAsync(month, year, role, assignedName);
+            var ws = wb.AddWorksheet("Store Comparison");
+            var headers = new[] { "Store", "OC", "OM", "Headcount", "New Hires", "Resignations", "Turnover %" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var c = ws.Cell(1, i + 1);
+                c.Value = headers[i]; c.Style.Font.Bold = true;
+                c.Style.Fill.BackgroundColor = XLColor.FromHtml("#C8102E");
+                c.Style.Font.FontColor = XLColor.White;
+                c.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            }
+            for (int r = 0; r < rows.Count; r++)
+            {
+                var row = rows[r];
+                ws.Cell(r + 2, 1).Value = row.StoreName;
+                ws.Cell(r + 2, 2).Value = row.OperationConsultant;
+                ws.Cell(r + 2, 3).Value = row.OperationManager;
+                ws.Cell(r + 2, 4).Value = row.Headcount;
+                ws.Cell(r + 2, 5).Value = row.NewHires;
+                ws.Cell(r + 2, 6).Value = row.Resignations;
+                ws.Cell(r + 2, 7).Value = row.TurnoverRate;
+            }
+            ws.Columns().AdjustToContents();
+        }
+        else
+        {
+            fileName = $"Summary_Report_{year}_{month:D2}.xlsx";
+            var kpi = await _dashboard.GetKpisAsync(month, year, null, role, assignedName);
+            var jobTitle = await _dashboard.GetTurnoverByJobTitleAsync(month, year, null, role, assignedName);
+            var tenure = await _dashboard.GetTurnoverByTenureAsync(month, year, null, role, assignedName);
+            var gender = await _dashboard.GetGenderBreakdownAsync(month, year, null, role, assignedName);
+
+            var ws1 = wb.AddWorksheet("Summary KPIs");
+            ws1.Cell(1, 1).Value = "Metric"; ws1.Cell(1, 2).Value = "Value";
+            ws1.Row(1).Style.Font.Bold = true;
+            ws1.Cell(2, 1).Value = "Total Headcount"; ws1.Cell(2, 2).Value = kpi.TotalHeadcount;
+            ws1.Cell(3, 1).Value = "New Hires"; ws1.Cell(3, 2).Value = kpi.NewHires;
+            ws1.Cell(4, 1).Value = "Total Resignations"; ws1.Cell(4, 2).Value = kpi.TotalResignations;
+            ws1.Cell(5, 1).Value = "Turnover Rate (%)"; ws1.Cell(5, 2).Value = kpi.TurnoverRate;
+            ws1.Columns().AdjustToContents();
+
+            var ws2 = wb.AddWorksheet("By Job Title");
+            ws2.Cell(1, 1).Value = "Job Title"; ws2.Cell(1, 2).Value = "Resignations";
+            ws2.Row(1).Style.Font.Bold = true;
+            for (int i = 0; i < jobTitle.Count; i++) { ws2.Cell(i + 2, 1).Value = jobTitle[i].Label; ws2.Cell(i + 2, 2).Value = jobTitle[i].Value; }
+            ws2.Columns().AdjustToContents();
+
+            var ws3 = wb.AddWorksheet("By Tenure");
+            ws3.Cell(1, 1).Value = "Tenure Bucket"; ws3.Cell(1, 2).Value = "Resignations";
+            ws3.Row(1).Style.Font.Bold = true;
+            for (int i = 0; i < tenure.Count; i++) { ws3.Cell(i + 2, 1).Value = tenure[i].Label; ws3.Cell(i + 2, 2).Value = tenure[i].Value; }
+            ws3.Columns().AdjustToContents();
+
+            var ws4 = wb.AddWorksheet("By Gender");
+            ws4.Cell(1, 1).Value = "Gender"; ws4.Cell(1, 2).Value = "Resignations";
+            ws4.Row(1).Style.Font.Bold = true;
+            for (int i = 0; i < gender.Count; i++) { ws4.Cell(i + 2, 1).Value = gender[i].Label; ws4.Cell(i + 2, 2).Value = gender[i].Value; }
+            ws4.Columns().AdjustToContents();
+        }
+
+        using var stream = new MemoryStream();
+        wb.SaveAs(stream);
+        return File(stream.ToArray(),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName);
+    }
+
+    public async Task<IActionResult> Uploads(int page = 1)
+    {
+        const int pageSize = 10;
+        var (items, total) = await _uploads.GetLogsPagedAsync(page, pageSize);
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = (int)Math.Ceiling((double)total / pageSize);
+        ViewBag.TotalCount = total;
+        return View(items);
     }
 
     [HttpPost, ValidateAntiForgeryToken]

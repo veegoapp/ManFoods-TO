@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using MvcApp.Data;
 using MvcApp.Models;
 using MvcApp.Models.ViewModels;
@@ -8,8 +9,10 @@ namespace MvcApp.Services;
 public class DashboardService : IDashboardService
 {
     private readonly AppDbContext _db;
+    private readonly IMemoryCache _cache;
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
-    public DashboardService(AppDbContext db) => _db = db;
+    public DashboardService(AppDbContext db, IMemoryCache cache) { _db = db; _cache = cache; }
 
     private async Task<List<string>?> GetAccessibleStoresAsync(string role, string? assignedName, int? month, int? year)
     {
@@ -29,6 +32,10 @@ public class DashboardService : IDashboardService
 
     public async Task<DashboardKpiViewModel> GetKpisAsync(int? month, int? year, string? store, string role, string? assignedName)
     {
+        var cacheKey = $"kpi_{month}_{year}_{store}_{role}_{assignedName}";
+        if (_cache.TryGetValue(cacheKey, out DashboardKpiViewModel? cached) && cached != null)
+            return cached;
+
         if (!month.HasValue || !year.HasValue)
         {
             var latest = await _db.ActiveEmployees
@@ -66,7 +73,7 @@ public class DashboardService : IDashboardService
 
         var turnoverRate = headcount > 0 ? Math.Round((double)resignations / headcount * 100, 2) : 0;
 
-        return new DashboardKpiViewModel
+        var result = new DashboardKpiViewModel
         {
             TotalHeadcount = headcount,
             NewHires = newHires,
@@ -75,6 +82,9 @@ public class DashboardService : IDashboardService
             Month = month.Value,
             Year = year.Value
         };
+
+        _cache.Set(cacheKey, result, CacheDuration);
+        return result;
     }
 
     public async Task<List<ChartDataItem>> GetTurnoverByJobTitleAsync(int? month, int? year, string? store, string role, string? assignedName)

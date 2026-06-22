@@ -10,6 +10,24 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddMemoryCache();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("login", o =>
+    {
+        o.Window = TimeSpan.FromMinutes(1);
+        o.PermitLimit = 10;
+        o.QueueLimit = 0;
+    });
+    options.AddFixedWindowLimiter("api", o =>
+    {
+        o.Window = TimeSpan.FromMinutes(1);
+        o.PermitLimit = 60;
+        o.QueueLimit = 0;
+    });
+    options.RejectionStatusCode = 429;
+});
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -43,6 +61,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 app.UseRouting();
+app.UseRateLimiter();
 app.UseSession();
 app.UseAuthorization();
 
@@ -75,17 +94,19 @@ using (var scope = app.Services.CreateScope())
 
         if (!db.Users.Any())
         {
+            var adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "admin@manfoods.com";
+            var adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "ManfoodsAdmin@2025";
             db.Users.Add(new User
             {
-                Email = "admin@manfoods.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
+                Email = adminEmail,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword),
                 Role = "Admin_Full",
                 AssignedName = "Admin",
                 CreatedAt = DateTime.UtcNow
             });
             db.SaveChanges();
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-            logger.LogInformation("Default admin user created.");
+            logger.LogInformation("Default admin user created with email: {Email}", adminEmail);
         }
     }
     catch (Exception ex)

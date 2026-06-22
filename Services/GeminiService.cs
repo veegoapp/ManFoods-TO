@@ -129,23 +129,32 @@ public class GeminiService : IGeminiService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Gemini API error {Status}: {Body}", response.StatusCode, responseJson);
-                return "تعذر الحصول على إجابة من الـ AI. حاول مرة أخرى.";
+                return response.StatusCode == System.Net.HttpStatusCode.TooManyRequests
+                    ? "⚠️ تم تجاوز حد الطلبات على الـ AI. انتظر دقيقة وحاول مجدداً."
+                    : $"⚠️ خطأ في الاتصال بالـ AI (كود {(int)response.StatusCode}). حاول مرة أخرى.";
             }
 
             using var doc = JsonDocument.Parse(responseJson);
-            var text = doc.RootElement
-                .GetProperty("candidates")[0]
+            if (!doc.RootElement.TryGetProperty("candidates", out var candidates) || candidates.GetArrayLength() == 0)
+                return "⚠️ لم يُرجع الـ AI أي إجابة. حاول إعادة صياغة السؤال.";
+
+            var text = candidates[0]
                 .GetProperty("content")
                 .GetProperty("parts")[0]
                 .GetProperty("text")
                 .GetString();
 
-            return text ?? "لم يتم الحصول على إجابة.";
+            return text ?? "⚠️ لم يتم الحصول على إجابة.";
+        }
+        catch (TaskCanceledException)
+        {
+            _logger.LogWarning("Gemini API timeout");
+            return "⚠️ انتهت مهلة الاتصال بالـ AI. تأكد من اتصالك بالإنترنت وحاول مجدداً.";
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Gemini service exception");
-            return "حدث خطأ أثناء الاتصال بالـ AI. تأكد من الاتصال بالإنترنت وحاول مرة أخرى.";
+            return "⚠️ حدث خطأ غير متوقع أثناء الاتصال بالـ AI. حاول مرة أخرى.";
         }
     }
 }

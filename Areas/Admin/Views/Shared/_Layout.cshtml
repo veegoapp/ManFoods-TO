@@ -69,6 +69,9 @@
                 <div class="topnav-user-email">@userEmail</div>
                 <div class="topnav-user-role">@userRole.Replace("_"," ")</div>
             </div>
+            <a href="/admin/account/changepassword" class="topnav-logout-btn ms-1" title="Change Password" style="text-decoration:none">
+                <i class="bi bi-key-fill"></i>
+            </a>
             <form asp-area="Admin" asp-controller="Account" asp-action="Logout" method="post" class="d-inline ms-1">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="topnav-logout-btn" title="Sign Out">

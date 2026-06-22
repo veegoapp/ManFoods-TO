@@ -59,6 +59,9 @@
         <!-- Sign out -->
         <div class="sidebar-footer">
             <div class="sidebar-footer-inner">
+                <a href="/home/account/changepassword" class="btn-signout-full mb-2" style="text-decoration:none;display:flex;align-items:center;gap:8px;color:inherit">
+                    <i class="bi bi-key-fill"></i>Change Password
+                </a>
                 <form asp-area="Home" asp-controller="Account" asp-action="Logout" method="post" class="w-100">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn-signout-full">
