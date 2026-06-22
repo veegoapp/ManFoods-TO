@@ -40,8 +40,8 @@ else
                             <select name="month" class="form-select form-select-dark form-select-sm">
                                 @for (int m = 1; m <= 12; m++)
                                 {
-                                    var sel = Model.Any(p => p.Month == m) ? "selected" : "";
-                                    <option value="@m" @(Model.LastOrDefault()?.Month == m ? "selected" : "")>@months[m-1]</option>
+                                    var isSelected = Model.LastOrDefault()?.Month == m;
+                                    <option value="@m" selected="@isSelected">@months[m-1]</option>
                                 }
                             </select>
                         </div>
@@ -80,7 +80,8 @@ else
                             <select name="month" class="form-select form-select-dark form-select-sm">
                                 @for (int m = 1; m <= 12; m++)
                                 {
-                                    <option value="@m" @(Model.LastOrDefault()?.Month == m ? "selected" : "")>@months[m-1]</option>
+                                    var isSelected = Model.LastOrDefault()?.Month == m;
+                                    <option value="@m" selected="@isSelected">@months[m-1]</option>
                                 }
                             </select>
                         </div>

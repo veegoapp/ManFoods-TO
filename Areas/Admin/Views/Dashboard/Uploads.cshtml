@@ -96,6 +96,11 @@
 
 <div class="card-dark">
     <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i>Upload History</h6>
+    @{
+        var currentPage = (int)(ViewBag.CurrentPage ?? 1);
+        var totalPages = (int)(ViewBag.TotalPages ?? 1);
+        var totalCount = (int)(ViewBag.TotalCount ?? 0);
+    }
     @if (!Model.Any())
     {
         <div class="empty-state"><i class="bi bi-inbox"></i><p>No uploads yet</p></div>
@@ -127,11 +132,6 @@
             </table>
         </div>
 
-        @{
-            var currentPage = (int)(ViewBag.CurrentPage ?? 1);
-            var totalPages = (int)(ViewBag.TotalPages ?? 1);
-            var totalCount = (int)(ViewBag.TotalCount ?? 0);
-        }
         @if (totalPages > 1)
         {
             <div class="d-flex align-items-center justify-content-between mt-3">
