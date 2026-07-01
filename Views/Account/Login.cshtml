@@ -35,7 +35,7 @@
         }
 
         .login-body {
-            background: linear-gradient(145deg, #ffffff 0%, #f9f9f9 40%, #fff8e1 70%, #fff3e0 100%);
+            background: linear-gradient(145deg, #ffffff 0%, #faf9ff 40%, #f5f2ff 70%, #f0ecff 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -48,7 +48,7 @@
         .bubble {
             position: absolute;
             border-radius: 50%;
-            background: rgba(255,199,44,.18);
+            background: rgba(167,139,250,.18);
             animation: floatUp linear infinite;
         }
 
@@ -58,7 +58,7 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 5px;
-            background: linear-gradient(90deg, #DA291C, #FFC72C, #DA291C);
+            background: linear-gradient(90deg, #6D5DFB, #A78BFA, #6D5DFB);
             background-size: 200% 100%;
             animation: shimmer 2.5s linear infinite;
         }
@@ -75,11 +75,11 @@
             background: rgba(255,255,255,.92);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
-            border: 1px solid rgba(255,199,44,.3);
+            border: 1px solid rgba(167,139,250,.3);
             border-radius: 24px;
             padding: 44px 40px 36px;
             box-shadow:
-                0 8px 32px rgba(218,41,28,.10),
+                0 8px 32px rgba(109,93,251,.10),
                 0 2px 8px rgba(0,0,0,.06),
                 inset 0 1px 0 rgba(255,255,255,.9);
             animation: cardEntrance .6s cubic-bezier(.22,1,.36,1) both;
@@ -94,7 +94,7 @@
             top: -60px; left: -60px;
             width: 160px; height: 160px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,199,44,.2) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(167,139,250,.2) 0%, transparent 70%);
             pointer-events: none;
         }
         .login-card::after {
@@ -103,7 +103,7 @@
             bottom: -40px; right: -40px;
             width: 120px; height: 120px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(218,41,28,.08) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(109,93,251,.08) 0%, transparent 70%);
             pointer-events: none;
         }
 
@@ -119,14 +119,14 @@
             width: 80px;
             height: auto;
             animation: logoFloat 3s ease-in-out infinite;
-            filter: drop-shadow(0 4px 12px rgba(255,199,44,.5));
+            filter: drop-shadow(0 4px 12px rgba(167,139,250,.5));
         }
 
         .pulse-ring {
             position: absolute;
             inset: -10px;
             border-radius: 50%;
-            border: 2px solid rgba(255,199,44,.5);
+            border: 2px solid rgba(167,139,250,.5);
             animation: pulse-ring 2s ease-out infinite;
         }
         .pulse-ring:nth-child(2) { animation-delay: .6s; }
@@ -135,15 +135,15 @@
             font-size: 22px;
             font-weight: 900;
             margin: 0;
-            color: #27251F;
+            color: #1C1C27;
             letter-spacing: -.3px;
         }
 
-        .login-title span { color: #DA291C; }
+        .login-title span { color: #6D5DFB; }
 
         .login-subtitle {
             font-size: 12.5px;
-            color: #9a9490;
+            color: #9997AC;
             margin: 5px 0 0;
             text-transform: uppercase;
             letter-spacing: 1.2px;
@@ -160,7 +160,7 @@
             content: '';
             flex: 1;
             height: 1px;
-            background: linear-gradient(90deg, transparent, #e8e8e8, transparent);
+            background: linear-gradient(90deg, transparent, #E4E2F5, transparent);
         }
         .divider span {
             font-size: 11px;
@@ -186,7 +186,7 @@
             transition: color .2s;
         }
 
-        .form-field-wrap:focus-within .field-icon { color: #DA291C; }
+        .form-field-wrap:focus-within .field-icon { color: #6D5DFB; }
 
         .form-field-wrap input {
             padding-left: 40px;
@@ -195,15 +195,15 @@
             border-radius: 12px;
             border: 1.5px solid #eee;
             background: #fafafa;
-            color: #27251F;
+            color: #1C1C27;
             width: 100%;
             transition: all .2s;
         }
 
         .form-field-wrap input:focus {
             background: #fff;
-            border-color: #DA291C;
-            box-shadow: 0 0 0 3px rgba(218,41,28,.1);
+            border-color: #6D5DFB;
+            box-shadow: 0 0 0 3px rgba(109,93,251,.1);
             outline: none;
         }
 
@@ -212,7 +212,7 @@
         .btn-signin {
             width: 100%;
             height: 50px;
-            background: linear-gradient(135deg, #DA291C, #c0200f);
+            background: linear-gradient(135deg, #6D5DFB, #5B3FE0);
             border: none;
             border-radius: 12px;
             color: #fff;
@@ -221,7 +221,7 @@
             letter-spacing: .5px;
             cursor: pointer;
             transition: all .2s;
-            box-shadow: 0 4px 14px rgba(218,41,28,.35);
+            box-shadow: 0 4px 14px rgba(109,93,251,.35);
             position: relative;
             overflow: hidden;
             margin-top: 8px;
@@ -236,14 +236,14 @@
             transition: left .4s;
         }
 
-        .btn-signin:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(218,41,28,.45); }
+        .btn-signin:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(109,93,251,.45); }
         .btn-signin:hover::before { left: 100%; }
         .btn-signin:active { transform: translateY(0); }
 
         .form-label-dark {
             font-size: 12px;
             font-weight: 700;
-            color: #7a7672;
+            color: #5B5875;
             text-transform: uppercase;
             letter-spacing: .6px;
             margin-bottom: 6px;
@@ -268,7 +268,7 @@
     <div class="bubble" style="width:80px;height:80px;left:70%;animation-duration:14s;animation-delay:1s;bottom:-80px;"></div>
     <div class="bubble" style="width:20px;height:20px;left:85%;animation-duration:8s;animation-delay:3s;bottom:-20px;"></div>
     <div class="bubble" style="width:50px;height:50px;left:50%;animation-duration:11s;animation-delay:0.5s;bottom:-50px;"></div>
-    <div class="bubble" style="width:40px;height:40px;left:35%;animation-duration:10s;animation-delay:4s;bottom:-40px;background:rgba(218,41,28,.1);"></div>
+    <div class="bubble" style="width:40px;height:40px;left:35%;animation-duration:10s;animation-delay:4s;bottom:-40px;background:rgba(109,93,251,.1);"></div>
 
     <div class="login-container">
         <div class="login-card">

@@ -1,10 +1,10 @@
 /* Shared dashboard chart logic — Admin & Home areas */
-Chart.defaults.color = '#7a7672';
+Chart.defaults.color = '#5B5875';
 
 let periodMonth, periodYear, storeFilter = '';
 let jobTitleChart, tenureChart, genderChart;
 
-const COLORS = ['#DA291C', '#FFC72C', '#27251F', '#e8630a', '#b82015'];
+const COLORS = ['#6D5DFB', '#A78BFA', '#1C1C27', '#7EB6FF', '#5B3FE0'];
 
 async function fetchJson(url) {
     const r = await fetch(url);
@@ -88,20 +88,20 @@ async function loadCharts() {
 
     jobTitleChart = mkChart(jobTitleChart, 'jobTitleChart', {
         type: 'bar',
-        data: { labels: jobTitle.map(d=>d.label), datasets: [{ data: jobTitle.map(d=>d.value), backgroundColor: '#DA291C', borderRadius: 4 }] },
-        options: { indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{grid:{color:'#e8e8e8'},ticks:{color:'#7a7672'}},y:{grid:{display:false},ticks:{color:'#7a7672'}}} }
+        data: { labels: jobTitle.map(d=>d.label), datasets: [{ data: jobTitle.map(d=>d.value), backgroundColor: '#6D5DFB', borderRadius: 4 }] },
+        options: { indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{grid:{color:'#E4E2F5'},ticks:{color:'#5B5875'}},y:{grid:{display:false},ticks:{color:'#5B5875'}}} }
     });
 
     tenureChart = mkChart(tenureChart, 'tenureChart', {
         type: 'bar',
-        data: { labels: tenure.map(d=>d.label), datasets: [{ data: tenure.map(d=>d.value), backgroundColor: '#FFC72C', borderRadius: 4 }] },
-        options: { plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},ticks:{color:'#7a7672'}},y:{grid:{color:'#e8e8e8'},ticks:{color:'#7a7672'}}} }
+        data: { labels: tenure.map(d=>d.label), datasets: [{ data: tenure.map(d=>d.value), backgroundColor: '#A78BFA', borderRadius: 4 }] },
+        options: { plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},ticks:{color:'#5B5875'}},y:{grid:{color:'#E4E2F5'},ticks:{color:'#5B5875'}}} }
     });
 
     genderChart = mkChart(genderChart, 'genderChart', {
         type: 'doughnut',
         data: { labels: gender.map(d=>d.label), datasets: [{ data: gender.map(d=>d.value), backgroundColor: COLORS, borderWidth: 0 }] },
-        options: { plugins:{legend:{position:'bottom', labels:{color:'#7a7672', padding:16}}} }
+        options: { plugins:{legend:{position:'bottom', labels:{color:'#5B5875', padding:16}}} }
     });
 }
 
