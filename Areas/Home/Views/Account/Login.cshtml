@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
-    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('mf-theme') || 'dark');</script>
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('mf-theme') || 'light');</script>
     <style>
         @@keyframes cardEntrance { 0%{opacity:0;transform:translateY(28px) scale(.97)} 100%{opacity:1;transform:translateY(0) scale(1)} }
         @@keyframes logoFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
@@ -28,7 +28,7 @@
             background: linear-gradient(90deg, var(--red), var(--gold));
         }
         [data-theme="light"] .login-body {
-            background: linear-gradient(135deg, #FFF9F0 0%, #FFF5F5 50%, #FFFBF0 100%);
+            background: linear-gradient(135deg, #F5F3FF 0%, #FAF9FF 50%, #F3F1FF 100%);
         }
 
         .bubble { position: absolute; border-radius: 50%; background: rgba(255,199,44,.06); animation: floatUp linear infinite; }

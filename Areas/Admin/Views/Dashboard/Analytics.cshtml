@@ -51,7 +51,7 @@
             <h6>Monthly Turnover Trend</h6>
             <p>Turnover rate (%) across all available periods</p>
         </div>
-        <a href="/admin/dashboard/reports" class="btn btn-sm" style="background:rgba(218,41,28,.15);color:#DA291C;border:1px solid rgba(218,41,28,.3);font-size:12px;border-radius:7px">
+        <a href="/admin/dashboard/reports" class="btn btn-sm" style="background:rgba(109,93,251,.15);color:#6D5DFB;border:1px solid rgba(109,93,251,.3);font-size:12px;border-radius:7px">
             <i class="bi bi-download me-1"></i>Export
         </a>
     </div>
@@ -69,7 +69,7 @@
             const data = await res.json();
             if (!data || !data.periods || data.periods.length === 0) return;
 
-            const colors = ['#DA291C','#FFBC0D','#27ae60','#3498db','#9b59b6','#e67e22'];
+            const colors = ['#6D5DFB','#A78BFA','#27ae60','#3498db','#9b59b6','#e67e22'];
             const storeMap = {};
             data.rows.forEach(row => {
                 storeMap[row.storeName] = data.periods.map(p => row.periodRates?.[p] ?? null);
