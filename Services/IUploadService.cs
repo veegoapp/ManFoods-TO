@@ -8,4 +8,5 @@ public interface IUploadService
     Task<List<MvcApp.Models.UploadLog>> GetLogsAsync();
     Task<(List<MvcApp.Models.UploadLog> Items, int TotalCount)> GetLogsPagedAsync(int page, int pageSize);
     Task DeleteLogAsync(int id);
+    Task<(byte[] Content, string ContentType, string FileName)?> GetFileAsync(int id);
 }

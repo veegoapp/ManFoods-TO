@@ -38,6 +38,15 @@
         background: #27ae60;
         color: #fff;
     }
+    .btn-download-outline {
+        background: transparent; border: 1px solid rgba(109,93,251,.3); color: #27ae60;
+        border-radius: 8px; padding: 6px 12px;
+        cursor: pointer; transition: all .2s;
+        font-weight: 600; font-size: 13px; min-height: 34px;
+        display: inline-flex; align-items: center; gap: 4px;
+        text-decoration: none;
+    }
+    .btn-download-outline:hover { background: rgba(39,174,96,.15); border-color: #27ae60; color: #27ae60; }
 </style>
 
 <div class="row g-4 mb-4">
@@ -119,7 +128,11 @@
                             <td>@(new DateTime(log.Year,log.Month,1).ToString("MMMM yyyy"))</td>
                             <td class="text-muted-custom">@log.UploadedBy</td>
                             <td class="text-muted-custom small">@log.UploadDate.ToString("MMM dd, yyyy HH:mm")</td>
-                            <td>
+                            <td class="d-flex gap-2">
+                                @if (log.HasFile)
+                                {
+                                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="DownloadUploadFile" asp-route-id="@log.Id" class="btn-download-outline" title="Download original file"><i class="bi bi-download"></i></a>
+                                }
                                 <form asp-area="Admin" asp-controller="Dashboard" asp-action="DeleteUploadLog" method="post" onsubmit="return confirm('Delete this upload and all associated data?')">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@log.Id"/>

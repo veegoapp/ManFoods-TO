@@ -240,6 +240,13 @@ public class DashboardController : Controller
             fileName);
     }
 
+    public async Task<IActionResult> DownloadUploadFile(int id)
+    {
+        var file = await _uploads.GetFileAsync(id);
+        if (file == null) return NotFound();
+        return File(file.Value.Content, file.Value.ContentType, file.Value.FileName);
+    }
+
     [HttpPost, ValidateAntiForgeryToken]
     [RequireRole("Admin_Full")]
     public async Task<IActionResult> DeleteUploadLog(int id)
