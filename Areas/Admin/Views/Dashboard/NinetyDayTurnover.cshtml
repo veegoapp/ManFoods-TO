@@ -1,0 +1,265 @@
+@{
+    ViewData["Title"] = "90-Day Turnover";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">90-Day Turnover</h1>
+        <p class="page-subtitle">Of everyone hired in a month, the share who resigned within their first 90 days</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <select id="ntdPeriodSelect" class="form-select form-select-dark form-select-sm" style="width:170px">
+            <option value="">Select Cohort Month</option>
+        </select>
+        <select id="ntdStoreSelect" class="form-select form-select-dark form-select-sm" style="width:170px">
+            <option value="">All Stores</option>
+        </select>
+    </div>
+</div>
+
+<div id="ntdEmptyState" class="card-dark text-center py-5" style="display:none">
+    <i class="bi bi-hourglass-split" style="font-size:3rem;color:oklch(0.5 0.18 265);display:block;margin-bottom:1rem"></i>
+    <h5 class="mb-2">No Cohort Data Yet</h5>
+    <p class="text-muted-custom">Upload workforce and resignation data with hire dates to see 90-day turnover here.</p>
+</div>
+
+<div id="ntdContent">
+    <div id="ntdProvisionalBanner" class="mb-3" style="display:none;background:oklch(0.75 0.16 75 / .12);border-left:3px solid oklch(0.75 0.16 75);border-radius:8px;padding:10px 14px;font-size:12.5px;color:oklch(0.5 0.14 75)">
+        <i class="bi bi-info-circle-fill me-1"></i>This cohort hasn't reached its 90-day mark yet — the rate is provisional and may still rise.
+    </div>
+
+    <div id="ntdKpiCards" class="kpi-grid mb-4">
+        <div class="kpi-spinner text-center py-3 w-100">
+            <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 265)"></div>
+        </div>
+    </div>
+
+    <div class="chart-card mb-4">
+        <div class="chart-header">
+            <h6>90-Day Turnover Trend</h6>
+            <p>Rate per hire-month cohort — dashed points are still provisional</p>
+        </div>
+        <div class="chart-body"><canvas id="ntdTrendChart" style="max-height:280px"></canvas></div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="chart-card h-100">
+                <div class="chart-header"><h6>By Store</h6><p>Early-leaver rate for the selected cohort month</p></div>
+                <div class="chart-body"><canvas id="ntdByStoreChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="chart-card h-100">
+                <div class="chart-header"><h6>Reasons for Early Leaving</h6><p>From exit interviews, matched to this cohort's early leavers</p></div>
+                <div class="chart-body"><canvas id="ntdReasonsChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="section-accent"></div>
+        <h5 class="mb-0 fw-bold">Early Leavers</h5>
+        <span id="ntdLeaversCountBadge" class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px"></span>
+    </div>
+    <div class="chart-card p-0" style="overflow:hidden">
+        <div class="table-responsive" style="max-height:480px;overflow-y:auto">
+            <table class="table table-hover mb-0" style="font-size:13px">
+                <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                    <tr>
+                        <th class="px-3 py-2">Name</th>
+                        <th class="px-3 py-2">Store</th>
+                        <th class="px-3 py-2">Job Title</th>
+                        <th class="px-3 py-2">Hire Date</th>
+                        <th class="px-3 py-2">Resignation Date</th>
+                        <th class="px-3 py-2">Tenure (days)</th>
+                    </tr>
+                </thead>
+                <tbody id="ntdLeaversBody">
+                    <tr><td colspan="6" class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+function ntdFmtPeriod(m, y) {
+    return new Date(y, m - 1, 1).toLocaleString('default', { month: 'short', year: 'numeric' });
+}
+
+async function ntdFetch(path, extraQuery) {
+    const p = new URLSearchParams(extraQuery || {});
+    const store = document.getElementById('ntdStoreSelect').value;
+    if (store) p.set('store', store);
+    const r = await fetch(`/api/ninety-day-turnover/${path}?${p.toString()}`);
+    return r.ok ? r.json() : null;
+}
+
+let ntdPeriods = [];
+async function ntdLoadFilters() {
+    ntdPeriods = await ntdFetch('cohort-periods') || [];
+    const periodSel = document.getElementById('ntdPeriodSelect');
+    const curPeriod = periodSel.value;
+    periodSel.innerHTML = '<option value="">Select Cohort Month</option>';
+    ntdPeriods.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = `${p.month}-${p.year}`;
+        opt.textContent = ntdFmtPeriod(p.month, p.year);
+        periodSel.appendChild(opt);
+    });
+    if (curPeriod && [...periodSel.options].some(o => o.value === curPeriod)) periodSel.value = curPeriod;
+    else if (ntdPeriods.length) periodSel.value = `${ntdPeriods[0].month}-${ntdPeriods[0].year}`;
+
+    const stores = await ntdFetch('stores') || [];
+    const storeSel = document.getElementById('ntdStoreSelect');
+    const curStore = storeSel.value;
+    storeSel.innerHTML = '<option value="">All Stores</option>';
+    stores.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        storeSel.appendChild(opt);
+    });
+    if (curStore) storeSel.value = curStore;
+
+    const hasData = ntdPeriods.length > 0;
+    document.getElementById('ntdEmptyState').style.display = hasData ? 'none' : '';
+    document.getElementById('ntdContent').style.display = hasData ? '' : 'none';
+    return hasData;
+}
+
+function ntdSelectedPeriod() {
+    const val = document.getElementById('ntdPeriodSelect').value;
+    if (!val) return null;
+    const [month, year] = val.split('-').map(Number);
+    return { month, year };
+}
+
+function ntdRenderKpis(kpi) {
+    const el = document.getElementById('ntdKpiCards');
+    if (!kpi) { el.innerHTML = ''; return; }
+    el.innerHTML = `
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-people-fill"></i></div><div class="kpi-value">${kpi.totalHires}</div><div class="kpi-label">Hired This Cohort</div></div>
+        <div class="kpi-card"><div class="kpi-icon text-danger"><i class="bi bi-person-dash-fill"></i></div><div class="kpi-value text-danger">${kpi.earlyLeavers}</div><div class="kpi-label">Left Within 90 Days</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-graph-up"></i></div><div class="kpi-value">${kpi.rate.toFixed(1)}%${kpi.isProvisional ? ' <span class=\'badge\' style=\'font-size:10px;background:oklch(0.75 0.16 75 / .18);color:oklch(0.5 0.14 75)\'>provisional</span>' : ''}</div><div class="kpi-label">90-Day Turnover Rate</div></div>
+    `;
+    document.getElementById('ntdProvisionalBanner').style.display = kpi.isProvisional ? '' : 'none';
+}
+
+async function ntdLoadKpi() {
+    const period = ntdSelectedPeriod();
+    if (!period) { ntdRenderKpis(null); return; }
+    const kpi = await ntdFetch('kpi', { month: period.month, year: period.year });
+    ntdRenderKpis(kpi);
+}
+
+let ntdTrendInstance;
+async function ntdLoadTrend() {
+    const data = await ntdFetch('trend') || [];
+    const ctx = document.getElementById('ntdTrendChart');
+    if (!ctx) return;
+    if (ntdTrendInstance) ntdTrendInstance.destroy();
+    ntdTrendInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => d.label),
+            datasets: [{
+                label: '90-Day Turnover Rate',
+                data: data.map(d => d.rate),
+                borderColor: 'oklch(0.5 0.18 265)',
+                backgroundColor: 'oklch(0.5 0.18 265 / .15)',
+                segment: {
+                    borderDash: ctx => data[ctx.p1DataIndex]?.isProvisional ? [6, 4] : undefined
+                },
+                tension: 0.3, fill: true, pointRadius: 4, spanGaps: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } }, grid: { display: false } },
+                y: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 }, callback: v => v + '%' }, grid: { color: 'oklch(0.92 0.008 255)' } }
+            }
+        }
+    });
+}
+
+let ntdByStoreInstance;
+async function ntdLoadByStore() {
+    const period = ntdSelectedPeriod();
+    const ctx = document.getElementById('ntdByStoreChart');
+    if (!ctx) return;
+    if (ntdByStoreInstance) ntdByStoreInstance.destroy();
+    if (!period) return;
+    const data = await ntdFetch('by-store', { month: period.month, year: period.year }) || [];
+    ntdByStoreInstance = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: 'oklch(0.55 0.19 265)', borderRadius: 4, maxBarThickness: 26 }] },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: 'oklch(0.92 0.008 255)' }, ticks: { color: 'oklch(0.5 0.03 258)', callback: v => v + '%' } },
+                y: { grid: { display: false }, ticks: { color: 'oklch(0.5 0.03 258)' } }
+            }
+        }
+    });
+}
+
+const NTD_REASON_COLORS = ['oklch(0.55 0.19 265)', 'oklch(0.65 0.15 190)', 'oklch(0.7 0.16 145)', 'oklch(0.72 0.17 60)', 'oklch(0.62 0.2 15)'];
+let ntdReasonsInstance;
+async function ntdLoadReasons() {
+    const period = ntdSelectedPeriod();
+    const ctx = document.getElementById('ntdReasonsChart');
+    if (!ctx) return;
+    if (ntdReasonsInstance) ntdReasonsInstance.destroy();
+    if (!period) return;
+    const data = await ntdFetch('reasons', { month: period.month, year: period.year }) || [];
+    if (!data.length) return;
+    ntdReasonsInstance = new Chart(ctx.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: NTD_REASON_COLORS, borderWidth: 2, borderColor: 'oklch(1 0 0)' }] },
+        options: { cutout: '60%', plugins: { legend: { position: 'bottom', labels: { color: 'oklch(0.5 0.03 258)', boxWidth: 10, boxHeight: 10, padding: 12, font: { size: 11 } } } } }
+    });
+}
+
+async function ntdLoadLeavers() {
+    const period = ntdSelectedPeriod();
+    const tbody = document.getElementById('ntdLeaversBody');
+    const badge = document.getElementById('ntdLeaversCountBadge');
+    if (!period) { tbody.innerHTML = ''; badge.textContent = ''; return; }
+    const rows = await ntdFetch('early-leavers', { month: period.month, year: period.year }) || [];
+    badge.textContent = rows.length + ' early leavers';
+    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No early leavers in this cohort.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(r => `
+        <tr>
+            <td class="px-3 py-2 fw-semibold">${r.name}</td>
+            <td class="px-3 py-2">${r.store}</td>
+            <td class="px-3 py-2" style="color:oklch(0.5 0.03 258)">${r.jobTitle}</td>
+            <td class="px-3 py-2" style="color:oklch(0.5 0.03 258)">${r.hireDate}</td>
+            <td class="px-3 py-2" style="color:oklch(0.5 0.03 258)">${r.resignationDate}</td>
+            <td class="px-3 py-2">${r.tenureDays}</td>
+        </tr>`).join('');
+}
+
+async function ntdLoadAll() {
+    await Promise.all([ntdLoadKpi(), ntdLoadByStore(), ntdLoadReasons(), ntdLoadLeavers()]);
+}
+
+document.getElementById('ntdPeriodSelect').addEventListener('change', ntdLoadAll);
+document.getElementById('ntdStoreSelect').addEventListener('change', async () => {
+    await ntdLoadFilters();
+    await Promise.all([ntdLoadTrend(), ntdLoadAll()]);
+});
+
+(async function init() {
+    const hasData = await ntdLoadFilters();
+    if (hasData) await Promise.all([ntdLoadTrend(), ntdLoadAll()]);
+})();
+</script>
+}

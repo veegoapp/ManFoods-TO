@@ -35,6 +35,8 @@ public class DashboardController : Controller
 
     public IActionResult ExitInterviews() => View();
 
+    public IActionResult NinetyDayTurnover() => View();
+
     public async Task<IActionResult> StoreProfile(string store)
     {
         if (string.IsNullOrWhiteSpace(store)) return RedirectToAction("Turnover");
