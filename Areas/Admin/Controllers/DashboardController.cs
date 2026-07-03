@@ -263,6 +263,63 @@ public class DashboardController : Controller
             ws.Cell(4, 3).Value = "Ahmed Samy"; ws.Cell(4, 4).Value = "Fatma Reda";
             ws.Columns().AdjustToContents();
         }
+        else if (type == "exit_interviews")
+        {
+            // Mirrors the real Microsoft Forms export shape (headers match the
+            // question text exactly) so admins know what to upload — this is a
+            // reference sample, not a fixed template to fill in by hand.
+            fileName = "Sample_Exit_Interviews.xlsx";
+            var ws = wb.AddWorksheet("Exit Interview Responses");
+            var headers = new[]
+            {
+                "ID", "Start time", "Completion time", "Email", "Name", "Last modified time",
+                "الرقم الوظيفى",
+                "الاسم ( برجاء كتابة الاسم ثلاثى )",
+                "الرقم القومى ( يرجى ادخال ال 14 رقم )",
+                "برجاء اختيار سبب ترك العمل",
+                "فى حالة وجود سبب اخر ( الرجاء ذكره )",
+                "هل يتم معاملة جميع العاملين معاملة عادلة ؟",
+                "يتم تشجيع العاملين على ابداء ارائهم و اقتراحاتهم",
+                "يتم التعامل مع المشكلات و الشكاوى بطريقة فعالة",
+                "من وجههة نظرك هل المزايا التى تقدمها ماكدونالدز مصر تتفق مع متطلبات العمل ؟",
+                "ما هو تقييمك لمستوى التعاون بين الزملاء في المطعم و هل يتم العمل بروح الفريق الواحد ؟",
+                "كيف تقيم مدي التواصل بين المطاعم والإدارة؟",
+                "كيف تصف تجربتك الإجمالية للعمل داخل ماكدونالدز - مصر ؟",
+                "هل تشعر بانه تم تكليفك بالمهام و المسئوليات المناسبة للوظيفة التى تم تعينك عليها ؟",
+                "هل حصلت على التدريب الكافى لمساعدتك على أداء عملك ؟",
+                "هل كنت تتلقى ملاحظات و توجيهات عن مستوى ادائك ؟",
+                "الى اى مدى اتيحت لك الفرصه فى استخدام قدراتك الشخصية اثناء عملك بالشركة ؟",
+                "هل تفكر في العودة للعمل معنا مرة أخرى؟",
+                "من وجهه نظرك : هل ظروف التشغيل فى المطعم تتسم ب :-",
+                "فى حالة اختيارك ان مستوى ضغط العمل شديد الرجاء اختيار السبب ؟ ( برجاء توضيح السبب )",
+                "لو كنت صاحب قرار في ماكدونالدز مصر ايه اول حاجة حابب تغيرها ؟",
+                "حاجة اتعلمتها في ماكدونالدز مصر و هتبقي مفيدة ليك في المستقبل ؟",
+                "هل هناك أي شيء ترغب في مشاركته معنا قبل مغادرتك؟",
+            };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = ws.Cell(1, i + 1);
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#C8102E");
+                cell.Style.Font.FontColor = XLColor.White;
+                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            }
+
+            var sample = new[]
+            {
+                "1355", "2026-06-25 10:17", "2026-06-29 13:49", "anonymous", "", "",
+                "38416", "احمد ماهر عبدالعزيز", "29508172103033",
+                "المرتب غير مجزى", "عدم توافر فرص الترقيه",
+                "أعارض", "أعارض بشدة", "لا أوافق ولا اعارض", "أعارض بشدة",
+                "جيدة", "مقبولة", "ضعيفة",
+                "لا", "لا", "لا", "بدرجة ضعيفة",
+                "ربما فى المستقبل", "ضغط عمل بشكل مستمر", "لا اتمكن من الحصول على الاجازات السنوية",
+                "مديرالتدريب", "الالتزام", "لا",
+            };
+            for (int i = 0; i < sample.Length; i++) ws.Cell(2, i + 1).Value = sample[i];
+            ws.Columns().AdjustToContents();
+        }
         else
         {
             return NotFound();
