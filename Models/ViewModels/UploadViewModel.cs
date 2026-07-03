@@ -21,3 +21,9 @@ public class ExitInterviewUploadViewModel
     [Required]
     public IFormFile? File { get; set; }
 }
+
+public class BulkUserUploadViewModel
+{
+    [Required]
+    public IFormFile? File { get; set; }
+}

@@ -16,11 +16,7 @@ public class StoreService : IStoreService
         if (month.HasValue) q = q.Where(s => s.Month == month);
         if (year.HasValue) q = q.Where(s => s.Year == year);
 
-        if (role == "Operation_Manager" && !string.IsNullOrEmpty(assignedName))
-            q = q.Where(s => s.OperationManager == assignedName);
-        else if (role == "Operation_Consultant" && !string.IsNullOrEmpty(assignedName))
-            q = q.Where(s => s.OperationConsultant == assignedName);
-
+        // Role system simplified to Admin/User — no more per-store restriction.
         return await q.OrderBy(s => s.StoreName).ToListAsync();
     }
 }

@@ -38,6 +38,12 @@ else
   echo "  ✅ Gemini_API_Key is set — AI features enabled."
 fi
 
+if [ -z "$ADMIN_RECOVERY_KEY_HASH" ]; then
+  echo "  ⚠️  ADMIN_RECOVERY_KEY_HASH not set — admin password recovery (/admin/account/recover) is disabled until you add it in Secrets."
+else
+  echo "  ✅ ADMIN_RECOVERY_KEY_HASH is set — admin password recovery enabled."
+fi
+
 # ── [2/4] Restore NuGet packages ──────────────
 echo ""
 echo "[2/4] Restoring NuGet packages..."

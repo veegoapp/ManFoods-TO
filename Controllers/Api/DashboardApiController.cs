@@ -104,12 +104,9 @@ public class DashboardApiController : ControllerBase
         return Ok(await _dashboard.GetTrendMatrixAsync(role, assignedName));
     }
 
-    private async Task<bool> CanAccessStoreAsync(string store, string role, string? assignedName)
-    {
-        if (role == "Admin_Full" || role == "Admin_Read") return true;
-        var stores = await _stores.GetStoresAsync(null, null, role, assignedName);
-        return stores.Any(s => s.StoreName == store);
-    }
+    // Role system simplified to Admin/User — no more per-store restriction.
+    private Task<bool> CanAccessStoreAsync(string store, string role, string? assignedName) =>
+        Task.FromResult(true);
 
     [HttpGet("store-employees")]
     public async Task<IActionResult> StoreEmployees([FromQuery] string store, [FromQuery] int? month, [FromQuery] int? year)

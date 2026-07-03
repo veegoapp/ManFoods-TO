@@ -10,7 +10,7 @@ public class DashboardController : Controller
     public IActionResult Index()
     {
         var role = HttpContext.Session.GetRole();
-        if (role == "Admin_Full" || role == "Admin_Read")
+        if (role == "Admin")
             return RedirectToAction("Turnover", "Admin");
 
         return View();

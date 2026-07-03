@@ -181,10 +181,9 @@ body.admin-theme .table-hover tbody tr:hover { background: var(--bg-2); }
 
 /* ── Badges / role pills ── */
 body.admin-theme .role-badge { border-radius: 20px; }
-body.admin-theme .role-admin-full { background: var(--red-light); color: var(--red); border-color: transparent; }
-body.admin-theme .role-admin-read { background: var(--info-bg); color: var(--info); border-color: transparent; }
-body.admin-theme .role-operation-manager { background: var(--success-bg); color: var(--success); border-color: transparent; }
-body.admin-theme .role-operation-consultant { background: var(--gold-light); color: var(--red); border-color: transparent; }
+body.admin-theme .role-admin { background: var(--red-light); color: var(--red); border-color: transparent; }
+body.admin-theme .role-user { background: var(--info-bg); color: var(--info); border-color: transparent; }
+body.admin-theme .role-pending { background: var(--warning-bg); color: var(--warning); border-color: transparent; }
 
 body.admin-theme .upload-drop-zone { border-color: var(--card-border); background: var(--bg-2); }
 body.admin-theme .upload-drop-zone:hover,

@@ -7,11 +7,7 @@
     var displayName  = !string.IsNullOrEmpty(assignedName) ? assignedName : userEmail;
     var initials     = string.IsNullOrEmpty(displayName) ? "U" : displayName.Substring(0,1).ToUpper();
 
-    string RoleLabel(string r) => r switch {
-        "Operation_Manager"    => "Operations Manager",
-        "Operation_Consultant" => "Consultant",
-        _ => r.Replace("_"," ")
-    };
+    string RoleLabel(string r) => r == "User" ? "User" : r.Replace("_"," ");
 }
 <!DOCTYPE html>
 <html lang="en">

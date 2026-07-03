@@ -123,6 +123,7 @@
 
         .alert-error-banner { background: var(--danger-bg); border-left: 4px solid var(--red); color: #fca5a5; padding: 11px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
         [data-theme="light"] .alert-error-banner { color: var(--red); }
+        .alert-success-banner { background: var(--success-bg); border-left: 4px solid var(--success); color: var(--success); padding: 11px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
     </style>
 </head>
 <body class="login-body">
@@ -149,6 +150,11 @@
             </div>
 
             <div class="divider"><span>Sign in to continue</span></div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert-success-banner"><i class="bi bi-check-circle-fill me-1"></i>@TempData["Success"]</div>
+            }
 
             <form asp-area="Admin" asp-controller="Account" asp-action="Login" method="post">
                 @Html.AntiForgeryToken()
@@ -182,6 +188,9 @@
                 </button>
             </form>
 
+            <div class="user-portal-link">
+                <a href="/admin/account/recover">Forgot password? Use recovery key</a>
+            </div>
             <div class="user-portal-link">
                 Not an admin? <a href="/home/account/login">Go to User Portal →</a>
             </div>

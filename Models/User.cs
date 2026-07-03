@@ -13,9 +13,14 @@ public class User
     [Required]
     public string Email { get; set; } = "";
 
-    [Column("password_hash")]
+    [Column("phone")]
     [Required]
-    public string PasswordHash { get; set; } = "";
+    public string Phone { get; set; } = "";
+
+    // Null until the account is activated. Bulk-created accounts start
+    // pending: no password, can't log in, until the OTP flow sets one.
+    [Column("password_hash")]
+    public string? PasswordHash { get; set; }
 
     [Column("role")]
     [Required]

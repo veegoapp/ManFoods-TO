@@ -4,12 +4,38 @@
 -- =============================================
 
 -- ── users ─────────────────────────────────────
+-- password_hash is nullable: bulk-created accounts start "pending" (no
+-- password) until the OTP self-activation flow sets one.
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL DEFAULT '',
+    phone TEXT NOT NULL DEFAULT '',
+    password_hash TEXT,
     role TEXT NOT NULL DEFAULT '',
     assigned_name TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+-- CREATE TABLE IF NOT EXISTS is a no-op on a pre-existing table, so backfill
+-- explicitly for databases that already had the old shape.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT NOT NULL DEFAULT '';
+ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+
+-- Role system simplified from Admin_Full/Admin_Read/Operation_Manager/
+-- Operation_Consultant/Viewer down to just Admin/User.
+UPDATE users SET role = 'Admin' WHERE role IN ('Admin_Full', 'Admin_Read');
+UPDATE users SET role = 'User' WHERE role IN ('Operation_Manager', 'Operation_Consultant', 'Viewer');
+
+-- ── password_reset_otps ────────────────────────
+-- OTPs for the self-service "forgot password" flow (User accounts only —
+-- Admin accounts use the separate master-key recovery flow). 4h expiry,
+-- single use, invalidated after 5 failed attempts.
+CREATE TABLE IF NOT EXISTS password_reset_otps (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    otp_code TEXT NOT NULL DEFAULT '',
+    expires_at TIMESTAMPTZ NOT NULL,
+    is_used BOOLEAN NOT NULL DEFAULT FALSE,
+    failed_attempts INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -112,8 +138,8 @@ ALTER TABLE upload_logs ADD COLUMN IF NOT EXISTS content_type TEXT;
 -- ── seed users ────────────────────────────────
 -- admin@mcd.com / 123123654  →  Admin portal
 -- user@mcd.com  / 123123654  →  Home portal
-INSERT INTO users (email, password_hash, role, assigned_name, created_at)
+INSERT INTO users (email, phone, password_hash, role, created_at)
 VALUES
-    ('admin@mcd.com', '$2a$11$4dMAuH6DiUfgnniQT39r1uof2UmVIJQ2vslu8qs8OwOJ7EUM1i/n6', 'Admin_Full', 'Admin', NOW()),
-    ('user@mcd.com',  '$2a$11$4dMAuH6DiUfgnniQT39r1uof2UmVIJQ2vslu8qs8OwOJ7EUM1i/n6', 'Viewer',     'User',  NOW())
+    ('admin@mcd.com', '+201000000000', '$2a$11$4dMAuH6DiUfgnniQT39r1uof2UmVIJQ2vslu8qs8OwOJ7EUM1i/n6', 'Admin', NOW()),
+    ('user@mcd.com',  '+201000000001', '$2a$11$4dMAuH6DiUfgnniQT39r1uof2UmVIJQ2vslu8qs8OwOJ7EUM1i/n6', 'User',  NOW())
 ON CONFLICT (email) DO NOTHING;

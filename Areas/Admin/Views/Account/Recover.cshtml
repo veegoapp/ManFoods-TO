@@ -1,0 +1,92 @@
+@model MvcApp.Models.ViewModels.AdminRecoveryViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Recovery — Manfoods McDonald's</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('mf-theme') || 'light');</script>
+    <style>
+        .login-body { background: var(--bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        [data-theme="light"] .login-body { background: linear-gradient(135deg, #F5F3FF 0%, #FAF9FF 50%, #F3F1FF 100%); }
+        .login-container { width: 100%; max-width: 440px; padding: 16px; }
+        .login-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 40px 36px 32px; box-shadow: var(--shadow-lg); position: relative; overflow: hidden; }
+        .login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--red), var(--gold)); }
+        .admin-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--red-light); border: 1px solid rgba(218,41,28,.25); color: var(--red); font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-bottom: 14px; }
+        .login-title { font-size: 22px; font-weight: 800; color: var(--text); margin: 0 0 4px; }
+        .login-subtitle { font-size: 13px; color: var(--text-3); margin: 0 0 22px; }
+        .field-wrap { margin-bottom: 16px; }
+        .field-wrap label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; display: block; }
+        .field-wrap input { height: 46px; font-size: 15px; border-radius: 8px; border: 1.5px solid var(--card-border); background: var(--card-bg-2); color: var(--text); width: 100%; padding: 0 14px; outline: none; }
+        .field-wrap input:focus { background: var(--card-bg); border-color: var(--gold); }
+        [data-theme="light"] .field-wrap input:focus { border-color: var(--red); }
+        .btn-signin { width: 100%; min-height: 48px; background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%); border: 1px solid var(--red-dark); border-radius: 48px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+        .back-link { display: block; text-align: center; margin-top: 16px; font-size: 12px; color: var(--text-3); text-decoration: none; }
+        .back-link:hover { color: var(--gold); }
+        [data-theme="light"] .back-link:hover { color: var(--red); }
+        .alert-error-banner { background: var(--danger-bg); border-left: 4px solid var(--red); color: #fca5a5; padding: 11px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
+        [data-theme="light"] .alert-error-banner { color: var(--red); }
+    </style>
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="admin-badge"><i class="bi bi-shield-lock-fill"></i> Admin Recovery</div>
+            <h1 class="login-title">Reset Admin Password</h1>
+            <p class="login-subtitle">Requires the master recovery key. Not the OTP flow — that's for regular users only.</p>
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert-error-banner">
+                    @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <div><i class="bi bi-exclamation-triangle-fill me-1"></i>@err.ErrorMessage</div>
+                    }
+                </div>
+            }
+
+            <form asp-area="Admin" asp-controller="Account" asp-action="Recover" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="field-wrap">
+                    <label>Admin Email</label>
+                    <input asp-for="Email" type="email" placeholder="admin@mcd.com"/>
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="field-wrap">
+                    <label>Recovery Key</label>
+                    <input asp-for="RecoveryKey" type="password" placeholder="Paste your saved recovery key"/>
+                    <span asp-validation-for="RecoveryKey" class="text-danger small"></span>
+                </div>
+
+                <div class="field-wrap">
+                    <label>New Password</label>
+                    <input asp-for="NewPassword" type="password" placeholder="New password"/>
+                    <span asp-validation-for="NewPassword" class="text-danger small"></span>
+                </div>
+
+                <div class="field-wrap">
+                    <label>Confirm New Password</label>
+                    <input asp-for="ConfirmPassword" type="password" placeholder="Confirm new password"/>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
+
+                <button type="submit" class="btn-signin"><i class="bi bi-shield-check me-2"></i>Reset Password</button>
+            </form>
+
+            <a href="/admin/account/login" class="back-link"><i class="bi bi-arrow-left me-1"></i>Back to Sign In</a>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>

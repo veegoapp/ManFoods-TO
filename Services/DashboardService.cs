@@ -14,21 +14,11 @@ public class DashboardService : IDashboardService
 
     public DashboardService(AppDbContext db, IMemoryCache cache) { _db = db; _cache = cache; }
 
-    private async Task<List<string>?> GetAccessibleStoresAsync(string role, string? assignedName, int? month, int? year)
-    {
-        if (role == "Admin_Full" || role == "Admin_Read") return null;
-
-        var q = _db.StoreReferences.AsQueryable();
-        if (month.HasValue) q = q.Where(s => s.Month == month.Value);
-        if (year.HasValue) q = q.Where(s => s.Year == year.Value);
-
-        if (role == "Operation_Manager" && !string.IsNullOrEmpty(assignedName))
-            q = q.Where(s => s.OperationManager == assignedName);
-        else if (role == "Operation_Consultant" && !string.IsNullOrEmpty(assignedName))
-            q = q.Where(s => s.OperationConsultant == assignedName);
-
-        return await q.Select(s => s.StoreName).ToListAsync();
-    }
+    // Role system simplified to Admin/User — every Admin sees every store now,
+    // so this always returns "unrestricted." Kept as a method (instead of
+    // deleting every call site) to minimize the blast radius of the change.
+    private Task<List<string>?> GetAccessibleStoresAsync(string role, string? assignedName, int? month, int? year) =>
+        Task.FromResult<List<string>?>(null);
 
     public async Task<DashboardKpiViewModel> GetKpisAsync(int? month, int? year, string? store, string role, string? assignedName)
     {

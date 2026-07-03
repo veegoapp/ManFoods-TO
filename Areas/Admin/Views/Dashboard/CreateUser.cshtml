@@ -1,8 +1,6 @@
 @model MvcApp.Models.ViewModels.CreateUserViewModel
 @{
     ViewData["Title"] = "Create User";
-    var managers = ViewBag.Managers as List<string> ?? new List<string>();
-    var consultants = ViewBag.Consultants as List<string> ?? new List<string>();
 }
 
 <div class="page-header">
@@ -20,42 +18,24 @@
             <span asp-validation-for="Email" class="text-danger small"></span>
         </div>
         <div class="mb-3">
+            <label asp-for="Phone" class="form-label-dark">Phone</label>
+            <input asp-for="Phone" class="form-control form-control-dark" placeholder="+20 1xx xxx xxxx"/>
+            <span asp-validation-for="Phone" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
             <label asp-for="Password" class="form-label-dark">Password</label>
             <input asp-for="Password" type="password" class="form-control form-control-dark" placeholder="Min. 6 characters"/>
             <span asp-validation-for="Password" class="text-danger small"></span>
         </div>
-        <div class="mb-3">
+        <div class="mb-4">
             <label asp-for="Role" class="form-label-dark">Role</label>
-            <select asp-for="Role" class="form-select form-select-dark" id="roleSelect">
+            <select asp-for="Role" class="form-select form-select-dark">
                 <option value="">Select role...</option>
-                <option value="Admin_Full">Admin Full</option>
-                <option value="Admin_Read">Admin Read</option>
-                <option value="Operation_Manager">Operation Manager</option>
-                <option value="Operation_Consultant">Operation Consultant</option>
+                <option value="Admin">Admin</option>
+                <option value="User">User</option>
             </select>
             <span asp-validation-for="Role" class="text-danger small"></span>
-        </div>
-        <div class="mb-4" id="assignedNameGroup" style="display:none">
-            <label asp-for="AssignedName" class="form-label-dark">Assigned Name</label>
-            <select asp-for="AssignedName" class="form-select form-select-dark" id="assignedNameSelect">
-                <option value="">Select name...</option>
-            </select>
         </div>
         <button type="submit" class="btn btn-primary w-100">Create User</button>
     </form>
 </div>
-
-@section Scripts {
-    <script>
-        const managers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(managers));
-        const consultants = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(consultants));
-        document.getElementById('roleSelect').addEventListener('change', function() {
-            const group = document.getElementById('assignedNameGroup');
-            const sel = document.getElementById('assignedNameSelect');
-            sel.innerHTML = '<option value="">Select name...</option>';
-            if (this.value === 'Operation_Manager') { group.style.display=''; managers.forEach(n=>sel.add(new Option(n,n))); }
-            else if (this.value === 'Operation_Consultant') { group.style.display=''; consultants.forEach(n=>sel.add(new Option(n,n))); }
-            else { group.style.display='none'; }
-        });
-    </script>
-}

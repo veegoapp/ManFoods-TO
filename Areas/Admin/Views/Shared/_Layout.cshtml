@@ -6,7 +6,6 @@
     var currentPath  = HttpCtx.HttpContext?.Request.Path.Value ?? "";
     bool IsActive(string seg) => currentPath.Contains(seg, StringComparison.OrdinalIgnoreCase);
     var initials     = string.IsNullOrEmpty(userEmail) ? "A" : userEmail.Substring(0,1).ToUpper();
-    bool isFullAdmin = userRole == "Admin_Full";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -57,13 +56,9 @@
             <a href="/admin/dashboard/reports" class="admin-nav-link @(IsActive("Reports") ? "active" : "")">
                 <i class="bi bi-file-earmark-bar-graph-fill"></i><span>Reports</span>
             </a>
-            @if (isFullAdmin)
-            {
-                <a href="/admin/dashboard/users" class="admin-nav-link @(IsActive("Users") ? "active" : "")">
-                    <i class="bi bi-person-badge-fill"></i><span>Users</span>
-                    <span class="admin-nav-badge">Admin</span>
-                </a>
-            }
+            <a href="/admin/dashboard/users" class="admin-nav-link @(IsActive("Users") ? "active" : "")">
+                <i class="bi bi-person-badge-fill"></i><span>Users</span>
+            </a>
         </nav>
 
         <div class="admin-sidebar-user">

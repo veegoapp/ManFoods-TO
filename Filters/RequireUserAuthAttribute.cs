@@ -15,7 +15,7 @@ public class RequireUserAuthAttribute : ActionFilterAttribute
             return;
         }
         var role = session.GetString("Role") ?? "";
-        if (role == "Admin_Full" || role == "Admin_Read")
+        if (role == "Admin")
         {
             context.Result = new RedirectToActionResult("Login", "Account", new { area = "Home" });
         }

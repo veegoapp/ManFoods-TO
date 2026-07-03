@@ -19,6 +19,10 @@ public class AuthService : IAuthService
             .FirstOrDefaultAsync(u => u.Email == email.ToLower());
 
         if (user == null) return null;
+        // Bulk-created accounts start with no password set (pending activation
+        // via the OTP flow) — reject the login attempt instead of letting
+        // BCrypt.Verify throw on a null/empty hash.
+        if (string.IsNullOrEmpty(user.PasswordHash)) return null;
 
         if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash)) return null;
 

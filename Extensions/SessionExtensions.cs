@@ -19,9 +19,5 @@ public static class SessionExtensions
         return string.IsNullOrEmpty(v) ? null : v;
     }
 
-    public static bool IsAdmin(this ISession session)
-    {
-        var role = session.GetRole();
-        return role == "Admin_Full" || role == "Admin_Read";
-    }
+    public static bool IsAdmin(this ISession session) => session.GetRole() == "Admin";
 }

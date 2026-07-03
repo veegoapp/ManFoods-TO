@@ -13,13 +13,7 @@ public class ExitInterviewService : IExitInterviewService
 
     private static IQueryable<ExitInterview> ApplyFilter(IQueryable<ExitInterview> q, ExitInterviewFilter filter, string role, string? assignedName)
     {
-        // Same store-scoping convention as DashboardService.GetAccessibleStoresAsync:
-        // Admin_Full/Admin_Read see everything, OC/OM only see their own stores.
-        if (role == "Operation_Manager" && !string.IsNullOrEmpty(assignedName))
-            q = q.Where(e => e.OperationManager == assignedName);
-        else if (role == "Operation_Consultant" && !string.IsNullOrEmpty(assignedName))
-            q = q.Where(e => e.OperationConsultant == assignedName);
-
+        // Role system simplified to Admin/User — no more per-store restriction.
         if (!string.IsNullOrWhiteSpace(filter.Store)) q = q.Where(e => e.Store == filter.Store);
         if (!string.IsNullOrWhiteSpace(filter.StoreLeader)) q = q.Where(e => e.StoreLeader == filter.StoreLeader);
         if (!string.IsNullOrWhiteSpace(filter.OperationConsultant)) q = q.Where(e => e.OperationConsultant == filter.OperationConsultant);

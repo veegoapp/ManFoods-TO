@@ -11,7 +11,8 @@ namespace MvcApp.Areas.Home.Controllers;
 public class AccountController : Controller
 {
     private readonly IAuthService _auth;
-    public AccountController(IAuthService auth) => _auth = auth;
+    private readonly IOtpService _otp;
+    public AccountController(IAuthService auth, IOtpService otp) { _auth = auth; _otp = otp; }
 
     [HttpGet]
     public IActionResult Login()
@@ -30,7 +31,7 @@ public class AccountController : Controller
         var user = await _auth.ValidateAsync(vm.Email, vm.Password);
         if (user == null) { ModelState.AddModelError("", "Invalid email or password"); return View(vm); }
 
-        if (user.Role == "Admin_Full" || user.Role == "Admin_Read")
+        if (user.Role == "Admin")
         {
             ModelState.AddModelError("", "Admin accounts must use the admin portal.");
             return View(vm);
@@ -44,6 +45,22 @@ public class AccountController : Controller
     public IActionResult Logout()
     {
         HttpContext.Session.Clear();
+        return RedirectToAction("Login");
+    }
+
+    [HttpGet]
+    public IActionResult ForgotPassword() => View(new ForgotPasswordViewModel());
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [EnableRateLimiting("login")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel vm)
+    {
+        if (!ModelState.IsValid) return View(vm);
+
+        var (success, message) = await _otp.VerifyAndResetPasswordAsync(vm.Identifier, vm.OtpCode, vm.NewPassword);
+        if (!success) { ModelState.AddModelError("", message); return View(vm); }
+
+        TempData["Success"] = message;
         return RedirectToAction("Login");
     }
 

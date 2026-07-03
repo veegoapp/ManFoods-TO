@@ -11,7 +11,8 @@ namespace MvcApp.Areas.Admin.Controllers;
 public class AccountController : Controller
 {
     private readonly IAuthService _auth;
-    public AccountController(IAuthService auth) => _auth = auth;
+    private readonly IUserService _users;
+    public AccountController(IAuthService auth, IUserService users) { _auth = auth; _users = users; }
 
     [HttpGet]
     public IActionResult Login()
@@ -30,7 +31,7 @@ public class AccountController : Controller
         var user = await _auth.ValidateAsync(vm.Email, vm.Password);
         if (user == null) { ModelState.AddModelError("", "Invalid email or password"); return View(vm); }
 
-        if (user.Role != "Admin_Full" && user.Role != "Admin_Read")
+        if (user.Role != "Admin")
         {
             ModelState.AddModelError("", "Access denied. Admin credentials required.");
             return View(vm);
@@ -44,6 +45,34 @@ public class AccountController : Controller
     public IActionResult Logout()
     {
         HttpContext.Session.Clear();
+        return RedirectToAction("Login");
+    }
+
+    [HttpGet]
+    public IActionResult Recover() => View(new AdminRecoveryViewModel());
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [EnableRateLimiting("login")]
+    public async Task<IActionResult> Recover(AdminRecoveryViewModel vm)
+    {
+        if (!ModelState.IsValid) return View(vm);
+
+        var keyHash = Environment.GetEnvironmentVariable("ADMIN_RECOVERY_KEY_HASH");
+        if (string.IsNullOrEmpty(keyHash))
+        {
+            ModelState.AddModelError("", "Recovery is not configured. Set ADMIN_RECOVERY_KEY_HASH in Secrets.");
+            return View(vm);
+        }
+        if (!BCrypt.Net.BCrypt.Verify(vm.RecoveryKey, keyHash))
+        {
+            ModelState.AddModelError("RecoveryKey", "Invalid recovery key.");
+            return View(vm);
+        }
+
+        var ok = await _users.ResetAdminPasswordAsync(vm.Email, vm.NewPassword);
+        if (!ok) { ModelState.AddModelError("Email", "No admin account with that email."); return View(vm); }
+
+        TempData["Success"] = "Admin password reset successfully. You can now sign in.";
         return RedirectToAction("Login");
     }
 

@@ -14,13 +14,15 @@ public class DashboardController : Controller
     private readonly IUserService _users;
     private readonly IDashboardService _dashboard;
     private readonly IStoreService _stores;
+    private readonly IOtpService _otp;
 
-    public DashboardController(IUploadService uploads, IUserService users, IDashboardService dashboard, IStoreService stores)
+    public DashboardController(IUploadService uploads, IUserService users, IDashboardService dashboard, IStoreService stores, IOtpService otp)
     {
         _uploads = uploads;
         _users = users;
         _dashboard = dashboard;
         _stores = stores;
+        _otp = otp;
     }
 
     public IActionResult Turnover() => View();
@@ -61,7 +63,7 @@ public class DashboardController : Controller
     [HttpGet("admin/dashboard/export")]
     public async Task<IActionResult> Export(int month, int year, string reportType = "summary")
     {
-        var role = HttpContext.Session.GetRole() ?? "Admin_Full";
+        var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetAssignedName();
 
         using var wb = new XLWorkbook();
@@ -320,6 +322,24 @@ public class DashboardController : Controller
             for (int i = 0; i < sample.Length; i++) ws.Cell(2, i + 1).Value = sample[i];
             ws.Columns().AdjustToContents();
         }
+        else if (type == "bulk_users")
+        {
+            fileName = "Template_Bulk_Users.xlsx";
+            var ws = wb.AddWorksheet("Users");
+            var headers = new[] { "Email", "Phone" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = ws.Cell(1, i + 1);
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#C8102E");
+                cell.Style.Font.FontColor = XLColor.White;
+                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            }
+            ws.Cell(2, 1).Value = "ahmed@manfoods.com"; ws.Cell(2, 2).Value = "+201012345678";
+            ws.Cell(3, 1).Value = "sara@manfoods.com"; ws.Cell(3, 2).Value = "+201098765432";
+            ws.Columns().AdjustToContents();
+        }
         else
         {
             return NotFound();
@@ -341,7 +361,6 @@ public class DashboardController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    [RequireRole("Admin_Full")]
     public async Task<IActionResult> DeleteUploadLog(int id)
     {
         await _uploads.DeleteLogAsync(id);
@@ -349,58 +368,75 @@ public class DashboardController : Controller
         return RedirectToAction("Uploads");
     }
 
-    [RequireRole("Admin_Full")]
     public async Task<IActionResult> Users()
     {
         var users = await _users.GetAllAsync();
         return View(users);
     }
 
-    [RequireRole("Admin_Full")]
-    public async Task<IActionResult> CreateUser()
-    {
-        var (managers, consultants) = await _users.GetAssignableNamesAsync();
-        ViewBag.Managers = managers; ViewBag.Consultants = consultants;
-        return View(new MvcApp.Models.ViewModels.CreateUserViewModel());
-    }
+    public IActionResult CreateUser() => View(new MvcApp.Models.ViewModels.CreateUserViewModel());
 
     [HttpPost, ValidateAntiForgeryToken]
-    [RequireRole("Admin_Full")]
     public async Task<IActionResult> CreateUser(MvcApp.Models.ViewModels.CreateUserViewModel vm)
     {
-        if (!ModelState.IsValid) { var (m, c) = await _users.GetAssignableNamesAsync(); ViewBag.Managers = m; ViewBag.Consultants = c; return View(vm); }
+        if (!ModelState.IsValid) return View(vm);
         await _users.CreateAsync(vm);
         TempData["Success"] = "User created successfully.";
         return RedirectToAction("Users");
     }
 
-    [RequireRole("Admin_Full")]
     public async Task<IActionResult> EditUser(int id)
     {
         var user = await _users.GetByIdAsync(id);
         if (user == null) return NotFound();
-        var (m, c) = await _users.GetAssignableNamesAsync();
-        ViewBag.Managers = m; ViewBag.Consultants = c;
-        return View(new MvcApp.Models.ViewModels.EditUserViewModel { Id = user.Id, Email = user.Email, Role = user.Role, AssignedName = user.AssignedName });
+        return View(new MvcApp.Models.ViewModels.EditUserViewModel { Id = user.Id, Email = user.Email, Phone = user.Phone, Role = user.Role });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    [RequireRole("Admin_Full")]
     public async Task<IActionResult> EditUser(int id, MvcApp.Models.ViewModels.EditUserViewModel vm)
     {
         vm.Id = id;
-        if (!ModelState.IsValid) { var (m, c) = await _users.GetAssignableNamesAsync(); ViewBag.Managers = m; ViewBag.Consultants = c; return View(vm); }
+        if (!ModelState.IsValid) return View(vm);
         await _users.UpdateAsync(id, vm);
         TempData["Success"] = "User updated.";
         return RedirectToAction("Users");
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    [RequireRole("Admin_Full")]
     public async Task<IActionResult> DeleteUser(int id)
     {
         await _users.DeleteAsync(id);
         TempData["Success"] = "User deleted.";
         return RedirectToAction("Users");
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadBulkUsers(MvcApp.Models.ViewModels.BulkUserUploadViewModel vm)
+    {
+        if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = "Please select a file."; return RedirectToAction("Users"); }
+        try
+        {
+            var (created, skipped) = await _users.UploadBulkUsersAsync(vm.File);
+            TempData["Success"] = $"Created {created} pending user(s)." + (skipped > 0 ? $" Skipped {skipped} (already existed)." : "");
+        }
+        catch (Exception ex) { TempData["Error"] = $"Upload failed: {ex.Message}"; }
+        return RedirectToAction("Users");
+    }
+
+    public async Task<IActionResult> GenerateBulkOtps()
+    {
+        var (count, bytes) = await _otp.GenerateBulkOtpsAsync();
+        if (count == 0) { TempData["Error"] = "No pending users need an OTP right now."; return RedirectToAction("Users"); }
+        return File(bytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"Bulk_OTPs_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx");
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> GenerateOtp(int id)
+    {
+        var otp = await _otp.GenerateSingleOtpAsync(id);
+        if (otp == null) return NotFound();
+        return Json(new { otp });
     }
 }

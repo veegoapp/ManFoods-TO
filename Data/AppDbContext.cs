@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<StoreReference> StoreReferences { get; set; }
     public DbSet<UploadLog> UploadLogs { get; set; }
     public DbSet<ExitInterview> ExitInterviews { get; set; }
+    public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
