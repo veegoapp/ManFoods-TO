@@ -67,6 +67,6 @@ CREATE TABLE IF NOT EXISTS upload_logs (
 -- user@mcd.com  / 123123654  →  Home portal
 INSERT INTO users (email, password_hash, role, assigned_name, created_at)
 VALUES
-    ('admin@mcd.com', '$2a$11$9P3qHK/vfR4g8c99FKA.regSIy2D6QIAQhgVx4JWnn6BqFTxvA.mC', 'Admin_Full', 'Admin', NOW()),
-    ('user@mcd.com',  '$2a$11$9P3qHK/vfR4g8c99FKA.regSIy2D6QIAQhgVx4JWnn6BqFTxvA.mC', 'Viewer',     'User',  NOW())
+    ('admin@mcd.com', '$2a$11$4dMAuH6DiUfgnniQT39r1uof2UmVIJQ2vslu8qs8OwOJ7EUM1i/n6', 'Admin_Full', 'Admin', NOW()),
+    ('user@mcd.com',  '$2a$11$4dMAuH6DiUfgnniQT39r1uof2UmVIJQ2vslu8qs8OwOJ7EUM1i/n6', 'Viewer',     'User',  NOW())
 ON CONFLICT (email) DO NOTHING;
