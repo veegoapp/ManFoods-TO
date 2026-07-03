@@ -13,15 +13,36 @@ public class DashboardController : Controller
     private readonly IUploadService _uploads;
     private readonly IUserService _users;
     private readonly IDashboardService _dashboard;
+    private readonly IStoreService _stores;
 
-    public DashboardController(IUploadService uploads, IUserService users, IDashboardService dashboard)
+    public DashboardController(IUploadService uploads, IUserService users, IDashboardService dashboard, IStoreService stores)
     {
         _uploads = uploads;
         _users = users;
         _dashboard = dashboard;
+        _stores = stores;
     }
 
     public IActionResult Turnover() => View();
+
+    public async Task<IActionResult> StoreProfile(string store)
+    {
+        if (string.IsNullOrWhiteSpace(store)) return RedirectToAction("Turnover");
+
+        var role = HttpContext.Session.GetRole();
+        var assignedName = HttpContext.Session.GetAssignedName();
+        var storeRefs = (await _stores.GetStoresAsync(null, null, role, assignedName))
+            .Where(s => s.StoreName == store)
+            .ToList();
+        if (!storeRefs.Any()) return NotFound();
+
+        var latest = storeRefs.OrderByDescending(s => s.Year).ThenByDescending(s => s.Month).First();
+        ViewBag.StoreName = store;
+        ViewBag.StoreLeader = latest.StoreLeader;
+        ViewBag.OperationConsultant = latest.OperationConsultant;
+        ViewBag.OperationManager = latest.OperationManager;
+        return View();
+    }
 
     public async Task<IActionResult> Reports()
     {

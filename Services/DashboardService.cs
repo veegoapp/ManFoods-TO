@@ -519,4 +519,52 @@ public class DashboardService : IDashboardService
 
         return new TrendMatrixResult { Periods = periodKeys, Rows = rows };
     }
+
+    public async Task<List<StoreEmployeeRow>> GetStoreEmployeesAsync(string store, int? month, int? year)
+    {
+        if (!month.HasValue || !year.HasValue)
+        {
+            var latest = await _db.ActiveEmployees
+                .Where(e => e.Store == store)
+                .OrderByDescending(e => e.Year).ThenByDescending(e => e.Month)
+                .Select(e => new { e.Month, e.Year })
+                .FirstOrDefaultAsync();
+            month ??= latest?.Month;
+            year ??= latest?.Year;
+        }
+        if (!month.HasValue || !year.HasValue) return new List<StoreEmployeeRow>();
+
+        return await _db.ActiveEmployees
+            .Where(e => e.Store == store && e.Month == month && e.Year == year)
+            .OrderBy(e => e.Name)
+            .Select(e => new StoreEmployeeRow
+            {
+                EmployeeId = e.EmployeeId,
+                Name       = e.Name,
+                JobTitle   = e.JobTitle,
+                Grade      = e.Grade,
+                Gender     = e.Gender,
+                HireDate   = e.HireDate
+            })
+            .ToListAsync();
+    }
+
+    public async Task<List<StoreResignationRow>> GetStoreResignationHistoryAsync(string store)
+    {
+        return await _db.Resignations
+            .Where(r => r.Store == store)
+            .OrderByDescending(r => r.Year).ThenByDescending(r => r.Month).ThenByDescending(r => r.ResignationDate)
+            .Select(r => new StoreResignationRow
+            {
+                EmployeeId      = r.EmployeeId,
+                Name            = r.Name,
+                JobTitle        = r.JobTitle,
+                Gender          = r.Gender,
+                HireDate        = r.HireDate,
+                ResignationDate = r.ResignationDate,
+                Month           = r.Month,
+                Year            = r.Year
+            })
+            .ToListAsync();
+    }
 }

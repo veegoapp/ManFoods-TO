@@ -113,9 +113,8 @@ if (periodSel) {
         if (!this.value) return;
         const [m, y] = this.value.split('-');
         periodMonth = parseInt(m); periodYear = parseInt(y);
-        storeFilter = '';
         const stSel = document.getElementById('storeSelect');
-        if (stSel) { stSel.value = ''; await loadStores(); }
+        if (stSel) { storeFilter = ''; stSel.value = ''; await loadStores(); }
         await loadAll();
     });
 }

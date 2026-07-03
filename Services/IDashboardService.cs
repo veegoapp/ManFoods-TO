@@ -14,4 +14,6 @@ public interface IDashboardService
     Task<OcOmAnalysisResult> GetOcOmAnalysisAsync(int month, int year, string role, string? assignedName);
     Task<List<SmartInsightItem>> GetSmartInsightsAsync(int month, int year, string role, string? assignedName);
     Task<TrendMatrixResult> GetTrendMatrixAsync(string role, string? assignedName);
+    Task<List<StoreEmployeeRow>> GetStoreEmployeesAsync(string store, int? month, int? year);
+    Task<List<StoreResignationRow>> GetStoreResignationHistoryAsync(string store);
 }

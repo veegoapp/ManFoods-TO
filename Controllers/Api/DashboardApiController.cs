@@ -104,6 +104,33 @@ public class DashboardApiController : ControllerBase
         return Ok(await _dashboard.GetTrendMatrixAsync(role, assignedName));
     }
 
+    private async Task<bool> CanAccessStoreAsync(string store, string role, string? assignedName)
+    {
+        if (role == "Admin_Full" || role == "Admin_Read") return true;
+        var stores = await _stores.GetStoresAsync(null, null, role, assignedName);
+        return stores.Any(s => s.StoreName == store);
+    }
+
+    [HttpGet("store-employees")]
+    public async Task<IActionResult> StoreEmployees([FromQuery] string store, [FromQuery] int? month, [FromQuery] int? year)
+    {
+        if (string.IsNullOrWhiteSpace(store)) return BadRequest();
+        var role = HttpContext.Session.GetRole();
+        var assignedName = HttpContext.Session.GetAssignedName();
+        if (!await CanAccessStoreAsync(store, role, assignedName)) return Forbid();
+        return Ok(await _dashboard.GetStoreEmployeesAsync(store, month, year));
+    }
+
+    [HttpGet("store-resignations")]
+    public async Task<IActionResult> StoreResignations([FromQuery] string store)
+    {
+        if (string.IsNullOrWhiteSpace(store)) return BadRequest();
+        var role = HttpContext.Session.GetRole();
+        var assignedName = HttpContext.Session.GetAssignedName();
+        if (!await CanAccessStoreAsync(store, role, assignedName)) return Forbid();
+        return Ok(await _dashboard.GetStoreResignationHistoryAsync(store));
+    }
+
     public record AiChatRequest(string Question, int? Month, int? Year, string? Store);
 
     [HttpPost("ai-chat")]
