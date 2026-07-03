@@ -26,4 +26,13 @@ public class UploadLog
 
     [Column("uploaded_by")]
     public string UploadedBy { get; set; } = "";
+
+    [Column("file_content")]
+    public byte[]? FileContent { get; set; }
+
+    [Column("content_type")]
+    public string? ContentType { get; set; }
+
+    [NotMapped]
+    public bool HasFile { get; set; }
 }

@@ -56,11 +56,22 @@ public class UploadService : IUploadService
             throw new InvalidOperationException("Only Excel files (.xlsx / .xls) are allowed.");
     }
 
+    private static string GetContentType(string fileName) =>
+        Path.GetExtension(fileName).ToLowerInvariant() switch
+        {
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".xls" => "application/vnd.ms-excel",
+            _ => "application/octet-stream"
+        };
+
     public async Task<(bool, string, int)> UploadActiveEmployeesAsync(IFormFile file, int month, int year, string uploadedBy)
     {
         ValidateFile(file);
-        using var stream = file.OpenReadStream();
-        using var wb = new XLWorkbook(stream);
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
+        var fileBytes = ms.ToArray();
+        ms.Position = 0;
+        using var wb = new XLWorkbook(ms);
         var ws = wb.Worksheet(1);
 
         await _db.ActiveEmployees.Where(e => e.Month == month && e.Year == year).ExecuteDeleteAsync();
@@ -87,7 +98,7 @@ public class UploadService : IUploadService
         }
 
         if (records.Count > 0) await _db.ActiveEmployees.AddRangeAsync(records);
-        _db.UploadLogs.Add(new UploadLog { FileType = "active_employees", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy });
+        _db.UploadLogs.Add(new UploadLog { FileType = "active_employees", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
         await _db.SaveChangesAsync();
 
         return (true, $"Processed {records.Count} records", records.Count);
@@ -96,8 +107,11 @@ public class UploadService : IUploadService
     public async Task<(bool, string, int)> UploadResignationsAsync(IFormFile file, int month, int year, string uploadedBy)
     {
         ValidateFile(file);
-        using var stream = file.OpenReadStream();
-        using var wb = new XLWorkbook(stream);
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
+        var fileBytes = ms.ToArray();
+        ms.Position = 0;
+        using var wb = new XLWorkbook(ms);
         var ws = wb.Worksheet(1);
 
         await _db.Resignations.Where(r => r.Month == month && r.Year == year).ExecuteDeleteAsync();
@@ -124,7 +138,7 @@ public class UploadService : IUploadService
         }
 
         if (records.Count > 0) await _db.Resignations.AddRangeAsync(records);
-        _db.UploadLogs.Add(new UploadLog { FileType = "resignations", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy });
+        _db.UploadLogs.Add(new UploadLog { FileType = "resignations", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
         await _db.SaveChangesAsync();
 
         return (true, $"Processed {records.Count} records", records.Count);
@@ -133,8 +147,11 @@ public class UploadService : IUploadService
     public async Task<(bool, string, int)> UploadStoreReferenceAsync(IFormFile file, int month, int year, string uploadedBy)
     {
         ValidateFile(file);
-        using var stream = file.OpenReadStream();
-        using var wb = new XLWorkbook(stream);
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
+        var fileBytes = ms.ToArray();
+        ms.Position = 0;
+        using var wb = new XLWorkbook(ms);
         var ws = wb.Worksheet(1);
 
         await _db.StoreReferences.Where(s => s.Month == month && s.Year == year).ExecuteDeleteAsync();
@@ -156,21 +173,35 @@ public class UploadService : IUploadService
         }
 
         if (records.Count > 0) await _db.StoreReferences.AddRangeAsync(records);
-        _db.UploadLogs.Add(new UploadLog { FileType = "store_reference", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy });
+        _db.UploadLogs.Add(new UploadLog { FileType = "store_reference", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
         await _db.SaveChangesAsync();
 
         return (true, $"Processed {records.Count} records", records.Count);
     }
 
+    private static readonly System.Linq.Expressions.Expression<Func<UploadLog, UploadLog>> ProjectWithoutFile = l => new UploadLog
+    {
+        Id = l.Id, FileType = l.FileType, FileName = l.FileName,
+        Month = l.Month, Year = l.Year, UploadDate = l.UploadDate,
+        UploadedBy = l.UploadedBy, HasFile = l.FileContent != null
+    };
+
     public async Task<List<UploadLog>> GetLogsAsync() =>
-        await _db.UploadLogs.OrderByDescending(l => l.UploadDate).ToListAsync();
+        await _db.UploadLogs.OrderByDescending(l => l.UploadDate).Select(ProjectWithoutFile).ToListAsync();
 
     public async Task<(List<UploadLog> Items, int TotalCount)> GetLogsPagedAsync(int page, int pageSize)
     {
         var q = _db.UploadLogs.OrderByDescending(l => l.UploadDate);
         var total = await q.CountAsync();
-        var items = await q.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        var items = await q.Skip((page - 1) * pageSize).Take(pageSize).Select(ProjectWithoutFile).ToListAsync();
         return (items, total);
+    }
+
+    public async Task<(byte[] Content, string ContentType, string FileName)?> GetFileAsync(int id)
+    {
+        var log = await _db.UploadLogs.AsNoTracking().FirstOrDefaultAsync(l => l.Id == id);
+        if (log?.FileContent == null) return null;
+        return (log.FileContent, log.ContentType ?? "application/octet-stream", log.FileName);
     }
 
     public async Task DeleteLogAsync(int id)
