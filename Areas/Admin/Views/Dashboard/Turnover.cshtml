@@ -7,9 +7,12 @@
         <h1 class="page-title">Turnover Analysis</h1>
         <p class="page-subtitle">Deep-dive into resignation patterns and store performance</p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
         <select id="periodSelect" class="form-select form-select-dark" style="width:180px">
             <option value="">Select Period</option>
+        </select>
+        <select id="storeSelect" class="form-select form-select-dark" style="width:200px">
+            <option value="">All Stores</option>
         </select>
     </div>
 </div>
@@ -28,6 +31,20 @@
         <div class="chart-header"><h6>Gender Breakdown</h6><p>Active workforce distribution</p></div>
         <div class="chart-body chart-body-sm"><canvas id="genderChart"></canvas></div>
     </div>
+</div>
+
+<!-- ── Monthly Trend Chart ─────────────────────────────────── -->
+<div class="chart-card mb-4" style="border-radius:14px">
+    <div class="chart-header d-flex align-items-center justify-content-between">
+        <div>
+            <h6>Monthly Turnover Trend</h6>
+            <p id="trendChartSubtitle">Turnover rate (%) across all available periods</p>
+        </div>
+        <a href="/admin/dashboard/reports" class="btn btn-sm" style="background:rgba(109,93,251,.15);color:#6D5DFB;border:1px solid rgba(109,93,251,.3);font-size:12px;border-radius:7px">
+            <i class="bi bi-download me-1"></i>Export
+        </a>
+    </div>
+    <div class="chart-body"><canvas id="trendChart" style="max-height:260px"></canvas></div>
 </div>
 
 <!-- ── Smart Insights ─────────────────────────────────────── -->
@@ -332,12 +349,18 @@ loadAll = async function () {
     await tvLoadSmartInsights();
     await tvLoadStoreComparison();
     await tvLoadOcOmAnalysis();
+    tvRenderTrendChart();
 };
 
 /* ── Full Data Trend Matrix ─────────────────────────────── */
 let mxData = null;          // { periods: [], rows: [] }
 let mxSortCol  = 'avg';
 let mxSortAsc  = false;
+
+function fmtPeriod(pk) {
+    const [y, m] = pk.split('-');
+    return new Date(+y, +m - 1, 1).toLocaleString('default', { month: 'short', year: '2-digit' });
+}
 
 function mxRateCell(rate) {
     if (rate === null || rate === undefined)
@@ -357,11 +380,6 @@ function mxBuildHeader(periods) {
     // Remove any previously inserted period cols (between Store th and AVG th)
     const avgTh = tr.querySelector('[data-mcol="avg"]');
     tr.querySelectorAll('[data-mcol^="p-"]').forEach(el => el.remove());
-
-    const fmtPeriod = pk => {
-        const [y, m] = pk.split('-');
-        return new Date(+y, +m - 1, 1).toLocaleString('default', { month: 'short', year: '2-digit' });
-    };
 
     periods.forEach(pk => {
         const th = document.createElement('th');
@@ -437,9 +455,55 @@ async function tvLoadTrendMatrix() {
     }
     mxBuildHeader(mxData.periods);
     mxRender();
+    tvRenderTrendChart();
 }
 
 document.getElementById('matrixSearch').addEventListener('input', mxRender);
+
+/* Monthly Trend Chart — single store when filtered, top 6 when "All Stores" */
+let trendChartInstance;
+function tvRenderTrendChart() {
+    if (!mxData || !mxData.periods || !mxData.periods.length) return;
+    const colors = ['#6D5DFB', '#A78BFA', '#27ae60', '#3498db', '#9b59b6', '#e67e22'];
+    const subtitle = document.getElementById('trendChartSubtitle');
+
+    let rows;
+    if (storeFilter) {
+        rows = mxData.rows.filter(r => r.storeName === storeFilter);
+        if (subtitle) subtitle.textContent = `Turnover rate (%) for ${storeFilter} across all available periods`;
+    } else {
+        rows = mxData.rows.slice(0, 6);
+        if (subtitle) subtitle.textContent = 'Turnover rate (%) across all available periods';
+    }
+
+    const ctx = document.getElementById('trendChart');
+    if (!ctx) return;
+    if (trendChartInstance) trendChartInstance.destroy();
+    trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: mxData.periods.map(fmtPeriod),
+            datasets: rows.map((row, i) => ({
+                label: row.storeName,
+                data: mxData.periods.map(p => row.periodRates?.[p] ?? null),
+                borderColor: colors[i % colors.length],
+                backgroundColor: colors[i % colors.length] + '22',
+                tension: 0.4,
+                fill: false,
+                pointRadius: 4,
+                spanGaps: true
+            }))
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: '#ccc', font: { size: 11 } } } },
+            scales: {
+                x: { ticks: { color: '#888', font: { size: 11 } }, grid: { color: '#2a2a2a' } },
+                y: { ticks: { color: '#888', font: { size: 11 }, callback: v => v + '%' }, grid: { color: '#2a2a2a' } }
+            }
+        }
+    });
+}
 
 /* Load trend matrix once — scripts block runs after DOMContentLoaded fires,
    so call directly instead of adding a listener that would never fire. */

@@ -21,8 +21,6 @@ public class DashboardController : Controller
         _dashboard = dashboard;
     }
 
-    public IActionResult Analytics() => View();
-
     public IActionResult Turnover() => View();
 
     public async Task<IActionResult> Reports()

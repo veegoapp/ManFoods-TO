@@ -17,7 +17,7 @@ public class AccountController : Controller
     public IActionResult Login()
     {
         if (HttpContext.Session.GetUserId() != null && HttpContext.Session.IsAdmin())
-            return RedirectToAction("Analytics", "Dashboard", new { area = "Admin" });
+            return RedirectToAction("Turnover", "Dashboard", new { area = "Admin" });
         return View(new LoginViewModel());
     }
 
@@ -37,7 +37,7 @@ public class AccountController : Controller
         }
 
         HttpContext.Session.SetUserSession(user.Id, user.Email, user.Role, user.AssignedName);
-        return RedirectToAction("Analytics", "Dashboard", new { area = "Admin" });
+        return RedirectToAction("Turnover", "Dashboard", new { area = "Admin" });
     }
 
     [HttpPost, ValidateAntiForgeryToken]

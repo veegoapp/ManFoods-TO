@@ -269,12 +269,6 @@
                 @if (isAdmin)
                 {
                     <div class="nav-section-label">Analytics</div>
-                    <a asp-controller="Admin" asp-action="Analytics" class="nav-item @(IsActive("/Admin/Analytics") ? "active" : "")">
-                        <span class="nav-item-inner">
-                            <span class="nav-icon-wrap"><i class="bi bi-bar-chart-line-fill"></i></span>
-                            <span class="nav-item-label">Global Analytics</span>
-                        </span>
-                    </a>
                     <a asp-controller="Admin" asp-action="Turnover" class="nav-item @(IsActive("/Admin/Turnover") ? "active" : "")">
                         <span class="nav-item-inner">
                             <span class="nav-icon-wrap"><i class="bi bi-pie-chart-fill"></i></span>

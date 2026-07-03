@@ -27,7 +27,7 @@
     <div class="topnav-inner">
 
         <!-- Brand -->
-        <a class="topnav-brand" href="/admin/dashboard/analytics">
+        <a class="topnav-brand" href="/admin/dashboard/turnover">
             <img src="/images/mclogo.png" alt="Manfoods Logo" class="topnav-logo"/>
             <div class="topnav-brand-texts">
                 <span class="topnav-brand-main">Manfoods</span>
@@ -37,10 +37,6 @@
 
         <!-- Center nav links -->
         <nav class="topnav-links" id="topnavLinks">
-            <a href="/admin/dashboard/analytics" class="topnav-link @(IsActive("Analytics") ? "active" : "")">
-                <i class="bi bi-bar-chart-line-fill"></i>
-                <span>Global Analytics</span>
-            </a>
             <a href="/admin/dashboard/turnover" class="topnav-link @(IsActive("Turnover") ? "active" : "")">
                 <i class="bi bi-pie-chart-fill"></i>
                 <span>Turnover Analysis</span>
@@ -93,9 +89,6 @@
 
     <!-- Mobile dropdown menu -->
     <div class="topnav-mobile-menu" id="topnavMobileMenu">
-        <a href="/admin/dashboard/analytics" class="topnav-mobile-link @(IsActive("Analytics") ? "active" : "")">
-            <i class="bi bi-bar-chart-line-fill"></i> Global Analytics
-        </a>
         <a href="/admin/dashboard/turnover" class="topnav-mobile-link @(IsActive("Turnover") ? "active" : "")">
             <i class="bi bi-pie-chart-fill"></i> Turnover Analysis
         </a>

@@ -10,7 +10,7 @@ public class AccountController : Controller
         if (HttpContext.Session.GetUserId() != null)
         {
             return HttpContext.Session.IsAdmin()
-                ? Redirect("/admin/dashboard/analytics")
+                ? Redirect("/admin/dashboard/turnover")
                 : Redirect("/home/dashboard");
         }
         return Redirect("/home/account/login");

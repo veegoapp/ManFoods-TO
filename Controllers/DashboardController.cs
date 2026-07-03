@@ -11,7 +11,7 @@ public class DashboardController : Controller
     {
         var role = HttpContext.Session.GetRole();
         if (role == "Admin_Full" || role == "Admin_Read")
-            return RedirectToAction("Analytics", "Admin");
+            return RedirectToAction("Turnover", "Admin");
 
         return View();
     }

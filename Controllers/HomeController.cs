@@ -11,7 +11,7 @@ public class HomeController : Controller
             return Redirect("/home/account/login");
 
         return HttpContext.Session.IsAdmin()
-            ? Redirect("/admin/dashboard/analytics")
+            ? Redirect("/admin/dashboard/turnover")
             : Redirect("/home/dashboard");
     }
 
