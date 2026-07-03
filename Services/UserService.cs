@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using MvcApp.Data;
@@ -74,6 +75,27 @@ public class UserService : IUserService
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         await _db.SaveChangesAsync();
         return true;
+    }
+
+    private static string GenerateRecoveryKey() =>
+        Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+            .Replace('+', '-').Replace('/', '_').TrimEnd('=');
+
+    public async Task<string?> RegenerateRecoveryKeyAsync(string requestingEmail, string password)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestingEmail.ToLower() && u.Role == "Admin");
+        if (user == null || string.IsNullOrEmpty(user.PasswordHash) || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+            return null;
+
+        var key = GenerateRecoveryKey();
+        var hash = BCrypt.Net.BCrypt.HashPassword(key);
+
+        var setting = await _db.AppSettings.FindAsync("admin_recovery_key_hash");
+        if (setting == null) _db.AppSettings.Add(new AppSetting { Key = "admin_recovery_key_hash", Value = hash });
+        else setting.Value = hash;
+        await _db.SaveChangesAsync();
+
+        return key;
     }
 
     private static string Col(IXLRow row, IXLWorksheet ws, params string[] names)

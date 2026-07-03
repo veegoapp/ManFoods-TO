@@ -71,6 +71,10 @@
                                 {
                                     <button type="button" class="btn btn-sm btn-outline-secondary me-1 js-generate-otp" data-id="@user.Id" data-email="@user.Email" title="Generate OTP"><i class="bi bi-key"></i></button>
                                 }
+                                @if (user.Role == "Admin")
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-secondary me-1 js-regenerate-recovery-key" title="Generate a new admin recovery key"><i class="bi bi-shield-lock"></i></button>
+                                }
                                 <a href="/admin/dashboard/edituser/@user.Id" class="btn btn-sm btn-outline-secondary me-1"><i class="bi bi-pencil"></i></a>
                                 <form asp-area="Admin" asp-controller="Dashboard" asp-action="DeleteUser" method="post" class="d-inline" onsubmit="return confirm('Delete user @user.Email?')">
                                     @Html.AntiForgeryToken()
@@ -96,6 +100,31 @@
         </div>
         <p class="text-muted-custom small mb-3">Valid for 4 hours, single use. Send this to the user yourself.</p>
         <button type="button" class="btn btn-primary w-100" id="otpCloseBtn">Close</button>
+    </div>
+</div>
+
+<div id="recoveryPasswordModal" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.5);align-items:center;justify-content:center">
+    <div class="card-dark" style="max-width:380px;width:90%">
+        <h6 class="mb-2"><i class="bi bi-shield-lock me-1"></i>Confirm Your Password</h6>
+        <p class="text-muted-custom small mb-3">Enter <strong>your own</strong> admin password to generate a new recovery key. This replaces the current key everywhere — the old one stops working immediately.</p>
+        <input type="password" id="recoveryPasswordInput" class="form-control form-control-dark mb-2" placeholder="Your password"/>
+        <p class="text-danger small mb-2" id="recoveryPasswordError" style="display:none"></p>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary w-100" id="recoveryPasswordCancelBtn">Cancel</button>
+            <button type="button" class="btn btn-primary w-100" id="recoveryPasswordSubmitBtn">Generate New Key</button>
+        </div>
+    </div>
+</div>
+
+<div id="recoveryResultModal" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.5);align-items:center;justify-content:center">
+    <div class="card-dark" style="max-width:420px;width:90%">
+        <h6 class="mb-2"><i class="bi bi-shield-check me-1"></i>New Recovery Key</h6>
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <input type="text" id="recoveryResultKey" class="form-control form-control-dark" readonly style="font-size:14px;font-weight:700"/>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="recoveryCopyBtn" title="Copy"><i class="bi bi-clipboard"></i></button>
+        </div>
+        <p class="text-danger small mb-3"><i class="bi bi-exclamation-triangle-fill me-1"></i>Save this now — it will not be shown again, and the old key no longer works.</p>
+        <button type="button" class="btn btn-primary w-100" id="recoveryResultCloseBtn">I've Saved It — Close</button>
     </div>
 </div>
 
@@ -131,6 +160,58 @@
         navigator.clipboard.writeText(codeEl.value);
     });
     document.getElementById('otpCloseBtn').addEventListener('click', () => { modal.style.display = 'none'; });
+
+    // ── Regenerate admin recovery key ──────────────────────
+    const pwModal = document.getElementById('recoveryPasswordModal');
+    const pwInput = document.getElementById('recoveryPasswordInput');
+    const pwError = document.getElementById('recoveryPasswordError');
+    const resultModal = document.getElementById('recoveryResultModal');
+    const resultKeyEl = document.getElementById('recoveryResultKey');
+
+    document.querySelectorAll('.js-regenerate-recovery-key').forEach(btn => {
+        btn.addEventListener('click', () => {
+            pwInput.value = '';
+            pwError.style.display = 'none';
+            pwModal.style.display = 'flex';
+            pwInput.focus();
+        });
+    });
+
+    document.getElementById('recoveryPasswordCancelBtn').addEventListener('click', () => { pwModal.style.display = 'none'; });
+
+    async function submitRecoveryPassword() {
+        const submitBtn = document.getElementById('recoveryPasswordSubmitBtn');
+        pwError.style.display = 'none';
+        submitBtn.disabled = true;
+        try {
+            const body = new URLSearchParams({ password: pwInput.value });
+            const res = await fetch('/admin/dashboard/regeneraterecoverykey', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': token, 'Content-Type': 'application/x-www-form-urlencoded' },
+                body
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                pwError.textContent = data.error || 'Something went wrong.';
+                pwError.style.display = '';
+                return;
+            }
+            pwModal.style.display = 'none';
+            resultKeyEl.value = data.key;
+            resultModal.style.display = 'flex';
+        } finally {
+            submitBtn.disabled = false;
+        }
+    }
+
+    document.getElementById('recoveryPasswordSubmitBtn').addEventListener('click', submitRecoveryPassword);
+    pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitRecoveryPassword(); });
+
+    document.getElementById('recoveryCopyBtn').addEventListener('click', () => {
+        resultKeyEl.select();
+        navigator.clipboard.writeText(resultKeyEl.value);
+    });
+    document.getElementById('recoveryResultCloseBtn').addEventListener('click', () => { resultModal.style.display = 'none'; });
 })();
 </script>
 }

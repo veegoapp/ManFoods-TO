@@ -439,4 +439,13 @@ public class DashboardController : Controller
         if (otp == null) return NotFound();
         return Json(new { otp });
     }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RegenerateRecoveryKey([FromForm] string password)
+    {
+        var email = HttpContext.Session.GetEmail();
+        var key = await _users.RegenerateRecoveryKeyAsync(email, password);
+        if (key == null) return Json(new { error = "Incorrect password." });
+        return Json(new { key });
+    }
 }
