@@ -61,3 +61,12 @@ CREATE TABLE IF NOT EXISTS upload_logs (
     file_content BYTEA,
     content_type TEXT
 );
+
+-- ── seed users ────────────────────────────────
+-- admin@mcd.com / 123123654  →  Admin portal
+-- user@mcd.com  / 123123654  →  Home portal
+INSERT INTO users (email, password_hash, role, assigned_name, created_at)
+VALUES
+    ('admin@mcd.com', '$2a$11$9P3qHK/vfR4g8c99FKA.regSIy2D6QIAQhgVx4JWnn6BqFTxvA.mC', 'Admin_Full', 'Admin', NOW()),
+    ('user@mcd.com',  '$2a$11$9P3qHK/vfR4g8c99FKA.regSIy2D6QIAQhgVx4JWnn6BqFTxvA.mC', 'Viewer',     'User',  NOW())
+ON CONFLICT (email) DO NOTHING;

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using MvcApp.Data;
-using MvcApp.Models;
 using MvcApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -92,23 +91,6 @@ using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.Database.EnsureCreated();
-
-        if (!db.Users.Any())
-        {
-            var adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "admin@manfoods.com";
-            var adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "ManfoodsAdmin@2025";
-            db.Users.Add(new User
-            {
-                Email = adminEmail,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword),
-                Role = "Admin_Full",
-                AssignedName = "Admin",
-                CreatedAt = DateTime.UtcNow
-            });
-            db.SaveChanges();
-            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-            logger.LogInformation("Default admin user created with email: {Email}", adminEmail);
-        }
     }
     catch (Exception ex)
     {
