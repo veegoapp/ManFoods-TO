@@ -49,6 +49,47 @@ CREATE TABLE IF NOT EXISTS store_references (
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+-- ── exit_interviews ────────────────────────────
+-- One row per Microsoft Forms exit-interview submission. No name / national
+-- ID is stored — employee_id is kept only to resolve store/leader/OC/OM at
+-- upload time and must never be surfaced in any view or API response.
+CREATE TABLE IF NOT EXISTS exit_interviews (
+    id SERIAL PRIMARY KEY,
+    forms_response_id TEXT NOT NULL DEFAULT '',
+    employee_id TEXT NOT NULL DEFAULT '',
+    store TEXT NOT NULL DEFAULT '',
+    store_leader TEXT NOT NULL DEFAULT '',
+    operation_consultant TEXT NOT NULL DEFAULT '',
+    operation_manager TEXT NOT NULL DEFAULT '',
+    job_title TEXT NOT NULL DEFAULT '',
+    month INTEGER NOT NULL DEFAULT 0,
+    year INTEGER NOT NULL DEFAULT 0,
+    submitted_at TIMESTAMPTZ,
+
+    reason_for_leaving TEXT NOT NULL DEFAULT '',
+    would_return TEXT NOT NULL DEFAULT '',
+    overall_experience TEXT NOT NULL DEFAULT '',
+    workload_condition TEXT NOT NULL DEFAULT '',
+    fair_treatment TEXT NOT NULL DEFAULT '',
+    encourage_opinions TEXT NOT NULL DEFAULT '',
+    complaints_handling TEXT NOT NULL DEFAULT '',
+    benefits_match TEXT NOT NULL DEFAULT '',
+    teamwork TEXT NOT NULL DEFAULT '',
+    communication TEXT NOT NULL DEFAULT '',
+    task_fit TEXT NOT NULL DEFAULT '',
+    training TEXT NOT NULL DEFAULT '',
+    feedback TEXT NOT NULL DEFAULT '',
+    use_personal_abilities TEXT NOT NULL DEFAULT '',
+
+    reason_other_text TEXT,
+    work_pressure_reason_text TEXT,
+    what_would_change_text TEXT,
+    what_learned_text TEXT,
+    final_comments_text TEXT
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_exit_interviews_forms_response_id
+    ON exit_interviews (forms_response_id) WHERE forms_response_id <> '';
+
 -- ── upload_logs ───────────────────────────────
 CREATE TABLE IF NOT EXISTS upload_logs (
     id SERIAL PRIMARY KEY,

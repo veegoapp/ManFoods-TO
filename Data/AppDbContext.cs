@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Resignation> Resignations { get; set; }
     public DbSet<StoreReference> StoreReferences { get; set; }
     public DbSet<UploadLog> UploadLogs { get; set; }
+    public DbSet<ExitInterview> ExitInterviews { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

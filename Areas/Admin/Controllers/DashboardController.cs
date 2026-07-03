@@ -31,6 +31,8 @@ public class DashboardController : Controller
 
     public IActionResult Stores() => View();
 
+    public IActionResult ExitInterviews() => View();
+
     public async Task<IActionResult> StoreProfile(string store)
     {
         if (string.IsNullOrWhiteSpace(store)) return RedirectToAction("Turnover");
@@ -168,6 +170,15 @@ public class DashboardController : Controller
     {
         if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = "Please select a file and specify month/year."; return RedirectToAction("Uploads"); }
         try { var email = HttpContext.Session.GetEmail(); var (_, msg, _) = await _uploads.UploadStoreReferenceAsync(vm.File, vm.Month, vm.Year, email); TempData["Success"] = msg; }
+        catch (Exception ex) { TempData["Error"] = $"Upload failed: {ex.Message}"; }
+        return RedirectToAction("Uploads");
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadExitInterviews(MvcApp.Models.ViewModels.ExitInterviewUploadViewModel vm)
+    {
+        if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = "Please select a file."; return RedirectToAction("Uploads"); }
+        try { var email = HttpContext.Session.GetEmail(); var (_, msg, _) = await _uploads.UploadExitInterviewsAsync(vm.File, email); TempData["Success"] = msg; }
         catch (Exception ex) { TempData["Error"] = $"Upload failed: {ex.Message}"; }
         return RedirectToAction("Uploads");
     }

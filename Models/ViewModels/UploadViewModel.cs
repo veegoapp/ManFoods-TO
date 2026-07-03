@@ -15,3 +15,9 @@ public class UploadViewModel
     [Range(2000, 2100)]
     public int Year { get; set; }
 }
+
+public class ExitInterviewUploadViewModel
+{
+    [Required]
+    public IFormFile? File { get; set; }
+}

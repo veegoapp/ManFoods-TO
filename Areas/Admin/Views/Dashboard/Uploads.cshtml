@@ -50,7 +50,7 @@
 </style>
 
 <div class="row g-4 mb-4">
-    <div class="col-lg-4">
+    <div class="col-xl-3 col-lg-6">
         <div class="card-dark">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="card-icon"><i class="bi bi-people-fill"></i></div>
@@ -67,7 +67,7 @@
             </form>
         </div>
     </div>
-    <div class="col-lg-4">
+    <div class="col-xl-3 col-lg-6">
         <div class="card-dark">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="card-icon"><i class="bi bi-person-dash-fill"></i></div>
@@ -84,7 +84,7 @@
             </form>
         </div>
     </div>
-    <div class="col-lg-4">
+    <div class="col-xl-3 col-lg-6">
         <div class="card-dark">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="card-icon"><i class="bi bi-shop"></i></div>
@@ -98,6 +98,20 @@
                 </div>
                 <div class="mb-2"><input type="file" name="File" accept=".xlsx,.xls" class="form-control form-control-dark form-control-sm" required/></div>
                 <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-cloud-upload me-1"></i>Upload Store Reference</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-xl-3 col-lg-6">
+        <div class="card-dark">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="card-icon"><i class="bi bi-chat-square-text-fill"></i></div>
+                <div><h6 class="mb-0">Exit Interviews</h6><p class="text-muted-custom mb-0 small">Export responses from Microsoft Forms and upload as-is — no reformatting needed.</p></div>
+            </div>
+            <form asp-area="Admin" asp-controller="Dashboard" asp-action="UploadExitInterviews" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="mb-2"><input type="file" name="File" accept=".xlsx,.xls" class="form-control form-control-dark form-control-sm" required/></div>
+                <div class="mb-2" style="font-size:11px;color:var(--text-3)">Re-uploading the full export is safe — existing responses are matched and updated, never duplicated.</div>
+                <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-cloud-upload me-1"></i>Upload Exit Interviews</button>
             </form>
         </div>
     </div>

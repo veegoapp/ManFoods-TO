@@ -1,0 +1,235 @@
+@{
+    ViewData["Title"] = "Exit Interviews";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Exit Interviews</h1>
+        <p class="page-subtitle">Why people are leaving, in aggregate — individual responses are never identified</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <select id="eiStoreSelect" class="form-select form-select-dark form-select-sm" style="width:170px"><option value="">All Stores</option></select>
+        <select id="eiLeaderSelect" class="form-select form-select-dark form-select-sm" style="width:170px"><option value="">All Store Leaders</option></select>
+        <select id="eiOcSelect" class="form-select form-select-dark form-select-sm" style="width:170px"><option value="">All Consultants</option></select>
+        <select id="eiOmSelect" class="form-select form-select-dark form-select-sm" style="width:170px"><option value="">All Managers</option></select>
+    </div>
+</div>
+
+<div id="eiEmptyState" class="card-dark text-center py-5" style="display:none">
+    <i class="bi bi-chat-square-text" style="font-size:3rem;color:oklch(0.5 0.18 265);display:block;margin-bottom:1rem"></i>
+    <h5 class="mb-2">No Exit Interview Data</h5>
+    <p class="text-muted-custom">Upload exit interview responses from the Data Management page to see analysis here.</p>
+</div>
+
+<div id="eiContent">
+    <div class="charts-grid mb-4">
+        <div class="chart-card chart-full">
+            <div class="chart-header"><h6>Reasons for Leaving</h6><p>Most common answer to "why did you leave?"</p></div>
+            <div class="chart-body"><canvas id="eiReasonsChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header"><h6>Would They Return?</h6><p>Willingness to work here again</p></div>
+            <div class="chart-body"><canvas id="eiReturnChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header"><h6>Overall Experience</h6><p>How they describe their time here</p></div>
+            <div class="chart-body"><canvas id="eiExperienceChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="chart-card mb-4">
+        <div class="chart-header"><h6>Workload Conditions</h6><p>How they describe operating conditions in-store</p></div>
+        <div class="chart-body chart-body-sm"><canvas id="eiWorkloadChart"></canvas></div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="section-accent"></div>
+        <h5 class="mb-0 fw-bold">Engagement Drivers</h5>
+        <span class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px">% who answered positively — lowest first</span>
+    </div>
+    <div class="chart-card mb-4" id="eiDriversCard">
+        <div id="eiDriversContainer">
+            <div class="text-center py-3 text-muted">
+                <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <div class="section-accent"></div>
+            <h5 class="mb-0 fw-bold">Comments</h5>
+            <span id="eiCommentCountBadge" class="badge" style="background:var(--bg-2);color:var(--text-2);font-size:11px"></span>
+        </div>
+        <input type="text" id="eiCommentSearch" class="form-control form-control-sm" placeholder="&#xF52A; Search comments…" style="width:220px;border-radius:20px">
+    </div>
+    <div class="chart-card mb-4 p-0" style="overflow:hidden">
+        <div class="table-responsive" style="max-height:480px;overflow-y:auto">
+            <table class="table table-hover mb-0" style="font-size:13px">
+                <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                    <tr>
+                        <th class="px-3 py-2">Store</th>
+                        <th class="px-3 py-2">Store Leader</th>
+                        <th class="px-3 py-2">Question</th>
+                        <th class="px-3 py-2">Comment</th>
+                    </tr>
+                </thead>
+                <tbody id="eiCommentsBody">
+                    <tr><td colspan="4" class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const DRIVER_COLORS = ['oklch(0.55 0.19 265)', 'oklch(0.65 0.15 190)', 'oklch(0.7 0.16 145)', 'oklch(0.72 0.17 60)', 'oklch(0.62 0.2 15)'];
+
+function eiBuildQuery() {
+    const p = new URLSearchParams();
+    const store = document.getElementById('eiStoreSelect').value;
+    const leader = document.getElementById('eiLeaderSelect').value;
+    const oc = document.getElementById('eiOcSelect').value;
+    const om = document.getElementById('eiOmSelect').value;
+    if (store) p.set('store', store);
+    if (leader) p.set('storeLeader', leader);
+    if (oc) p.set('oc', oc);
+    if (om) p.set('om', om);
+    return p.toString();
+}
+
+async function eiFetch(path) {
+    const r = await fetch(`/api/exit-interviews/${path}?${eiBuildQuery()}`);
+    return r.ok ? r.json() : [];
+}
+
+async function eiLoadFilters() {
+    const opts = await eiFetch('filters');
+    const fill = (id, values) => {
+        const sel = document.getElementById(id);
+        const cur = sel.value;
+        const placeholder = sel.options[0];
+        sel.innerHTML = '';
+        sel.appendChild(placeholder);
+        (values || []).forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v; opt.textContent = v;
+            sel.appendChild(opt);
+        });
+        if (cur) sel.value = cur;
+    };
+    fill('eiStoreSelect', opts.stores);
+    fill('eiLeaderSelect', opts.storeLeaders);
+    fill('eiOcSelect', opts.operationConsultants);
+    fill('eiOmSelect', opts.operationManagers);
+
+    const hasData = (opts.stores && opts.stores.length) || (opts.storeLeaders && opts.storeLeaders.length);
+    document.getElementById('eiEmptyState').style.display = hasData ? 'none' : '';
+    document.getElementById('eiContent').style.display = hasData ? '' : 'none';
+    return hasData;
+}
+
+let eiReasonsChart, eiReturnChart, eiExperienceChart, eiWorkloadChart;
+function eiMkChart(ref, id, labels, values, horizontal) {
+    if (ref) ref.destroy();
+    const ctx = document.getElementById(id);
+    if (!ctx) return null;
+    if (horizontal) {
+        return new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: { labels, datasets: [{ data: values, backgroundColor: 'oklch(0.55 0.19 265)', borderRadius: 4, maxBarThickness: 26 }] },
+            options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'oklch(0.92 0.008 255)' }, ticks: { color: 'oklch(0.5 0.03 258)' } }, y: { grid: { display: false }, ticks: { color: 'oklch(0.5 0.03 258)' } } } }
+        });
+    }
+    return new Chart(ctx.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data: values, backgroundColor: DRIVER_COLORS, borderWidth: 2, borderColor: 'oklch(1 0 0)' }] },
+        options: { cutout: '60%', plugins: { legend: { position: 'bottom', labels: { color: 'oklch(0.5 0.03 258)', boxWidth: 10, boxHeight: 10, padding: 12, font: { size: 11 } } } } }
+    });
+}
+
+async function eiLoadReasons() {
+    const data = await eiFetch('reasons');
+    eiReasonsChart = eiMkChart(eiReasonsChart, 'eiReasonsChart', data.map(d => d.label), data.map(d => d.value), true);
+}
+async function eiLoadReturn() {
+    const data = await eiFetch('would-return');
+    eiReturnChart = eiMkChart(eiReturnChart, 'eiReturnChart', data.map(d => d.label), data.map(d => d.value), false);
+}
+async function eiLoadExperience() {
+    const data = await eiFetch('overall-experience');
+    eiExperienceChart = eiMkChart(eiExperienceChart, 'eiExperienceChart', data.map(d => d.label), data.map(d => d.value), false);
+}
+async function eiLoadWorkload() {
+    const data = await eiFetch('workload');
+    eiWorkloadChart = eiMkChart(eiWorkloadChart, 'eiWorkloadChart', data.map(d => d.label), data.map(d => d.value), true);
+}
+
+function eiDriverTone(pct) {
+    if (pct >= 70) return 'oklch(0.62 0.15 155)';
+    if (pct >= 40) return 'oklch(0.75 0.16 75)';
+    return 'oklch(0.6 0.22 22)';
+}
+
+async function eiLoadDrivers() {
+    const data = await eiFetch('engagement-drivers');
+    const container = document.getElementById('eiDriversContainer');
+    if (!data.length) { container.innerHTML = '<div class="text-center py-3 text-muted">No data for the selected filters.</div>'; return; }
+    container.innerHTML = data.map(d => `
+        <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1" style="font-size:12.5px">
+                <span class="fw-semibold">${d.label}</span>
+                <span style="color:var(--text-3)">${d.positivePercent}% positive · ${d.totalResponses} responses</span>
+            </div>
+            <div style="height:8px;border-radius:20px;background:var(--bg-2);overflow:hidden">
+                <div style="height:100%;border-radius:20px;background:${eiDriverTone(d.positivePercent)};width:${d.positivePercent}%"></div>
+            </div>
+        </div>`).join('');
+}
+
+let eiCommentsData = [];
+function eiRenderComments() {
+    const search = (document.getElementById('eiCommentSearch').value || '').toLowerCase();
+    const rows = eiCommentsData.filter(c =>
+        c.text.toLowerCase().includes(search) ||
+        (c.store || '').toLowerCase().includes(search) ||
+        (c.questionLabel || '').toLowerCase().includes(search)
+    );
+    const badge = document.getElementById('eiCommentCountBadge');
+    if (badge) badge.textContent = rows.length + ' comments';
+
+    const tbody = document.getElementById('eiCommentsBody');
+    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No comments for the selected filters.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(c => `
+        <tr>
+            <td class="px-3 py-2 fw-semibold">${c.store || '<span class="text-muted">—</span>'}</td>
+            <td class="px-3 py-2" style="color:oklch(0.5 0.03 258)">${c.storeLeader || '<span class="text-muted">—</span>'}</td>
+            <td class="px-3 py-2" style="white-space:nowrap;color:oklch(0.5 0.03 258)">${c.questionLabel}</td>
+            <td class="px-3 py-2">${c.text}</td>
+        </tr>`).join('');
+}
+
+async function eiLoadComments() {
+    eiCommentsData = await eiFetch('comments');
+    eiRenderComments();
+}
+
+async function eiLoadAll() {
+    await Promise.all([eiLoadReasons(), eiLoadReturn(), eiLoadExperience(), eiLoadWorkload(), eiLoadDrivers(), eiLoadComments()]);
+}
+
+['eiStoreSelect', 'eiLeaderSelect', 'eiOcSelect', 'eiOmSelect'].forEach(id => {
+    document.getElementById(id).addEventListener('change', eiLoadAll);
+});
+document.getElementById('eiCommentSearch').addEventListener('input', eiRenderComments);
+
+(async function init() {
+    const hasData = await eiLoadFilters();
+    if (hasData) await eiLoadAll();
+})();
+</script>
+}
