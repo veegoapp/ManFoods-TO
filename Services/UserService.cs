@@ -60,6 +60,13 @@ public class UserService : IUserService
         if (user != null) { _db.Users.Remove(user); await _db.SaveChangesAsync(); }
     }
 
+    public async Task<bool> VerifyRecoveryKeyAsync(string key)
+    {
+        var setting = await _db.AppSettings.FindAsync("admin_recovery_key_hash");
+        if (setting == null || string.IsNullOrEmpty(setting.Value)) return false;
+        return BCrypt.Net.BCrypt.Verify(key, setting.Value);
+    }
+
     public async Task<bool> ResetAdminPasswordAsync(string email, string newPassword)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLower() && u.Role == "Admin");

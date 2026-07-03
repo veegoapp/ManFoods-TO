@@ -39,6 +39,22 @@ CREATE TABLE IF NOT EXISTS password_reset_otps (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ── app_settings ───────────────────────────────
+-- Small key/value store for config that isn't tied to any entity — right
+-- now just the admin recovery key hash (bcrypt, same as passwords). Not an
+-- env var/Secret: this way there is nothing extra to configure outside the
+-- database, and it can be rotated later from within the app if needed.
+CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL DEFAULT ''
+);
+-- Seeds the recovery key hash for the key already generated and handed to
+-- the admin — ON CONFLICT DO NOTHING so re-running this script never
+-- silently resets a key that's since been rotated.
+INSERT INTO app_settings (key, value)
+VALUES ('admin_recovery_key_hash', '$2b$11$24/KLaFMtFEfWIHLPFgbsudQs/B1SN/EVztSlE7u4ff0QAMiMS.sC')
+ON CONFLICT (key) DO NOTHING;
+
 -- ── active_employees ──────────────────────────
 CREATE TABLE IF NOT EXISTS active_employees (
     id SERIAL PRIMARY KEY,

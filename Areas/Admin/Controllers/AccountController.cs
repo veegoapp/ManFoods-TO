@@ -57,13 +57,7 @@ public class AccountController : Controller
     {
         if (!ModelState.IsValid) return View(vm);
 
-        var keyHash = Environment.GetEnvironmentVariable("ADMIN_RECOVERY_KEY_HASH");
-        if (string.IsNullOrEmpty(keyHash))
-        {
-            ModelState.AddModelError("", "Recovery is not configured. Set ADMIN_RECOVERY_KEY_HASH in Secrets.");
-            return View(vm);
-        }
-        if (!BCrypt.Net.BCrypt.Verify(vm.RecoveryKey, keyHash))
+        if (!await _users.VerifyRecoveryKeyAsync(vm.RecoveryKey))
         {
             ModelState.AddModelError("RecoveryKey", "Invalid recovery key.");
             return View(vm);

@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<UploadLog> UploadLogs { get; set; }
     public DbSet<ExitInterview> ExitInterviews { get; set; }
     public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
+    public DbSet<AppSetting> AppSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

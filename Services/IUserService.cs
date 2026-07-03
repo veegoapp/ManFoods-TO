@@ -11,5 +11,6 @@ public interface IUserService
     Task<UserViewModel?> UpdateAsync(int id, EditUserViewModel vm);
     Task DeleteAsync(int id);
     Task<(int created, int skipped)> UploadBulkUsersAsync(IFormFile file);
+    Task<bool> VerifyRecoveryKeyAsync(string key);
     Task<bool> ResetAdminPasswordAsync(string email, string newPassword);
 }
