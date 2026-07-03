@@ -62,6 +62,12 @@ CREATE TABLE IF NOT EXISTS upload_logs (
     content_type TEXT
 );
 
+-- CREATE TABLE IF NOT EXISTS is a no-op on a table that already exists with
+-- an older shape, so columns added after the table's first deploy (like
+-- these two) never land on existing databases. Backfill them explicitly.
+ALTER TABLE upload_logs ADD COLUMN IF NOT EXISTS file_content BYTEA;
+ALTER TABLE upload_logs ADD COLUMN IF NOT EXISTS content_type TEXT;
+
 -- ── seed users ────────────────────────────────
 -- admin@mcd.com / 123123654  →  Admin portal
 -- user@mcd.com  / 123123654  →  Home portal
