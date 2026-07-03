@@ -29,8 +29,11 @@ if [ "$DB_OK" = false ]; then
 fi
 
 if [ -z "$Gemini_API_Key" ]; then
-  echo "  ⚠️  Gemini_API_Key not set — AI features will be disabled."
-  echo "     Add it in the Replit Secrets tab to enable AI chat."
+  echo ""
+  echo "  ❌ ERROR: Gemini_API_Key not found."
+  echo "     Add it in the Replit Secrets tab."
+  echo "     Get a free key from: https://aistudio.google.com/app/apikey"
+  exit 1
 else
   echo "  ✅ Gemini_API_Key is set — AI features enabled."
 fi
