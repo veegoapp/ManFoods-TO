@@ -25,6 +25,12 @@ public class DashboardController : Controller
 
     public IActionResult Turnover() => View();
 
+    public IActionResult Workforce() => View();
+
+    public IActionResult Retention() => View();
+
+    public IActionResult Stores() => View();
+
     public async Task<IActionResult> StoreProfile(string store)
     {
         if (string.IsNullOrWhiteSpace(store)) return RedirectToAction("Turnover");

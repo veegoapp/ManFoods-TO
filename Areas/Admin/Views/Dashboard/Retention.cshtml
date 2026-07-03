@@ -1,0 +1,139 @@
+@{
+    ViewData["Title"] = "Retention";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Retention</h1>
+        <p class="page-subtitle">Company-wide turnover trend and smart insights</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <select id="periodSelect" class="form-select form-select-dark" style="width:180px">
+            <option value="">Select Period</option>
+        </select>
+        <select id="storeSelect" class="form-select form-select-dark" style="width:200px">
+            <option value="">All Stores</option>
+        </select>
+    </div>
+</div>
+
+<div id="kpiCards" class="kpi-grid mb-4">
+    <div class="kpi-spinner text-center py-3 w-100">
+        <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 265)"></div>
+    </div>
+</div>
+
+<div class="chart-card mb-4">
+    <div class="chart-header d-flex align-items-center justify-content-between">
+        <div>
+            <h6>Turnover Trend</h6>
+            <p id="retTrendSubtitle">Average turnover rate (%) across all stores, by period</p>
+        </div>
+    </div>
+    <div class="chart-body"><canvas id="retTrendChart" style="max-height:280px"></canvas></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="chart-card h-100">
+            <div class="chart-header"><h6>Turnover by Tenure</h6><p>How long before resignation</p></div>
+            <div class="chart-body"><canvas id="tenureChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="chart-card h-100">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="bi bi-lightbulb-fill" style="color:oklch(0.75 0.16 75)"></i>
+                <h6 class="mb-0">Smart Insights</h6>
+            </div>
+            <p style="font-size:12px;color:var(--text-3);margin-bottom:14px">Auto-generated from period-over-period trends</p>
+            <div id="retInsights">
+                <div class="text-center py-3 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="~/js/dashboard.js" asp-append-version="true"></script>
+<script>
+function fmtPeriodRet(pk) {
+    const [y, m] = pk.split('-');
+    return new Date(+y, +m - 1, 1).toLocaleString('default', { month: 'short', year: '2-digit' });
+}
+
+let retTrendInstance;
+async function retLoadTrend() {
+    const mx = await fetchJson('/api/dashboard/trend-matrix');
+    if (!mx || !mx.periods || !mx.periods.length) return;
+    const avgByPeriod = mx.periods.map(pk => {
+        const vals = mx.rows.map(r => r.periodRates?.[pk]).filter(v => v !== null && v !== undefined);
+        return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+    });
+
+    const ctx = document.getElementById('retTrendChart');
+    if (!ctx) return;
+    if (retTrendInstance) retTrendInstance.destroy();
+    retTrendInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: mx.periods.map(fmtPeriodRet),
+            datasets: [{
+                label: 'Avg. Turnover Rate',
+                data: avgByPeriod,
+                borderColor: 'oklch(0.5 0.18 265)',
+                backgroundColor: 'oklch(0.5 0.18 265 / .15)',
+                tension: 0.4, fill: true, pointRadius: 4, spanGaps: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } }, grid: { display: false } },
+                y: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 }, callback: v => v + '%' }, grid: { color: 'oklch(0.92 0.008 255)' } }
+            }
+        }
+    });
+}
+
+function retRenderInsights(items) {
+    const el = document.getElementById('retInsights');
+    if (!items || !items.length) { el.innerHTML = '<div class="text-muted" style="font-size:13px">No insights available — upload data for multiple periods to enable trend analysis.</div>'; return; }
+    const colorMap = {
+        danger:    { bg: 'oklch(0.6 0.22 22 / .08)', border: 'oklch(0.6 0.22 22)', text: 'oklch(0.6 0.22 22)' },
+        success:   { bg: 'oklch(0.62 0.15 155 / .1)', border: 'oklch(0.62 0.15 155)', text: 'oklch(0.62 0.15 155)' },
+        warning:   { bg: 'oklch(0.75 0.16 75 / .12)', border: 'oklch(0.75 0.16 75)', text: 'oklch(0.6 0.14 75)' },
+        secondary: { bg: 'var(--bg-2)', border: 'var(--text-3)', text: 'var(--text-2)' }
+    };
+    el.innerHTML = items.slice(0, 5).map(item => {
+        const c = colorMap[item.color] || colorMap.secondary;
+        return `<div style="background:${c.bg};border-left:3px solid ${c.border};border-radius:8px;padding:12px 14px;margin-bottom:10px">
+            <div class="d-flex align-items-start gap-2">
+                <i class="bi ${item.icon} mt-1 flex-shrink-0" style="color:${c.text};font-size:15px"></i>
+                <div>
+                    <div style="font-size:12.5px;font-weight:700;color:${c.text};margin-bottom:2px">${item.title}</div>
+                    <div style="font-size:12px;color:var(--text-2);line-height:1.5">${item.description}</div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function retLoadInsights() {
+    if (!periodMonth || !periodYear) return;
+    const items = await fetchJson(`/api/dashboard/smart-insights?month=${periodMonth}&year=${periodYear}`);
+    retRenderInsights(items);
+}
+
+const _retOrigLoadAll = loadAll;
+loadAll = async function () {
+    await _retOrigLoadAll();
+    await retLoadInsights();
+};
+retLoadTrend();
+</script>
+}

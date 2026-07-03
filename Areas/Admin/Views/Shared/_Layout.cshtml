@@ -17,152 +17,129 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/admin-theme.css" asp-append-version="true"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
     <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('mf-theme') || 'light');</script>
 </head>
-<body>
+<body class="admin-theme" data-theme="light">
+<script>document.body.setAttribute('data-theme', localStorage.getItem('mf-theme') || 'light');</script>
 
-<!-- ══ TOP NAV ════════════════════════════════════════════ -->
-<header class="topnav">
-    <div class="topnav-inner">
-
-        <!-- Brand -->
-        <a class="topnav-brand" href="/admin/dashboard/turnover">
-            <img src="/images/mclogo.png" alt="Manfoods Logo" class="topnav-logo"/>
-            <div class="topnav-brand-texts">
-                <span class="topnav-brand-main">Manfoods</span>
-                <span class="topnav-brand-sub">Admin Portal</span>
+<div class="admin-shell">
+    <!-- ══ SIDEBAR ════════════════════════════════════════ -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <a class="admin-sidebar-brand" href="/admin/dashboard/turnover" style="text-decoration:none">
+            <div class="admin-sidebar-logo"><img src="/images/mclogo.png" alt="Manfoods"/></div>
+            <div>
+                <div class="admin-sidebar-brand-main">Manfoods</div>
+                <div class="admin-sidebar-brand-sub">Admin Portal</div>
             </div>
         </a>
 
-        <!-- Center nav links -->
-        <nav class="topnav-links" id="topnavLinks">
-            <a href="/admin/dashboard/turnover" class="topnav-link @(IsActive("Turnover") ? "active" : "")">
-                <i class="bi bi-pie-chart-fill"></i>
-                <span>Turnover Analysis</span>
+        <nav class="admin-sidebar-nav">
+            <a href="/admin/dashboard/turnover" class="admin-nav-link @(IsActive("Turnover") ? "active" : "")">
+                <i class="bi bi-pie-chart-fill"></i><span>Turnover</span>
             </a>
-            <a href="/admin/dashboard/uploads" class="topnav-link @(IsActive("Uploads") ? "active" : "")">
-                <i class="bi bi-cloud-upload-fill"></i>
-                <span>Data Management</span>
+            <a href="/admin/dashboard/workforce" class="admin-nav-link @(IsActive("Workforce") ? "active" : "")">
+                <i class="bi bi-people-fill"></i><span>Workforce</span>
             </a>
-            <a href="/admin/dashboard/reports" class="topnav-link @(IsActive("Reports") ? "active" : "")">
-                <i class="bi bi-file-earmark-bar-graph-fill"></i>
-                <span>Reports</span>
+            <a href="/admin/dashboard/retention" class="admin-nav-link @(IsActive("Retention") ? "active" : "")">
+                <i class="bi bi-graph-up-arrow"></i><span>Retention</span>
+            </a>
+            <a href="/admin/dashboard/stores" class="admin-nav-link @(IsActive("Stores") || IsActive("StoreProfile") ? "active" : "")">
+                <i class="bi bi-shop"></i><span>Stores</span>
+            </a>
+            <a href="/admin/dashboard/uploads" class="admin-nav-link @(IsActive("Uploads") ? "active" : "")">
+                <i class="bi bi-cloud-upload-fill"></i><span>Data Management</span>
+            </a>
+            <a href="/admin/dashboard/reports" class="admin-nav-link @(IsActive("Reports") ? "active" : "")">
+                <i class="bi bi-file-earmark-bar-graph-fill"></i><span>Reports</span>
             </a>
             @if (isFullAdmin)
             {
-                <a href="/admin/dashboard/users" class="topnav-link @(IsActive("Users") ? "active" : "")">
-                    <i class="bi bi-people-fill"></i>
-                    <span>Users</span>
-                    <span class="topnav-admin-badge">Admin</span>
+                <a href="/admin/dashboard/users" class="admin-nav-link @(IsActive("Users") ? "active" : "")">
+                    <i class="bi bi-person-badge-fill"></i><span>Users</span>
+                    <span class="admin-nav-badge">Admin</span>
                 </a>
             }
         </nav>
 
-        <!-- Right: user + logout -->
-        <div class="topnav-user">
-            <button class="theme-toggle" id="themeToggle" title="Toggle light/dark mode">
+        <div class="admin-sidebar-user">
+            <div class="admin-sidebar-avatar">@initials</div>
+            <div class="admin-sidebar-user-details">
+                <div class="admin-sidebar-user-email">@userEmail</div>
+                <div class="admin-sidebar-user-role">@userRole.Replace("_"," ")</div>
+            </div>
+            <button class="admin-sidebar-iconbtn theme-toggle" id="themeToggle" title="Toggle light/dark mode">
                 <i class="bi bi-moon-stars-fill icon-dark"></i>
                 <i class="bi bi-sun-fill icon-light"></i>
             </button>
-            <div class="topnav-avatar">@initials</div>
-            <div class="topnav-user-details">
-                <div class="topnav-user-email">@userEmail</div>
-                <div class="topnav-user-role">@userRole.Replace("_"," ")</div>
-            </div>
-            <a href="/admin/account/changepassword" class="topnav-logout-btn ms-1" title="Change Password" style="text-decoration:none">
+            <a href="/admin/account/changepassword" class="admin-sidebar-iconbtn" title="Change Password">
                 <i class="bi bi-key-fill"></i>
             </a>
-            <form asp-area="Admin" asp-controller="Account" asp-action="Logout" method="post" class="d-inline ms-1">
+            <form asp-area="Admin" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="topnav-logout-btn" title="Sign Out">
+                <button type="submit" class="admin-sidebar-iconbtn" title="Sign Out">
                     <i class="bi bi-box-arrow-right"></i>
                 </button>
             </form>
         </div>
+    </aside>
 
-        <!-- Hamburger (mobile) -->
-        <button class="topnav-hamburger" id="topnavToggle" aria-label="Toggle menu">
-            <i class="bi bi-list" id="topnavHamburgerIcon"></i>
-        </button>
-    </div>
+    <!-- ══ MAIN ═══════════════════════════════════════════ -->
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <button class="admin-hamburger" id="adminSidebarToggle" aria-label="Toggle menu">
+                <i class="bi bi-list"></i>
+            </button>
+            <span class="admin-topbar-title">@(ViewData["Title"] ?? "Dashboard")</span>
+            <span></span>
+        </header>
 
-    <!-- Mobile dropdown menu -->
-    <div class="topnav-mobile-menu" id="topnavMobileMenu">
-        <a href="/admin/dashboard/turnover" class="topnav-mobile-link @(IsActive("Turnover") ? "active" : "")">
-            <i class="bi bi-pie-chart-fill"></i> Turnover Analysis
-        </a>
-        <a href="/admin/dashboard/uploads" class="topnav-mobile-link @(IsActive("Uploads") ? "active" : "")">
-            <i class="bi bi-cloud-upload-fill"></i> Data Management
-        </a>
-        <a href="/admin/dashboard/reports" class="topnav-mobile-link @(IsActive("Reports") ? "active" : "")">
-            <i class="bi bi-file-earmark-bar-graph-fill"></i> Reports
-        </a>
-        @if (isFullAdmin)
-        {
-            <a href="/admin/dashboard/users" class="topnav-mobile-link @(IsActive("Users") ? "active" : "")">
-                <i class="bi bi-people-fill"></i> Users
-            </a>
-        }
-        <div class="topnav-mobile-user">
-            <div class="topnav-avatar">@initials</div>
-            <div class="topnav-user-details">
-                <div class="topnav-user-email">@userEmail</div>
-                <div class="topnav-user-role">@userRole.Replace("_"," ")</div>
+        <main class="admin-content">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert-banner alert-success-banner">
+                    <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert-banner alert-error-banner">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+                </div>
+            }
+            <div class="page-content">
+                @RenderBody()
             </div>
-            <form asp-area="Admin" asp-controller="Account" asp-action="Logout" method="post" class="d-inline ms-auto">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="topnav-logout-btn" title="Sign Out">
-                    <i class="bi bi-box-arrow-right"></i>
-                </button>
-            </form>
-        </div>
+        </main>
     </div>
-</header>
-
-<!-- ══ MAIN CONTENT ═══════════════════════════════════════ -->
-<main class="main-content">
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert-banner alert-success-banner">
-            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert-banner alert-error-banner">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
-        </div>
-    }
-    <div class="page-content">
-        @RenderBody()
-    </div>
-</main>
+</div>
 
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 (function () {
-    // Mobile nav toggle
-    const toggle = document.getElementById('topnavToggle');
-    const menu   = document.getElementById('topnavMobileMenu');
-    const icon   = document.getElementById('topnavHamburgerIcon');
+    // Mobile sidebar toggle
+    const toggle  = document.getElementById('adminSidebarToggle');
+    const sidebar = document.getElementById('adminSidebar');
     if (toggle) {
-        toggle.addEventListener('click', () => {
-            const open = menu.classList.toggle('open');
-            icon.className = open ? 'bi bi-x-lg' : 'bi bi-list';
+        toggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+        document.addEventListener('click', (e) => {
+            if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
         });
     }
 
     // Theme toggle
     const themeBtn = document.getElementById('themeToggle');
-    const root = document.documentElement;
+    const body = document.body;
     const saved = localStorage.getItem('mf-theme') || 'light';
-    root.setAttribute('data-theme', saved);
+    body.setAttribute('data-theme', saved);
     if (themeBtn) {
         themeBtn.addEventListener('click', () => {
-            const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            root.setAttribute('data-theme', next);
+            const next = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', next);
             localStorage.setItem('mf-theme', next);
         });
     }

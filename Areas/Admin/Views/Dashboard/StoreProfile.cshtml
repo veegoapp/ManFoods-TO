@@ -8,7 +8,7 @@
 
 <div class="page-header">
     <div>
-        <a href="/admin/dashboard/turnover" class="btn btn-sm mb-2" style="background:rgba(109,93,251,.15);color:#6D5DFB;border:1px solid rgba(109,93,251,.3);font-size:12px;border-radius:7px">
+        <a href="/admin/dashboard/turnover" class="btn btn-sm mb-2" style="background:oklch(0.5 0.18 265 / .15);color:oklch(0.5 0.18 265);border:1px solid oklch(0.5 0.18 265 / .3);font-size:12px;border-radius:7px">
             <i class="bi bi-arrow-left me-1"></i>Back to Turnover Analysis
         </a>
         <h1 class="page-title">@storeName</h1>
@@ -64,15 +64,15 @@
 <!-- ── Active Employees ───────────────────────────────────── -->
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
-        <div style="width:4px;height:22px;background:linear-gradient(135deg,#5B3FE0,#A78BFA);border-radius:2px"></div>
+        <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 265),oklch(0.6 0.16 265));border-radius:2px"></div>
         <h5 class="mb-0 fw-bold">Active Employees</h5>
-        <span id="employeeCountBadge" class="badge" style="background:#f0f0f0;color:#555;font-size:11px"></span>
+        <span id="employeeCountBadge" class="badge" style="background:oklch(0.965 0.008 255);color:oklch(0.5 0.03 258);font-size:11px"></span>
     </div>
 </div>
 <div class="chart-card mb-4 p-0" style="overflow:hidden">
     <div class="table-responsive" style="max-height:400px;overflow-y:auto">
         <table class="table table-hover mb-0" style="font-size:13px">
-            <thead style="background:#f8f8f8;border-bottom:2px solid #eee;position:sticky;top:0;z-index:1">
+            <thead style="background:oklch(0.965 0.008 255);border-bottom:2px solid oklch(0.92 0.008 255);position:sticky;top:0;z-index:1">
                 <tr>
                     <th class="px-3 py-2">Name</th>
                     <th class="px-3 py-2">Job Title</th>
@@ -83,7 +83,7 @@
             </thead>
             <tbody id="employeesTableBody">
                 <tr><td colspan="5" class="text-center py-4 text-muted">
-                    <div class="spinner-border spinner-border-sm me-2" style="color:#c8102e"></div>Loading...
+                    <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.6 0.22 22)"></div>Loading...
                 </td></tr>
             </tbody>
         </table>
@@ -93,15 +93,15 @@
 <!-- ── Resignation History ────────────────────────────────── -->
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
-        <div style="width:4px;height:22px;background:linear-gradient(135deg,#5B3FE0,#A78BFA);border-radius:2px"></div>
+        <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 265),oklch(0.6 0.16 265));border-radius:2px"></div>
         <h5 class="mb-0 fw-bold">Resignation History</h5>
-        <span class="badge ms-1" style="background:#f0f0f0;color:#555;font-size:11px">All Periods</span>
+        <span class="badge ms-1" style="background:oklch(0.965 0.008 255);color:oklch(0.5 0.03 258);font-size:11px">All Periods</span>
     </div>
 </div>
 <div class="chart-card mb-4 p-0" style="overflow:hidden">
     <div class="table-responsive" style="max-height:400px;overflow-y:auto">
         <table class="table table-hover mb-0" style="font-size:13px">
-            <thead style="background:#f8f8f8;border-bottom:2px solid #eee;position:sticky;top:0;z-index:1">
+            <thead style="background:oklch(0.965 0.008 255);border-bottom:2px solid oklch(0.92 0.008 255);position:sticky;top:0;z-index:1">
                 <tr>
                     <th class="px-3 py-2">Name</th>
                     <th class="px-3 py-2">Job Title</th>
@@ -112,7 +112,7 @@
             </thead>
             <tbody id="resignationsTableBody">
                 <tr><td colspan="5" class="text-center py-4 text-muted">
-                    <div class="spinner-border spinner-border-sm me-2" style="color:#c8102e"></div>Loading...
+                    <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.6 0.22 22)"></div>Loading...
                 </td></tr>
             </tbody>
         </table>
@@ -152,7 +152,7 @@ async function loadNetworkCompare() {
     if (!el || !storeKpi || !networkKpi) return;
     const diff = (storeKpi.turnoverRate || 0) - (networkKpi.turnoverRate || 0);
     const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '—';
-    const color = diff > 0 ? '#c8102e' : diff < 0 ? '#28a745' : '#888';
+    const color = diff > 0 ? 'oklch(0.6 0.22 22)' : diff < 0 ? 'oklch(0.62 0.15 155)' : 'oklch(0.5 0.03 258)';
     el.innerHTML = `This store: <strong>${(storeKpi.turnoverRate || 0).toFixed(1)}%</strong> &nbsp;|&nbsp; Network average: <strong>${(networkKpi.turnoverRate || 0).toFixed(1)}%</strong> &nbsp;|&nbsp; <span style="color:${color};font-weight:700">${arrow} ${Math.abs(diff).toFixed(1)}%</span>`;
 }
 
@@ -215,8 +215,8 @@ async function loadTrendChart() {
             datasets: [{
                 label: storeFilter,
                 data: data.periods.map(p => row.periodRates?.[p] ?? null),
-                borderColor: '#6D5DFB',
-                backgroundColor: '#6D5DFB22',
+                borderColor: 'oklch(0.5 0.18 265)',
+                backgroundColor: 'oklch(0.5 0.18 265 / .15)',
                 tension: 0.4,
                 fill: true,
                 pointRadius: 4,
@@ -227,8 +227,8 @@ async function loadTrendChart() {
             responsive: true,
             plugins: { legend: { display: false } },
             scales: {
-                x: { ticks: { color: '#888', font: { size: 11 } }, grid: { color: '#2a2a2a' } },
-                y: { ticks: { color: '#888', font: { size: 11 }, callback: v => v + '%' }, grid: { color: '#2a2a2a' } }
+                x: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } }, grid: { color: 'oklch(0.92 0.008 255)' } },
+                y: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 }, callback: v => v + '%' }, grid: { color: 'oklch(0.92 0.008 255)' } }
             }
         }
     });

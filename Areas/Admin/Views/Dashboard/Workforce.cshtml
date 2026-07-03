@@ -1,0 +1,162 @@
+@{
+    ViewData["Title"] = "Workforce";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Workforce</h1>
+        <p class="page-subtitle">Headcount composition and distribution across stores</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <select id="periodSelect" class="form-select form-select-dark" style="width:180px">
+            <option value="">Select Period</option>
+        </select>
+        <select id="storeSelect" class="form-select form-select-dark" style="width:200px">
+            <option value="">All Stores</option>
+        </select>
+    </div>
+</div>
+
+<div id="kpiCards" class="kpi-grid mb-4">
+    <div class="kpi-spinner text-center py-3 w-100">
+        <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 265)"></div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-xl-5">
+        <div class="chart-card h-100">
+            <div class="chart-header"><h6>Store Distribution</h6><p>Share of total headcount by store</p></div>
+            <div id="wfDistribution" class="mt-3">
+                <div class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-7">
+        <div class="chart-card h-100">
+            <div class="chart-header"><h6>Turnover by Job Title</h6><p>Resignations grouped by role</p></div>
+            <div class="chart-body"><canvas id="jobTitleChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <div class="section-accent"></div>
+    <h5 class="mb-0 fw-bold">By Operation Consultant &amp; Manager</h5>
+</div>
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="chart-card p-0 h-100" style="overflow:hidden">
+            <div class="chart-header d-flex align-items-center gap-2">
+                <i class="bi bi-person-badge" style="color:oklch(0.5 0.18 265);font-size:16px"></i>
+                <div><h6 class="mb-0">Operation Consultants</h6><p class="mb-0">Headcount &amp; turnover by consultant</p></div>
+            </div>
+            <div class="table-responsive" style="max-height:400px;overflow-y:auto">
+                <table class="table table-hover table-sm mb-0" style="font-size:13px">
+                    <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                        <tr>
+                            <th class="px-3 py-2">Name</th>
+                            <th class="px-3 py-2 text-center">Stores</th>
+                            <th class="px-3 py-2 text-center">Headcount</th>
+                            <th class="px-3 py-2 text-center">Turnover%</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ocTableBody">
+                        <tr><td colspan="4" class="text-center py-3 text-muted">
+                            <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="chart-card p-0 h-100" style="overflow:hidden">
+            <div class="chart-header d-flex align-items-center gap-2">
+                <i class="bi bi-person-gear" style="color:oklch(0.6 0.16 265);font-size:16px"></i>
+                <div><h6 class="mb-0">Operation Managers</h6><p class="mb-0">Headcount &amp; turnover by manager</p></div>
+            </div>
+            <div class="table-responsive" style="max-height:400px;overflow-y:auto">
+                <table class="table table-hover table-sm mb-0" style="font-size:13px">
+                    <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                        <tr>
+                            <th class="px-3 py-2">Name</th>
+                            <th class="px-3 py-2 text-center">Stores</th>
+                            <th class="px-3 py-2 text-center">Headcount</th>
+                            <th class="px-3 py-2 text-center">Turnover%</th>
+                        </tr>
+                    </thead>
+                    <tbody id="omTableBody">
+                        <tr><td colspan="4" class="text-center py-3 text-muted">
+                            <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.6 0.16 265)"></div>Loading...
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="~/js/dashboard.js" asp-append-version="true"></script>
+<script>
+/* Store distribution ----------------------------------------- */
+function wfRenderDistribution(rows) {
+    const el = document.getElementById('wfDistribution');
+    if (!rows || !rows.length) { el.innerHTML = '<div class="text-center py-3 text-muted">No data for this period.</div>'; return; }
+    const total = rows.reduce((s, r) => s + r.headcount, 0) || 1;
+    const sorted = [...rows].sort((a, b) => b.headcount - a.headcount).slice(0, 8);
+    el.innerHTML = sorted.map(r => {
+        const pct = Math.round((r.headcount / total) * 100);
+        return `<div class="mb-3">
+            <div class="d-flex justify-content-between mb-1" style="font-size:12.5px">
+                <span class="fw-semibold">${r.storeName}</span>
+                <span style="color:var(--text-3)">${r.headcount} · ${pct}%</span>
+            </div>
+            <div style="height:7px;border-radius:20px;background:var(--bg-2);overflow:hidden">
+                <div style="height:100%;border-radius:20px;background:oklch(0.5 0.18 265);width:${Math.min(pct * 2.5, 100)}%"></div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function wfLoadDistribution() {
+    if (!periodMonth || !periodYear) return;
+    const data = await fetchJson(`/api/dashboard/store-comparison?month=${periodMonth}&year=${periodYear}`);
+    wfRenderDistribution(data || []);
+}
+
+/* OC / OM tables (reusing the same rendering approach as Turnover) ------- */
+function wfRenderOcOmTable(tbodyId, rows) {
+    const tbody = document.getElementById(tbodyId);
+    if (!rows || !rows.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">No data for this period.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(r => {
+        const bg = r.avgTurnoverRate >= 15 ? 'oklch(0.6 0.22 22)' : r.avgTurnoverRate >= 8 ? 'oklch(0.68 0.18 55)' : r.avgTurnoverRate >= 4 ? 'oklch(0.75 0.16 75)' : 'oklch(0.62 0.15 155)';
+        const badge = `<span style="background:${bg};color:#fff;padding:3px 10px;border-radius:12px;font-size:11.5px;font-weight:700">${r.avgTurnoverRate.toFixed(1)}%</span>`;
+        return `<tr>
+            <td class="px-3 py-2 fw-semibold">${r.name}</td>
+            <td class="px-3 py-2 text-center">${r.storeCount}</td>
+            <td class="px-3 py-2 text-center">${r.totalHeadcount}</td>
+            <td class="px-3 py-2 text-center">${badge}</td>
+        </tr>`;
+    }).join('');
+}
+
+async function wfLoadOcOm() {
+    if (!periodMonth || !periodYear) return;
+    const data = await fetchJson(`/api/dashboard/oc-om-analysis?month=${periodMonth}&year=${periodYear}`);
+    wfRenderOcOmTable('ocTableBody', data.ocRows);
+    wfRenderOcOmTable('omTableBody', data.omRows);
+}
+
+const _wfOrigLoadAll = loadAll;
+loadAll = async function () {
+    await _wfOrigLoadAll();
+    await wfLoadDistribution();
+    await wfLoadOcOm();
+};
+</script>
+}

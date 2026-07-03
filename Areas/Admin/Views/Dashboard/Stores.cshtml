@@ -1,0 +1,96 @@
+@{
+    ViewData["Title"] = "Stores";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Stores</h1>
+        <p class="page-subtitle">Turnover health across every store</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <select id="periodSelect" class="form-select form-select-dark" style="width:180px">
+            <option value="">Select Period</option>
+        </select>
+        <input type="text" id="storeCardSearch" class="form-control form-control-sm"
+               placeholder="&#xF52A; Search store, OC, OM…" style="width:220px;border-radius:20px">
+    </div>
+</div>
+
+<div id="storeCardsContainer" class="row g-3">
+    <div class="col-12 text-center py-5 text-muted">
+        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading stores…
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/dashboard.js" asp-append-version="true"></script>
+<script>
+/* Stores page reuses periodSelect (from dashboard.js loadPeriods) but has no
+   #kpiCards / chart canvases, so loadAll() below is a no-op override that
+   only drives the store-cards grid instead. */
+let stStoreData = [];
+
+function stHealth(rate) {
+    if (rate < 4) return { label: 'Healthy', tone: 'success' };
+    if (rate < 8) return { label: 'Watch', tone: 'warning' };
+    return { label: 'Critical', tone: 'danger' };
+}
+
+function stRenderCards() {
+    const search = (document.getElementById('storeCardSearch').value || '').toLowerCase();
+    const rows = stStoreData.filter(r =>
+        r.storeName.toLowerCase().includes(search) ||
+        (r.operationConsultant || '').toLowerCase().includes(search) ||
+        (r.operationManager || '').toLowerCase().includes(search)
+    );
+
+    const container = document.getElementById('storeCardsContainer');
+    if (!rows.length) {
+        container.innerHTML = '<div class="col-12 text-center py-5 text-muted">No matching stores.</div>';
+        return;
+    }
+
+    const toneVar = { success: 'oklch(0.62 0.15 155)', warning: 'oklch(0.75 0.16 75)', danger: 'oklch(0.6 0.22 22)' };
+    const toneBg  = { success: 'oklch(0.62 0.15 155 / .1)', warning: 'oklch(0.75 0.16 75 / .15)', danger: 'oklch(0.6 0.22 22 / .08)' };
+
+    container.innerHTML = rows.map(r => {
+        const h = stHealth(r.turnoverRate);
+        return `<div class="col-sm-6 col-lg-4 col-xl-3">
+            <a href="/admin/dashboard/storeprofile?store=${encodeURIComponent(r.storeName)}" class="card-dark d-block h-100" style="text-decoration:none;color:inherit">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                    <div>
+                        <h6 class="mb-1 fw-bold" style="font-size:14px">${r.storeName}</h6>
+                        <div style="font-size:11.5px;color:var(--text-3)"><i class="bi bi-people me-1"></i>${r.headcount} employees</div>
+                    </div>
+                    <span style="background:${toneBg[h.tone]};color:${toneVar[h.tone]};padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap">${h.label}</span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <div style="font-size:22px;font-weight:700">${r.turnoverRate.toFixed(1)}%</div>
+                </div>
+                <div style="font-size:11px;color:var(--text-3);margin-bottom:12px">Turnover rate</div>
+                <div style="border-top:1px solid var(--card-border);padding-top:10px;display:flex;justify-content:space-between;font-size:11.5px">
+                    <div>
+                        <div style="color:var(--text-3)">OC / OM</div>
+                        <div class="fw-semibold mt-1">${r.operationConsultant || '—'}</div>
+                    </div>
+                    <div class="text-end">
+                        <div style="color:var(--text-3)">Resignations</div>
+                        <div class="fw-semibold mt-1" style="color:oklch(0.6 0.22 22)">${r.resignations}</div>
+                    </div>
+                </div>
+            </a>
+        </div>`;
+    }).join('');
+}
+
+async function stLoadStores() {
+    if (!periodMonth || !periodYear) return;
+    const data = await fetchJson(`/api/dashboard/store-comparison?month=${periodMonth}&year=${periodYear}`);
+    stStoreData = data || [];
+    stRenderCards();
+}
+
+loadAll = async function () { await stLoadStores(); };
+document.getElementById('storeCardSearch').addEventListener('input', stRenderCards);
+</script>
+}

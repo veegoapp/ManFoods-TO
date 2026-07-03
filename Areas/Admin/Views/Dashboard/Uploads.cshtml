@@ -24,8 +24,8 @@
 <style>
     .btn-outline-template {
         background: transparent;
-        border: 1px solid #27ae60;
-        color: #27ae60;
+        border: 1px solid oklch(0.62 0.15 155);
+        color: oklch(0.62 0.15 155);
         font-size: 12px;
         border-radius: 7px;
         padding: 6px 12px;
@@ -35,18 +35,18 @@
         transition: background .15s, color .15s;
     }
     .btn-outline-template:hover {
-        background: #27ae60;
+        background: oklch(0.62 0.15 155);
         color: #fff;
     }
     .btn-download-outline {
-        background: transparent; border: 1px solid rgba(109,93,251,.3); color: #27ae60;
+        background: transparent; border: 1px solid oklch(0.5 0.18 265 / .3); color: oklch(0.62 0.15 155);
         border-radius: 8px; padding: 6px 12px;
         cursor: pointer; transition: all .2s;
         font-weight: 600; font-size: 13px; min-height: 34px;
         display: inline-flex; align-items: center; gap: 4px;
         text-decoration: none;
     }
-    .btn-download-outline:hover { background: rgba(39,174,96,.15); border-color: #27ae60; color: #27ae60; }
+    .btn-download-outline:hover { background: rgba(39,174,96,.15); border-color: oklch(0.62 0.15 155); color: oklch(0.62 0.15 155); }
 </style>
 
 <div class="row g-4 mb-4">
@@ -177,7 +177,7 @@
 </div>
 
 <style>
-    .page-link-dark { background: #2a2a2a; border-color: #3a3a3a; color: #ccc; border-radius: 6px !important; }
-    .page-link-dark:hover { background: #3a3a3a; color: #fff; }
-    .page-item.active .page-link-dark { background: #6D5DFB; border-color: #6D5DFB; color: #fff; }
+    .page-link-dark { background: var(--card-bg); border-color: var(--card-border); color: var(--text-2); border-radius: 6px !important; }
+    .page-link-dark:hover { background: var(--bg-2); color: var(--text); }
+    .page-item.active .page-link-dark { background: oklch(0.5 0.18 265); border-color: oklch(0.5 0.18 265); color: #fff; }
 </style>
