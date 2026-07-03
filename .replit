@@ -29,7 +29,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "dotnet run --project MvcApp.csproj"
+args = "bash setup.sh"
 waitForPort = 5000
 
 [agent]
