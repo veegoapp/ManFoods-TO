@@ -46,18 +46,6 @@ public class AiAssistantApiController : ControllerBase
         return Ok(new { used, limit });
     }
 
-    public record SetLimitRequest(int Limit);
-
-    [HttpPost("limit")]
-    [RequireAdminAuth]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SetLimit([FromBody] SetLimitRequest request)
-    {
-        if (request.Limit < 1) return BadRequest(new { error = "الحد لازم يكون رقم أكبر من صفر." });
-        await _usage.SetDailyLimitAsync(request.Limit);
-        return Ok(new { limit = request.Limit });
-    }
-
     public record ChatRequest(string Question, int? Month, int? Year, string? Store);
 
     [HttpPost("chat")]
@@ -113,6 +101,7 @@ public class AiAssistantApiController : ControllerBase
         };
 
         var answer = await _gemini.AskAsync(request.Question, context);
-        return Ok(new { answer, used, limit });
+        await _usage.RecordTokensAsync(userId.Value, answer.PromptTokens, answer.CompletionTokens);
+        return Ok(new { answer = answer.Text, used, limit });
     }
 }

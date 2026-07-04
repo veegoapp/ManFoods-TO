@@ -1,0 +1,230 @@
+@{
+    ViewData["Title"] = "AI Usage";
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">AI Usage</h1>
+        <p class="page-subtitle">استهلاك الـ AI Assistant — الحدود، عدد الأسئلة، التوكنز، والتكلفة التقديرية</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card-dark h-100">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="card-icon"><i class="bi bi-speedometer2"></i></div>
+                <div><h6 class="mb-0">Daily Question Limit</h6><p class="text-muted-custom mb-0 small">أقصى عدد أسئلة يقدر أي شخص يسألها للـ AI في اليوم الواحد</p></div>
+            </div>
+            <div class="input-group mb-2">
+                <input type="number" id="auLimitInput" class="form-control form-control-dark form-control-sm" min="1" step="1"/>
+                <button id="auLimitSaveBtn" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i></button>
+            </div>
+            <span id="auLimitSavedMsg" class="text-success small" style="display:none"><i class="bi bi-check-circle-fill me-1"></i>اتحفظ</span>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card-dark h-100">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="card-icon"><i class="bi bi-currency-dollar"></i></div>
+                <div><h6 class="mb-0">Estimated Cost Rates</h6><p class="text-muted-custom mb-0 small">سعر تقديري لكل مليون توكن — اتأكد من السعر الفعلي من حساب Google بتاعك، الرقم ده تقديري وقابل للتعديل</p></div>
+            </div>
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <label class="form-label small text-muted-custom mb-1">Input $/1M</label>
+                    <input type="number" id="auInputPriceInput" class="form-control form-control-dark form-control-sm" min="0" step="0.01"/>
+                </div>
+                <div class="col-6">
+                    <label class="form-label small text-muted-custom mb-1">Output $/1M</label>
+                    <input type="number" id="auOutputPriceInput" class="form-control form-control-dark form-control-sm" min="0" step="0.01"/>
+                </div>
+            </div>
+            <button id="auRatesSaveBtn" class="btn btn-primary btn-sm w-100"><i class="bi bi-check-lg me-1"></i>Save Rates</button>
+            <span id="auRatesSavedMsg" class="text-success small d-block mt-1" style="display:none"><i class="bi bi-check-circle-fill me-1"></i>اتحفظ</span>
+        </div>
+    </div>
+</div>
+
+<div id="auSummaryCards" class="kpi-grid mb-4">
+    <div class="kpi-spinner text-center py-3 w-100">
+        <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 25)"></div>
+    </div>
+</div>
+
+<div class="chart-card mb-4">
+    <div class="chart-header"><h6>Usage Trend</h6><p>آخر 30 يوم — عدد الأسئلة والتوكنز على مستوى الشركة كلها</p></div>
+    <div class="chart-body"><canvas id="auTrendChart" style="max-height:280px"></canvas></div>
+</div>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <div class="section-accent"></div>
+    <h5 class="mb-0 fw-bold">Top Users (Last 30 Days)</h5>
+</div>
+<div class="chart-card p-0" style="overflow:hidden">
+    <div class="table-responsive" style="max-height:480px;overflow-y:auto">
+        <table class="table table-hover mb-0" style="font-size:13px">
+            <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                <tr>
+                    <th class="px-3 py-2">Email</th>
+                    <th class="px-3 py-2 text-center">Questions</th>
+                    <th class="px-3 py-2 text-center">Tokens</th>
+                    <th class="px-3 py-2 text-center">Est. Cost</th>
+                    <th class="px-3 py-2 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody id="auTopUsersBody">
+                <tr><td colspan="5" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
+                </td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const auToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+function auRenderSummary(s) {
+    const el = document.getElementById('auSummaryCards');
+    if (!s) { el.innerHTML = ''; return; }
+    el.innerHTML = `
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-chat-dots-fill"></i></div><div class="kpi-value">${s.questionsToday}</div><div class="kpi-label">Questions Today</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-calendar-week"></i></div><div class="kpi-value">${s.questionsLast7Days}</div><div class="kpi-label">Questions (7 Days)</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-calendar-month"></i></div><div class="kpi-value">${s.questionsLast30Days}</div><div class="kpi-label">Questions (30 Days)</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-cpu"></i></div><div class="kpi-value">${s.tokensToday.toLocaleString()}</div><div class="kpi-label">Tokens Today</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-cpu-fill"></i></div><div class="kpi-value">${s.tokensLast30Days.toLocaleString()}</div><div class="kpi-label">Tokens (30 Days)</div></div>
+        <div class="kpi-card"><div class="kpi-icon text-success"><i class="bi bi-currency-dollar"></i></div><div class="kpi-value text-success">$${s.estimatedCostToday.toFixed(4)}</div><div class="kpi-label">Est. Cost Today</div></div>
+        <div class="kpi-card"><div class="kpi-icon text-success"><i class="bi bi-currency-dollar"></i></div><div class="kpi-value text-success">$${s.estimatedCostLast30Days.toFixed(4)}</div><div class="kpi-label">Est. Cost (30 Days)</div></div>
+    `;
+}
+
+async function auLoadSummary() {
+    const res = await fetch('/api/ai-usage/summary');
+    auRenderSummary(res.ok ? await res.json() : null);
+}
+
+let auTrendInstance;
+async function auLoadTrend() {
+    const res = await fetch('/api/ai-usage/trend?days=30');
+    const data = res.ok ? await res.json() : [];
+    const ctx = document.getElementById('auTrendChart');
+    if (!ctx) return;
+    if (auTrendInstance) auTrendInstance.destroy();
+    auTrendInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => d.label),
+            datasets: [
+                {
+                    label: 'Questions',
+                    data: data.map(d => d.questions),
+                    borderColor: 'oklch(0.55 0.19 25)',
+                    backgroundColor: 'oklch(0.55 0.19 25 / .12)',
+                    yAxisID: 'y', tension: 0.3, fill: true, pointRadius: 2,
+                },
+                {
+                    label: 'Tokens',
+                    data: data.map(d => d.tokens),
+                    borderColor: 'oklch(0.65 0.15 190)',
+                    backgroundColor: 'transparent',
+                    yAxisID: 'y1', tension: 0.3, fill: false, pointRadius: 2,
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: 'var(--text-2)', font: { size: 11 } } } },
+            scales: {
+                x: { ticks: { color: 'var(--text-2)', font: { size: 10 } }, grid: { display: false } },
+                y: { position: 'left', ticks: { color: 'var(--text-2)', font: { size: 11 } }, grid: { color: 'oklch(0.92 0.008 255)' } },
+                y1: { position: 'right', ticks: { color: 'var(--text-2)', font: { size: 11 } }, grid: { display: false } },
+            }
+        }
+    });
+}
+
+async function auResetUser(userId, btn) {
+    btn.disabled = true;
+    try {
+        await fetch(`/api/ai-usage/reset/${userId}`, { method: 'POST', headers: { 'RequestVerificationToken': auToken } });
+        await auLoadTopUsers();
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function auLoadTopUsers() {
+    const res = await fetch('/api/ai-usage/top-users?days=30');
+    const rows = res.ok ? await res.json() : [];
+    const tbody = document.getElementById('auTopUsersBody');
+    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">مفيش استخدام مسجل لسه.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(r => `
+        <tr>
+            <td class="px-3 py-2 fw-semibold">${r.email}</td>
+            <td class="px-3 py-2 text-center">${r.questions}</td>
+            <td class="px-3 py-2 text-center">${r.tokens.toLocaleString()}</td>
+            <td class="px-3 py-2 text-center">$${r.estimatedCost.toFixed(4)}</td>
+            <td class="px-3 py-2 text-center"><button class="btn btn-sm btn-outline-secondary au-reset-btn" data-id="${r.userId}" title="Reset today's count">Reset</button></td>
+        </tr>`).join('');
+    document.querySelectorAll('.au-reset-btn').forEach(btn => {
+        btn.addEventListener('click', () => auResetUser(btn.dataset.id, btn));
+    });
+}
+
+async function auLoadSettings() {
+    const [limitRes, ratesRes] = await Promise.all([
+        fetch('/api/ai-usage/limit'),
+        fetch('/api/ai-usage/cost-rates'),
+    ]);
+    if (limitRes.ok) {
+        const data = await limitRes.json();
+        document.getElementById('auLimitInput').value = data.limit;
+    }
+    if (ratesRes.ok) {
+        const rates = await ratesRes.json();
+        document.getElementById('auInputPriceInput').value = rates.inputPricePerMillion;
+        document.getElementById('auOutputPriceInput').value = rates.outputPricePerMillion;
+    }
+}
+
+document.getElementById('auLimitSaveBtn').addEventListener('click', async () => {
+    const limit = parseInt(document.getElementById('auLimitInput').value, 10);
+    if (!limit || limit < 1) return;
+    const res = await fetch('/api/ai-usage/limit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': auToken },
+        body: JSON.stringify({ limit })
+    });
+    if (res.ok) {
+        const msg = document.getElementById('auLimitSavedMsg');
+        msg.style.display = ''; setTimeout(() => { msg.style.display = 'none'; }, 2500);
+    }
+});
+
+document.getElementById('auRatesSaveBtn').addEventListener('click', async () => {
+    const inputPricePerMillion = parseFloat(document.getElementById('auInputPriceInput').value);
+    const outputPricePerMillion = parseFloat(document.getElementById('auOutputPriceInput').value);
+    if (isNaN(inputPricePerMillion) || isNaN(outputPricePerMillion)) return;
+    const res = await fetch('/api/ai-usage/cost-rates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': auToken },
+        body: JSON.stringify({ inputPricePerMillion, outputPricePerMillion })
+    });
+    if (res.ok) {
+        const msg = document.getElementById('auRatesSavedMsg');
+        msg.style.display = ''; setTimeout(() => { msg.style.display = 'none'; }, 2500);
+        auLoadSummary();
+        auLoadTopUsers();
+    }
+});
+
+auLoadSettings();
+auLoadSummary();
+auLoadTrend();
+auLoadTopUsers();
+</script>
+}

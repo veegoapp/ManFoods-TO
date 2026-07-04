@@ -14,11 +14,11 @@ public class GeminiService : IGeminiService
         _logger = logger;
     }
 
-    public async Task<string> AskAsync(string userQuestion, GeminiContext ctx)
+    public async Task<GeminiAnswer> AskAsync(string userQuestion, GeminiContext ctx)
     {
         var apiKey = Environment.GetEnvironmentVariable("Gemini_API_Key");
         if (string.IsNullOrEmpty(apiKey))
-            return "AI غير مُفعّل. تأكد من إعداد Gemini_API_Key في الـ Secrets.";
+            return new GeminiAnswer { Text = "AI غير مُفعّل. تأكد من إعداد Gemini_API_Key في الـ Secrets." };
 
         var periodLabel = (ctx.Month.HasValue && ctx.Year.HasValue)
             ? $"{ctx.Month}/{ctx.Year}"
@@ -176,14 +176,26 @@ public class GeminiService : IGeminiService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Gemini API error {Status}: {Body}", response.StatusCode, responseJson);
-                return response.StatusCode == System.Net.HttpStatusCode.TooManyRequests
-                    ? "⚠️ تم تجاوز حد الطلبات على الـ AI. انتظر دقيقة وحاول مجدداً."
-                    : $"⚠️ خطأ في الاتصال بالـ AI (كود {(int)response.StatusCode}). حاول مرة أخرى.";
+                return new GeminiAnswer
+                {
+                    Text = response.StatusCode == System.Net.HttpStatusCode.TooManyRequests
+                        ? "⚠️ تم تجاوز حد الطلبات على الـ AI. انتظر دقيقة وحاول مجدداً."
+                        : $"⚠️ خطأ في الاتصال بالـ AI (كود {(int)response.StatusCode}). حاول مرة أخرى.",
+                };
             }
 
             using var doc = JsonDocument.Parse(responseJson);
+
+            var promptTokens = 0;
+            var completionTokens = 0;
+            if (doc.RootElement.TryGetProperty("usageMetadata", out var usage))
+            {
+                if (usage.TryGetProperty("promptTokenCount", out var pt)) promptTokens = pt.GetInt32();
+                if (usage.TryGetProperty("candidatesTokenCount", out var ct)) completionTokens = ct.GetInt32();
+            }
+
             if (!doc.RootElement.TryGetProperty("candidates", out var candidates) || candidates.GetArrayLength() == 0)
-                return "⚠️ لم يُرجع الـ AI أي إجابة. حاول إعادة صياغة السؤال.";
+                return new GeminiAnswer { Text = "⚠️ لم يُرجع الـ AI أي إجابة. حاول إعادة صياغة السؤال.", PromptTokens = promptTokens, CompletionTokens = completionTokens };
 
             var text = candidates[0]
                 .GetProperty("content")
@@ -191,17 +203,17 @@ public class GeminiService : IGeminiService
                 .GetProperty("text")
                 .GetString();
 
-            return text ?? "⚠️ لم يتم الحصول على إجابة.";
+            return new GeminiAnswer { Text = text ?? "⚠️ لم يتم الحصول على إجابة.", PromptTokens = promptTokens, CompletionTokens = completionTokens };
         }
         catch (TaskCanceledException)
         {
             _logger.LogWarning("Gemini API timeout");
-            return "⚠️ انتهت مهلة الاتصال بالـ AI. تأكد من اتصالك بالإنترنت وحاول مجدداً.";
+            return new GeminiAnswer { Text = "⚠️ انتهت مهلة الاتصال بالـ AI. تأكد من اتصالك بالإنترنت وحاول مجدداً." };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Gemini service exception");
-            return "⚠️ حدث خطأ غير متوقع أثناء الاتصال بالـ AI. حاول مرة أخرى.";
+            return new GeminiAnswer { Text = "⚠️ حدث خطأ غير متوقع أثناء الاتصال بالـ AI. حاول مرة أخرى." };
         }
     }
 }

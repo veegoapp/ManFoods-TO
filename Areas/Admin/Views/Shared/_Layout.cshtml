@@ -54,6 +54,12 @@
             <a href="/admin/dashboard/aiassistant" class="admin-nav-link @(IsActive("AiAssistant") ? "active" : "")">
                 <i class="bi bi-stars"></i><span>AI Assistant</span>
             </a>
+            @if (userRole == "Admin")
+            {
+                <a href="/admin/dashboard/aiusage" class="admin-nav-link @(IsActive("AiUsage") ? "active" : "")">
+                    <i class="bi bi-cpu-fill"></i><span>AI Usage</span>
+                </a>
+            }
             <a href="/admin/dashboard/earlywarning" class="admin-nav-link @(IsActive("EarlyWarning") ? "active" : "")">
                 <i class="bi bi-exclamation-diamond-fill"></i><span>Early Warning</span>
             </a>

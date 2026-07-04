@@ -15,4 +15,10 @@ public class AiUsageDaily
 
     [Column("question_count")]
     public int QuestionCount { get; set; }
+
+    [Column("prompt_tokens")]
+    public long PromptTokens { get; set; }
+
+    [Column("completion_tokens")]
+    public long CompletionTokens { get; set; }
 }

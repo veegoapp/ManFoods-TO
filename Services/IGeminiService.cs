@@ -38,7 +38,14 @@ public class GeminiContext
     public double? Retention90Target { get; set; }
 }
 
+public class GeminiAnswer
+{
+    public string Text { get; set; } = "";
+    public int PromptTokens { get; set; }
+    public int CompletionTokens { get; set; }
+}
+
 public interface IGeminiService
 {
-    Task<string> AskAsync(string userQuestion, GeminiContext context);
+    Task<GeminiAnswer> AskAsync(string userQuestion, GeminiContext context);
 }

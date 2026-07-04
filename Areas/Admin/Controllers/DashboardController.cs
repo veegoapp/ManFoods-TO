@@ -41,6 +41,9 @@ public class DashboardController : Controller
 
     public IActionResult AiAssistant() => View();
 
+    [RequireAdminAuth]
+    public IActionResult AiUsage() => View();
+
     public IActionResult EarlyWarning() => View();
 
     public IActionResult Scorecard() => View();

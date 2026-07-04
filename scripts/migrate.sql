@@ -158,6 +158,8 @@ CREATE TABLE IF NOT EXISTS ai_usage_daily (
     question_count INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, usage_date)
 );
+ALTER TABLE ai_usage_daily ADD COLUMN IF NOT EXISTS prompt_tokens BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE ai_usage_daily ADD COLUMN IF NOT EXISTS completion_tokens BIGINT NOT NULL DEFAULT 0;
 
 -- ── seed users ────────────────────────────────
 -- admin@mcd.com / 123123654  →  Admin portal
