@@ -18,6 +18,12 @@ public class ExitInterviewService : IExitInterviewService
         if (!string.IsNullOrWhiteSpace(filter.StoreLeader)) q = q.Where(e => e.StoreLeader == filter.StoreLeader);
         if (!string.IsNullOrWhiteSpace(filter.OperationConsultant)) q = q.Where(e => e.OperationConsultant == filter.OperationConsultant);
         if (!string.IsNullOrWhiteSpace(filter.OperationManager)) q = q.Where(e => e.OperationManager == filter.OperationManager);
+        if (filter.Year.HasValue)
+        {
+            var periods = DashboardService.ResolvePeriods(null, filter.Year, null, null, filter.Months);
+            var keys = periods.Select(p => p.Year * 100 + p.Month).ToHashSet();
+            q = q.Where(e => keys.Contains(e.Year * 100 + e.Month));
+        }
         return q;
     }
 
@@ -44,6 +50,17 @@ public class ExitInterviewService : IExitInterviewService
         if (a.Contains("أعارض") || a.Contains("ضعيف") || a == "لا") return -1;
         if (a.Contains("أوافق") || a == "جيدة" || a == "نعم" || a.Contains("كبيرة") || a.Contains("عالية")) return 1;
         return 0;
+    }
+
+    public async Task<List<PeriodItem>> GetAvailablePeriodsAsync()
+    {
+        return await _db.ExitInterviews
+            .Where(e => e.Month > 0 && e.Year > 0)
+            .Select(e => new { e.Month, e.Year })
+            .Distinct()
+            .OrderByDescending(p => p.Year).ThenByDescending(p => p.Month)
+            .Select(p => new PeriodItem { Month = p.Month, Year = p.Year })
+            .ToListAsync();
     }
 
     public async Task<ExitInterviewFilterOptions> GetFilterOptionsAsync(string role, string? assignedName)
@@ -75,6 +92,15 @@ public class ExitInterviewService : IExitInterviewService
 
     public async Task<List<ChartDataItem>> GetWorkloadConditionAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
         GroupCount((await FilteredAsync(filter, role, assignedName)).Select(e => e.WorkloadCondition));
+
+    public async Task<List<ChartDataItem>> GetTrainingAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
+        GroupCount((await FilteredAsync(filter, role, assignedName)).Select(e => e.Training));
+
+    public async Task<List<ChartDataItem>> GetFairTreatmentAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
+        GroupCount((await FilteredAsync(filter, role, assignedName)).Select(e => e.FairTreatment));
+
+    public async Task<List<ChartDataItem>> GetWorkPressureReasonAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
+        GroupCount((await FilteredAsync(filter, role, assignedName)).Select(e => e.WorkPressureReasonText ?? ""));
 
     public async Task<List<EngagementDriverItem>> GetEngagementDriversAsync(ExitInterviewFilter filter, string role, string? assignedName)
     {

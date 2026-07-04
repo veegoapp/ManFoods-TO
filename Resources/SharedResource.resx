@@ -222,11 +222,28 @@
   <data name="Chart_StoreLeaderboard" xml:space="preserve"><value>Store Leaderboard</value></data>
   <data name="Chart_TenureDistribution" xml:space="preserve"><value>Workforce Tenure Distribution</value></data>
   <data name="Chart_ReasonsForLeaving" xml:space="preserve"><value>Reasons for Leaving</value></data>
+  <data name="Chart_ReasonsForLeavingSub" xml:space="preserve"><value>What leavers say drove their decision, most common first</value></data>
   <data name="Chart_WouldTheyReturn" xml:space="preserve"><value>Would They Return?</value></data>
+  <data name="Chart_WouldTheyReturnSub" xml:space="preserve"><value>Would they consider working with us again?</value></data>
   <data name="Chart_OverallExperience" xml:space="preserve"><value>Overall Experience</value></data>
+  <data name="Chart_OverallExperienceSub" xml:space="preserve"><value>How they describe their overall time with the company</value></data>
   <data name="Chart_WorkloadConditions" xml:space="preserve"><value>Workload Conditions</value></data>
+  <data name="Chart_WorkloadConditionsSub" xml:space="preserve"><value>How they describe operating conditions in-store</value></data>
+  <data name="Chart_Training" xml:space="preserve"><value>Received Adequate Training?</value></data>
+  <data name="Chart_TrainingSub" xml:space="preserve"><value>Did they feel sufficiently trained to do their job?</value></data>
+  <data name="Chart_FairTreatment" xml:space="preserve"><value>Fair Treatment</value></data>
+  <data name="Chart_FairTreatmentSub" xml:space="preserve"><value>Were all employees treated fairly?</value></data>
+  <data name="Chart_WorkPressureReason" xml:space="preserve"><value>Reason for Workload Pressure</value></data>
+  <data name="Chart_WorkPressureReasonSub" xml:space="preserve"><value>When workload was described as heavy, what they said caused it</value></data>
   <data name="Chart_EngagementDrivers" xml:space="preserve"><value>Engagement Drivers</value></data>
+  <data name="Chart_EngagementDriversSub" xml:space="preserve"><value>% who answered positively — lowest first</value></data>
   <data name="Chart_Comments" xml:space="preserve"><value>Comments</value></data>
+  <data name="EI_SearchComments" xml:space="preserve"><value>Search comments…</value></data>
+  <data name="EI_CommentsCount" xml:space="preserve"><value>comments</value></data>
+  <data name="EI_Question" xml:space="preserve"><value>Question</value></data>
+  <data name="EI_Comment" xml:space="preserve"><value>Comment</value></data>
+  <data name="EI_NoDataForFilters" xml:space="preserve"><value>No data for the selected filters.</value></data>
+  <data name="EI_NoCommentsForFilters" xml:space="preserve"><value>No comments for the selected filters.</value></data>
   <data name="Chart_NinetyDayTrend" xml:space="preserve"><value>90-Day Turnover Trend</value></data>
   <data name="Chart_NinetyDayTrendSub" xml:space="preserve"><value>Rate per hire-month cohort — dashed points are still provisional</value></data>
   <data name="Chart_ByStore" xml:space="preserve"><value>By Store</value></data>
