@@ -17,7 +17,7 @@
 <div id="ewContent">
     <div id="ewSummaryCards" class="kpi-grid mb-4">
         <div class="kpi-spinner text-center py-3 w-100">
-            <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 265)"></div>
+            <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 25)"></div>
         </div>
     </div>
 
@@ -42,7 +42,7 @@
                 </thead>
                 <tbody id="ewBody">
                     <tr><td colspan="7" class="text-center py-4 text-muted">
-                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...
+                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
                     </td></tr>
                 </tbody>
             </table>
@@ -86,7 +86,7 @@ function ewRenderSummary(s) {
 }
 
 function ewRiskBadge(score) {
-    const color = score >= 3 ? 'oklch(0.6 0.22 22)' : score >= 2 ? 'oklch(0.75 0.16 75)' : 'oklch(0.55 0.19 265)';
+    const color = score >= 3 ? 'oklch(0.6 0.22 22)' : score >= 2 ? 'oklch(0.75 0.16 75)' : 'oklch(0.55 0.19 25)';
     const fg = score >= 3 ? '#fff' : score >= 2 ? '#1C1C27' : '#fff';
     return `<span style="background:${color};color:${fg};padding:3px 10px;border-radius:12px;font-size:11.5px;font-weight:700">${score}</span>`;
 }

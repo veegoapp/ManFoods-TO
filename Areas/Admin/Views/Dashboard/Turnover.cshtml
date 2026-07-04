@@ -40,7 +40,7 @@
             <h6>Monthly Turnover Trend</h6>
             <p id="trendChartSubtitle">Turnover rate (%) across all available periods</p>
         </div>
-        <a href="/admin/dashboard/reports" class="btn btn-sm" style="background:rgba(109,93,251,.15);color:oklch(0.5 0.18 265);border:1px solid rgba(109,93,251,.3);font-size:12px;border-radius:7px">
+        <a href="/admin/dashboard/reports" class="btn btn-sm" style="background:rgba(218,41,28,.12);color:oklch(0.5 0.18 25);border:1px solid rgba(218,41,28,.3);font-size:12px;border-radius:7px">
             <i class="bi bi-download me-1"></i>Export
         </a>
     </div>
@@ -49,9 +49,9 @@
 
 <!-- ── Smart Insights ─────────────────────────────────────── -->
 <div class="d-flex align-items-center gap-2 mb-3">
-    <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 265),oklch(0.6 0.16 265));border-radius:2px"></div>
+    <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 25),oklch(0.6 0.16 25));border-radius:2px"></div>
     <h5 class="mb-0 fw-bold">Smart Insights</h5>
-    <span class="badge ms-1" style="background:oklch(0.6 0.16 265);color:#1C1C27;font-size:10px;padding:4px 8px">AUTO-GENERATED</span>
+    <span class="badge ms-1" style="background:oklch(0.6 0.16 25);color:#1C1C27;font-size:10px;padding:4px 8px">AUTO-GENERATED</span>
 </div>
 <div id="insightsContainer" class="row g-3 mb-4">
     <div class="col-12 text-center py-3 text-muted">
@@ -62,7 +62,7 @@
 <!-- ── Store Comparison Table ─────────────────────────────── -->
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
-        <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 265),oklch(0.6 0.16 265));border-radius:2px"></div>
+        <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 25),oklch(0.6 0.16 25));border-radius:2px"></div>
         <h5 class="mb-0 fw-bold">Store Comparison</h5>
         <span id="storeCountBadge" class="badge" style="background:oklch(0.965 0.008 255);color:oklch(0.5 0.03 258);font-size:11px"></span>
     </div>
@@ -108,7 +108,7 @@
 
 <!-- ── OC / OM Analysis ───────────────────────────────────── -->
 <div class="d-flex align-items-center gap-2 mb-3">
-    <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 265),oklch(0.6 0.16 265));border-radius:2px"></div>
+    <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 25),oklch(0.6 0.16 25));border-radius:2px"></div>
     <h5 class="mb-0 fw-bold">By Operation Consultant &amp; Manager</h5>
 </div>
 <div class="row g-3 mb-4">
@@ -144,7 +144,7 @@
     <div class="col-lg-6">
         <div class="chart-card p-0 h-100" style="overflow:hidden">
             <div class="chart-header d-flex align-items-center gap-2">
-                <i class="bi bi-person-gear" style="color:oklch(0.6 0.16 265);font-size:16px"></i>
+                <i class="bi bi-person-gear" style="color:oklch(0.6 0.16 25);font-size:16px"></i>
                 <div>
                     <h6 class="mb-0">Operation Managers</h6>
                     <p class="mb-0">Ranked by weighted turnover rate</p>
@@ -163,7 +163,7 @@
                     </thead>
                     <tbody id="omTableBody">
                         <tr><td colspan="5" class="text-center py-3 text-muted">
-                            <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.6 0.16 265)"></div>Loading...
+                            <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.6 0.16 25)"></div>Loading...
                         </td></tr>
                     </tbody>
                 </table>
@@ -175,7 +175,7 @@
 <!-- ── Full Data Table (Trend Matrix) ─────────────────────── -->
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
-        <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 265),oklch(0.6 0.16 265));border-radius:2px"></div>
+        <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 25),oklch(0.6 0.16 25));border-radius:2px"></div>
         <h5 class="mb-0 fw-bold">Full Data Table</h5>
         <span class="badge ms-1" style="background:oklch(0.965 0.008 255);color:oklch(0.5 0.03 258);font-size:11px">All Periods · Turnover %</span>
     </div>
@@ -192,7 +192,7 @@
                     <th class="px-3 py-2" style="min-width:160px;cursor:pointer" data-mcol="store"
                         onclick="mxSort('store')">Store <i id="mxi-store" class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
                     <!-- period columns injected by JS -->
-                    <th class="px-3 py-2 text-center" style="min-width:70px;cursor:pointer;background:oklch(0.5 0.18 265 / .08)" data-mcol="avg"
+                    <th class="px-3 py-2 text-center" style="min-width:70px;cursor:pointer;background:oklch(0.5 0.18 25 / .08)" data-mcol="avg"
                         onclick="mxSort('avg')">AVG <i id="mxi-avg" class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
                 </tr>
             </thead>
@@ -245,7 +245,7 @@ function tvRenderStoreTable() {
         const c = tvRateColor(r.turnoverRate);
         const rateBadge = `<span style="background:${c.bg};color:${c.fg};padding:3px 10px;border-radius:12px;font-size:11.5px;font-weight:700">${r.turnoverRate.toFixed(1)}%</span>`;
         return `<tr>
-            <td class="px-3 py-2 fw-semibold"><a href="/admin/dashboard/storeprofile?store=${encodeURIComponent(r.storeName)}" style="color:inherit;text-decoration:none" onmouseover="this.style.color='oklch(0.5 0.18 265)'" onmouseout="this.style.color='inherit'">${r.storeName}</a></td>
+            <td class="px-3 py-2 fw-semibold"><a href="/admin/dashboard/storeprofile?store=${encodeURIComponent(r.storeName)}" style="color:inherit;text-decoration:none" onmouseover="this.style.color='oklch(0.5 0.18 25)'" onmouseout="this.style.color='inherit'">${r.storeName}</a></td>
             <td class="px-3 py-2" style="color:oklch(0.5 0.03 258)">${r.operationConsultant || '<span class="text-muted">—</span>'}</td>
             <td class="px-3 py-2" style="color:oklch(0.5 0.03 258)">${r.operationManager    || '<span class="text-muted">—</span>'}</td>
             <td class="px-3 py-2 text-center">${r.headcount}</td>
@@ -424,11 +424,11 @@ function mxRender() {
     document.getElementById('matrixBody').innerHTML = rows.map(r => {
         const periodCells = mxData.periods.map(pk => mxRateCell(r.periodRates[pk])).join('');
         const avgCell = r.avgRate !== null && r.avgRate !== undefined
-            ? mxRateCell(r.avgRate).replace('<td', '<td style="background:oklch(0.5 0.18 265 / .06)"')
-            : `<td class="px-2 py-2 text-center text-muted" style="background:oklch(0.5 0.18 265 / .06)">—</td>`;
+            ? mxRateCell(r.avgRate).replace('<td', '<td style="background:oklch(0.5 0.18 25 / .06)"')
+            : `<td class="px-2 py-2 text-center text-muted" style="background:oklch(0.5 0.18 25 / .06)">—</td>`;
         return `<tr>
             <td class="px-3 py-2" style="color:oklch(0.5 0.03 258);white-space:nowrap">${r.operationConsultant || '<span class="text-muted">—</span>'}</td>
-            <td class="px-3 py-2 fw-semibold" style="white-space:nowrap"><a href="/admin/dashboard/storeprofile?store=${encodeURIComponent(r.storeName)}" style="color:inherit;text-decoration:none" onmouseover="this.style.color='oklch(0.5 0.18 265)'" onmouseout="this.style.color='inherit'">${r.storeName}</a></td>
+            <td class="px-3 py-2 fw-semibold" style="white-space:nowrap"><a href="/admin/dashboard/storeprofile?store=${encodeURIComponent(r.storeName)}" style="color:inherit;text-decoration:none" onmouseover="this.style.color='oklch(0.5 0.18 25)'" onmouseout="this.style.color='inherit'">${r.storeName}</a></td>
             ${periodCells}
             ${avgCell}
         </tr>`;
@@ -465,12 +465,12 @@ let trendChartInstance;
 function tvRenderTrendChart() {
     if (!mxData || !mxData.periods || !mxData.periods.length) return;
     const colors = [
-        'oklch(0.55 0.19 265)', 'oklch(0.65 0.15 190)', 'oklch(0.7 0.16 145)',
-        'oklch(0.72 0.17 60)', 'oklch(0.62 0.2 15)', 'oklch(0.6 0.16 265)'
+        'oklch(0.55 0.19 25)', 'oklch(0.65 0.15 190)', 'oklch(0.7 0.16 145)',
+        'oklch(0.72 0.17 60)', 'oklch(0.62 0.2 15)', 'oklch(0.6 0.16 25)'
     ];
     const colorsFill = [
-        'oklch(0.55 0.19 265 / .15)', 'oklch(0.65 0.15 190 / .15)', 'oklch(0.7 0.16 145 / .15)',
-        'oklch(0.72 0.17 60 / .15)', 'oklch(0.62 0.2 15 / .15)', 'oklch(0.6 0.16 265 / .15)'
+        'oklch(0.55 0.19 25 / .15)', 'oklch(0.65 0.15 190 / .15)', 'oklch(0.7 0.16 145 / .15)',
+        'oklch(0.72 0.17 60 / .15)', 'oklch(0.62 0.2 15 / .15)', 'oklch(0.6 0.16 25 / .15)'
     ];
     const subtitle = document.getElementById('trendChartSubtitle');
 

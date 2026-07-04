@@ -10,15 +10,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 body.admin-theme {
-    --red:           oklch(0.5 0.18 265);
-    --red-dark:      oklch(0.44 0.18 265);
-    --red-light:     oklch(0.5 0.18 265 / .12);
-    --red-glow:      oklch(0.5 0.18 265 / .25);
+    /* McDonald's Red (~#DA291C) and Golden Arches Gold (~#FFC72C) */
+    --red:           oklch(0.5 0.18 25);
+    --red-dark:      oklch(0.44 0.18 25);
+    --red-light:     oklch(0.5 0.18 25 / .12);
+    --red-glow:      oklch(0.5 0.18 25 / .25);
 
-    --gold:          oklch(0.6 0.16 265);
-    --gold-dark:     oklch(0.5 0.18 265);
-    --gold-light:    oklch(0.5 0.18 265 / .1);
-    --gold-glow:     oklch(0.5 0.18 265 / .2);
+    --gold:          oklch(0.75 0.15 85);
+    --gold-dark:     oklch(0.65 0.15 82);
+    --gold-light:    oklch(0.75 0.15 85 / .1);
+    --gold-glow:     oklch(0.75 0.15 85 / .2);
 
     --bg:            oklch(0.985 0.003 250);
     --bg-2:           oklch(0.965 0.008 255);
@@ -52,8 +53,8 @@ body.admin-theme {
     --shadow-sm:     0 1px 2px 0 oklch(0.2 0.04 260 / .05), 0 1px 3px 0 oklch(0.2 0.04 260 / .04);
     --shadow-md:     0 4px 20px -4px oklch(0.2 0.04 260 / .1), 0 2px 6px -2px oklch(0.2 0.04 260 / .06);
     --shadow-lg:     0 12px 32px -8px oklch(0.2 0.04 260 / .14), 0 4px 10px -2px oklch(0.2 0.04 260 / .08);
-    --shadow-red:    0 4px 20px oklch(0.5 0.18 265 / .22);
-    --shadow-gold:   0 4px 20px oklch(0.5 0.18 265 / .14);
+    --shadow-red:    0 4px 20px oklch(0.5 0.18 25 / .22);
+    --shadow-gold:   0 4px 20px oklch(0.75 0.15 85 / .2);
 
     background: var(--bg);
     color: var(--text);
@@ -75,15 +76,15 @@ body.admin-theme[data-theme="dark"] {
     --text-2:        oklch(0.72 0.02 258);
     --text-3:        oklch(0.55 0.02 258);
 
-    --red:           oklch(0.65 0.19 265);
-    --red-dark:      oklch(0.58 0.19 265);
-    --red-light:     oklch(0.65 0.19 265 / .16);
-    --red-glow:      oklch(0.65 0.19 265 / .3);
+    --red:           oklch(0.65 0.19 25);
+    --red-dark:      oklch(0.58 0.19 25);
+    --red-light:     oklch(0.65 0.19 25 / .16);
+    --red-glow:      oklch(0.65 0.19 25 / .3);
 
-    --gold:          oklch(0.7 0.15 265);
-    --gold-dark:     oklch(0.62 0.17 265);
-    --gold-light:    oklch(0.65 0.19 265 / .16);
-    --gold-glow:     oklch(0.65 0.19 265 / .3);
+    --gold:          oklch(0.8 0.15 85);
+    --gold-dark:     oklch(0.7 0.15 83);
+    --gold-light:    oklch(0.8 0.15 85 / .16);
+    --gold-glow:     oklch(0.8 0.15 85 / .3);
 
     --success:       oklch(0.68 0.16 155);
     --success-bg:    oklch(0.68 0.16 155 / .16);
@@ -209,7 +210,8 @@ body.admin-theme .empty-state { color: var(--text-3); }
 }
 .admin-sidebar-logo {
     width: 36px; height: 36px; border-radius: var(--radius-sm);
-    background: var(--red); display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--red), var(--gold));
+    display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; overflow: hidden;
 }
 .admin-sidebar-logo img { width: 22px; height: 22px; object-fit: contain; filter: brightness(0) invert(1); }

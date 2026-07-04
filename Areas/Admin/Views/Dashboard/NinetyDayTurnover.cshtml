@@ -18,7 +18,7 @@
 </div>
 
 <div id="ntdEmptyState" class="card-dark text-center py-5" style="display:none">
-    <i class="bi bi-hourglass-split" style="font-size:3rem;color:oklch(0.5 0.18 265);display:block;margin-bottom:1rem"></i>
+    <i class="bi bi-hourglass-split" style="font-size:3rem;color:oklch(0.5 0.18 25);display:block;margin-bottom:1rem"></i>
     <h5 class="mb-2">No Cohort Data Yet</h5>
     <p class="text-muted-custom">Upload workforce and resignation data with hire dates to see 90-day turnover here.</p>
 </div>
@@ -30,7 +30,7 @@
 
     <div id="ntdKpiCards" class="kpi-grid mb-4">
         <div class="kpi-spinner text-center py-3 w-100">
-            <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 265)"></div>
+            <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 25)"></div>
         </div>
     </div>
 
@@ -77,7 +77,7 @@
                 </thead>
                 <tbody id="ntdLeaversBody">
                     <tr><td colspan="6" class="text-center py-4 text-muted">
-                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...
+                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
                     </td></tr>
                 </tbody>
             </table>
@@ -170,8 +170,8 @@ async function ntdLoadTrend() {
             datasets: [{
                 label: '90-Day Turnover Rate',
                 data: data.map(d => d.rate),
-                borderColor: 'oklch(0.5 0.18 265)',
-                backgroundColor: 'oklch(0.5 0.18 265 / .15)',
+                borderColor: 'oklch(0.5 0.18 25)',
+                backgroundColor: 'oklch(0.5 0.18 25 / .15)',
                 segment: {
                     borderDash: ctx => data[ctx.p1DataIndex]?.isProvisional ? [6, 4] : undefined
                 },
@@ -199,7 +199,7 @@ async function ntdLoadByStore() {
     const data = await ntdFetch('by-store', { month: period.month, year: period.year }) || [];
     ntdByStoreInstance = new Chart(ctx.getContext('2d'), {
         type: 'bar',
-        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: 'oklch(0.55 0.19 265)', borderRadius: 4, maxBarThickness: 26 }] },
+        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: 'oklch(0.55 0.19 25)', borderRadius: 4, maxBarThickness: 26 }] },
         options: {
             indexAxis: 'y',
             plugins: { legend: { display: false } },
@@ -211,7 +211,7 @@ async function ntdLoadByStore() {
     });
 }
 
-const NTD_REASON_COLORS = ['oklch(0.55 0.19 265)', 'oklch(0.65 0.15 190)', 'oklch(0.7 0.16 145)', 'oklch(0.72 0.17 60)', 'oklch(0.62 0.2 15)'];
+const NTD_REASON_COLORS = ['oklch(0.55 0.19 25)', 'oklch(0.65 0.15 190)', 'oklch(0.7 0.16 145)', 'oklch(0.72 0.17 60)', 'oklch(0.62 0.2 15)'];
 let ntdReasonsInstance;
 async function ntdLoadReasons() {
     const period = ntdSelectedPeriod();

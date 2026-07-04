@@ -15,7 +15,7 @@
 </div>
 
 <div id="rtEmptyState" class="card-dark text-center py-5" style="display:none">
-    <i class="bi bi-shield-check" style="font-size:3rem;color:oklch(0.5 0.18 265);display:block;margin-bottom:1rem"></i>
+    <i class="bi bi-shield-check" style="font-size:3rem;color:oklch(0.5 0.18 25);display:block;margin-bottom:1rem"></i>
     <h5 class="mb-2">No Retention Data Yet</h5>
     <p class="text-muted-custom">Upload workforce and resignation data with hire dates to see retention analysis here.</p>
 </div>
@@ -23,7 +23,7 @@
 <div id="rtContent">
     <div id="rtMilestoneCards" class="kpi-grid mb-4">
         <div class="kpi-spinner text-center py-3 w-100">
-            <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 265)"></div>
+            <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 25)"></div>
         </div>
     </div>
 
@@ -66,7 +66,7 @@
     <div class="chart-card mb-4" id="rtInsightsCard">
         <div id="rtInsights">
             <div class="text-center py-3 text-muted">
-                <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...
+                <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
             </div>
         </div>
     </div>
@@ -143,8 +143,8 @@ async function rtLoadSurvivalCurve() {
             datasets: [{
                 label: 'Retained',
                 data: data.map(d => d.retentionRate),
-                borderColor: 'oklch(0.55 0.19 265)',
-                backgroundColor: 'oklch(0.55 0.19 265 / .15)',
+                borderColor: 'oklch(0.55 0.19 25)',
+                backgroundColor: 'oklch(0.55 0.19 25 / .15)',
                 tension: 0.3, fill: true, pointRadius: 4, spanGaps: true
             }]
         },
@@ -169,7 +169,7 @@ async function rtLoadTrend() {
     if (!ctx) return;
     if (rtTrendInstance) rtTrendInstance.destroy();
     const series = [
-        { key: 'retention90', prov: 'provisional90', label: '90-Day', color: 'oklch(0.55 0.19 265)' },
+        { key: 'retention90', prov: 'provisional90', label: '90-Day', color: 'oklch(0.55 0.19 25)' },
         { key: 'retention180', prov: 'provisional180', label: '180-Day', color: 'oklch(0.7 0.16 145)' },
         { key: 'retention365', prov: 'provisional365', label: '365-Day', color: 'oklch(0.72 0.17 60)' },
     ];
@@ -217,7 +217,7 @@ async function rtLoadLeaderboard() {
     });
 }
 
-const RT_TENURE_COLORS = ['oklch(0.55 0.19 265)', 'oklch(0.65 0.15 190)', 'oklch(0.7 0.16 145)', 'oklch(0.72 0.17 60)', 'oklch(0.62 0.2 15)'];
+const RT_TENURE_COLORS = ['oklch(0.55 0.19 25)', 'oklch(0.65 0.15 190)', 'oklch(0.7 0.16 145)', 'oklch(0.72 0.17 60)', 'oklch(0.62 0.2 15)'];
 let rtTenureInstance;
 async function rtLoadTenureDistribution() {
     const data = await rtFetch('tenure-distribution') || [];

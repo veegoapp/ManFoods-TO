@@ -60,7 +60,7 @@ function aiScrollBottom() {
 
 function aiBubbleHtml(text, who) {
     const isUser = who === 'user';
-    return `<div style="align-self:${isUser ? 'flex-end' : 'flex-start'};max-width:80%;background:${isUser ? 'oklch(0.55 0.19 265)' : 'var(--bg-2)'};color:${isUser ? '#fff' : 'var(--text)'};padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.6;white-space:pre-wrap">${text}</div>`;
+    return `<div style="align-self:${isUser ? 'flex-end' : 'flex-start'};max-width:80%;background:${isUser ? 'oklch(0.55 0.19 25)' : 'var(--bg-2)'};color:${isUser ? '#fff' : 'var(--text)'};padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.6;white-space:pre-wrap">${text}</div>`;
 }
 
 function aiAddBubble(text, who) {
@@ -74,7 +74,7 @@ function aiAddLoadingBubble() {
     const div = document.createElement('div');
     div.className = 'ai-loading-bubble';
     div.style.cssText = 'align-self:flex-start;background:var(--bg-2);padding:10px 14px;border-radius:14px';
-    div.innerHTML = '<div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 265)"></div>';
+    div.innerHTML = '<div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 25)"></div>';
     aiMessagesEl.appendChild(div);
     aiScrollBottom();
     return div;
