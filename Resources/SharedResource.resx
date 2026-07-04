@@ -66,7 +66,6 @@
   <data name="DM_MonthlyDataBadge" xml:space="preserve"><value>Monthly Data</value></data>
   <data name="DM_ExitInterviewsBadge" xml:space="preserve"><value>Exit Interviews</value></data>
   <data name="Nav_Users" xml:space="preserve"><value>Users</value></data>
-  <data name="Nav_Targets" xml:space="preserve"><value>Targets</value></data>
 
   <!-- Login -->
   <data name="Login_SignInToContinue" xml:space="preserve"><value>Sign in to continue</value></data>
@@ -237,8 +236,6 @@
   <data name="Page_ScorecardSub" xml:space="preserve"><value>Performance rankings across store leaders, consultants, and managers</value></data>
   <data name="Page_Stores" xml:space="preserve"><value>Stores</value></data>
   <data name="Page_StoresSub" xml:space="preserve"><value>Turnover health across every store</value></data>
-  <data name="Page_Targets" xml:space="preserve"><value>Targets</value></data>
-  <data name="Page_TargetsSub" xml:space="preserve"><value>Set company-wide performance benchmarks</value></data>
   <data name="Page_Reports" xml:space="preserve"><value>Reports</value></data>
   <data name="Page_ReportsSub" xml:space="preserve"><value>Export every part of the portal to Excel</value></data>
   <data name="Page_Users" xml:space="preserve"><value>Users</value></data>
@@ -446,12 +443,6 @@
   <data name="EW_HighRisk" xml:space="preserve"><value>High Risk (2+)</value></data>
   <data name="EW_NewHireWindow" xml:space="preserve"><value>Still in first 90 days</value></data>
   <data name="EW_CompanyBaseline" xml:space="preserve"><value>Avg Early Leave Rate (Company)</value></data>
-
-  <!-- Targets -->
-  <data name="TG_TurnoverTarget" xml:space="preserve"><value>Target Turnover Rate</value></data>
-  <data name="TG_RetentionTarget" xml:space="preserve"><value>Target 90-Day Retention</value></data>
-  <data name="TG_SaveTargets" xml:space="preserve"><value>Save Targets</value></data>
-  <data name="TG_Saved" xml:space="preserve"><value>Saved!</value></data>
 
   <!-- Retention -->
   <data name="Ret_MilestoneTitle" xml:space="preserve"><value>Retention Milestones</value></data>

@@ -33,9 +33,6 @@ public class GeminiContext
     public List<(string Label, double RetentionRate)> RetentionMilestones { get; set; } = new();
     public List<(string CohortLabel, double Rate, bool IsProvisional)> NinetyDayCohorts { get; set; } = new();
     public List<(string Reason, int Count)> ExitInterviewReasons { get; set; } = new();
-
-    public double? TurnoverRateTarget { get; set; }
-    public double? Retention90Target { get; set; }
 }
 
 public class GeminiAnswer

@@ -50,12 +50,6 @@ public class DashboardController : Controller
 
     public IActionResult Scorecard() => View();
 
-    public IActionResult Targets()
-    {
-        ViewBag.IsAdmin = HttpContext.Session.IsAdmin();
-        return View();
-    }
-
     public async Task<IActionResult> StoreProfile(string store)
     {
         if (string.IsNullOrWhiteSpace(store)) return RedirectToAction("Turnover");

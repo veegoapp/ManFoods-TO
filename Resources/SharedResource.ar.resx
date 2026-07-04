@@ -66,7 +66,6 @@
   <data name="DM_MonthlyDataBadge" xml:space="preserve"><value>بيانات شهرية</value></data>
   <data name="DM_ExitInterviewsBadge" xml:space="preserve"><value>مقابلات خروج</value></data>
   <data name="Nav_Users" xml:space="preserve"><value>المستخدمون</value></data>
-  <data name="Nav_Targets" xml:space="preserve"><value>الأهداف</value></data>
 
   <!-- Login -->
   <data name="Login_SignInToContinue" xml:space="preserve"><value>سجّل دخولك للمتابعة</value></data>
@@ -237,8 +236,6 @@
   <data name="Page_ScorecardSub" xml:space="preserve"><value>تصنيف الأداء لقادة الفروع والمستشارين والمديرين</value></data>
   <data name="Page_Stores" xml:space="preserve"><value>الفروع</value></data>
   <data name="Page_StoresSub" xml:space="preserve"><value>حالة معدل الدوران في جميع الفروع</value></data>
-  <data name="Page_Targets" xml:space="preserve"><value>الأهداف</value></data>
-  <data name="Page_TargetsSub" xml:space="preserve"><value>تحديد معايير الأداء على مستوى الشركة</value></data>
   <data name="Page_Reports" xml:space="preserve"><value>التقارير</value></data>
   <data name="Page_ReportsSub" xml:space="preserve"><value>تصدير كل أجزاء البوابة إلى Excel</value></data>
   <data name="Page_Users" xml:space="preserve"><value>المستخدمون</value></data>
@@ -446,12 +443,6 @@
   <data name="EW_HighRisk" xml:space="preserve"><value>خطر عالٍ (2+)</value></data>
   <data name="EW_NewHireWindow" xml:space="preserve"><value>لا يزال في أول 90 يوم</value></data>
   <data name="EW_CompanyBaseline" xml:space="preserve"><value>متوسط معدل المغادرة المبكرة (الشركة)</value></data>
-
-  <!-- Targets -->
-  <data name="TG_TurnoverTarget" xml:space="preserve"><value>معدل الدوران المستهدف</value></data>
-  <data name="TG_RetentionTarget" xml:space="preserve"><value>الاحتفاظ المستهدف 90 يوم</value></data>
-  <data name="TG_SaveTargets" xml:space="preserve"><value>حفظ الأهداف</value></data>
-  <data name="TG_Saved" xml:space="preserve"><value>تم الحفظ!</value></data>
 
 
   <!-- Retention -->
