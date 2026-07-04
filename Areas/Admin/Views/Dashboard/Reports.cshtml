@@ -1,6 +1,6 @@
 @model List<MvcApp.Models.ViewModels.PeriodItem>
 @{
-    ViewData["Title"] = "Reports";
+    ViewData["Title"] = L["Page_Reports"].Value;
     var months = new[] { "January","February","March","April","May","June","July","August","September","October","November","December" };
     var hasPeriods = Model != null && Model.Count > 0;
     var stores = (ViewBag.Stores as List<string>) ?? new List<string>();
@@ -10,8 +10,8 @@
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Reports</h1>
-        <p class="page-subtitle">Export every part of the portal to Excel — turnover, retention, exit interviews, scorecards, and early warning. Every report can be filtered down to just the data you need.</p>
+        <h1 class="page-title">@L["Page_Reports"]</h1>
+        <p class="page-subtitle">@L["Page_ReportsSub"]</p>
     </div>
 </div>
 
@@ -21,8 +21,8 @@
         <div class="d-flex align-items-center gap-3 flex-wrap">
             <div class="card-icon" style="background:oklch(0.5 0.18 25 / .12)"><i class="bi bi-file-earmark-zip-fill" style="color:oklch(0.5 0.18 25)"></i></div>
             <div class="flex-grow-1" style="min-width:220px">
-                <h6 class="mb-0">Full Company Report</h6>
-                <p class="text-muted-custom mb-0 small">Everything in one workbook — turnover, stores, 90-day, retention, exit interviews, scorecard, and early warning</p>
+                <h6 class="mb-0">@L["RP_FullReport"]</h6>
+                <p class="text-muted-custom mb-0 small">@L["RP_FullReportSub"]</p>
             </div>
             <form method="get" action="/admin/dashboard/export" class="d-flex gap-2 align-items-center flex-wrap">
                 <input type="hidden" name="reportType" value="full" />
@@ -40,19 +40,19 @@
                     }
                 </select>
                 <select name="store" class="form-select form-select-dark form-select-sm" style="width:170px">
-                    <option value="">All Stores</option>
+                    <option value="">@L["Common_AllStores"]</option>
                     @foreach (var s in stores)
                     {
                         <option value="@s">@s</option>
                     }
                 </select>
-                <button type="submit" class="btn btn-primary btn-sm text-nowrap"><i class="bi bi-download me-1"></i>Download</button>
+                <button type="submit" class="btn btn-primary btn-sm text-nowrap"><i class="bi bi-download me-1"></i>@L["Common_Download"]</button>
             </form>
         </div>
     </div>
 }
 
-<h5 class="fw-bold mb-3 mt-2">Turnover &amp; Workforce</h5>
+<h5 class="fw-bold mb-3 mt-2">@L["RP_TurnoverWorkforce"]</h5>
 @if (!hasPeriods)
 {
     <div class="card-dark text-center py-4 mb-4">

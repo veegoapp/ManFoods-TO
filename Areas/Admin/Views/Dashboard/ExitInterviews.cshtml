@@ -1,17 +1,17 @@
 @{
-    ViewData["Title"] = "Exit Interviews";
+    ViewData["Title"] = L["Page_ExitInterviews"].Value;
 }
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Exit Interviews</h1>
-        <p class="page-subtitle">Why people are leaving, in aggregate — individual responses are never identified</p>
+        <h1 class="page-title">@L["Page_ExitInterviews"]</h1>
+        <p class="page-subtitle">@L["Page_ExitInterviewsSub"]</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <select id="eiStoreSelect" class="form-select form-select-dark form-select-sm" style="width:170px"><option value="">All Stores</option></select>
-        <select id="eiLeaderSelect" class="form-select form-select-dark form-select-sm" style="width:170px"><option value="">All Store Leaders</option></select>
-        <select id="eiOcSelect" class="form-select form-select-dark form-select-sm" style="width:170px"><option value="">All Consultants</option></select>
-        <select id="eiOmSelect" class="form-select form-select-dark form-select-sm" style="width:170px"><option value="">All Managers</option></select>
+        <select id="eiStoreSelect" class="form-select form-select-dark form-select-sm" style="width:170px"><option value="">@L["Common_AllStores"]</option></select>
+        <select id="eiLeaderSelect" class="form-select form-select-dark form-select-sm" style="width:170px"><option value="">@L["Common_AllStoreLeaders"]</option></select>
+        <select id="eiOcSelect" class="form-select form-select-dark form-select-sm" style="width:170px"><option value="">@L["Common_AllConsultants"]</option></select>
+        <select id="eiOmSelect" class="form-select form-select-dark form-select-sm" style="width:170px"><option value="">@L["Common_AllManagers"]</option></select>
     </div>
 </div>
 
@@ -24,15 +24,15 @@
 <div id="eiContent">
     <div class="charts-grid mb-4">
         <div class="chart-card chart-full">
-            <div class="chart-header"><h6>Reasons for Leaving</h6><p>Most common answer to "why did you leave?"</p></div>
+            <div class="chart-header"><h6>@L["EI_ReasonsForLeaving"]</h6><p>@L["EI_ReasonsForLeavingSub"]</p></div>
             <div class="chart-body"><canvas id="eiReasonsChart"></canvas></div>
         </div>
         <div class="chart-card">
-            <div class="chart-header"><h6>Would They Return?</h6><p>Willingness to work here again</p></div>
+            <div class="chart-header"><h6>@L["EI_WouldReturn"]</h6><p>@L["EI_WouldReturnSub"]</p></div>
             <div class="chart-body"><canvas id="eiReturnChart"></canvas></div>
         </div>
         <div class="chart-card">
-            <div class="chart-header"><h6>Overall Experience</h6><p>How they describe their time here</p></div>
+            <div class="chart-header"><h6>@L["EI_OverallExperience"]</h6><p>@L["EI_OverallExperienceSub"]</p></div>
             <div class="chart-body"><canvas id="eiExperienceChart"></canvas></div>
         </div>
     </div>

@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Targets";
+    ViewData["Title"] = L["Page_Targets"].Value;
     bool isAdmin = ViewBag.IsAdmin is true;
 }
 
@@ -10,15 +10,15 @@
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Targets</h1>
+        <h1 class="page-title">@L["Page_Targets"]</h1>
         <p class="page-subtitle">
             @if (isAdmin)
             {
-                <text>حدد أهداف الشركة عشان تتقارن بيها الأرقام الفعلية في كل الصفحات وفي الـ AI Assistant</text>
+                @L["Page_TargetsAdminSub"]
             }
             else
             {
-                <text>الأهداف الحالية اللي حددها الأدمن — تتقارن بيها الأرقام الفعلية في كل الصفحات</text>
+                @L["Page_TargetsUserSub"]
             }
         </p>
     </div>
@@ -29,10 +29,10 @@
         <div class="card-dark h-100">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="card-icon"><i class="bi bi-graph-up"></i></div>
-                <div><h6 class="mb-0">Target Turnover Rate</h6><p class="text-muted-custom mb-0 small">النسبة المستهدفة لمعدل التيرن أوفر الشهري — تظهر كمقارنة تحت كارت "Turnover Rate" في كل الصفحات</p></div>
+                <div><h6 class="mb-0">@L["TG_TargetTurnover"]</h6><p class="text-muted-custom mb-0 small">@L["TG_TargetTurnoverSub"]</p></div>
             </div>
             <div class="input-group mb-2">
-                <input type="number" id="tgTurnoverInput" class="form-control form-control-dark" step="0.1" min="0" max="100" placeholder="مثال: 5" @(isAdmin ? "" : "disabled")/>
+                <input type="number" id="tgTurnoverInput" class="form-control form-control-dark" step="0.1" min="0" max="100" placeholder="5" @(isAdmin ? "" : "disabled")/>
                 <span class="input-group-text">%</span>
             </div>
         </div>
@@ -41,10 +41,10 @@
         <div class="card-dark h-100">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="card-icon"><i class="bi bi-shield-check"></i></div>
-                <div><h6 class="mb-0">Target 90-Day Retention</h6><p class="text-muted-custom mb-0 small">النسبة المستهدفة للاحتفاظ بالموظفين بعد أول 90 يوم — تظهر في صفحة Retention</p></div>
+                <div><h6 class="mb-0">@L["TG_TargetRetention"]</h6><p class="text-muted-custom mb-0 small">@L["TG_TargetRetentionSub"]</p></div>
             </div>
             <div class="input-group mb-2">
-                <input type="number" id="tgRetentionInput" class="form-control form-control-dark" step="0.1" min="0" max="100" placeholder="مثال: 90" @(isAdmin ? "" : "disabled")/>
+                <input type="number" id="tgRetentionInput" class="form-control form-control-dark" step="0.1" min="0" max="100" placeholder="90" @(isAdmin ? "" : "disabled")/>
                 <span class="input-group-text">%</span>
             </div>
         </div>
@@ -54,8 +54,8 @@
 @if (isAdmin)
 {
     <div class="mt-4 d-flex align-items-center gap-3">
-        <button id="tgSaveBtn" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>حفظ الأهداف</button>
-        <span id="tgSavedMsg" class="text-success small" style="display:none"><i class="bi bi-check-circle-fill me-1"></i>اتحفظ بنجاح</span>
+        <button id="tgSaveBtn" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>@L["TG_SaveTargets"]</button>
+        <span id="tgSavedMsg" class="text-success small" style="display:none"><i class="bi bi-check-circle-fill me-1"></i>@L["Common_Saved"]</span>
     </div>
 }
 

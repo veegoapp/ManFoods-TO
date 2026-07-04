@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- Language toggle -->
+  <data name="Layout_SwitchLang" xml:space="preserve"><value>AR</value></data>
+
+  <!-- Layout -->
+  <data name="Layout_AdminPortal" xml:space="preserve"><value>Admin Portal</value></data>
+  <data name="Layout_EmployeePortal" xml:space="preserve"><value>Employee Portal</value></data>
+  <data name="Layout_ChangePassword" xml:space="preserve"><value>Change Password</value></data>
+  <data name="Layout_SignOut" xml:space="preserve"><value>Sign Out</value></data>
+  <data name="Layout_DarkMode" xml:space="preserve"><value>Dark Mode</value></data>
+  <data name="Layout_LightMode" xml:space="preserve"><value>Light Mode</value></data>
+
+  <!-- Navigation -->
+  <data name="Nav_Dashboard" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Nav_MyWorkspace" xml:space="preserve"><value>My Workspace</value></data>
+  <data name="Nav_Turnover" xml:space="preserve"><value>Turnover</value></data>
+  <data name="Nav_Workforce" xml:space="preserve"><value>Workforce</value></data>
+  <data name="Nav_Retention" xml:space="preserve"><value>Retention</value></data>
+  <data name="Nav_ExitInterviews" xml:space="preserve"><value>Exit Interviews</value></data>
+  <data name="Nav_NinetyDay" xml:space="preserve"><value>90-Day Turnover</value></data>
+  <data name="Nav_AiAssistant" xml:space="preserve"><value>AI Assistant</value></data>
+  <data name="Nav_AiUsage" xml:space="preserve"><value>AI Usage</value></data>
+  <data name="Nav_EarlyWarning" xml:space="preserve"><value>Early Warning</value></data>
+  <data name="Nav_Scorecard" xml:space="preserve"><value>Scorecard</value></data>
+  <data name="Nav_Stores" xml:space="preserve"><value>Stores</value></data>
+  <data name="Nav_DataManagement" xml:space="preserve"><value>Data Management</value></data>
+  <data name="Nav_Reports" xml:space="preserve"><value>Reports</value></data>
+  <data name="Nav_Users" xml:space="preserve"><value>Users</value></data>
+  <data name="Nav_Targets" xml:space="preserve"><value>Targets</value></data>
+
+  <!-- Login -->
+  <data name="Login_SignInToContinue" xml:space="preserve"><value>Sign in to continue</value></data>
+  <data name="Login_EmailAddress" xml:space="preserve"><value>Email Address</value></data>
+  <data name="Login_Password" xml:space="preserve"><value>Password</value></data>
+  <data name="Login_SignIn" xml:space="preserve"><value>Sign In</value></data>
+  <data name="Login_SignInAdmin" xml:space="preserve"><value>Sign In as Admin</value></data>
+  <data name="Login_ForgotPassword" xml:space="preserve"><value>Forgot password?</value></data>
+  <data name="Login_ForgotPasswordAdmin" xml:space="preserve"><value>Forgot password? Use recovery key</value></data>
+  <data name="Login_AdminPortal" xml:space="preserve"><value>Admin Portal</value></data>
+  <data name="Login_AdminDashboard" xml:space="preserve"><value>Admin Dashboard</value></data>
+  <data name="Login_WorkforceAnalytics" xml:space="preserve"><value>Workforce Analytics Platform</value></data>
+
+  <!-- Change Password -->
+  <data name="CP_Title" xml:space="preserve"><value>Change Password</value></data>
+  <data name="CP_Subtitle" xml:space="preserve"><value>Update your account password</value></data>
+  <data name="CP_UpdatePassword" xml:space="preserve"><value>Update Password</value></data>
+  <data name="CP_CurrentPassword" xml:space="preserve"><value>Current Password</value></data>
+  <data name="CP_NewPassword" xml:space="preserve"><value>New Password</value></data>
+  <data name="CP_ConfirmPassword" xml:space="preserve"><value>Confirm New Password</value></data>
+  <data name="CP_MinChars" xml:space="preserve"><value>Minimum 8 characters required</value></data>
+  <data name="CP_EnterCurrent" xml:space="preserve"><value>Enter current password</value></data>
+  <data name="CP_MinEightChars" xml:space="preserve"><value>Minimum 8 characters</value></data>
+  <data name="CP_RepeatNew" xml:space="preserve"><value>Repeat new password</value></data>
+
+  <!-- Recover -->
+  <data name="Recover_AdminRecovery" xml:space="preserve"><value>Admin Recovery</value></data>
+  <data name="Recover_Title" xml:space="preserve"><value>Reset Admin Password</value></data>
+  <data name="Recover_Subtitle" xml:space="preserve"><value>Requires the master recovery key. Not the OTP flow — that's for regular users only.</value></data>
+  <data name="Recover_AdminEmail" xml:space="preserve"><value>Admin Email</value></data>
+  <data name="Recover_RecoveryKey" xml:space="preserve"><value>Recovery Key</value></data>
+  <data name="Recover_NewPassword" xml:space="preserve"><value>New Password</value></data>
+  <data name="Recover_ConfirmPassword" xml:space="preserve"><value>Confirm New Password</value></data>
+  <data name="Recover_ResetPassword" xml:space="preserve"><value>Reset Password</value></data>
+  <data name="Recover_BackToSignIn" xml:space="preserve"><value>Back to Sign In</value></data>
+
+  <!-- Forgot Password -->
+  <data name="FP_Title" xml:space="preserve"><value>Reset Your Password</value></data>
+  <data name="FP_Subtitle" xml:space="preserve"><value>Use the OTP your admin sent you to set a new password.</value></data>
+  <data name="FP_PhoneOrEmail" xml:space="preserve"><value>Phone or Email</value></data>
+  <data name="FP_OtpCode" xml:space="preserve"><value>OTP Code</value></data>
+  <data name="FP_NewPassword" xml:space="preserve"><value>New Password</value></data>
+  <data name="FP_SetNewPassword" xml:space="preserve"><value>Set New Password</value></data>
+  <data name="FP_BackToSignIn" xml:space="preserve"><value>Back to Sign In</value></data>
+
+  <!-- Common UI -->
+  <data name="Common_Loading" xml:space="preserve"><value>Loading...</value></data>
+  <data name="Common_AllStores" xml:space="preserve"><value>All Stores</value></data>
+  <data name="Common_AllOperationManagers" xml:space="preserve"><value>All Operation Managers</value></data>
+  <data name="Common_AllOperationConsultants" xml:space="preserve"><value>All Operation Consultants</value></data>
+  <data name="Common_AllConsultants" xml:space="preserve"><value>All Consultants</value></data>
+  <data name="Common_AllManagers" xml:space="preserve"><value>All Managers</value></data>
+  <data name="Common_AllStoreLeaders" xml:space="preserve"><value>All Store Leaders</value></data>
+  <data name="Common_SelectPeriod" xml:space="preserve"><value>Select Period</value></data>
+  <data name="Common_CohortMonth" xml:space="preserve"><value>Cohort Month</value></data>
+  <data name="Common_From" xml:space="preserve"><value>From</value></data>
+  <data name="Common_To" xml:space="preserve"><value>To</value></data>
+  <data name="Common_Export" xml:space="preserve"><value>Export</value></data>
+  <data name="Common_Download" xml:space="preserve"><value>Download</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Common_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Common_Headcount" xml:space="preserve"><value>Headcount</value></data>
+  <data name="Common_Resignations" xml:space="preserve"><value>Resignations</value></data>
+  <data name="Common_TurnoverPct" xml:space="preserve"><value>Turnover%</value></data>
+  <data name="Common_Month" xml:space="preserve"><value>Month</value></data>
+  <data name="Common_Year" xml:space="preserve"><value>Year</value></data>
+  <data name="Common_NoData" xml:space="preserve"><value>No data for this period.</value></data>
+  <data name="Common_NoMatchingStores" xml:space="preserve"><value>No matching stores.</value></data>
+  <data name="Common_NewHires" xml:space="preserve"><value>New Hires</value></data>
+  <data name="Common_StoreName" xml:space="preserve"><value>Store Name</value></data>
+  <data name="Common_Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Common_Phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="Common_Role" xml:space="preserve"><value>Role</value></data>
+  <data name="Common_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Common_Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Common_SearchStore" xml:space="preserve"><value>Search store, OC, OM…</value></data>
+  <data name="Common_SearchComments" xml:space="preserve"><value>Search comments…</value></data>
+  <data name="Common_SmartInsights" xml:space="preserve"><value>Smart Insights</value></data>
+  <data name="Common_AutoGenerated" xml:space="preserve"><value>AUTO-GENERATED</value></data>
+  <data name="Common_OperationConsultants" xml:space="preserve"><value>Operation Consultants</value></data>
+  <data name="Common_OperationManagers" xml:space="preserve"><value>Operation Managers</value></data>
+  <data name="Common_ByOcOm" xml:space="preserve"><value>By Operation Consultant &amp; Manager</value></data>
+  <data name="Common_StoreComparison" xml:space="preserve"><value>Store Comparison</value></data>
+  <data name="Common_FullDataTable" xml:space="preserve"><value>Full Data Table</value></data>
+  <data name="Common_Of" xml:space="preserve"><value>of</value></data>
+  <data name="Common_Total" xml:space="preserve"><value>total</value></data>
+
+  <!-- Page Titles & Subtitles -->
+  <data name="Page_HomeDashboard" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Page_HomeDashboardSub" xml:space="preserve"><value>Workforce intelligence and turnover metrics</value></data>
+  <data name="Page_Turnover" xml:space="preserve"><value>Turnover Analysis</value></data>
+  <data name="Page_TurnoverSub" xml:space="preserve"><value>Deep-dive into resignation patterns and store performance</value></data>
+  <data name="Page_Workforce" xml:space="preserve"><value>Workforce</value></data>
+  <data name="Page_WorkforceSub" xml:space="preserve"><value>Headcount composition and distribution across stores</value></data>
+  <data name="Page_Retention" xml:space="preserve"><value>Retention</value></data>
+  <data name="Page_RetentionSub" xml:space="preserve"><value>How long new hires actually stay — milestones, survival curve, and long-term trends</value></data>
+  <data name="Page_ExitInterviews" xml:space="preserve"><value>Exit Interviews</value></data>
+  <data name="Page_ExitInterviewsSub" xml:space="preserve"><value>Why people are leaving, in aggregate — individual responses are never identified</value></data>
+  <data name="Page_NinetyDay" xml:space="preserve"><value>90-Day Turnover</value></data>
+  <data name="Page_NinetyDaySub" xml:space="preserve"><value>Of everyone hired in a month, the share who resigned within their first 90 days</value></data>
+  <data name="Page_AiAssistant" xml:space="preserve"><value>AI Assistant</value></data>
+  <data name="Page_AiAssistantSub" xml:space="preserve"><value>Ask anything about your workforce data</value></data>
+  <data name="Page_AiUsage" xml:space="preserve"><value>AI Usage</value></data>
+  <data name="Page_AiUsageSub" xml:space="preserve"><value>AI Assistant consumption — limits, questions, tokens, and estimated cost</value></data>
+  <data name="Page_EarlyWarning" xml:space="preserve"><value>Early Warning</value></data>
+  <data name="Page_EarlyWarningSub" xml:space="preserve"><value>At-risk employees identified before they resign</value></data>
+  <data name="Page_Scorecard" xml:space="preserve"><value>Scorecard</value></data>
+  <data name="Page_ScorecardSub" xml:space="preserve"><value>Performance rankings across store leaders, consultants, and managers</value></data>
+  <data name="Page_Stores" xml:space="preserve"><value>Stores</value></data>
+  <data name="Page_StoresSub" xml:space="preserve"><value>Turnover health across every store</value></data>
+  <data name="Page_Targets" xml:space="preserve"><value>Targets</value></data>
+  <data name="Page_TargetsSub" xml:space="preserve"><value>Set company-wide performance benchmarks</value></data>
+  <data name="Page_Reports" xml:space="preserve"><value>Reports</value></data>
+  <data name="Page_ReportsSub" xml:space="preserve"><value>Export every part of the portal to Excel</value></data>
+  <data name="Page_Users" xml:space="preserve"><value>Users</value></data>
+  <data name="Page_UsersSub" xml:space="preserve"><value>Manage system access and roles</value></data>
+  <data name="Page_CreateUser" xml:space="preserve"><value>Create User</value></data>
+  <data name="Page_CreateUserSub" xml:space="preserve"><value>Add a new system user</value></data>
+  <data name="Page_EditUser" xml:space="preserve"><value>Edit User</value></data>
+  <data name="Page_DataMgmt" xml:space="preserve"><value>Data Management</value></data>
+  <data name="Page_DataMgmtSub" xml:space="preserve"><value>Upload monthly Excel files to import workforce data</value></data>
+  <data name="Page_ChangePassword" xml:space="preserve"><value>Change Password</value></data>
+  <data name="Page_ChangePasswordSub" xml:space="preserve"><value>Update your account password</value></data>
+  <data name="Page_StoreProfile" xml:space="preserve"><value>Back to Turnover Analysis</value></data>
+  <data name="Page_VsNetwork" xml:space="preserve"><value>Vs. Network Average</value></data>
+
+  <!-- Charts -->
+  <data name="Chart_TurnoverByJobTitle" xml:space="preserve"><value>Turnover by Job Title</value></data>
+  <data name="Chart_TurnoverByJobTitleSub" xml:space="preserve"><value>Resignations grouped by role</value></data>
+  <data name="Chart_TurnoverByTenure" xml:space="preserve"><value>Turnover by Tenure</value></data>
+  <data name="Chart_TurnoverByTenureSub" xml:space="preserve"><value>Duration before resignation</value></data>
+  <data name="Chart_TurnoverByPayroll" xml:space="preserve"><value>Turnover by Payroll Group</value></data>
+  <data name="Chart_GenderBreakdown" xml:space="preserve"><value>Gender Breakdown</value></data>
+  <data name="Chart_GenderBreakdownSub" xml:space="preserve"><value>Active workforce distribution</value></data>
+  <data name="Chart_MonthlyTrend" xml:space="preserve"><value>Monthly Turnover Trend</value></data>
+  <data name="Chart_MonthlyTrendSub" xml:space="preserve"><value>Turnover rate over time</value></data>
+  <data name="Chart_SurvivalCurve" xml:space="preserve"><value>Survival Curve</value></data>
+  <data name="Chart_RetentionTrend" xml:space="preserve"><value>Retention Trend by Milestone</value></data>
+  <data name="Chart_StoreLeaderboard" xml:space="preserve"><value>Store Leaderboard</value></data>
+  <data name="Chart_TenureDistribution" xml:space="preserve"><value>Workforce Tenure Distribution</value></data>
+  <data name="Chart_ReasonsForLeaving" xml:space="preserve"><value>Reasons for Leaving</value></data>
+  <data name="Chart_WouldTheyReturn" xml:space="preserve"><value>Would They Return?</value></data>
+  <data name="Chart_OverallExperience" xml:space="preserve"><value>Overall Experience</value></data>
+  <data name="Chart_WorkloadConditions" xml:space="preserve"><value>Workload Conditions</value></data>
+  <data name="Chart_EngagementDrivers" xml:space="preserve"><value>Engagement Drivers</value></data>
+  <data name="Chart_Comments" xml:space="preserve"><value>Comments</value></data>
+  <data name="Chart_NinetyDayTrend" xml:space="preserve"><value>90-Day Turnover Trend</value></data>
+  <data name="Chart_NinetyDayTrendSub" xml:space="preserve"><value>Rate per hire-month cohort — dashed points are still provisional</value></data>
+  <data name="Chart_ByStore" xml:space="preserve"><value>By Store</value></data>
+  <data name="Chart_ByStoreNinetyDaySub" xml:space="preserve"><value>Early-leaver rate for the selected cohort month</value></data>
+  <data name="Chart_UsageTrend" xml:space="preserve"><value>Usage Trend</value></data>
+  <data name="Chart_AiInsights" xml:space="preserve"><value>AI Insights</value></data>
+  <data name="Chart_AiInsightsSub" xml:space="preserve"><value>Connect your AI key to enable smart workforce recommendations.</value></data>
+
+  <!-- 90-Day specific -->
+  <data name="NTD_NoCohortData" xml:space="preserve"><value>No Cohort Data Yet</value></data>
+  <data name="NTD_NoCohortDataSub" xml:space="preserve"><value>Upload workforce and resignation data with hire dates to see 90-day turnover here.</value></data>
+  <data name="NTD_Provisional" xml:space="preserve"><value>This cohort hasn't reached its 90-day mark yet — the rate is provisional and may still rise.</value></data>
+
+  <!-- Uploads -->
+  <data name="Upload_ActiveEmployees" xml:space="preserve"><value>Active Employees</value></data>
+  <data name="Upload_ActiveDesc" xml:space="preserve"><value>Upload active employees for a given month.</value></data>
+  <data name="Upload_Resignations" xml:space="preserve"><value>Resignations</value></data>
+  <data name="Upload_ResignationsDesc" xml:space="preserve"><value>Upload resignation records for a given month.</value></data>
+  <data name="Upload_StoreRef" xml:space="preserve"><value>Store Reference</value></data>
+  <data name="Upload_StoreDesc" xml:space="preserve"><value>Upload store reference with assignments.</value></data>
+  <data name="Upload_ExitInterviews" xml:space="preserve"><value>Exit Interviews</value></data>
+  <data name="Upload_ExitDesc" xml:space="preserve"><value>Export responses from Microsoft Forms and upload as-is — no reformatting needed.</value></data>
+  <data name="Upload_History" xml:space="preserve"><value>Upload History</value></data>
+  <data name="Upload_NoUploads" xml:space="preserve"><value>No uploads yet</value></data>
+  <data name="Upload_FileType" xml:space="preserve"><value>File Type</value></data>
+  <data name="Upload_FileName" xml:space="preserve"><value>File Name</value></data>
+  <data name="Upload_Period" xml:space="preserve"><value>Period</value></data>
+  <data name="Upload_UploadedBy" xml:space="preserve"><value>Uploaded By</value></data>
+  <data name="Upload_Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Upload_TemplateActive" xml:space="preserve"><value>Template: Active Employees</value></data>
+  <data name="Upload_TemplateResignations" xml:space="preserve"><value>Template: Resignations</value></data>
+  <data name="Upload_TemplateStore" xml:space="preserve"><value>Template: Store Reference</value></data>
+  <data name="Upload_SampleExit" xml:space="preserve"><value>Sample: Exit Interviews</value></data>
+  <data name="Upload_ShowingPage" xml:space="preserve"><value>Showing page</value></data>
+  <data name="Upload_Upload" xml:space="preserve"><value>Upload</value></data>
+
+  <!-- Users -->
+  <data name="Users_NewUser" xml:space="preserve"><value>New User</value></data>
+  <data name="Users_BulkUpload" xml:space="preserve"><value>Bulk Upload Users</value></data>
+  <data name="Users_BulkUploadDesc" xml:space="preserve"><value>Excel with Email + Phone — created as pending "User" accounts, no password yet.</value></data>
+  <data name="Users_GenerateBulkOtps" xml:space="preserve"><value>Generate Bulk OTPs</value></data>
+  <data name="Users_GenerateBulkOtpsDesc" xml:space="preserve"><value>Downloads Email + Phone + OTP for every pending user who doesn't have an active OTP yet.</value></data>
+  <data name="Users_UploadUsers" xml:space="preserve"><value>Upload Users</value></data>
+  <data name="Users_GenerateDownloadOtps" xml:space="preserve"><value>Generate &amp; Download OTPs</value></data>
+  <data name="Users_NoUsers" xml:space="preserve"><value>No users yet</value></data>
+  <data name="Users_Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Users_PendingActivation" xml:space="preserve"><value>Pending Activation</value></data>
+  <data name="Users_TemplateBulk" xml:space="preserve"><value>Template: Bulk Users</value></data>
+  <data name="Users_Created" xml:space="preserve"><value>Created</value></data>
+  <data name="Users_OtpGenerated" xml:space="preserve"><value>OTP Generated</value></data>
+  <data name="Users_ValidFor" xml:space="preserve"><value>Valid for 4 hours, single use. Send this to the user yourself.</value></data>
+  <data name="Users_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Users_ConfirmPassword" xml:space="preserve"><value>Confirm Your Password</value></data>
+  <data name="Users_GenerateKey" xml:space="preserve"><value>Generate New Key</value></data>
+  <data name="Users_NewRecoveryKey" xml:space="preserve"><value>New Recovery Key</value></data>
+  <data name="Users_SaveKey" xml:space="preserve"><value>I've Saved It — Close</value></data>
+
+  <!-- Create/Edit User -->
+  <data name="CU_SelectRole" xml:space="preserve"><value>Select role...</value></data>
+  <data name="CU_CreateUser" xml:space="preserve"><value>Create User</value></data>
+  <data name="EU_NewPasswordNote" xml:space="preserve"><value>New Password (leave blank to keep)</value></data>
+  <data name="EU_SaveChanges" xml:space="preserve"><value>Save Changes</value></data>
+
+  <!-- Reports -->
+  <data name="Rep_TurnoverWorkforce" xml:space="preserve"><value>Turnover &amp; Workforce</value></data>
+  <data name="Rep_DeepAnalytics" xml:space="preserve"><value>Deep Analytics</value></data>
+  <data name="Rep_ExitInterviewsSection" xml:space="preserve"><value>Exit Interviews</value></data>
+  <data name="Rep_AvailablePeriods" xml:space="preserve"><value>Available Data Periods</value></data>
+  <data name="Rep_UploadFirst" xml:space="preserve"><value>Upload employee data first to generate period-based reports.</value></data>
+  <data name="Rep_DownloadSummaryExcel" xml:space="preserve"><value>Download Summary Excel</value></data>
+  <data name="Rep_DownloadStoreExcel" xml:space="preserve"><value>Download Store Report Excel</value></data>
+  <data name="Rep_FullCompany" xml:space="preserve"><value>Full Company Report</value></data>
+  <data name="Rep_FullCompanyDesc" xml:space="preserve"><value>Everything in one workbook</value></data>
+  <data name="Rep_Summary" xml:space="preserve"><value>Summary Report</value></data>
+  <data name="Rep_SummaryDesc" xml:space="preserve"><value>KPIs + Job Title + Tenure + Gender breakdown</value></data>
+  <data name="Rep_StoreComparison" xml:space="preserve"><value>Store Comparison Report</value></data>
+  <data name="Rep_StoreComparisonDesc" xml:space="preserve"><value>Turnover by store with OC/OM assignments</value></data>
+  <data name="Rep_NinetyDay" xml:space="preserve"><value>90-Day Turnover</value></data>
+  <data name="Rep_NinetyDayDesc" xml:space="preserve"><value>Cohort trend, by-store breakdown, early leavers, and reasons</value></data>
+  <data name="Rep_Retention" xml:space="preserve"><value>Retention</value></data>
+  <data name="Rep_RetentionDesc" xml:space="preserve"><value>Milestones, survival curve, trend, store leaderboard, and tenure distribution</value></data>
+  <data name="Rep_Scorecard" xml:space="preserve"><value>Scorecard</value></data>
+  <data name="Rep_ScorecardDesc" xml:space="preserve"><value>Store Leaders, Operation Consultants, and Operation Managers ranked side by side</value></data>
+  <data name="Rep_EarlyWarning" xml:space="preserve"><value>Early Warning</value></data>
+  <data name="Rep_EarlyWarningDesc" xml:space="preserve"><value>Full at-risk watchlist with risk scores and reasons</value></data>
+  <data name="Rep_ExitInterview" xml:space="preserve"><value>Exit Interview Report</value></data>
+  <data name="Rep_ExitInterviewDesc" xml:space="preserve"><value>Reasons, would-return, experience, workload, engagement drivers, and anonymous comments</value></data>
+  <data name="Rep_AllOperationManagers" xml:space="preserve"><value>All Operation Managers</value></data>
+  <data name="Rep_AllOperationConsultants" xml:space="preserve"><value>All Operation Consultants</value></data>
+
+  <!-- Scorecard -->
+  <data name="SC_StoreLeaders" xml:space="preserve"><value>Store Leaders</value></data>
+  <data name="SC_StoreLeader" xml:space="preserve"><value>Store Leader</value></data>
+  <data name="SC_OC" xml:space="preserve"><value>Operation Consultants</value></data>
+  <data name="SC_OM" xml:space="preserve"><value>Operation Managers</value></data>
+  <data name="SC_TurnoverRate" xml:space="preserve"><value>Turnover Rate</value></data>
+  <data name="SC_EarlyLeave" xml:space="preserve"><value>90-Day Early Leave</value></data>
+  <data name="SC_180Retention" xml:space="preserve"><value>180-Day Retention</value></data>
+  <data name="SC_ExitSentiment" xml:space="preserve"><value>Exit Sentiment</value></data>
+
+  <!-- Early Warning -->
+  <data name="EW_WatchList" xml:space="preserve"><value>Watch List</value></data>
+  <data name="EW_HireName" xml:space="preserve"><value>Name</value></data>
+  <data name="EW_Store" xml:space="preserve"><value>Store</value></data>
+  <data name="EW_JobTitle" xml:space="preserve"><value>Job Title</value></data>
+  <data name="EW_HireDate" xml:space="preserve"><value>Hire Date</value></data>
+  <data name="EW_TenureDays" xml:space="preserve"><value>Tenure (Days)</value></data>
+  <data name="EW_RiskScore" xml:space="preserve"><value>Risk Score</value></data>
+  <data name="EW_Reasons" xml:space="preserve"><value>Reasons</value></data>
+  <data name="EW_InWatchList" xml:space="preserve"><value>In Watch List</value></data>
+  <data name="EW_HighRisk" xml:space="preserve"><value>High Risk (2+)</value></data>
+  <data name="EW_NewHireWindow" xml:space="preserve"><value>Still in first 90 days</value></data>
+  <data name="EW_CompanyBaseline" xml:space="preserve"><value>Avg Early Leave Rate (Company)</value></data>
+
+  <!-- Targets -->
+  <data name="TG_TurnoverTarget" xml:space="preserve"><value>Target Turnover Rate</value></data>
+  <data name="TG_RetentionTarget" xml:space="preserve"><value>Target 90-Day Retention</value></data>
+  <data name="TG_SaveTargets" xml:space="preserve"><value>Save Targets</value></data>
+  <data name="TG_Saved" xml:space="preserve"><value>Saved!</value></data>
+
+  <!-- AI Usage -->
+  <data name="AIU_DailyLimit" xml:space="preserve"><value>Daily Question Limit</value></data>
+  <data name="AIU_DailyLimitDesc" xml:space="preserve"><value>Max number of questions anyone can ask the AI per day</value></data>
+  <data name="AIU_EstimatedCost" xml:space="preserve"><value>Estimated Cost Rates</value></data>
+  <data name="AIU_EstimatedCostDesc" xml:space="preserve"><value>Estimated price per million tokens — verify actual price from your Google account. This number is approximate and editable.</value></data>
+  <data name="AIU_SaveRates" xml:space="preserve"><value>Save Rates</value></data>
+  <data name="AIU_Saved" xml:space="preserve"><value>Saved</value></data>
+  <data name="AIU_UsageTrendSub" xml:space="preserve"><value>Last 30 days — number of questions and tokens company-wide</value></data>
+
+  <!-- AI Assistant -->
+  <data name="AI_NewConversation" xml:space="preserve"><value>New Conversation</value></data>
+  <data name="AI_QuestionsToday" xml:space="preserve"><value>Questions Today</value></data>
+  <data name="AI_QuickPrompts" xml:space="preserve"><value>Quick Prompts</value></data>
+  <data name="AI_ClickToAsk" xml:space="preserve"><value>Click to ask</value></data>
+  <data name="AI_TypeQuestion" xml:space="preserve"><value>Type your question here...</value></data>
+
+  <!-- Retention -->
+  <data name="Ret_MilestoneTitle" xml:space="preserve"><value>Retention Milestones</value></data>
+  <data name="Ret_SurvivalCurve" xml:space="preserve"><value>Survival Curve</value></data>
+  <data name="Ret_SurvivalCurveSub" xml:space="preserve"><value>Probability of an employee still being active after N days</value></data>
+  <data name="Ret_NoMilestoneData" xml:space="preserve"><value>No milestone data yet</value></data>
+  <data name="Ret_NoMilestoneDataSub" xml:space="preserve"><value>Upload data with hire dates to see retention milestones here.</value></data>
+</root>

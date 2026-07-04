@@ -1,25 +1,25 @@
 @model List<MvcApp.Models.UploadLog>
 @{
-    ViewData["Title"] = "Data Management";
+    ViewData["Title"] = L["Page_DataManagement"].Value;
 }
 
 <div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-3">
     <div>
-        <h1 class="page-title">Data Management</h1>
-        <p class="page-subtitle">Upload monthly Excel files to import workforce data</p>
+        <h1 class="page-title">@L["Page_DataManagement"]</h1>
+        <p class="page-subtitle">@L["Page_DataManagementSub"]</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
         <a href="/admin/dashboard/download-template?type=active_employees" class="btn btn-outline-template btn-sm">
-            <i class="bi bi-file-earmark-arrow-down me-1"></i>Template: Active Employees
+            <i class="bi bi-file-earmark-arrow-down me-1"></i>@L["UL_TemplateActiveEmployees"]
         </a>
         <a href="/admin/dashboard/download-template?type=resignations" class="btn btn-outline-template btn-sm">
-            <i class="bi bi-file-earmark-arrow-down me-1"></i>Template: Resignations
+            <i class="bi bi-file-earmark-arrow-down me-1"></i>@L["UL_TemplateResignations"]
         </a>
         <a href="/admin/dashboard/download-template?type=store_reference" class="btn btn-outline-template btn-sm">
-            <i class="bi bi-file-earmark-arrow-down me-1"></i>Template: Store Reference
+            <i class="bi bi-file-earmark-arrow-down me-1"></i>@L["UL_TemplateStoreRef"]
         </a>
         <a href="/admin/dashboard/download-template?type=exit_interviews" class="btn btn-outline-template btn-sm">
-            <i class="bi bi-file-earmark-arrow-down me-1"></i>Sample: Exit Interviews
+            <i class="bi bi-file-earmark-arrow-down me-1"></i>@L["UL_SampleExitInterviews"]
         </a>
     </div>
 </div>
@@ -57,7 +57,7 @@
         <div class="card-dark">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="card-icon"><i class="bi bi-people-fill"></i></div>
-                <div><h6 class="mb-0">Active Employees</h6><p class="text-muted-custom mb-0 small">Upload active employees for a given month.</p></div>
+                <div><h6 class="mb-0">@L["UL_ActiveEmployees"]</h6><p class="text-muted-custom mb-0 small">@L["UL_ActiveEmployeesSub"]</p></div>
             </div>
             <form asp-area="Admin" asp-controller="Dashboard" asp-action="UploadActiveEmployees" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
@@ -74,7 +74,7 @@
         <div class="card-dark">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="card-icon"><i class="bi bi-person-dash-fill"></i></div>
-                <div><h6 class="mb-0">Resignations</h6><p class="text-muted-custom mb-0 small">Upload resignation records for a given month.</p></div>
+                <div><h6 class="mb-0">@L["UL_Resignations"]</h6><p class="text-muted-custom mb-0 small">@L["UL_ResignationsSub"]</p></div>
             </div>
             <form asp-area="Admin" asp-controller="Dashboard" asp-action="UploadResignations" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()

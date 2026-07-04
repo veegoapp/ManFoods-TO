@@ -1,4 +1,5 @@
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpCtx
+@inject Microsoft.Extensions.Localization.IStringLocalizer<MvcApp.Resources.SharedResource> L
 @{
     var session = HttpCtx.HttpContext?.Session;
     var userEmail    = session?.GetString("Email") ?? "";
@@ -6,11 +7,15 @@
     var assignedName = session?.GetString("AssignedName") ?? "";
     var displayName  = !string.IsNullOrEmpty(assignedName) ? assignedName : userEmail;
     var initials     = string.IsNullOrEmpty(displayName) ? "U" : displayName.Substring(0,1).ToUpper();
+    var currentLang  = HttpCtx.HttpContext?.Request.Cookies["mf-lang"] ?? "en";
+    var isRtl        = currentLang == "ar";
+    var returnUrl    = HttpCtx.HttpContext?.Request.Path.Value ?? "/";
+    var switchLang   = isRtl ? "en" : "ar";
 
     string RoleLabel(string r) => r == "User" ? "User" : r.Replace("_"," ");
 }
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@currentLang" dir="@(isRtl ? "rtl" : "ltr")">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -44,31 +49,39 @@
 
         <!-- Navigation -->
         <nav class="sidebar-nav" style="flex:1; padding: 8px 0;">
-            <div class="nav-section-label">My Workspace</div>
+            <div class="nav-section-label">@L["Nav_MyWorkspace"]</div>
             <a href="/home/dashboard" class="nav-item active">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-speedometer2"></i></span>
-                    <span class="nav-item-label">Dashboard</span>
+                    <span class="nav-item-label">@L["Nav_Dashboard"]</span>
                 </span>
             </a>
         </nav>
 
-        <!-- Sign out -->
+        <!-- Footer -->
         <div class="sidebar-footer">
             <div class="sidebar-footer-inner">
-                <button class="btn-change-password w-100 mb-1" id="themeToggle" title="Toggle light/dark mode">
+                <button class="btn-change-password w-100 mb-1" id="themeToggle" title="@L["Layout_DarkMode"] / @L["Layout_LightMode"]">
                     <i class="bi bi-moon-stars-fill icon-dark"></i>
                     <i class="bi bi-sun-fill icon-light"></i>
-                    <span class="icon-dark">Dark Mode</span>
-                    <span class="icon-light">Light Mode</span>
+                    <span class="icon-dark">@L["Layout_DarkMode"]</span>
+                    <span class="icon-light">@L["Layout_LightMode"]</span>
                 </button>
                 <a href="/home/account/changepassword" class="btn-change-password w-100 mb-1" style="text-decoration:none">
-                    <i class="bi bi-key-fill"></i>Change Password
+                    <i class="bi bi-key-fill"></i>@L["Layout_ChangePassword"]
                 </a>
+                <form action="/language/set" method="post" class="w-100 mb-1">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="lang" value="@switchLang"/>
+                    <input type="hidden" name="returnUrl" value="@returnUrl"/>
+                    <button type="submit" class="btn-change-password w-100" style="font-weight:700">
+                        <i class="bi bi-translate me-1"></i>@L["Layout_SwitchLang"]
+                    </button>
+                </form>
                 <form asp-area="Home" asp-controller="Account" asp-action="Logout" method="post" class="w-100">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn-signout-full">
-                        <i class="bi bi-box-arrow-left me-2"></i>Sign Out
+                        <i class="bi bi-box-arrow-left me-2"></i>@L["Layout_SignOut"]
                     </button>
                 </form>
             </div>

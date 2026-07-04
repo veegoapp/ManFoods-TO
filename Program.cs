@@ -1,14 +1,18 @@
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using MvcApp.Data;
 using MvcApp.Services;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddLocalization(opts => opts.ResourcesPath = "Resources");
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
 builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerificationToken");
@@ -69,6 +73,18 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+var supportedCultures = new[] { new CultureInfo("en"), new CultureInfo("ar") };
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("en"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures,
+    RequestCultureProviders = new List<IRequestCultureProvider>
+    {
+        new CookieRequestCultureProvider { CookieName = "mf-lang" }
+    }
+});
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseRateLimiter();
@@ -84,6 +100,12 @@ app.MapControllerRoute(
 app.MapGet("/", ctx => { ctx.Response.Redirect("/login"); return Task.CompletedTask; });
 app.MapGet("/admin", ctx => { ctx.Response.Redirect("/adminlogin"); return Task.CompletedTask; });
 app.MapGet("/home", ctx => { ctx.Response.Redirect("/login"); return Task.CompletedTask; });
+
+// ── Language ───────────────────────────────────────────
+app.MapControllerRoute(
+    name: "language",
+    pattern: "language/{action}/{id?}",
+    defaults: new { controller = "Language" });
 
 // ── API (no area prefix) ───────────────────────────────
 app.MapControllerRoute(

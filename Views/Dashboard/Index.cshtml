@@ -1,18 +1,18 @@
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = L["Page_HomeDashboard"].Value;
 }
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Dashboard</h1>
-        <p class="page-subtitle">Workforce intelligence and turnover metrics</p>
+        <h1 class="page-title">@L["Page_HomeDashboard"]</h1>
+        <p class="page-subtitle">@L["Page_HomeDashboardSub"]</p>
     </div>
     <div class="d-flex gap-2 align-items-center flex-wrap">
         <select id="periodSelect" class="form-select form-select-dark" style="width:180px">
-            <option value="">Select Period</option>
+            <option value="">@L["Common_SelectPeriod"]</option>
         </select>
         <select id="storeSelect" class="form-select form-select-dark" style="width:200px">
-            <option value="">All Stores</option>
+            <option value="">@L["Common_AllStores"]</option>
         </select>
     </div>
 </div>
@@ -24,22 +24,22 @@
 <div class="insight-card mb-4">
     <div class="insight-icon"><i class="bi bi-stars"></i></div>
     <div>
-        <div class="insight-title">AI Insights</div>
-        <div class="insight-text">Connect your AI key to enable smart workforce recommendations.</div>
+        <div class="insight-title">@L["Chart_AiInsights"]</div>
+        <div class="insight-text">@L["Chart_AiInsightsSub"]</div>
     </div>
 </div>
 
 <div class="charts-grid">
     <div class="chart-card">
-        <div class="chart-header"><h6>Turnover by Job Title</h6><p>Resignations grouped by role</p></div>
+        <div class="chart-header"><h6>@L["Chart_TurnoverByJobTitle"]</h6><p>@L["Chart_TurnoverByJobTitleSub"]</p></div>
         <div class="chart-body"><canvas id="jobTitleChart"></canvas></div>
     </div>
     <div class="chart-card">
-        <div class="chart-header"><h6>Turnover by Tenure</h6><p>Duration before resignation</p></div>
+        <div class="chart-header"><h6>@L["Chart_TurnoverByTenure"]</h6><p>@L["Chart_TurnoverByTenureSub"]</p></div>
         <div class="chart-body"><canvas id="tenureChart"></canvas></div>
     </div>
     <div class="chart-card chart-full">
-        <div class="chart-header"><h6>Gender Breakdown</h6><p>Active workforce distribution</p></div>
+        <div class="chart-header"><h6>@L["Chart_GenderBreakdown"]</h6><p>@L["Chart_GenderBreakdownSub"]</p></div>
         <div class="chart-body chart-body-sm"><canvas id="genderChart"></canvas></div>
     </div>
 </div>

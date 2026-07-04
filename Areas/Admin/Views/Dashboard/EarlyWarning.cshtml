@@ -1,15 +1,15 @@
 @{
-    ViewData["Title"] = "Early Warning";
+    ViewData["Title"] = L["Page_EarlyWarning"].Value;
 }
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Early Warning</h1>
-        <p class="page-subtitle">الموظفين الشغالين حاليًا اللي في منطقة خطر — عشان تتحرك قبل ما يسيبوا، مش بعدين</p>
+        <h1 class="page-title">@L["Page_EarlyWarning"]</h1>
+        <p class="page-subtitle">@L["Page_EarlyWarningSub"]</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <select id="ewStoreSelect" class="form-select form-select-dark form-select-sm" style="width:200px">
-            <option value="">All Stores</option>
+            <option value="">@L["Common_AllStores"]</option>
         </select>
     </div>
 </div>

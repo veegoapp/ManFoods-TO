@@ -1,16 +1,16 @@
 @{
-    ViewData["Title"] = "Scorecard";
+    ViewData["Title"] = L["Page_Scorecard"].Value;
 }
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Scorecard</h1>
-        <p class="page-subtitle">أداء كل Store Leader / Operation Consultant / Operation Manager في مكان واحد — تيرن أوفر، احتفاظ، ورضا الموظفين المستقيلين</p>
+        <h1 class="page-title">@L["Page_Scorecard"]</h1>
+        <p class="page-subtitle">@L["Page_ScorecardSub"]</p>
     </div>
     <div class="d-flex gap-2 flex-wrap" role="group">
-        <button class="btn btn-sm sc-dim-btn active" data-dim="leader">Store Leaders</button>
-        <button class="btn btn-sm sc-dim-btn" data-dim="oc">Operation Consultants</button>
-        <button class="btn btn-sm sc-dim-btn" data-dim="om">Operation Managers</button>
+        <button class="btn btn-sm sc-dim-btn active" data-dim="leader">@L["SC_StoreLeaders"]</button>
+        <button class="btn btn-sm sc-dim-btn" data-dim="oc">@L["Common_OperationConsultants"]</button>
+        <button class="btn btn-sm sc-dim-btn" data-dim="om">@L["Common_OperationManagers"]</button>
     </div>
 </div>
 

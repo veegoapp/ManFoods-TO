@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- Language toggle -->
+  <data name="Layout_SwitchLang" xml:space="preserve"><value>EN</value></data>
+
+  <!-- Layout -->
+  <data name="Layout_AdminPortal" xml:space="preserve"><value>بوابة المشرف</value></data>
+  <data name="Layout_EmployeePortal" xml:space="preserve"><value>بوابة الموظف</value></data>
+  <data name="Layout_ChangePassword" xml:space="preserve"><value>تغيير كلمة المرور</value></data>
+  <data name="Layout_SignOut" xml:space="preserve"><value>تسجيل الخروج</value></data>
+  <data name="Layout_DarkMode" xml:space="preserve"><value>الوضع الداكن</value></data>
+  <data name="Layout_LightMode" xml:space="preserve"><value>الوضع الفاتح</value></data>
+
+  <!-- Navigation -->
+  <data name="Nav_Dashboard" xml:space="preserve"><value>لوحة التحكم</value></data>
+  <data name="Nav_MyWorkspace" xml:space="preserve"><value>مساحتي</value></data>
+  <data name="Nav_Turnover" xml:space="preserve"><value>الدوران</value></data>
+  <data name="Nav_Workforce" xml:space="preserve"><value>القوى العاملة</value></data>
+  <data name="Nav_Retention" xml:space="preserve"><value>الاحتفاظ</value></data>
+  <data name="Nav_ExitInterviews" xml:space="preserve"><value>مقابلات الخروج</value></data>
+  <data name="Nav_NinetyDay" xml:space="preserve"><value>دوران 90 يوم</value></data>
+  <data name="Nav_AiAssistant" xml:space="preserve"><value>المساعد الذكي</value></data>
+  <data name="Nav_AiUsage" xml:space="preserve"><value>استخدام الذكاء الاصطناعي</value></data>
+  <data name="Nav_EarlyWarning" xml:space="preserve"><value>الإنذار المبكر</value></data>
+  <data name="Nav_Scorecard" xml:space="preserve"><value>بطاقة الأداء</value></data>
+  <data name="Nav_Stores" xml:space="preserve"><value>الفروع</value></data>
+  <data name="Nav_DataManagement" xml:space="preserve"><value>إدارة البيانات</value></data>
+  <data name="Nav_Reports" xml:space="preserve"><value>التقارير</value></data>
+  <data name="Nav_Users" xml:space="preserve"><value>المستخدمون</value></data>
+  <data name="Nav_Targets" xml:space="preserve"><value>الأهداف</value></data>
+
+  <!-- Login -->
+  <data name="Login_SignInToContinue" xml:space="preserve"><value>سجّل دخولك للمتابعة</value></data>
+  <data name="Login_EmailAddress" xml:space="preserve"><value>البريد الإلكتروني</value></data>
+  <data name="Login_Password" xml:space="preserve"><value>كلمة المرور</value></data>
+  <data name="Login_SignIn" xml:space="preserve"><value>تسجيل الدخول</value></data>
+  <data name="Login_SignInAdmin" xml:space="preserve"><value>دخول كمشرف</value></data>
+  <data name="Login_ForgotPassword" xml:space="preserve"><value>نسيت كلمة المرور؟</value></data>
+  <data name="Login_ForgotPasswordAdmin" xml:space="preserve"><value>نسيت كلمة المرور؟ استخدم مفتاح الاسترداد</value></data>
+  <data name="Login_AdminPortal" xml:space="preserve"><value>بوابة المشرف</value></data>
+  <data name="Login_AdminDashboard" xml:space="preserve"><value>لوحة تحكم المشرف</value></data>
+  <data name="Login_WorkforceAnalytics" xml:space="preserve"><value>منصة تحليل القوى العاملة</value></data>
+
+  <!-- Change Password -->
+  <data name="CP_Title" xml:space="preserve"><value>تغيير كلمة المرور</value></data>
+  <data name="CP_Subtitle" xml:space="preserve"><value>تحديث كلمة مرور حسابك</value></data>
+  <data name="CP_UpdatePassword" xml:space="preserve"><value>تحديث كلمة المرور</value></data>
+  <data name="CP_CurrentPassword" xml:space="preserve"><value>كلمة المرور الحالية</value></data>
+  <data name="CP_NewPassword" xml:space="preserve"><value>كلمة المرور الجديدة</value></data>
+  <data name="CP_ConfirmPassword" xml:space="preserve"><value>تأكيد كلمة المرور الجديدة</value></data>
+  <data name="CP_MinChars" xml:space="preserve"><value>الحد الأدنى 8 أحرف</value></data>
+  <data name="CP_EnterCurrent" xml:space="preserve"><value>أدخل كلمة المرور الحالية</value></data>
+  <data name="CP_MinEightChars" xml:space="preserve"><value>8 أحرف على الأقل</value></data>
+  <data name="CP_RepeatNew" xml:space="preserve"><value>أعد كلمة المرور الجديدة</value></data>
+
+  <!-- Recover -->
+  <data name="Recover_AdminRecovery" xml:space="preserve"><value>استرداد المشرف</value></data>
+  <data name="Recover_Title" xml:space="preserve"><value>إعادة تعيين كلمة مرور المشرف</value></data>
+  <data name="Recover_Subtitle" xml:space="preserve"><value>يتطلب مفتاح الاسترداد الرئيسي. وليس OTP — هذا للمستخدمين العاديين فقط.</value></data>
+  <data name="Recover_AdminEmail" xml:space="preserve"><value>بريد المشرف الإلكتروني</value></data>
+  <data name="Recover_RecoveryKey" xml:space="preserve"><value>مفتاح الاسترداد</value></data>
+  <data name="Recover_NewPassword" xml:space="preserve"><value>كلمة المرور الجديدة</value></data>
+  <data name="Recover_ConfirmPassword" xml:space="preserve"><value>تأكيد كلمة المرور الجديدة</value></data>
+  <data name="Recover_ResetPassword" xml:space="preserve"><value>إعادة تعيين كلمة المرور</value></data>
+  <data name="Recover_BackToSignIn" xml:space="preserve"><value>العودة لتسجيل الدخول</value></data>
+
+  <!-- Forgot Password -->
+  <data name="FP_Title" xml:space="preserve"><value>إعادة تعيين كلمة المرور</value></data>
+  <data name="FP_Subtitle" xml:space="preserve"><value>استخدم رمز التحقق الذي أرسله المشرف لتعيين كلمة مرور جديدة.</value></data>
+  <data name="FP_PhoneOrEmail" xml:space="preserve"><value>الهاتف أو البريد الإلكتروني</value></data>
+  <data name="FP_OtpCode" xml:space="preserve"><value>رمز التحقق</value></data>
+  <data name="FP_NewPassword" xml:space="preserve"><value>كلمة المرور الجديدة</value></data>
+  <data name="FP_SetNewPassword" xml:space="preserve"><value>تعيين كلمة مرور جديدة</value></data>
+  <data name="FP_BackToSignIn" xml:space="preserve"><value>العودة لتسجيل الدخول</value></data>
+
+  <!-- Common UI -->
+  <data name="Common_Loading" xml:space="preserve"><value>جاري التحميل...</value></data>
+  <data name="Common_AllStores" xml:space="preserve"><value>جميع الفروع</value></data>
+  <data name="Common_AllOperationManagers" xml:space="preserve"><value>جميع مديري العمليات</value></data>
+  <data name="Common_AllOperationConsultants" xml:space="preserve"><value>جميع مستشاري العمليات</value></data>
+  <data name="Common_AllConsultants" xml:space="preserve"><value>جميع المستشارين</value></data>
+  <data name="Common_AllManagers" xml:space="preserve"><value>جميع المديرين</value></data>
+  <data name="Common_AllStoreLeaders" xml:space="preserve"><value>جميع قادة الفروع</value></data>
+  <data name="Common_SelectPeriod" xml:space="preserve"><value>اختر الفترة</value></data>
+  <data name="Common_CohortMonth" xml:space="preserve"><value>شهر المجموعة</value></data>
+  <data name="Common_From" xml:space="preserve"><value>من</value></data>
+  <data name="Common_To" xml:space="preserve"><value>إلى</value></data>
+  <data name="Common_Export" xml:space="preserve"><value>تصدير</value></data>
+  <data name="Common_Download" xml:space="preserve"><value>تنزيل</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>رجوع</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>إغلاق</value></data>
+  <data name="Common_Name" xml:space="preserve"><value>الاسم</value></data>
+  <data name="Common_Headcount" xml:space="preserve"><value>عدد الموظفين</value></data>
+  <data name="Common_Resignations" xml:space="preserve"><value>الاستقالات</value></data>
+  <data name="Common_TurnoverPct" xml:space="preserve"><value>معدل الدوران%</value></data>
+  <data name="Common_Month" xml:space="preserve"><value>الشهر</value></data>
+  <data name="Common_Year" xml:space="preserve"><value>السنة</value></data>
+  <data name="Common_NoData" xml:space="preserve"><value>لا توجد بيانات لهذه الفترة.</value></data>
+  <data name="Common_NoMatchingStores" xml:space="preserve"><value>لا توجد فروع مطابقة.</value></data>
+  <data name="Common_NewHires" xml:space="preserve"><value>موظفون جدد</value></data>
+  <data name="Common_StoreName" xml:space="preserve"><value>اسم الفرع</value></data>
+  <data name="Common_Email" xml:space="preserve"><value>البريد الإلكتروني</value></data>
+  <data name="Common_Phone" xml:space="preserve"><value>الهاتف</value></data>
+  <data name="Common_Role" xml:space="preserve"><value>الدور</value></data>
+  <data name="Common_Status" xml:space="preserve"><value>الحالة</value></data>
+  <data name="Common_Actions" xml:space="preserve"><value>الإجراءات</value></data>
+  <data name="Common_SearchStore" xml:space="preserve"><value>بحث في الفرع، مستشار، مدير...</value></data>
+  <data name="Common_SearchComments" xml:space="preserve"><value>بحث في التعليقات...</value></data>
+  <data name="Common_SmartInsights" xml:space="preserve"><value>تحليلات ذكية</value></data>
+  <data name="Common_AutoGenerated" xml:space="preserve"><value>مُولَّد تلقائيًا</value></data>
+  <data name="Common_OperationConsultants" xml:space="preserve"><value>مستشارو العمليات</value></data>
+  <data name="Common_OperationManagers" xml:space="preserve"><value>مديرو العمليات</value></data>
+  <data name="Common_ByOcOm" xml:space="preserve"><value>حسب المستشار والمدير</value></data>
+  <data name="Common_StoreComparison" xml:space="preserve"><value>مقارنة الفروع</value></data>
+  <data name="Common_FullDataTable" xml:space="preserve"><value>جدول البيانات الكامل</value></data>
+  <data name="Common_Of" xml:space="preserve"><value>من</value></data>
+  <data name="Common_Total" xml:space="preserve"><value>الإجمالي</value></data>
+
+  <!-- Page Titles & Subtitles -->
+  <data name="Page_HomeDashboard" xml:space="preserve"><value>لوحة التحكم</value></data>
+  <data name="Page_HomeDashboardSub" xml:space="preserve"><value>ذكاء القوى العاملة ومقاييس معدل الدوران</value></data>
+  <data name="Page_Turnover" xml:space="preserve"><value>تحليل معدل الدوران</value></data>
+  <data name="Page_TurnoverSub" xml:space="preserve"><value>تحليل عميق لأنماط الاستقالات وأداء الفروع</value></data>
+  <data name="Page_Workforce" xml:space="preserve"><value>القوى العاملة</value></data>
+  <data name="Page_WorkforceSub" xml:space="preserve"><value>تكوين وتوزيع الموظفين عبر الفروع</value></data>
+  <data name="Page_Retention" xml:space="preserve"><value>الاحتفاظ بالموظفين</value></data>
+  <data name="Page_RetentionSub" xml:space="preserve"><value>كم يبقى الموظفون الجدد — المعالم، منحنى البقاء، والاتجاهات</value></data>
+  <data name="Page_ExitInterviews" xml:space="preserve"><value>مقابلات الخروج</value></data>
+  <data name="Page_ExitInterviewsSub" xml:space="preserve"><value>لماذا يغادر الناس، بشكل إجمالي — لا تُحدد الردود الفردية أبدًا</value></data>
+  <data name="Page_NinetyDay" xml:space="preserve"><value>دوران 90 يوم</value></data>
+  <data name="Page_NinetyDaySub" xml:space="preserve"><value>من بين كل من تم توظيفه في شهر، نسبة من استقال خلال أول 90 يومًا</value></data>
+  <data name="Page_AiAssistant" xml:space="preserve"><value>المساعد الذكي</value></data>
+  <data name="Page_AiAssistantSub" xml:space="preserve"><value>اسأل أي شيء عن بيانات القوى العاملة</value></data>
+  <data name="Page_AiUsage" xml:space="preserve"><value>استخدام الذكاء الاصطناعي</value></data>
+  <data name="Page_AiUsageSub" xml:space="preserve"><value>استهلاك المساعد الذكي — الحدود، عدد الأسئلة، التوكنز، والتكلفة التقديرية</value></data>
+  <data name="Page_EarlyWarning" xml:space="preserve"><value>الإنذار المبكر</value></data>
+  <data name="Page_EarlyWarningSub" xml:space="preserve"><value>الموظفون في خطر — رُصدوا قبل أن يستقيلوا</value></data>
+  <data name="Page_Scorecard" xml:space="preserve"><value>بطاقة الأداء</value></data>
+  <data name="Page_ScorecardSub" xml:space="preserve"><value>تصنيف الأداء لقادة الفروع والمستشارين والمديرين</value></data>
+  <data name="Page_Stores" xml:space="preserve"><value>الفروع</value></data>
+  <data name="Page_StoresSub" xml:space="preserve"><value>حالة معدل الدوران في جميع الفروع</value></data>
+  <data name="Page_Targets" xml:space="preserve"><value>الأهداف</value></data>
+  <data name="Page_TargetsSub" xml:space="preserve"><value>تحديد معايير الأداء على مستوى الشركة</value></data>
+  <data name="Page_Reports" xml:space="preserve"><value>التقارير</value></data>
+  <data name="Page_ReportsSub" xml:space="preserve"><value>تصدير كل أجزاء البوابة إلى Excel</value></data>
+  <data name="Page_Users" xml:space="preserve"><value>المستخدمون</value></data>
+  <data name="Page_UsersSub" xml:space="preserve"><value>إدارة الوصول للنظام والأدوار</value></data>
+  <data name="Page_CreateUser" xml:space="preserve"><value>إنشاء مستخدم</value></data>
+  <data name="Page_CreateUserSub" xml:space="preserve"><value>إضافة مستخدم جديد للنظام</value></data>
+  <data name="Page_EditUser" xml:space="preserve"><value>تعديل مستخدم</value></data>
+  <data name="Page_DataMgmt" xml:space="preserve"><value>إدارة البيانات</value></data>
+  <data name="Page_DataMgmtSub" xml:space="preserve"><value>رفع ملفات Excel الشهرية لاستيراد بيانات القوى العاملة</value></data>
+  <data name="Page_ChangePassword" xml:space="preserve"><value>تغيير كلمة المرور</value></data>
+  <data name="Page_ChangePasswordSub" xml:space="preserve"><value>تحديث كلمة مرور حسابك</value></data>
+  <data name="Page_StoreProfile" xml:space="preserve"><value>العودة لتحليل الدوران</value></data>
+  <data name="Page_VsNetwork" xml:space="preserve"><value>مقارنة بمتوسط الشبكة</value></data>
+
+  <!-- Charts -->
+  <data name="Chart_TurnoverByJobTitle" xml:space="preserve"><value>الدوران حسب المسمى الوظيفي</value></data>
+  <data name="Chart_TurnoverByJobTitleSub" xml:space="preserve"><value>الاستقالات مجمّعة حسب الدور</value></data>
+  <data name="Chart_TurnoverByTenure" xml:space="preserve"><value>الدوران حسب مدة الخدمة</value></data>
+  <data name="Chart_TurnoverByTenureSub" xml:space="preserve"><value>المدة قبل الاستقالة</value></data>
+  <data name="Chart_TurnoverByPayroll" xml:space="preserve"><value>الدوران حسب مجموعة الرواتب</value></data>
+  <data name="Chart_GenderBreakdown" xml:space="preserve"><value>التوزيع حسب الجنس</value></data>
+  <data name="Chart_GenderBreakdownSub" xml:space="preserve"><value>توزيع القوى العاملة الفعلية</value></data>
+  <data name="Chart_MonthlyTrend" xml:space="preserve"><value>اتجاه الدوران الشهري</value></data>
+  <data name="Chart_MonthlyTrendSub" xml:space="preserve"><value>معدل الدوران عبر الزمن</value></data>
+  <data name="Chart_SurvivalCurve" xml:space="preserve"><value>منحنى البقاء</value></data>
+  <data name="Chart_RetentionTrend" xml:space="preserve"><value>اتجاه الاحتفاظ بالمعالم</value></data>
+  <data name="Chart_StoreLeaderboard" xml:space="preserve"><value>تصنيف الفروع</value></data>
+  <data name="Chart_TenureDistribution" xml:space="preserve"><value>توزيع مدة خدمة القوى العاملة</value></data>
+  <data name="Chart_ReasonsForLeaving" xml:space="preserve"><value>أسباب المغادرة</value></data>
+  <data name="Chart_WouldTheyReturn" xml:space="preserve"><value>هل سيعودون؟</value></data>
+  <data name="Chart_OverallExperience" xml:space="preserve"><value>التجربة الإجمالية</value></data>
+  <data name="Chart_WorkloadConditions" xml:space="preserve"><value>ظروف العمل</value></data>
+  <data name="Chart_EngagementDrivers" xml:space="preserve"><value>محركات الانخراط</value></data>
+  <data name="Chart_Comments" xml:space="preserve"><value>التعليقات</value></data>
+  <data name="Chart_NinetyDayTrend" xml:space="preserve"><value>اتجاه دوران 90 يوم</value></data>
+  <data name="Chart_NinetyDayTrendSub" xml:space="preserve"><value>المعدل لكل شهر توظيف — النقاط المتقطعة لا تزال مؤقتة</value></data>
+  <data name="Chart_ByStore" xml:space="preserve"><value>حسب الفرع</value></data>
+  <data name="Chart_ByStoreNinetyDaySub" xml:space="preserve"><value>معدل المغادرة المبكرة لشهر المجموعة المحدد</value></data>
+  <data name="Chart_UsageTrend" xml:space="preserve"><value>اتجاه الاستخدام</value></data>
+  <data name="Chart_AiInsights" xml:space="preserve"><value>تحليلات الذكاء الاصطناعي</value></data>
+  <data name="Chart_AiInsightsSub" xml:space="preserve"><value>ربط مفتاح الذكاء الاصطناعي لتفعيل التوصيات الذكية.</value></data>
+
+  <!-- 90-Day specific -->
+  <data name="NTD_NoCohortData" xml:space="preserve"><value>لا توجد بيانات مجموعة بعد</value></data>
+  <data name="NTD_NoCohortDataSub" xml:space="preserve"><value>ارفع بيانات القوى العاملة والاستقالات مع تواريخ التعيين لعرض دوران 90 يوم هنا.</value></data>
+  <data name="NTD_Provisional" xml:space="preserve"><value>هذه المجموعة لم تبلغ علامة 90 يومًا بعد — المعدل مؤقت وقد يرتفع.</value></data>
+
+  <!-- Uploads -->
+  <data name="Upload_ActiveEmployees" xml:space="preserve"><value>الموظفون الفعليون</value></data>
+  <data name="Upload_ActiveDesc" xml:space="preserve"><value>ارفع الموظفين الفعليين لشهر معين.</value></data>
+  <data name="Upload_Resignations" xml:space="preserve"><value>الاستقالات</value></data>
+  <data name="Upload_ResignationsDesc" xml:space="preserve"><value>ارفع سجلات الاستقالات لشهر معين.</value></data>
+  <data name="Upload_StoreRef" xml:space="preserve"><value>مرجع الفروع</value></data>
+  <data name="Upload_StoreDesc" xml:space="preserve"><value>ارفع مرجع الفروع مع التعيينات.</value></data>
+  <data name="Upload_ExitInterviews" xml:space="preserve"><value>مقابلات الخروج</value></data>
+  <data name="Upload_ExitDesc" xml:space="preserve"><value>صدّر الردود من Microsoft Forms وارفعها كما هي — بدون إعادة تنسيق.</value></data>
+  <data name="Upload_History" xml:space="preserve"><value>سجل الرفع</value></data>
+  <data name="Upload_NoUploads" xml:space="preserve"><value>لا توجد رفوعات بعد</value></data>
+  <data name="Upload_FileType" xml:space="preserve"><value>نوع الملف</value></data>
+  <data name="Upload_FileName" xml:space="preserve"><value>اسم الملف</value></data>
+  <data name="Upload_Period" xml:space="preserve"><value>الفترة</value></data>
+  <data name="Upload_UploadedBy" xml:space="preserve"><value>رُفع بواسطة</value></data>
+  <data name="Upload_Date" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="Upload_TemplateActive" xml:space="preserve"><value>نموذج: الموظفون الفعليون</value></data>
+  <data name="Upload_TemplateResignations" xml:space="preserve"><value>نموذج: الاستقالات</value></data>
+  <data name="Upload_TemplateStore" xml:space="preserve"><value>نموذج: مرجع الفروع</value></data>
+  <data name="Upload_SampleExit" xml:space="preserve"><value>نموذج: مقابلات الخروج</value></data>
+  <data name="Upload_ShowingPage" xml:space="preserve"><value>عرض الصفحة</value></data>
+  <data name="Upload_Upload" xml:space="preserve"><value>رفع</value></data>
+
+  <!-- Users -->
+  <data name="Users_NewUser" xml:space="preserve"><value>مستخدم جديد</value></data>
+  <data name="Users_BulkUpload" xml:space="preserve"><value>رفع مستخدمين بالجملة</value></data>
+  <data name="Users_BulkUploadDesc" xml:space="preserve"><value>ملف Excel بالبريد والهاتف — تُنشأ كحسابات مستخدمين معلقة بدون كلمة مرور.</value></data>
+  <data name="Users_GenerateBulkOtps" xml:space="preserve"><value>توليد رموز OTP بالجملة</value></data>
+  <data name="Users_GenerateBulkOtpsDesc" xml:space="preserve"><value>تنزيل البريد والهاتف ورمز OTP لكل مستخدم معلق لا يملك رمزًا فعالًا بعد.</value></data>
+  <data name="Users_UploadUsers" xml:space="preserve"><value>رفع المستخدمين</value></data>
+  <data name="Users_GenerateDownloadOtps" xml:space="preserve"><value>توليد وتنزيل رموز OTP</value></data>
+  <data name="Users_NoUsers" xml:space="preserve"><value>لا يوجد مستخدمون بعد</value></data>
+  <data name="Users_Active" xml:space="preserve"><value>نشط</value></data>
+  <data name="Users_PendingActivation" xml:space="preserve"><value>في انتظار التفعيل</value></data>
+  <data name="Users_TemplateBulk" xml:space="preserve"><value>نموذج: مستخدمون بالجملة</value></data>
+  <data name="Users_Created" xml:space="preserve"><value>تاريخ الإنشاء</value></data>
+  <data name="Users_OtpGenerated" xml:space="preserve"><value>تم توليد رمز OTP</value></data>
+  <data name="Users_ValidFor" xml:space="preserve"><value>صالح لمدة 4 ساعات، استخدام واحد. أرسله للمستخدم بنفسك.</value></data>
+  <data name="Users_Close" xml:space="preserve"><value>إغلاق</value></data>
+  <data name="Users_ConfirmPassword" xml:space="preserve"><value>تأكيد كلمة المرور</value></data>
+  <data name="Users_GenerateKey" xml:space="preserve"><value>توليد مفتاح جديد</value></data>
+  <data name="Users_NewRecoveryKey" xml:space="preserve"><value>مفتاح الاسترداد الجديد</value></data>
+  <data name="Users_SaveKey" xml:space="preserve"><value>حفظته — إغلاق</value></data>
+
+  <!-- Create/Edit User -->
+  <data name="CU_SelectRole" xml:space="preserve"><value>اختر الدور...</value></data>
+  <data name="CU_CreateUser" xml:space="preserve"><value>إنشاء مستخدم</value></data>
+  <data name="EU_NewPasswordNote" xml:space="preserve"><value>كلمة المرور الجديدة (اتركه فارغًا للإبقاء عليها)</value></data>
+  <data name="EU_SaveChanges" xml:space="preserve"><value>حفظ التغييرات</value></data>
+
+  <!-- Reports -->
+  <data name="Rep_TurnoverWorkforce" xml:space="preserve"><value>الدوران والقوى العاملة</value></data>
+  <data name="Rep_DeepAnalytics" xml:space="preserve"><value>التحليلات العميقة</value></data>
+  <data name="Rep_ExitInterviewsSection" xml:space="preserve"><value>مقابلات الخروج</value></data>
+  <data name="Rep_AvailablePeriods" xml:space="preserve"><value>فترات البيانات المتاحة</value></data>
+  <data name="Rep_UploadFirst" xml:space="preserve"><value>ارفع بيانات الموظفين أولاً لإنشاء تقارير مبنية على الفترات.</value></data>
+  <data name="Rep_DownloadSummaryExcel" xml:space="preserve"><value>تنزيل ملخص Excel</value></data>
+  <data name="Rep_DownloadStoreExcel" xml:space="preserve"><value>تنزيل تقرير الفروع Excel</value></data>
+  <data name="Rep_FullCompany" xml:space="preserve"><value>تقرير الشركة الكامل</value></data>
+  <data name="Rep_FullCompanyDesc" xml:space="preserve"><value>كل شيء في مصنف واحد</value></data>
+  <data name="Rep_Summary" xml:space="preserve"><value>تقرير ملخص</value></data>
+  <data name="Rep_SummaryDesc" xml:space="preserve"><value>المؤشرات + المسمى الوظيفي + مدة الخدمة + التوزيع الجنسي</value></data>
+  <data name="Rep_StoreComparison" xml:space="preserve"><value>تقرير مقارنة الفروع</value></data>
+  <data name="Rep_StoreComparisonDesc" xml:space="preserve"><value>معدل الدوران حسب الفرع مع تعيينات المستشار والمدير</value></data>
+  <data name="Rep_NinetyDay" xml:space="preserve"><value>دوران 90 يوم</value></data>
+  <data name="Rep_NinetyDayDesc" xml:space="preserve"><value>اتجاه المجموعة، تحليل الفروع، المغادرون المبكرون، والأسباب</value></data>
+  <data name="Rep_Retention" xml:space="preserve"><value>الاحتفاظ</value></data>
+  <data name="Rep_RetentionDesc" xml:space="preserve"><value>المعالم، منحنى البقاء، الاتجاه، تصنيف الفروع، وتوزيع مدة الخدمة</value></data>
+  <data name="Rep_Scorecard" xml:space="preserve"><value>بطاقة الأداء</value></data>
+  <data name="Rep_ScorecardDesc" xml:space="preserve"><value>قادة الفروع والمستشارون والمديرون مرتبون جنبًا إلى جنب</value></data>
+  <data name="Rep_EarlyWarning" xml:space="preserve"><value>الإنذار المبكر</value></data>
+  <data name="Rep_EarlyWarningDesc" xml:space="preserve"><value>قائمة المتابعة الكاملة مع درجات الخطر والأسباب</value></data>
+  <data name="Rep_ExitInterview" xml:space="preserve"><value>تقرير مقابلات الخروج</value></data>
+  <data name="Rep_ExitInterviewDesc" xml:space="preserve"><value>الأسباب، الرغبة في العودة، التجربة، ظروف العمل، والتعليقات</value></data>
+  <data name="Rep_AllOperationManagers" xml:space="preserve"><value>جميع مديري العمليات</value></data>
+  <data name="Rep_AllOperationConsultants" xml:space="preserve"><value>جميع مستشاري العمليات</value></data>
+
+  <!-- Scorecard -->
+  <data name="SC_StoreLeaders" xml:space="preserve"><value>قادة الفروع</value></data>
+  <data name="SC_StoreLeader" xml:space="preserve"><value>قائد الفرع</value></data>
+  <data name="SC_OC" xml:space="preserve"><value>مستشارو العمليات</value></data>
+  <data name="SC_OM" xml:space="preserve"><value>مديرو العمليات</value></data>
+  <data name="SC_TurnoverRate" xml:space="preserve"><value>معدل الدوران</value></data>
+  <data name="SC_EarlyLeave" xml:space="preserve"><value>مغادرة مبكرة 90 يوم</value></data>
+  <data name="SC_180Retention" xml:space="preserve"><value>احتفاظ 180 يوم</value></data>
+  <data name="SC_ExitSentiment" xml:space="preserve"><value>شعور مقابلات الخروج</value></data>
+
+  <!-- Early Warning -->
+  <data name="EW_WatchList" xml:space="preserve"><value>قائمة المتابعة</value></data>
+  <data name="EW_HireName" xml:space="preserve"><value>الاسم</value></data>
+  <data name="EW_Store" xml:space="preserve"><value>الفرع</value></data>
+  <data name="EW_JobTitle" xml:space="preserve"><value>المسمى الوظيفي</value></data>
+  <data name="EW_HireDate" xml:space="preserve"><value>تاريخ التعيين</value></data>
+  <data name="EW_TenureDays" xml:space="preserve"><value>مدة الخدمة (يوم)</value></data>
+  <data name="EW_RiskScore" xml:space="preserve"><value>درجة الخطر</value></data>
+  <data name="EW_Reasons" xml:space="preserve"><value>الأسباب</value></data>
+  <data name="EW_InWatchList" xml:space="preserve"><value>في قائمة المتابعة</value></data>
+  <data name="EW_HighRisk" xml:space="preserve"><value>خطر عالٍ (2+)</value></data>
+  <data name="EW_NewHireWindow" xml:space="preserve"><value>لا يزال في أول 90 يوم</value></data>
+  <data name="EW_CompanyBaseline" xml:space="preserve"><value>متوسط معدل المغادرة المبكرة (الشركة)</value></data>
+
+  <!-- Targets -->
+  <data name="TG_TurnoverTarget" xml:space="preserve"><value>معدل الدوران المستهدف</value></data>
+  <data name="TG_RetentionTarget" xml:space="preserve"><value>الاحتفاظ المستهدف 90 يوم</value></data>
+  <data name="TG_SaveTargets" xml:space="preserve"><value>حفظ الأهداف</value></data>
+  <data name="TG_Saved" xml:space="preserve"><value>تم الحفظ!</value></data>
+
+  <!-- AI Usage -->
+  <data name="AIU_DailyLimit" xml:space="preserve"><value>حد الأسئلة اليومي</value></data>
+  <data name="AIU_DailyLimitDesc" xml:space="preserve"><value>أقصى عدد أسئلة يقدر أي شخص يسألها للذكاء الاصطناعي في اليوم الواحد</value></data>
+  <data name="AIU_EstimatedCost" xml:space="preserve"><value>أسعار التكلفة التقديرية</value></data>
+  <data name="AIU_EstimatedCostDesc" xml:space="preserve"><value>سعر تقديري لكل مليون توكن — اتأكد من السعر الفعلي من حساب Google، الرقم ده تقديري وقابل للتعديل.</value></data>
+  <data name="AIU_SaveRates" xml:space="preserve"><value>حفظ الأسعار</value></data>
+  <data name="AIU_Saved" xml:space="preserve"><value>اتحفظ</value></data>
+  <data name="AIU_UsageTrendSub" xml:space="preserve"><value>آخر 30 يوم — عدد الأسئلة والتوكنز على مستوى الشركة كلها</value></data>
+
+  <!-- AI Assistant -->
+  <data name="AI_NewConversation" xml:space="preserve"><value>محادثة جديدة</value></data>
+  <data name="AI_QuestionsToday" xml:space="preserve"><value>أسئلة اليوم</value></data>
+  <data name="AI_QuickPrompts" xml:space="preserve"><value>أسئلة جاهزة</value></data>
+  <data name="AI_ClickToAsk" xml:space="preserve"><value>دوس بدل ما تكتب</value></data>
+  <data name="AI_TypeQuestion" xml:space="preserve"><value>اكتب سؤالك هنا...</value></data>
+
+  <!-- Retention -->
+  <data name="Ret_MilestoneTitle" xml:space="preserve"><value>معالم الاحتفاظ</value></data>
+  <data name="Ret_SurvivalCurve" xml:space="preserve"><value>منحنى البقاء</value></data>
+  <data name="Ret_SurvivalCurveSub" xml:space="preserve"><value>احتمال أن يبقى الموظف فعالًا بعد N يومًا</value></data>
+  <data name="Ret_NoMilestoneData" xml:space="preserve"><value>لا توجد بيانات معالم بعد</value></data>
+  <data name="Ret_NoMilestoneDataSub" xml:space="preserve"><value>ارفع بيانات مع تواريخ التعيين لعرض معالم الاحتفاظ هنا.</value></data>
+</root>

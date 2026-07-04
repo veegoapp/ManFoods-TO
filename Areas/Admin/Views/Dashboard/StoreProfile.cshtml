@@ -9,7 +9,7 @@
 <div class="page-header">
     <div>
         <a href="/admin/dashboard/turnover" class="btn btn-sm mb-2" style="background:oklch(0.5 0.18 25 / .15);color:oklch(0.5 0.18 25);border:1px solid oklch(0.5 0.18 25 / .3);font-size:12px;border-radius:7px">
-            <i class="bi bi-arrow-left me-1"></i>Back to Turnover Analysis
+            <i class="bi bi-arrow-left me-1"></i>@L["SP_BackToTurnover"]
         </a>
         <h1 class="page-title">@storeName</h1>
         <p class="page-subtitle">
@@ -20,7 +20,7 @@
     </div>
     <div class="d-flex gap-2">
         <select id="periodSelect" class="form-select form-select-dark" style="width:180px">
-            <option value="">Select Period</option>
+            <option value="">@L["Common_SelectPeriod"]</option>
         </select>
     </div>
 </div>
@@ -32,22 +32,22 @@
 <div id="networkCompareCard" class="insight-card mb-4">
     <div class="insight-icon"><i class="bi bi-bar-chart-steps"></i></div>
     <div>
-        <div class="insight-title">Vs. Network Average</div>
+        <div class="insight-title">@L["SP_VsNetworkAvg"]</div>
         <div class="insight-text" id="networkCompareText">Loading comparison…</div>
     </div>
 </div>
 
 <div class="charts-grid mb-4">
     <div class="chart-card">
-        <div class="chart-header"><h6>Turnover by Job Title</h6><p>Resignations grouped by role</p></div>
+        <div class="chart-header"><h6>@L["Chart_TurnoverByJobTitle"]</h6><p>@L["Chart_TurnoverByJobTitleSub"]</p></div>
         <div class="chart-body"><canvas id="jobTitleChart"></canvas></div>
     </div>
     <div class="chart-card">
-        <div class="chart-header"><h6>Turnover by Tenure</h6><p>Duration before resignation</p></div>
+        <div class="chart-header"><h6>@L["Chart_TurnoverByTenure"]</h6><p>@L["Chart_TurnoverByTenureSub"]</p></div>
         <div class="chart-body"><canvas id="tenureChart"></canvas></div>
     </div>
     <div class="chart-card chart-full">
-        <div class="chart-header"><h6>Gender Breakdown</h6><p>Active workforce distribution</p></div>
+        <div class="chart-header"><h6>@L["Chart_GenderBreakdown"]</h6><p>@L["Chart_GenderBreakdownSub"]</p></div>
         <div class="chart-body chart-body-sm"><canvas id="genderChart"></canvas></div>
     </div>
 </div>

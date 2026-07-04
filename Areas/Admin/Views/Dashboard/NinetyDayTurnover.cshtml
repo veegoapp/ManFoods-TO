@@ -1,29 +1,29 @@
 @{
-    ViewData["Title"] = "90-Day Turnover";
+    ViewData["Title"] = L["Page_NinetyDay"].Value;
 }
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">90-Day Turnover</h1>
-        <p class="page-subtitle">Of everyone hired in a month, the share who resigned within their first 90 days</p>
+        <h1 class="page-title">@L["Page_NinetyDay"]</h1>
+        <p class="page-subtitle">@L["Page_NinetyDaySub"]</p>
     </div>
     <div class="d-flex gap-2 flex-wrap align-items-center">
-        <span class="text-muted" style="font-size:12px">From</span>
+        <span class="text-muted" style="font-size:12px">@L["Common_From"]</span>
         <select id="ntdFromPeriodSelect" class="form-select form-select-dark form-select-sm" style="width:150px">
-            <option value="">Cohort Month</option>
+            <option value="">@L["Common_CohortMonth"]</option>
         </select>
-        <span class="text-muted" style="font-size:12px">To</span>
+        <span class="text-muted" style="font-size:12px">@L["Common_To"]</span>
         <select id="ntdToPeriodSelect" class="form-select form-select-dark form-select-sm" style="width:150px">
-            <option value="">Cohort Month</option>
+            <option value="">@L["Common_CohortMonth"]</option>
         </select>
         <select id="ntdStoreSelect" class="form-select form-select-dark form-select-sm" style="width:170px">
-            <option value="">All Stores</option>
+            <option value="">@L["Common_AllStores"]</option>
         </select>
         <select id="ntdOmSelect" class="form-select form-select-dark form-select-sm" style="width:190px">
-            <option value="">All Operation Managers</option>
+            <option value="">@L["Common_AllOperationManagers"]</option>
         </select>
         <select id="ntdOcSelect" class="form-select form-select-dark form-select-sm" style="width:190px">
-            <option value="">All Operation Consultants</option>
+            <option value="">@L["Common_AllOperationConsultants"]</option>
         </select>
     </div>
 </div>

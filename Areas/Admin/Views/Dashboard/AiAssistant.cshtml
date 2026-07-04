@@ -1,21 +1,21 @@
 @{
-    ViewData["Title"] = "AI Assistant";
+    ViewData["Title"] = L["Page_AiAssistant"].Value;
 }
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">AI Assistant</h1>
-        <p class="page-subtitle">اسأل عن بيانات التيرن أوفر، الريتنشن، وأسباب ترك العمل بالعربي أو الإنجليزي</p>
+        <h1 class="page-title">@L["Page_AiAssistant"]</h1>
+        <p class="page-subtitle">@L["Page_AiAssistantSub"]</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <select id="aiPeriodSelect" class="form-select form-select-dark form-select-sm" style="width:170px">
-            <option value="">Select Period</option>
+            <option value="">@L["Common_SelectPeriod"]</option>
         </select>
         <select id="aiStoreSelect" class="form-select form-select-dark form-select-sm" style="width:170px">
-            <option value="">All Stores</option>
+            <option value="">@L["Common_AllStores"]</option>
         </select>
-        <button id="aiClearBtn" class="btn btn-outline-secondary btn-sm" title="محادثة جديدة">
-            <i class="bi bi-arrow-clockwise me-1"></i>محادثة جديدة
+        <button id="aiClearBtn" class="btn btn-outline-secondary btn-sm" title="@L["AI_NewChat"]">
+            <i class="bi bi-arrow-clockwise me-1"></i>@L["AI_NewChat"]
         </button>
     </div>
 </div>

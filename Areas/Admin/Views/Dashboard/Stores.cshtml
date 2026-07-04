@@ -1,18 +1,18 @@
 @{
-    ViewData["Title"] = "Stores";
+    ViewData["Title"] = L["Page_Stores"].Value;
 }
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Stores</h1>
-        <p class="page-subtitle">Turnover health across every store</p>
+        <h1 class="page-title">@L["Page_Stores"]</h1>
+        <p class="page-subtitle">@L["Page_StoresSub"]</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <select id="periodSelect" class="form-select form-select-dark" style="width:180px">
-            <option value="">Select Period</option>
+            <option value="">@L["Common_SelectPeriod"]</option>
         </select>
         <input type="text" id="storeCardSearch" class="form-control form-control-sm"
-               placeholder="&#xF52A; Search store, OC, OM…" style="width:220px;border-radius:20px">
+               placeholder="&#xF52A; @L["Common_SearchStore"]" style="width:220px;border-radius:20px">
     </div>
 </div>
 

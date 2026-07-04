@@ -1,13 +1,13 @@
 @{
-    ViewData["Title"] = "AI Usage";
+    ViewData["Title"] = L["Page_AiUsage"].Value;
 }
 
 @Html.AntiForgeryToken()
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">AI Usage</h1>
-        <p class="page-subtitle">استهلاك الـ AI Assistant — الحدود، عدد الأسئلة، التوكنز، والتكلفة التقديرية</p>
+        <h1 class="page-title">@L["Page_AiUsage"]</h1>
+        <p class="page-subtitle">@L["Page_AiUsageSub"]</p>
     </div>
 </div>
 
@@ -16,20 +16,20 @@
         <div class="card-dark h-100">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="card-icon"><i class="bi bi-speedometer2"></i></div>
-                <div><h6 class="mb-0">Daily Question Limit</h6><p class="text-muted-custom mb-0 small">أقصى عدد أسئلة يقدر أي شخص يسألها للـ AI في اليوم الواحد</p></div>
+                <div><h6 class="mb-0">@L["AU_DailyLimit"]</h6><p class="text-muted-custom mb-0 small">@L["AU_DailyLimitSub"]</p></div>
             </div>
             <div class="input-group mb-2">
                 <input type="number" id="auLimitInput" class="form-control form-control-dark form-control-sm" min="1" step="1"/>
                 <button id="auLimitSaveBtn" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i></button>
             </div>
-            <span id="auLimitSavedMsg" class="text-success small" style="display:none"><i class="bi bi-check-circle-fill me-1"></i>اتحفظ</span>
+            <span id="auLimitSavedMsg" class="text-success small" style="display:none"><i class="bi bi-check-circle-fill me-1"></i>@L["Common_Saved"]</span>
         </div>
     </div>
     <div class="col-lg-6">
         <div class="card-dark h-100">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="card-icon"><i class="bi bi-currency-dollar"></i></div>
-                <div><h6 class="mb-0">Estimated Cost Rates</h6><p class="text-muted-custom mb-0 small">سعر تقديري لكل مليون توكن — اتأكد من السعر الفعلي من حساب Google بتاعك، الرقم ده تقديري وقابل للتعديل</p></div>
+                <div><h6 class="mb-0">@L["AU_CostRates"]</h6><p class="text-muted-custom mb-0 small">@L["AU_CostRatesSub"]</p></div>
             </div>
             <div class="row g-2 mb-2">
                 <div class="col-6">
@@ -41,8 +41,8 @@
                     <input type="number" id="auOutputPriceInput" class="form-control form-control-dark form-control-sm" min="0" step="0.01"/>
                 </div>
             </div>
-            <button id="auRatesSaveBtn" class="btn btn-primary btn-sm w-100"><i class="bi bi-check-lg me-1"></i>Save Rates</button>
-            <span id="auRatesSavedMsg" class="text-success small d-block mt-1" style="display:none"><i class="bi bi-check-circle-fill me-1"></i>اتحفظ</span>
+            <button id="auRatesSaveBtn" class="btn btn-primary btn-sm w-100"><i class="bi bi-check-lg me-1"></i>@L["AU_SaveRates"]</button>
+            <span id="auRatesSavedMsg" class="text-success small d-block mt-1" style="display:none"><i class="bi bi-check-circle-fill me-1"></i>@L["Common_Saved"]</span>
         </div>
     </div>
 </div>
@@ -54,7 +54,7 @@
 </div>
 
 <div class="chart-card mb-4">
-    <div class="chart-header"><h6>Usage Trend</h6><p>آخر 30 يوم — عدد الأسئلة والتوكنز على مستوى الشركة كلها</p></div>
+    <div class="chart-header"><h6>@L["AU_UsageTrend"]</h6><p>@L["AU_UsageTrendSub"]</p></div>
     <div class="chart-body"><canvas id="auTrendChart" style="max-height:280px"></canvas></div>
 </div>
 

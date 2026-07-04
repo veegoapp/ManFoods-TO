@@ -1,9 +1,13 @@
 @model MvcApp.Models.ViewModels.LoginViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<MvcApp.Resources.SharedResource> L
 @{
     Layout = null;
+    var _lang = Context.Request.Cookies["mf-lang"] ?? "en";
+    var _isRtl = _lang == "ar";
+    var _switchLang = _isRtl ? "en" : "ar";
 }
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@_lang" dir="@(_isRtl ? "rtl" : "ltr")">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -49,13 +53,22 @@
         [data-theme="light"] .login-theme-toggle .icon-dark  { display: none; }
         [data-theme="light"] .login-theme-toggle .icon-light { display: block; }
 
+        .lang-toggle {
+            position: fixed; top: 16px; left: 16px; z-index: 100;
+            width: 38px; height: 38px; border-radius: 10px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg); color: var(--text-2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; cursor: pointer; transition: all .2s;
+            letter-spacing: .5px;
+        }
+        .lang-toggle:hover { border-color: var(--gold); color: var(--gold); }
+
         .login-container { width: 100%; max-width: 420px; padding: 16px; position: relative; z-index: 10; }
 
         .login-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 44px 40px 36px;
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 14px; padding: 44px 40px 36px;
             box-shadow: var(--shadow-lg);
             animation: cardEntrance .55s cubic-bezier(.22,1,.36,1) both;
             position: relative; overflow: hidden;
@@ -66,10 +79,8 @@
         }
 
         .logo-wrap {
-            display: inline-block;
-            animation: logoFloat 3.5s ease-in-out infinite;
-            filter: drop-shadow(0 4px 12px rgba(255,199,44,.4));
-            margin-bottom: 14px;
+            display: inline-block; animation: logoFloat 3.5s ease-in-out infinite;
+            filter: drop-shadow(0 4px 12px rgba(255,199,44,.4)); margin-bottom: 14px;
         }
         .logo-wrap img { width: 72px; height: auto; }
 
@@ -100,8 +111,7 @@
         .btn-signin {
             width: 100%; min-height: 50px;
             background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
-            border: 1px solid var(--red-dark);
-            border-radius: 48px; color: #fff;
+            border: 1px solid var(--red-dark); border-radius: 48px; color: #fff;
             font-size: 16px; font-weight: 700; cursor: pointer;
             transition: all .2s; margin-top: 8px; font-family: inherit;
             box-shadow: var(--shadow-red);
@@ -121,10 +131,17 @@
 </head>
 <body class="login-body">
 
-    <button class="login-theme-toggle" id="themeToggle" title="Toggle light/dark mode">
+    <button class="login-theme-toggle" id="themeToggle" title="Toggle theme">
         <i class="bi bi-moon-stars-fill icon-dark"></i>
         <i class="bi bi-sun-fill icon-light"></i>
     </button>
+
+    <form action="/language/set" method="post" style="position:fixed;top:16px;left:16px;z-index:100;margin:0">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="lang" value="@_switchLang"/>
+        <input type="hidden" name="returnUrl" value="/login"/>
+        <button type="submit" class="lang-toggle">@L["Layout_SwitchLang"]</button>
+    </form>
 
     <div class="bubble" style="width:60px;height:60px;left:8%;animation-duration:13s;bottom:-60px;"></div>
     <div class="bubble" style="width:30px;height:30px;left:22%;animation-duration:9s;animation-delay:2s;bottom:-30px;"></div>
@@ -139,10 +156,10 @@
                     <img src="/images/mclogo.png" alt="Logo"/>
                 </div>
                 <h1 class="login-title">Manfoods <span>McDonald's</span></h1>
-                <p class="login-subtitle">Workforce Analytics Platform</p>
+                <p class="login-subtitle">@L["Login_WorkforceAnalytics"]</p>
             </div>
 
-            <div class="divider"><span>Sign in to continue</span></div>
+            <div class="divider"><span>@L["Login_SignInToContinue"]</span></div>
 
             @if (TempData["Success"] != null)
             {
@@ -163,27 +180,27 @@
                 }
 
                 <div class="field-wrap">
-                    <label>Email Address</label>
+                    <label>@L["Login_EmailAddress"]</label>
                     <i class="bi bi-envelope-fill fi"></i>
                     <input asp-for="Email" type="email" placeholder="user@mcd.com" autocomplete="email"/>
                     <span asp-validation-for="Email" class="text-danger small"></span>
                 </div>
                 <div class="field-wrap">
-                    <label>Password</label>
+                    <label>@L["Login_Password"]</label>
                     <i class="bi bi-lock-fill fi"></i>
                     <input asp-for="Password" type="password" placeholder="••••••••" autocomplete="current-password"/>
                     <span asp-validation-for="Password" class="text-danger small"></span>
                 </div>
 
                 <button type="submit" class="btn-signin">
-                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                    <i class="bi bi-box-arrow-in-right me-2"></i>@L["Login_SignIn"]
                 </button>
             </form>
 
             <div class="admin-link">
-                <a href="/home/account/forgotpassword">Forgot password?</a>
+                <a href="/home/account/forgotpassword">@L["Login_ForgotPassword"]</a>
             </div>
-            <div class="login-footer">&copy; @DateTime.Now.Year Manfoods McDonald's — All rights reserved</div>
+            <div class="login-footer">&copy; @DateTime.Now.Year Manfoods McDonald's</div>
         </div>
     </div>
 
