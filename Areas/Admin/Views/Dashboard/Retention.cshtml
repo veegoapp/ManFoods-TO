@@ -7,9 +7,23 @@
         <h1 class="page-title">Retention</h1>
         <p class="page-subtitle">How long new hires actually stay — milestones, survival curve, and long-term trends</p>
     </div>
-    <div class="d-flex gap-2 flex-wrap">
-        <select id="rtStoreSelect" class="form-select form-select-dark form-select-sm" style="width:200px">
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <span class="text-muted" style="font-size:12px">From</span>
+        <select id="rtFromPeriodSelect" class="form-select form-select-dark form-select-sm" style="width:150px">
+            <option value="">Hire Month</option>
+        </select>
+        <span class="text-muted" style="font-size:12px">To</span>
+        <select id="rtToPeriodSelect" class="form-select form-select-dark form-select-sm" style="width:150px">
+            <option value="">Hire Month</option>
+        </select>
+        <select id="rtStoreSelect" class="form-select form-select-dark form-select-sm" style="width:180px">
             <option value="">All Stores</option>
+        </select>
+        <select id="rtOmSelect" class="form-select form-select-dark form-select-sm" style="width:190px">
+            <option value="">All Operation Managers</option>
+        </select>
+        <select id="rtOcSelect" class="form-select form-select-dark form-select-sm" style="width:190px">
+            <option value="">All Operation Consultants</option>
         </select>
     </div>
 </div>
@@ -21,6 +35,19 @@
 </div>
 
 <div id="rtContent">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-lightbulb-fill" style="color:oklch(0.75 0.16 75)"></i>
+        <h5 class="mb-0 fw-bold">Smart Insights</h5>
+        <span class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px">AUTO-GENERATED</span>
+    </div>
+    <div class="chart-card mb-4" id="rtInsightsCard">
+        <div id="rtInsights">
+            <div class="text-center py-3 text-muted">
+                <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
+            </div>
+        </div>
+    </div>
+
     <div id="rtMilestoneCards" class="kpi-grid mb-4">
         <div class="kpi-spinner text-center py-3 w-100">
             <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 25)"></div>
@@ -57,45 +84,86 @@
             </div>
         </div>
     </div>
-
-    <div class="d-flex align-items-center gap-2 mb-3">
-        <i class="bi bi-lightbulb-fill" style="color:oklch(0.75 0.16 75)"></i>
-        <h5 class="mb-0 fw-bold">Smart Insights</h5>
-        <span class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px">AUTO-GENERATED</span>
-    </div>
-    <div class="chart-card mb-4" id="rtInsightsCard">
-        <div id="rtInsights">
-            <div class="text-center py-3 text-muted">
-                <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
-            </div>
-        </div>
-    </div>
 </div>
 
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+function rtMonthName(m, y) {
+    return new Date(y, m - 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+}
+
 async function rtFetch(path) {
     const p = new URLSearchParams();
     const store = document.getElementById('rtStoreSelect').value;
     if (store) p.set('store', store);
+    const fromVal = document.getElementById('rtFromPeriodSelect').value;
+    const toVal   = document.getElementById('rtToPeriodSelect').value;
+    if (fromVal && toVal) {
+        const [fm, fy] = fromVal.split('-'); p.set('fromMonth', fm); p.set('fromYear', fy);
+        const [tm, ty] = toVal.split('-');   p.set('toMonth', tm);   p.set('toYear', ty);
+    }
+    const om = document.getElementById('rtOmSelect').value;
+    if (om) p.set('om', om);
+    const oc = document.getElementById('rtOcSelect').value;
+    if (oc) p.set('oc', oc);
     const r = await fetch(`/api/retention/${path}?${p.toString()}`);
     return r.ok ? r.json() : null;
 }
 
 async function rtLoadFilters() {
-    const stores = await rtFetch('stores') || [];
+    const [stores, periods, managers, consultants] = await Promise.all([
+        rtFetch('stores'),
+        fetch('/api/dashboard/available-periods').then(r => r.ok ? r.json() : []),
+        fetch('/api/retention/operation-managers').then(r => r.ok ? r.json() : []),
+        fetch('/api/retention/operation-consultants').then(r => r.ok ? r.json() : []),
+    ]);
+
     const sel = document.getElementById('rtStoreSelect');
     const cur = sel.value;
     sel.innerHTML = '<option value="">All Stores</option>';
-    stores.forEach(s => {
+    (stores || []).forEach(s => {
         const opt = document.createElement('option');
         opt.value = s; opt.textContent = s;
         sel.appendChild(opt);
     });
     if (cur) sel.value = cur;
 
-    const hasData = stores.length > 0;
+    const fromSel = document.getElementById('rtFromPeriodSelect');
+    const toSel   = document.getElementById('rtToPeriodSelect');
+    const sortedPeriods = (periods || []).slice().sort((a, b) => (a.year - b.year) || (a.month - b.month));
+    [fromSel, toSel].forEach(s => { s.innerHTML = '<option value="">Hire Month</option>'; });
+    sortedPeriods.forEach(p => {
+        [fromSel, toSel].forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = `${p.month}-${p.year}`;
+            opt.textContent = rtMonthName(p.month, p.year);
+            s.appendChild(opt);
+        });
+    });
+    if (sortedPeriods.length) {
+        fromSel.value = `${sortedPeriods[0].month}-${sortedPeriods[0].year}`;
+        const last = sortedPeriods[sortedPeriods.length - 1];
+        toSel.value = `${last.month}-${last.year}`;
+    }
+
+    const omSel = document.getElementById('rtOmSelect');
+    omSel.innerHTML = '<option value="">All Operation Managers</option>';
+    (managers || []).forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        omSel.appendChild(opt);
+    });
+
+    const ocSel = document.getElementById('rtOcSelect');
+    ocSel.innerHTML = '<option value="">All Operation Consultants</option>';
+    (consultants || []).forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        ocSel.appendChild(opt);
+    });
+
+    const hasData = (stores || []).length > 0;
     document.getElementById('rtEmptyState').style.display = hasData ? 'none' : '';
     document.getElementById('rtContent').style.display = hasData ? '' : 'none';
     return hasData;
@@ -264,6 +332,10 @@ async function rtLoadAll() {
 }
 
 document.getElementById('rtStoreSelect').addEventListener('change', rtLoadAll);
+document.getElementById('rtFromPeriodSelect').addEventListener('change', rtLoadAll);
+document.getElementById('rtToPeriodSelect').addEventListener('change', rtLoadAll);
+document.getElementById('rtOmSelect').addEventListener('change', rtLoadAll);
+document.getElementById('rtOcSelect').addEventListener('change', rtLoadAll);
 
 (async function init() {
     const hasData = await rtLoadFilters();

@@ -23,7 +23,23 @@ public class RetentionService : IRetentionService
         public int? TenureDays { get; set; }
     }
 
-    private async Task<List<EmployeeCohort>> LoadEmployeeCohortsAsync()
+    // Stores whose latest-known Operation Manager / Operation Consultant match the filter.
+    // Returns null when no OM/OC filter is set.
+    private async Task<List<string>?> GetStoresForOmOcAsync(string? om, string? oc)
+    {
+        if (string.IsNullOrEmpty(om) && string.IsNullOrEmpty(oc)) return null;
+        var refs = await _db.StoreReferences.ToListAsync();
+        var latestByStore = refs.GroupBy(s => s.StoreName)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(s => s.Year).ThenByDescending(s => s.Month).First());
+        return latestByStore.Values
+            .Where(s => (string.IsNullOrEmpty(om) || s.OperationManager == om)
+                     && (string.IsNullOrEmpty(oc) || s.OperationConsultant == oc))
+            .Select(s => s.StoreName)
+            .ToList();
+    }
+
+    private async Task<List<EmployeeCohort>> LoadEmployeeCohortsAsync(
+        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null)
     {
         var activeRows = await _db.ActiveEmployees
             .Where(e => e.HireDate != null)
@@ -64,7 +80,18 @@ public class RetentionService : IRetentionService
             };
         }
 
-        return byEmployee.Values.ToList();
+        IEnumerable<EmployeeCohort> cohorts = byEmployee.Values;
+
+        if (fromMonth.HasValue && fromYear.HasValue && toMonth.HasValue && toYear.HasValue)
+        {
+            var keys = DashboardService.ExpandRangeKeys(fromMonth.Value, fromYear.Value, toMonth.Value, toYear.Value).ToHashSet();
+            cohorts = cohorts.Where(c => keys.Contains(c.CohortYear * 100 + c.CohortMonth));
+        }
+
+        var omOcStores = await GetStoresForOmOcAsync(om, oc);
+        if (omOcStores != null) cohorts = cohorts.Where(c => omOcStores.Contains(c.Store));
+
+        return cohorts.ToList();
     }
 
     private static DateOnly CohortCloseDate(int month, int year) =>
@@ -83,9 +110,10 @@ public class RetentionService : IRetentionService
             .ToList();
     }
 
-    public async Task<List<RetentionMilestoneItem>> GetMilestonesAsync(string? store)
+    public async Task<List<RetentionMilestoneItem>> GetMilestonesAsync(string? store,
+        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null)
     {
-        var cohorts = await LoadEmployeeCohortsAsync();
+        var cohorts = await LoadEmployeeCohortsAsync(fromMonth, fromYear, toMonth, toYear, om, oc);
         if (store != null) cohorts = cohorts.Where(c => c.Store == store).ToList();
 
         var result = new List<RetentionMilestoneItem>();
@@ -112,9 +140,10 @@ public class RetentionService : IRetentionService
         return result;
     }
 
-    public async Task<List<SurvivalPoint>> GetSurvivalCurveAsync(string? store)
+    public async Task<List<SurvivalPoint>> GetSurvivalCurveAsync(string? store,
+        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null)
     {
-        var cohorts = await LoadEmployeeCohortsAsync();
+        var cohorts = await LoadEmployeeCohortsAsync(fromMonth, fromYear, toMonth, toYear, om, oc);
         if (store != null) cohorts = cohorts.Where(c => c.Store == store).ToList();
 
         var result = new List<SurvivalPoint>();
@@ -134,9 +163,10 @@ public class RetentionService : IRetentionService
         return result;
     }
 
-    public async Task<List<RetentionTrendPoint>> GetTrendAsync(string? store)
+    public async Task<List<RetentionTrendPoint>> GetTrendAsync(string? store,
+        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null)
     {
-        var cohorts = await LoadEmployeeCohortsAsync();
+        var cohorts = await LoadEmployeeCohortsAsync(fromMonth, fromYear, toMonth, toYear, om, oc);
         if (store != null) cohorts = cohorts.Where(c => c.Store == store).ToList();
 
         var periods = cohorts.Select(c => (c.CohortMonth, c.CohortYear))
@@ -167,10 +197,11 @@ public class RetentionService : IRetentionService
         return result;
     }
 
-    public async Task<List<ChartDataItem>> GetStoreLeaderboardAsync()
+    public async Task<List<ChartDataItem>> GetStoreLeaderboardAsync(
+        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null)
     {
         const int days = 180;
-        var cohorts = await LoadEmployeeCohortsAsync();
+        var cohorts = await LoadEmployeeCohortsAsync(fromMonth, fromYear, toMonth, toYear, om, oc);
         var included = cohorts
             .Where(c => !string.IsNullOrWhiteSpace(c.Store) && CohortReaches(c.CohortMonth, c.CohortYear, days))
             .ToList();
@@ -185,7 +216,7 @@ public class RetentionService : IRetentionService
             .ToList();
     }
 
-    public async Task<List<ChartDataItem>> GetTenureDistributionAsync(string? store)
+    public async Task<List<ChartDataItem>> GetTenureDistributionAsync(string? store, string? om = null, string? oc = null)
     {
         var periods = await _db.ActiveEmployees
             .Where(e => e.HireDate != null)
@@ -197,6 +228,7 @@ public class RetentionService : IRetentionService
 
         var rowsQuery = _db.ActiveEmployees.Where(e => e.Month == latest.Month && e.Year == latest.Year && e.HireDate != null);
         if (store != null) rowsQuery = rowsQuery.Where(e => e.Store == store);
+        else if (await GetStoresForOmOcAsync(om, oc) is { } omOcStores) rowsQuery = rowsQuery.Where(e => omOcStores.Contains(e.Store));
         var hireDates = await rowsQuery.Select(e => e.HireDate!.Value).ToListAsync();
 
         var asOf = new DateOnly(latest.Year, latest.Month, DateTime.DaysInMonth(latest.Year, latest.Month));
@@ -219,12 +251,13 @@ public class RetentionService : IRetentionService
             .ToList();
     }
 
-    public async Task<List<SmartInsightItem>> GetInsightsAsync(string? store)
+    public async Task<List<SmartInsightItem>> GetInsightsAsync(string? store,
+        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null)
     {
         var insights = new List<SmartInsightItem>();
 
         // 1. Recent vs. prior 90-day retention trend (up to 3 complete cohorts each side).
-        var trend = await GetTrendAsync(store);
+        var trend = await GetTrendAsync(store, fromMonth, fromYear, toMonth, toYear, om, oc);
         var complete90 = trend.Where(t => !t.Provisional90 && t.Retention90 != null).ToList();
         if (complete90.Count >= 2)
         {
@@ -250,7 +283,7 @@ public class RetentionService : IRetentionService
         // 2. Best/worst store on 180-day retention (only meaningful company-wide).
         if (store == null)
         {
-            var leaderboard = await GetStoreLeaderboardAsync();
+            var leaderboard = await GetStoreLeaderboardAsync(fromMonth, fromYear, toMonth, toYear, om, oc);
             if (leaderboard.Count > 0)
             {
                 var best = leaderboard.First();
@@ -274,7 +307,7 @@ public class RetentionService : IRetentionService
         }
 
         // 3. Workforce maturity from the active-employee tenure distribution.
-        var tenureDist = await GetTenureDistributionAsync(store);
+        var tenureDist = await GetTenureDistributionAsync(store, om, oc);
         var totalActive = tenureDist.Sum(t => t.Value);
         if (totalActive > 0)
         {

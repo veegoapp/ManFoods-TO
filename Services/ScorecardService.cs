@@ -24,7 +24,7 @@ public class ScorecardService : IScorecardService
         _ => "",
     };
 
-    private async Task<Dictionary<string, string>> BuildStoreToDimensionMapAsync(string dimension)
+    private async Task<Dictionary<string, string>> BuildStoreToDimensionMapAsync(string dimension, string? om = null, string? oc = null)
     {
         var periods = await _db.StoreReferences.Select(s => new { s.Month, s.Year }).Distinct().ToListAsync();
         if (periods.Count == 0) return new Dictionary<string, string>();
@@ -33,6 +33,8 @@ public class ScorecardService : IScorecardService
         var rows = await _db.StoreReferences
             .Where(s => s.Month == latest.Month && s.Year == latest.Year)
             .ToListAsync();
+        if (!string.IsNullOrEmpty(om)) rows = rows.Where(s => s.OperationManager == om).ToList();
+        if (!string.IsNullOrEmpty(oc)) rows = rows.Where(s => s.OperationConsultant == oc).ToList();
 
         var map = new Dictionary<string, string>();
         foreach (var r in rows)
@@ -79,9 +81,9 @@ public class ScorecardService : IScorecardService
         return byEmployee.Values.ToList();
     }
 
-    public async Task<List<ScorecardRow>> GetScorecardAsync(string dimension)
+    public async Task<List<ScorecardRow>> GetScorecardAsync(string dimension, string? om = null, string? oc = null)
     {
-        var storeMap = await BuildStoreToDimensionMapAsync(dimension);
+        var storeMap = await BuildStoreToDimensionMapAsync(dimension, om, oc);
         if (storeMap.Count == 0) return new List<ScorecardRow>();
 
         var periods = await _db.ActiveEmployees.Select(e => new { e.Month, e.Year }).Distinct().ToListAsync();

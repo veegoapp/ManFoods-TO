@@ -7,13 +7,36 @@
         <h1 class="page-title">Turnover Analysis</h1>
         <p class="page-subtitle">Deep-dive into resignation patterns and store performance</p>
     </div>
-    <div class="d-flex gap-2 flex-wrap">
-        <select id="periodSelect" class="form-select form-select-dark" style="width:180px">
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <span class="text-muted" style="font-size:12px">From</span>
+        <select id="fromPeriodSelect" class="form-select form-select-dark" style="width:160px">
             <option value="">Select Period</option>
         </select>
-        <select id="storeSelect" class="form-select form-select-dark" style="width:200px">
+        <span class="text-muted" style="font-size:12px">To</span>
+        <select id="periodSelect" class="form-select form-select-dark" style="width:160px">
+            <option value="">Select Period</option>
+        </select>
+        <select id="storeSelect" class="form-select form-select-dark" style="width:180px">
             <option value="">All Stores</option>
         </select>
+        <select id="omSelect" class="form-select form-select-dark" style="width:190px">
+            <option value="">All Operation Managers</option>
+        </select>
+        <select id="ocSelect" class="form-select form-select-dark" style="width:190px">
+            <option value="">All Operation Consultants</option>
+        </select>
+    </div>
+</div>
+
+<!-- ── Smart Insights ─────────────────────────────────────── -->
+<div class="d-flex align-items-center gap-2 mb-3">
+    <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 25),oklch(0.6 0.16 25));border-radius:2px"></div>
+    <h5 class="mb-0 fw-bold">Smart Insights</h5>
+    <span class="badge ms-1" style="background:oklch(0.6 0.16 25);color:#1C1C27;font-size:10px;padding:4px 8px">AUTO-GENERATED</span>
+</div>
+<div id="insightsContainer" class="row g-3 mb-4">
+    <div class="col-12 text-center py-3 text-muted">
+        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.6 0.22 22)"></div>Loading insights...
     </div>
 </div>
 
@@ -26,6 +49,10 @@
     <div class="chart-card">
         <div class="chart-header"><h6>Turnover by Tenure</h6><p>Duration before resignation</p></div>
         <div class="chart-body"><canvas id="tenureChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>Turnover by Payroll Group</h6><p>Resignations grouped by payroll group</p></div>
+        <div class="chart-body"><canvas id="payrollGroupChart"></canvas></div>
     </div>
     <div class="chart-card chart-full">
         <div class="chart-header"><h6>Gender Breakdown</h6><p>Active workforce distribution</p></div>
@@ -45,18 +72,6 @@
         </a>
     </div>
     <div class="chart-body"><canvas id="trendChart" style="max-height:260px"></canvas></div>
-</div>
-
-<!-- ── Smart Insights ─────────────────────────────────────── -->
-<div class="d-flex align-items-center gap-2 mb-3">
-    <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 25),oklch(0.6 0.16 25));border-radius:2px"></div>
-    <h5 class="mb-0 fw-bold">Smart Insights</h5>
-    <span class="badge ms-1" style="background:oklch(0.6 0.16 25);color:#1C1C27;font-size:10px;padding:4px 8px">AUTO-GENERATED</span>
-</div>
-<div id="insightsContainer" class="row g-3 mb-4">
-    <div class="col-12 text-center py-3 text-muted">
-        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.6 0.22 22)"></div>Loading insights...
-    </div>
 </div>
 
 <!-- ── Store Comparison Table ─────────────────────────────── -->
@@ -258,7 +273,7 @@ function tvRenderStoreTable() {
 
 async function tvLoadStoreComparison() {
     if (!periodMonth || !periodYear) return;
-    const data = await fetchJson(`/api/dashboard/store-comparison?month=${periodMonth}&year=${periodYear}`);
+    const data = await fetchJson(`/api/dashboard/store-comparison?${buildQuery()}`);
     tvStoreData = data || [];
     tvRenderStoreTable();
 }
@@ -286,7 +301,7 @@ function tvRenderOcOmTable(tbodyId, rows) {
 
 async function tvLoadOcOmAnalysis() {
     if (!periodMonth || !periodYear) return;
-    const data = await fetchJson(`/api/dashboard/oc-om-analysis?month=${periodMonth}&year=${periodYear}`);
+    const data = await fetchJson(`/api/dashboard/oc-om-analysis?${buildQuery()}`);
     tvRenderOcOmTable('ocTableBody', data.ocRows);
     tvRenderOcOmTable('omTableBody', data.omRows);
 }
@@ -294,7 +309,7 @@ async function tvLoadOcOmAnalysis() {
 /* Smart Insights ------------------------------------------- */
 async function tvLoadSmartInsights() {
     if (!periodMonth || !periodYear) return;
-    const items     = await fetchJson(`/api/dashboard/smart-insights?month=${periodMonth}&year=${periodYear}`);
+    const items     = await fetchJson(`/api/dashboard/smart-insights?${buildQuery()}`);
     const container = document.getElementById('insightsContainer');
 
     if (!items || !items.length) {
@@ -342,6 +357,18 @@ document.querySelectorAll('#storeTable .tv-sort').forEach(th => {
 /* Search filter -------------------------------------------- */
 document.getElementById('storeSearch').addEventListener('input', tvRenderStoreTable);
 
+/* Payroll Group chart -------------------------------------- */
+let payrollGroupChart;
+async function tvLoadPayrollGroupChart() {
+    const data = await fetchJson(`/api/dashboard/turnover-by-payroll-group?${buildQuery()}`);
+    payrollGroupChart = mkChart(payrollGroupChart, 'payrollGroupChart', {
+        type: 'bar',
+        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: '#5B3FE0', borderRadius: 4 }] },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } },
+            scales: { x: { grid: { color: '#E4E2F5' }, ticks: { color: '#5B5875' } }, y: { grid: { display: false }, ticks: { color: '#5B5875' } } } }
+    });
+}
+
 /* Hook into dashboard.js loadAll so extras refresh on period change */
 const _tvOrigLoadAll = loadAll;
 loadAll = async function () {
@@ -349,7 +376,8 @@ loadAll = async function () {
     await tvLoadSmartInsights();
     await tvLoadStoreComparison();
     await tvLoadOcOmAnalysis();
-    tvRenderTrendChart();
+    await tvLoadPayrollGroupChart();
+    await tvLoadTrendMatrix();
 };
 
 /* ── Full Data Trend Matrix ─────────────────────────────── */
@@ -448,7 +476,10 @@ function mxSort(col) {
 async function tvLoadTrendMatrix() {
     const body = document.getElementById('matrixBody');
     body.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.6 0.22 22)"></div>Loading…</td></tr>';
-    mxData = await fetchJson('/api/dashboard/trend-matrix');
+    const q = new URLSearchParams();
+    if (omFilter) q.set('om', omFilter);
+    if (ocFilter) q.set('oc', ocFilter);
+    mxData = await fetchJson(`/api/dashboard/trend-matrix?${q.toString()}`);
     if (!mxData || !mxData.rows || !mxData.rows.length) {
         body.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No data available.</td></tr>';
         return;
@@ -512,8 +543,5 @@ function tvRenderTrendChart() {
     });
 }
 
-/* Load trend matrix once — scripts block runs after DOMContentLoaded fires,
-   so call directly instead of adding a listener that would never fire. */
-tvLoadTrendMatrix();
 </script>
 }

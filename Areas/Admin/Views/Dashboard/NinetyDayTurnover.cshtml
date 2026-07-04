@@ -7,12 +7,23 @@
         <h1 class="page-title">90-Day Turnover</h1>
         <p class="page-subtitle">Of everyone hired in a month, the share who resigned within their first 90 days</p>
     </div>
-    <div class="d-flex gap-2 flex-wrap">
-        <select id="ntdPeriodSelect" class="form-select form-select-dark form-select-sm" style="width:170px">
-            <option value="">Select Cohort Month</option>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <span class="text-muted" style="font-size:12px">From</span>
+        <select id="ntdFromPeriodSelect" class="form-select form-select-dark form-select-sm" style="width:150px">
+            <option value="">Cohort Month</option>
+        </select>
+        <span class="text-muted" style="font-size:12px">To</span>
+        <select id="ntdToPeriodSelect" class="form-select form-select-dark form-select-sm" style="width:150px">
+            <option value="">Cohort Month</option>
         </select>
         <select id="ntdStoreSelect" class="form-select form-select-dark form-select-sm" style="width:170px">
             <option value="">All Stores</option>
+        </select>
+        <select id="ntdOmSelect" class="form-select form-select-dark form-select-sm" style="width:190px">
+            <option value="">All Operation Managers</option>
+        </select>
+        <select id="ntdOcSelect" class="form-select form-select-dark form-select-sm" style="width:190px">
+            <option value="">All Operation Consultants</option>
         </select>
     </div>
 </div>
@@ -96,35 +107,70 @@ async function ntdFetch(path, extraQuery) {
     const p = new URLSearchParams(extraQuery || {});
     const store = document.getElementById('ntdStoreSelect').value;
     if (store) p.set('store', store);
+    const om = document.getElementById('ntdOmSelect').value;
+    if (om) p.set('om', om);
+    const oc = document.getElementById('ntdOcSelect').value;
+    if (oc) p.set('oc', oc);
     const r = await fetch(`/api/ninety-day-turnover/${path}?${p.toString()}`);
     return r.ok ? r.json() : null;
 }
 
 let ntdPeriods = [];
 async function ntdLoadFilters() {
-    ntdPeriods = await ntdFetch('cohort-periods') || [];
-    const periodSel = document.getElementById('ntdPeriodSelect');
-    const curPeriod = periodSel.value;
-    periodSel.innerHTML = '<option value="">Select Cohort Month</option>';
-    ntdPeriods.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = `${p.month}-${p.year}`;
-        opt.textContent = ntdFmtPeriod(p.month, p.year);
-        periodSel.appendChild(opt);
-    });
-    if (curPeriod && [...periodSel.options].some(o => o.value === curPeriod)) periodSel.value = curPeriod;
-    else if (ntdPeriods.length) periodSel.value = `${ntdPeriods[0].month}-${ntdPeriods[0].year}`;
+    const [periods, stores, managers, consultants] = await Promise.all([
+        ntdFetch('cohort-periods'),
+        ntdFetch('stores'),
+        fetch('/api/ninety-day-turnover/operation-managers').then(r => r.ok ? r.json() : []),
+        fetch('/api/ninety-day-turnover/operation-consultants').then(r => r.ok ? r.json() : []),
+    ]);
+    ntdPeriods = periods || [];
+    const sortedPeriods = ntdPeriods.slice().sort((a, b) => (a.year - b.year) || (a.month - b.month));
 
-    const stores = await ntdFetch('stores') || [];
+    const fromSel = document.getElementById('ntdFromPeriodSelect');
+    const toSel   = document.getElementById('ntdToPeriodSelect');
+    const curFrom = fromSel.value, curTo = toSel.value;
+    [fromSel, toSel].forEach(s => { s.innerHTML = '<option value="">Cohort Month</option>'; });
+    sortedPeriods.forEach(p => {
+        [fromSel, toSel].forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = `${p.month}-${p.year}`;
+            opt.textContent = ntdFmtPeriod(p.month, p.year);
+            s.appendChild(opt);
+        });
+    });
+    if (curFrom && [...fromSel.options].some(o => o.value === curFrom)) fromSel.value = curFrom;
+    else if (sortedPeriods.length) fromSel.value = `${sortedPeriods[0].month}-${sortedPeriods[0].year}`;
+    if (curTo && [...toSel.options].some(o => o.value === curTo)) toSel.value = curTo;
+    else if (sortedPeriods.length) {
+        const last = sortedPeriods[sortedPeriods.length - 1];
+        toSel.value = `${last.month}-${last.year}`;
+    }
+
     const storeSel = document.getElementById('ntdStoreSelect');
     const curStore = storeSel.value;
     storeSel.innerHTML = '<option value="">All Stores</option>';
-    stores.forEach(s => {
+    (stores || []).forEach(s => {
         const opt = document.createElement('option');
         opt.value = s; opt.textContent = s;
         storeSel.appendChild(opt);
     });
     if (curStore) storeSel.value = curStore;
+
+    const omSel = document.getElementById('ntdOmSelect');
+    omSel.innerHTML = '<option value="">All Operation Managers</option>';
+    (managers || []).forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        omSel.appendChild(opt);
+    });
+
+    const ocSel = document.getElementById('ntdOcSelect');
+    ocSel.innerHTML = '<option value="">All Operation Consultants</option>';
+    (consultants || []).forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        ocSel.appendChild(opt);
+    });
 
     const hasData = ntdPeriods.length > 0;
     document.getElementById('ntdEmptyState').style.display = hasData ? 'none' : '';
@@ -133,10 +179,20 @@ async function ntdLoadFilters() {
 }
 
 function ntdSelectedPeriod() {
-    const val = document.getElementById('ntdPeriodSelect').value;
-    if (!val) return null;
-    const [month, year] = val.split('-').map(Number);
-    return { month, year };
+    const toVal = document.getElementById('ntdToPeriodSelect').value;
+    if (!toVal) return null;
+    const [month, year] = toVal.split('-').map(Number);
+    const fromVal = document.getElementById('ntdFromPeriodSelect').value;
+    if (!fromVal) return { month, year };
+    const [fromMonth, fromYear] = fromVal.split('-').map(Number);
+    return { month, year, fromMonth, fromYear };
+}
+
+function ntdPeriodQuery(period) {
+    const q = { month: period.month, year: period.year };
+    if (period.fromMonth) q.fromMonth = period.fromMonth;
+    if (period.fromYear)  q.fromYear  = period.fromYear;
+    return q;
 }
 
 function ntdRenderKpis(kpi) {
@@ -153,7 +209,7 @@ function ntdRenderKpis(kpi) {
 async function ntdLoadKpi() {
     const period = ntdSelectedPeriod();
     if (!period) { ntdRenderKpis(null); return; }
-    const kpi = await ntdFetch('kpi', { month: period.month, year: period.year });
+    const kpi = await ntdFetch('kpi', ntdPeriodQuery(period));
     ntdRenderKpis(kpi);
 }
 
@@ -196,7 +252,7 @@ async function ntdLoadByStore() {
     if (!ctx) return;
     if (ntdByStoreInstance) ntdByStoreInstance.destroy();
     if (!period) return;
-    const data = await ntdFetch('by-store', { month: period.month, year: period.year }) || [];
+    const data = await ntdFetch('by-store', ntdPeriodQuery(period)) || [];
     ntdByStoreInstance = new Chart(ctx.getContext('2d'), {
         type: 'bar',
         data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: 'oklch(0.55 0.19 25)', borderRadius: 4, maxBarThickness: 26 }] },
@@ -219,7 +275,7 @@ async function ntdLoadReasons() {
     if (!ctx) return;
     if (ntdReasonsInstance) ntdReasonsInstance.destroy();
     if (!period) return;
-    const data = await ntdFetch('reasons', { month: period.month, year: period.year }) || [];
+    const data = await ntdFetch('reasons', ntdPeriodQuery(period)) || [];
     if (!data.length) return;
     ntdReasonsInstance = new Chart(ctx.getContext('2d'), {
         type: 'doughnut',
@@ -233,7 +289,7 @@ async function ntdLoadLeavers() {
     const tbody = document.getElementById('ntdLeaversBody');
     const badge = document.getElementById('ntdLeaversCountBadge');
     if (!period) { tbody.innerHTML = ''; badge.textContent = ''; return; }
-    const rows = await ntdFetch('early-leavers', { month: period.month, year: period.year }) || [];
+    const rows = await ntdFetch('early-leavers', ntdPeriodQuery(period)) || [];
     badge.textContent = rows.length + ' early leavers';
     if (!rows.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No early leavers in this cohort.</td></tr>'; return; }
     tbody.innerHTML = rows.map(r => `
@@ -251,9 +307,16 @@ async function ntdLoadAll() {
     await Promise.all([ntdLoadKpi(), ntdLoadByStore(), ntdLoadReasons(), ntdLoadLeavers()]);
 }
 
-document.getElementById('ntdPeriodSelect').addEventListener('change', ntdLoadAll);
+document.getElementById('ntdFromPeriodSelect').addEventListener('change', ntdLoadAll);
+document.getElementById('ntdToPeriodSelect').addEventListener('change', ntdLoadAll);
 document.getElementById('ntdStoreSelect').addEventListener('change', async () => {
     await ntdLoadFilters();
+    await Promise.all([ntdLoadTrend(), ntdLoadAll()]);
+});
+document.getElementById('ntdOmSelect').addEventListener('change', async () => {
+    await Promise.all([ntdLoadTrend(), ntdLoadAll()]);
+});
+document.getElementById('ntdOcSelect').addEventListener('change', async () => {
     await Promise.all([ntdLoadTrend(), ntdLoadAll()]);
 });
 

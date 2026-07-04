@@ -119,12 +119,12 @@ public class ReportService : IReportService
     }
 
     // ── Turnover Summary ────────────────────────────────────
-    private async Task AddSummarySheetsAsync(XLWorkbook wb, int month, int year, string role, string? assignedName)
+    private async Task AddSummarySheetsAsync(XLWorkbook wb, int month, int year, string role, string? assignedName, string? store = null)
     {
-        var kpi = await _dashboard.GetKpisAsync(month, year, null, role, assignedName);
-        var jobTitle = await _dashboard.GetTurnoverByJobTitleAsync(month, year, null, role, assignedName);
-        var tenure = await _dashboard.GetTurnoverByTenureAsync(month, year, null, role, assignedName);
-        var gender = await _dashboard.GetGenderBreakdownAsync(month, year, null, role, assignedName);
+        var kpi = await _dashboard.GetKpisAsync(month, year, store, role, assignedName);
+        var jobTitle = await _dashboard.GetTurnoverByJobTitleAsync(month, year, store, role, assignedName);
+        var tenure = await _dashboard.GetTurnoverByTenureAsync(month, year, store, role, assignedName);
+        var gender = await _dashboard.GetGenderBreakdownAsync(month, year, store, role, assignedName);
 
         var ws1 = AddSheet(wb, "Summary KPIs");
         StyleHeader(ws1, new[] { "Metric", "Value" });
@@ -139,17 +139,17 @@ public class ReportService : IReportService
         WriteLabelValueSheet(wb, "By Gender", "Gender", "Count", gender);
     }
 
-    public async Task<XLWorkbook> BuildSummaryReportAsync(int month, int year, string role, string? assignedName)
+    public async Task<XLWorkbook> BuildSummaryReportAsync(int month, int year, string role, string? assignedName, string? store = null)
     {
         var wb = new XLWorkbook();
-        await AddSummarySheetsAsync(wb, month, year, role, assignedName);
+        await AddSummarySheetsAsync(wb, month, year, role, assignedName, store);
         return wb;
     }
 
     // ── Store Comparison ────────────────────────────────────
-    private async Task AddStoreComparisonSheetAsync(XLWorkbook wb, int month, int year, string role, string? assignedName)
+    private async Task AddStoreComparisonSheetAsync(XLWorkbook wb, int month, int year, string role, string? assignedName, string? om = null, string? oc = null)
     {
-        var rows = await _dashboard.GetStoreComparisonAsync(month, year, role, assignedName);
+        var rows = await _dashboard.GetStoreComparisonAsync(month, year, role, assignedName, om: om, oc: oc);
         var ws = AddSheet(wb, "Store Comparison");
         StyleHeader(ws, new[] { "Store", "OC", "OM", "Headcount", "New Hires", "Resignations", "Turnover Rate" });
         for (int r = 0; r < rows.Count; r++)
@@ -166,18 +166,18 @@ public class ReportService : IReportService
         Finalize(ws);
     }
 
-    public async Task<XLWorkbook> BuildStoreComparisonReportAsync(int month, int year, string role, string? assignedName)
+    public async Task<XLWorkbook> BuildStoreComparisonReportAsync(int month, int year, string role, string? assignedName, string? om = null, string? oc = null)
     {
         var wb = new XLWorkbook();
-        await AddStoreComparisonSheetAsync(wb, month, year, role, assignedName);
+        await AddStoreComparisonSheetAsync(wb, month, year, role, assignedName, om, oc);
         return wb;
     }
 
     // ── 90-Day Turnover ─────────────────────────────────────
-    private async Task AddNinetyDaySheetsAsync(XLWorkbook wb)
+    private async Task AddNinetyDaySheetsAsync(XLWorkbook wb, string? store = null)
     {
         var periods = await _ninetyDay.GetCohortPeriodsAsync();
-        var trend = await _ninetyDay.GetTrendAsync(null);
+        var trend = await _ninetyDay.GetTrendAsync(store);
 
         var wsTrend = AddSheet(wb, "90D Cohort Trend");
         StyleHeader(wsTrend, new[] { "Cohort", "Total Hires", "Early Leavers", "Rate", "Provisional" });
@@ -205,7 +205,7 @@ public class ReportService : IReportService
         var reasonTotals = new Dictionary<string, int>();
         foreach (var p in periods)
         {
-            var leavers = await _ninetyDay.GetEarlyLeaversAsync(p.Month, p.Year, null);
+            var leavers = await _ninetyDay.GetEarlyLeaversAsync(p.Month, p.Year, store);
             var cohortLabel = $"{p.Month}-{p.Year}";
             foreach (var lv in leavers)
             {
@@ -219,7 +219,7 @@ public class ReportService : IReportService
                 row++;
             }
 
-            var reasons = await _ninetyDay.GetEarlyLeaverReasonsAsync(p.Month, p.Year, null);
+            var reasons = await _ninetyDay.GetEarlyLeaverReasonsAsync(p.Month, p.Year, store);
             foreach (var reason in reasons)
                 reasonTotals[reason.Label] = reasonTotals.GetValueOrDefault(reason.Label) + reason.Value;
         }
@@ -229,22 +229,22 @@ public class ReportService : IReportService
             reasonTotals.OrderByDescending(kv => kv.Value).Select(kv => new ChartDataItem { Label = kv.Key, Value = kv.Value }));
     }
 
-    public async Task<XLWorkbook> BuildNinetyDayReportAsync()
+    public async Task<XLWorkbook> BuildNinetyDayReportAsync(string? store = null)
     {
         var wb = new XLWorkbook();
-        await AddNinetyDaySheetsAsync(wb);
+        await AddNinetyDaySheetsAsync(wb, store);
         return wb;
     }
 
     // ── Retention ───────────────────────────────────────────
-    private async Task AddRetentionSheetsAsync(XLWorkbook wb)
+    private async Task AddRetentionSheetsAsync(XLWorkbook wb, string? store = null)
     {
-        var milestones = await _retention.GetMilestonesAsync(null);
-        var survival = await _retention.GetSurvivalCurveAsync(null);
-        var trend = await _retention.GetTrendAsync(null);
+        var milestones = await _retention.GetMilestonesAsync(store);
+        var survival = await _retention.GetSurvivalCurveAsync(store);
+        var trend = await _retention.GetTrendAsync(store);
         var leaderboard = await _retention.GetStoreLeaderboardAsync();
-        var tenureDist = await _retention.GetTenureDistributionAsync(null);
-        var insights = await _retention.GetInsightsAsync(null);
+        var tenureDist = await _retention.GetTenureDistributionAsync(store);
+        var insights = await _retention.GetInsightsAsync(store);
 
         var wsMilestones = AddSheet(wb, "Retention Milestones");
         StyleHeader(wsMilestones, new[] { "Days", "Retention Rate", "Total Hires", "Retained", "Through Cohort" });
@@ -298,19 +298,19 @@ public class ReportService : IReportService
         Finalize(wsInsights);
     }
 
-    public async Task<XLWorkbook> BuildRetentionReportAsync()
+    public async Task<XLWorkbook> BuildRetentionReportAsync(string? store = null)
     {
         var wb = new XLWorkbook();
-        await AddRetentionSheetsAsync(wb);
+        await AddRetentionSheetsAsync(wb, store);
         return wb;
     }
 
     // ── Exit Interviews (aggregate only — never names or IDs) ──
-    private async Task AddExitInterviewSheetsAsync(XLWorkbook wb)
+    private async Task AddExitInterviewSheetsAsync(XLWorkbook wb, ExitInterviewFilter? filterOverride = null)
     {
         const string role = "Admin";
         string? assignedName = null;
-        var filter = new ExitInterviewFilter();
+        var filter = filterOverride ?? new ExitInterviewFilter();
 
         var reasons = await _exitInterviews.GetReasonsForLeavingAsync(filter, role, assignedName);
         var wouldReturn = await _exitInterviews.GetWouldReturnAsync(filter, role, assignedName);
@@ -348,17 +348,17 @@ public class ReportService : IReportService
         Finalize(wsComments);
     }
 
-    public async Task<XLWorkbook> BuildExitInterviewReportAsync()
+    public async Task<XLWorkbook> BuildExitInterviewReportAsync(string? store = null, string? om = null, string? oc = null)
     {
         var wb = new XLWorkbook();
-        await AddExitInterviewSheetsAsync(wb);
+        await AddExitInterviewSheetsAsync(wb, new ExitInterviewFilter { Store = store, OperationConsultant = oc, OperationManager = om });
         return wb;
     }
 
     // ── Scorecard ───────────────────────────────────────────
-    private async Task AddScorecardSheetAsync(XLWorkbook wb, string dimension, string sheetName, string nameHeader)
+    private async Task AddScorecardSheetAsync(XLWorkbook wb, string dimension, string sheetName, string nameHeader, string? om = null, string? oc = null)
     {
-        var rows = await _scorecard.GetScorecardAsync(dimension);
+        var rows = await _scorecard.GetScorecardAsync(dimension, om, oc);
         var ws = AddSheet(wb, sheetName);
         StyleHeader(ws, new[] { nameHeader, "Stores", "Headcount", "Turnover Rate", "90-Day Early Leave", "180-Day Retention", "Exit Sentiment", "Exit Responses" });
         for (int i = 0; i < rows.Count; i++)
@@ -377,25 +377,25 @@ public class ReportService : IReportService
         Finalize(ws);
     }
 
-    private async Task AddScorecardSheetsAsync(XLWorkbook wb)
+    private async Task AddScorecardSheetsAsync(XLWorkbook wb, string? om = null, string? oc = null)
     {
-        await AddScorecardSheetAsync(wb, "leader", "Scorecard Store Leaders", "Store Leader");
-        await AddScorecardSheetAsync(wb, "oc", "Scorecard Op. Consultants", "Operation Consultant");
-        await AddScorecardSheetAsync(wb, "om", "Scorecard Op. Managers", "Operation Manager");
+        await AddScorecardSheetAsync(wb, "leader", "Scorecard Store Leaders", "Store Leader", om, oc);
+        await AddScorecardSheetAsync(wb, "oc", "Scorecard Op. Consultants", "Operation Consultant", om, oc);
+        await AddScorecardSheetAsync(wb, "om", "Scorecard Op. Managers", "Operation Manager", om, oc);
     }
 
-    public async Task<XLWorkbook> BuildScorecardReportAsync()
+    public async Task<XLWorkbook> BuildScorecardReportAsync(string? om = null, string? oc = null)
     {
         var wb = new XLWorkbook();
-        await AddScorecardSheetsAsync(wb);
+        await AddScorecardSheetsAsync(wb, om, oc);
         return wb;
     }
 
     // ── Early Warning ───────────────────────────────────────
-    private async Task AddEarlyWarningSheetsAsync(XLWorkbook wb)
+    private async Task AddEarlyWarningSheetsAsync(XLWorkbook wb, string? store = null)
     {
-        var summary = await _earlyWarning.GetSummaryAsync(null);
-        var watchlist = await _earlyWarning.GetWatchlistAsync(null);
+        var summary = await _earlyWarning.GetSummaryAsync(store);
+        var watchlist = await _earlyWarning.GetWatchlistAsync(store);
 
         var wsSummary = AddSheet(wb, "Early Warning Summary");
         StyleHeader(wsSummary, new[] { "Metric", "Value" });
@@ -421,24 +421,24 @@ public class ReportService : IReportService
         Finalize(wsWatchlist);
     }
 
-    public async Task<XLWorkbook> BuildEarlyWarningReportAsync()
+    public async Task<XLWorkbook> BuildEarlyWarningReportAsync(string? store = null)
     {
         var wb = new XLWorkbook();
-        await AddEarlyWarningSheetsAsync(wb);
+        await AddEarlyWarningSheetsAsync(wb, store);
         return wb;
     }
 
     // ── Full Company Report — everything in one workbook ────
-    public async Task<XLWorkbook> BuildFullReportAsync(int month, int year, string role, string? assignedName)
+    public async Task<XLWorkbook> BuildFullReportAsync(int month, int year, string role, string? assignedName, string? store = null)
     {
         var wb = new XLWorkbook();
-        await AddSummarySheetsAsync(wb, month, year, role, assignedName);
+        await AddSummarySheetsAsync(wb, month, year, role, assignedName, store);
         await AddStoreComparisonSheetAsync(wb, month, year, role, assignedName);
-        await AddNinetyDaySheetsAsync(wb);
-        await AddRetentionSheetsAsync(wb);
-        await AddExitInterviewSheetsAsync(wb);
+        await AddNinetyDaySheetsAsync(wb, store);
+        await AddRetentionSheetsAsync(wb, store);
+        await AddExitInterviewSheetsAsync(wb, new ExitInterviewFilter { Store = store });
         await AddScorecardSheetsAsync(wb);
-        await AddEarlyWarningSheetsAsync(wb);
+        await AddEarlyWarningSheetsAsync(wb, store);
         return wb;
     }
 }

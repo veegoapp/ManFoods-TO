@@ -4,12 +4,12 @@ namespace MvcApp.Services;
 
 public interface IReportService
 {
-    Task<XLWorkbook> BuildSummaryReportAsync(int month, int year, string role, string? assignedName);
-    Task<XLWorkbook> BuildStoreComparisonReportAsync(int month, int year, string role, string? assignedName);
-    Task<XLWorkbook> BuildNinetyDayReportAsync();
-    Task<XLWorkbook> BuildRetentionReportAsync();
-    Task<XLWorkbook> BuildExitInterviewReportAsync();
-    Task<XLWorkbook> BuildScorecardReportAsync();
-    Task<XLWorkbook> BuildEarlyWarningReportAsync();
-    Task<XLWorkbook> BuildFullReportAsync(int month, int year, string role, string? assignedName);
+    Task<XLWorkbook> BuildSummaryReportAsync(int month, int year, string role, string? assignedName, string? store = null);
+    Task<XLWorkbook> BuildStoreComparisonReportAsync(int month, int year, string role, string? assignedName, string? om = null, string? oc = null);
+    Task<XLWorkbook> BuildNinetyDayReportAsync(string? store = null);
+    Task<XLWorkbook> BuildRetentionReportAsync(string? store = null);
+    Task<XLWorkbook> BuildExitInterviewReportAsync(string? store = null, string? om = null, string? oc = null);
+    Task<XLWorkbook> BuildScorecardReportAsync(string? om = null, string? oc = null);
+    Task<XLWorkbook> BuildEarlyWarningReportAsync(string? store = null);
+    Task<XLWorkbook> BuildFullReportAsync(int month, int year, string role, string? assignedName, string? store = null);
 }

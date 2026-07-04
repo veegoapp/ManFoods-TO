@@ -47,17 +47,34 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
         }).ToList();
     }
 
+    // Stores whose latest-known Operation Manager / Operation Consultant match the filter.
+    // Returns null when no OM/OC filter is set.
+    private async Task<List<string>?> GetStoresForOmOcAsync(string? om, string? oc)
+    {
+        if (string.IsNullOrEmpty(om) && string.IsNullOrEmpty(oc)) return null;
+        var refs = await _db.StoreReferences.ToListAsync();
+        var latestByStore = refs.GroupBy(s => s.StoreName)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(s => s.Year).ThenByDescending(s => s.Month).First());
+        return latestByStore.Values
+            .Where(s => (string.IsNullOrEmpty(om) || s.OperationManager == om)
+                     && (string.IsNullOrEmpty(oc) || s.OperationConsultant == oc))
+            .Select(s => s.StoreName)
+            .ToList();
+    }
+
     private static NinetyDayKpiViewModel ComputeKpi(
         List<(string EmployeeId, string Store, int Month, int Year)> activeHires,
         List<ResignationTenure> resTenures,
-        int month, int year, string? store)
+        HashSet<int> cohortKeys, int latestMonth, int latestYear, string? store, List<string>? omOcStores)
     {
-        var fromActive = activeHires.Where(a => a.Month == month && a.Year == year && (store == null || a.Store == store)).Select(a => a.EmployeeId);
-        var fromRes = resTenures.Where(r => r.HireDate.Month == month && r.HireDate.Year == year && (store == null || r.Store == store)).Select(r => r.EmployeeId);
+        bool StoreOk(string s) => (store == null || s == store) && (omOcStores == null || omOcStores.Contains(s));
+
+        var fromActive = activeHires.Where(a => cohortKeys.Contains(a.Year * 100 + a.Month) && StoreOk(a.Store)).Select(a => a.EmployeeId);
+        var fromRes = resTenures.Where(r => cohortKeys.Contains(r.HireDate.Year * 100 + r.HireDate.Month) && StoreOk(r.Store)).Select(r => r.EmployeeId);
         var hireIds = fromActive.Concat(fromRes).Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToHashSet();
 
         var earlyLeaverIds = resTenures
-            .Where(r => r.HireDate.Month == month && r.HireDate.Year == year && r.TenureDays <= 90 && (store == null || r.Store == store))
+            .Where(r => cohortKeys.Contains(r.HireDate.Year * 100 + r.HireDate.Month) && r.TenureDays <= 90 && StoreOk(r.Store))
             .Select(r => r.EmployeeId)
             .Where(id => !string.IsNullOrWhiteSpace(id))
             .Distinct()
@@ -67,13 +84,13 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
         var earlyLeavers = earlyLeaverIds.Count;
         var rate = totalHires > 0 ? Math.Round(earlyLeavers * 100.0 / totalHires, 1) : 0;
 
-        var cohortCloseDate = new DateOnly(year, month, DateTime.DaysInMonth(year, month));
+        var cohortCloseDate = new DateOnly(latestYear, latestMonth, DateTime.DaysInMonth(latestYear, latestMonth));
         var isProvisional = DateOnly.FromDateTime(DateTime.UtcNow) < cohortCloseDate.AddDays(90);
 
         return new NinetyDayKpiViewModel
         {
-            CohortMonth = month,
-            CohortYear = year,
+            CohortMonth = latestMonth,
+            CohortYear = latestYear,
             TotalHires = totalHires,
             EarlyLeavers = earlyLeavers,
             Rate = rate,
@@ -106,17 +123,21 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
             .ToList();
     }
 
-    public async Task<NinetyDayKpiViewModel> GetKpiAsync(int month, int year, string? store)
+    public async Task<NinetyDayKpiViewModel> GetKpiAsync(int month, int year, string? store,
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
     {
         var activeHires = await LoadActiveHiresAsync();
         var resTenures = await LoadResignationTenuresAsync();
-        return ComputeKpi(activeHires, resTenures, month, year, store);
+        var keys = DashboardService.ExpandRangeKeys(fromMonth ?? month, fromYear ?? year, month, year).ToHashSet();
+        var omOcStores = await GetStoresForOmOcAsync(om, oc);
+        return ComputeKpi(activeHires, resTenures, keys, month, year, store, omOcStores);
     }
 
-    public async Task<List<RateTrendItem>> GetTrendAsync(string? store)
+    public async Task<List<RateTrendItem>> GetTrendAsync(string? store, string? om = null, string? oc = null)
     {
         var activeHires = await LoadActiveHiresAsync();
         var resTenures = await LoadResignationTenuresAsync();
+        var omOcStores = await GetStoresForOmOcAsync(om, oc);
 
         var periods = activeHires.Select(a => (a.Month, a.Year))
             .Concat(resTenures.Select(r => (r.HireDate.Month, r.HireDate.Year)))
@@ -127,7 +148,7 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
         var result = new List<RateTrendItem>();
         foreach (var (m, y) in periods)
         {
-            var kpi = ComputeKpi(activeHires, resTenures, m, y, store);
+            var kpi = ComputeKpi(activeHires, resTenures, new HashSet<int> { y * 100 + m }, m, y, store, omOcStores);
             if (kpi.TotalHires == 0) continue;
             result.Add(new RateTrendItem
             {
@@ -141,31 +162,40 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
         return result;
     }
 
-    public async Task<List<ChartDataItem>> GetByStoreAsync(int month, int year)
+    public async Task<List<ChartDataItem>> GetByStoreAsync(int month, int year,
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
     {
         var activeHires = await LoadActiveHiresAsync();
         var resTenures = await LoadResignationTenuresAsync();
+        var keys = DashboardService.ExpandRangeKeys(fromMonth ?? month, fromYear ?? year, month, year).ToHashSet();
+        var omOcStores = await GetStoresForOmOcAsync(om, oc);
 
-        var stores = activeHires.Where(a => a.Month == month && a.Year == year).Select(a => a.Store)
-            .Concat(resTenures.Where(r => r.HireDate.Month == month && r.HireDate.Year == year).Select(r => r.Store))
+        var stores = activeHires.Where(a => keys.Contains(a.Year * 100 + a.Month)).Select(a => a.Store)
+            .Concat(resTenures.Where(r => keys.Contains(r.HireDate.Year * 100 + r.HireDate.Month)).Select(r => r.Store))
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .Distinct();
+        if (omOcStores != null) stores = stores.Where(s => omOcStores.Contains(s));
 
         var result = new List<ChartDataItem>();
         foreach (var store in stores)
         {
-            var kpi = ComputeKpi(activeHires, resTenures, month, year, store);
+            var kpi = ComputeKpi(activeHires, resTenures, keys, month, year, store, null);
             if (kpi.TotalHires == 0) continue;
             result.Add(new ChartDataItem { Label = store, Value = (int)Math.Round(kpi.Rate) });
         }
         return result.OrderByDescending(c => c.Value).ToList();
     }
 
-    public async Task<List<EarlyLeaverRow>> GetEarlyLeaversAsync(int month, int year, string? store)
+    public async Task<List<EarlyLeaverRow>> GetEarlyLeaversAsync(int month, int year, string? store,
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
     {
         var resTenures = await LoadResignationTenuresAsync();
+        var keys = DashboardService.ExpandRangeKeys(fromMonth ?? month, fromYear ?? year, month, year).ToHashSet();
+        var omOcStores = await GetStoresForOmOcAsync(om, oc);
         return resTenures
-            .Where(r => r.HireDate.Month == month && r.HireDate.Year == year && r.TenureDays <= 90 && (store == null || r.Store == store))
+            .Where(r => keys.Contains(r.HireDate.Year * 100 + r.HireDate.Month) && r.TenureDays <= 90
+                     && (store == null || r.Store == store)
+                     && (omOcStores == null || omOcStores.Contains(r.Store)))
             .OrderBy(r => r.TenureDays)
             .Select(r => new EarlyLeaverRow
             {
@@ -179,11 +209,16 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
             .ToList();
     }
 
-    public async Task<List<ChartDataItem>> GetEarlyLeaverReasonsAsync(int month, int year, string? store)
+    public async Task<List<ChartDataItem>> GetEarlyLeaverReasonsAsync(int month, int year, string? store,
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
     {
         var resTenures = await LoadResignationTenuresAsync();
+        var keys = DashboardService.ExpandRangeKeys(fromMonth ?? month, fromYear ?? year, month, year).ToHashSet();
+        var omOcStores = await GetStoresForOmOcAsync(om, oc);
         var earlyLeaverIds = resTenures
-            .Where(r => r.HireDate.Month == month && r.HireDate.Year == year && r.TenureDays <= 90 && (store == null || r.Store == store))
+            .Where(r => keys.Contains(r.HireDate.Year * 100 + r.HireDate.Month) && r.TenureDays <= 90
+                     && (store == null || r.Store == store)
+                     && (omOcStores == null || omOcStores.Contains(r.Store)))
             .Select(r => r.EmployeeId)
             .Where(id => !string.IsNullOrWhiteSpace(id))
             .Distinct()

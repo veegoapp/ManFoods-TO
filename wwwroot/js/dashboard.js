@@ -1,7 +1,7 @@
 /* Shared dashboard chart logic — Admin & Home areas */
 Chart.defaults.color = '#5B5875';
 
-let periodMonth, periodYear, storeFilter = '';
+let periodMonth, periodYear, fromPeriodMonth, fromPeriodYear, storeFilter = '', omFilter = '', ocFilter = '';
 let jobTitleChart, tenureChart, genderChart;
 
 const COLORS = ['#6D5DFB', '#A78BFA', '#1C1C27', '#7EB6FF', '#5B3FE0'];
@@ -17,28 +17,47 @@ function monthName(m, y) {
 
 function buildQuery() {
     const p = new URLSearchParams();
-    if (periodMonth) p.set('month', periodMonth);
-    if (periodYear)  p.set('year',  periodYear);
-    if (storeFilter) p.set('store', storeFilter);
+    if (periodMonth)     p.set('month',     periodMonth);
+    if (periodYear)      p.set('year',      periodYear);
+    if (fromPeriodMonth) p.set('fromMonth', fromPeriodMonth);
+    if (fromPeriodYear)  p.set('fromYear',  fromPeriodYear);
+    if (storeFilter)     p.set('store',     storeFilter);
+    if (omFilter)        p.set('om',        omFilter);
+    if (ocFilter)        p.set('oc',        ocFilter);
     return p.toString();
 }
 
 async function loadPeriods() {
     const periods = await fetchJson('/api/dashboard/available-periods');
-    const sel = document.getElementById('periodSelect');
-    if (!sel) return;
-    sel.innerHTML = '<option value="">Select Period</option>';
-    periods.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = `${p.month}-${p.year}`;
-        opt.textContent = monthName(p.month, p.year);
-        sel.appendChild(opt);
+    const toSel   = document.getElementById('periodSelect');
+    const fromSel = document.getElementById('fromPeriodSelect');
+    if (!toSel) return;
+
+    [toSel, fromSel].forEach(sel => {
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Select Period</option>';
+        periods.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = `${p.month}-${p.year}`;
+            opt.textContent = monthName(p.month, p.year);
+            sel.appendChild(opt);
+        });
     });
+
     if (periods.length > 0) {
-        sel.value = `${periods[0].month}-${periods[0].year}`;
+        toSel.value = `${periods[0].month}-${periods[0].year}`;
         periodMonth = periods[0].month;
         periodYear  = periods[0].year;
+
+        if (fromSel) {
+            fromSel.value = `${periods[0].month}-${periods[0].year}`;
+            fromPeriodMonth = periods[0].month;
+            fromPeriodYear  = periods[0].year;
+        }
+
         if (document.getElementById('storeSelect')) await loadStores();
+        if (document.getElementById('omSelect'))    await loadOperationManagers();
+        if (document.getElementById('ocSelect'))    await loadOperationConsultants();
         await loadAll();
     }
 }
@@ -54,6 +73,38 @@ async function loadStores() {
         const opt = document.createElement('option');
         opt.value = s.storeName;
         opt.textContent = s.storeName;
+        sel.appendChild(opt);
+    });
+    if (cur) sel.value = cur;
+}
+
+async function loadOperationManagers() {
+    if (!periodMonth || !periodYear) return;
+    const managers = await fetchJson(`/api/dashboard/operation-managers?month=${periodMonth}&year=${periodYear}`);
+    const sel = document.getElementById('omSelect');
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">All Operation Managers</option>';
+    managers.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        sel.appendChild(opt);
+    });
+    if (cur) sel.value = cur;
+}
+
+async function loadOperationConsultants() {
+    if (!periodMonth || !periodYear) return;
+    const consultants = await fetchJson(`/api/dashboard/operation-consultants?month=${periodMonth}&year=${periodYear}`);
+    const sel = document.getElementById('ocSelect');
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">All Operation Consultants</option>';
+    consultants.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
         sel.appendChild(opt);
     });
     if (cur) sel.value = cur;
@@ -129,8 +180,26 @@ if (periodSel) {
         if (!this.value) return;
         const [m, y] = this.value.split('-');
         periodMonth = parseInt(m); periodYear = parseInt(y);
+        // Keep the range valid: "From" can't be after "To".
+        if (fromPeriodYear > periodYear || (fromPeriodYear === periodYear && fromPeriodMonth > periodMonth)) {
+            fromPeriodMonth = periodMonth; fromPeriodYear = periodYear;
+            const fromSel = document.getElementById('fromPeriodSelect');
+            if (fromSel) fromSel.value = `${periodMonth}-${periodYear}`;
+        }
         const stSel = document.getElementById('storeSelect');
         if (stSel) { storeFilter = ''; stSel.value = ''; await loadStores(); }
+        if (document.getElementById('omSelect')) await loadOperationManagers();
+        if (document.getElementById('ocSelect')) await loadOperationConsultants();
+        await loadAll();
+    });
+}
+
+const fromPeriodSel = document.getElementById('fromPeriodSelect');
+if (fromPeriodSel) {
+    fromPeriodSel.addEventListener('change', async function() {
+        if (!this.value) return;
+        const [m, y] = this.value.split('-');
+        fromPeriodMonth = parseInt(m); fromPeriodYear = parseInt(y);
         await loadAll();
     });
 }
@@ -139,6 +208,22 @@ const storeSel = document.getElementById('storeSelect');
 if (storeSel) {
     storeSel.addEventListener('change', async function() {
         storeFilter = this.value || '';
+        await loadAll();
+    });
+}
+
+const omSel = document.getElementById('omSelect');
+if (omSel) {
+    omSel.addEventListener('change', async function() {
+        omFilter = this.value || '';
+        await loadAll();
+    });
+}
+
+const ocSel = document.getElementById('ocSelect');
+if (ocSel) {
+    ocSel.addEventListener('change', async function() {
+        ocFilter = this.value || '';
         await loadAll();
     });
 }
