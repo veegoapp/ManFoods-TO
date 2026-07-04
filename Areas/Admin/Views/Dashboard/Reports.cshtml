@@ -2,27 +2,57 @@
 @{
     ViewData["Title"] = "Reports";
     var months = new[] { "January","February","March","April","May","June","July","August","September","October","November","December" };
+    var hasPeriods = Model != null && Model.Count > 0;
 }
 
 <div class="page-header">
     <div>
         <h1 class="page-title">Reports</h1>
-        <p class="page-subtitle">Export workforce data to Excel</p>
+        <p class="page-subtitle">Export every part of the portal to Excel — turnover, retention, exit interviews, scorecards, and early warning</p>
     </div>
 </div>
 
-@if (Model == null || Model.Count == 0)
+@if (hasPeriods)
 {
-    <div class="card-dark text-center py-5">
-        <i class="bi bi-file-earmark-bar-graph-fill" style="font-size:3rem;color:oklch(0.5 0.18 25);display:block;margin-bottom:1rem"></i>
-        <h5 class="mb-2">No Data Available</h5>
-        <p class="text-muted-custom">Upload employee data first to generate reports.</p>
+    <div class="card-dark mb-4" style="border-left:4px solid oklch(0.5 0.18 25)">
+        <div class="d-flex align-items-center gap-3">
+            <div class="card-icon" style="background:oklch(0.5 0.18 25 / .12)"><i class="bi bi-file-earmark-zip-fill" style="color:oklch(0.5 0.18 25)"></i></div>
+            <div class="flex-grow-1">
+                <h6 class="mb-0">Full Company Report</h6>
+                <p class="text-muted-custom mb-0 small">Everything in one workbook — turnover, stores, 90-day, retention, exit interviews, scorecard, and early warning</p>
+            </div>
+            <form method="get" action="/admin/dashboard/export" class="d-flex gap-2 align-items-center">
+                <input type="hidden" name="reportType" value="full" />
+                <select name="month" class="form-select form-select-dark form-select-sm" style="width:130px">
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        var isSelected = Model!.LastOrDefault()?.Month == m;
+                        <option value="@m" selected="@isSelected">@months[m-1]</option>
+                    }
+                </select>
+                <select name="year" class="form-select form-select-dark form-select-sm" style="width:100px">
+                    @foreach (var y in Model!.Select(p => p.Year).Distinct().OrderByDescending(y => y))
+                    {
+                        <option value="@y">@y</option>
+                    }
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm text-nowrap"><i class="bi bi-download me-1"></i>Download</button>
+            </form>
+        </div>
+    </div>
+}
+
+<h5 class="fw-bold mb-3 mt-2">Turnover &amp; Workforce</h5>
+@if (!hasPeriods)
+{
+    <div class="card-dark text-center py-4 mb-4">
+        <i class="bi bi-file-earmark-bar-graph-fill" style="font-size:2.5rem;color:oklch(0.5 0.18 25);display:block;margin-bottom:.75rem"></i>
+        <p class="text-muted-custom mb-0">Upload employee data first to generate period-based reports.</p>
     </div>
 }
 else
 {
-    <div class="row g-4">
-        <!-- Summary Report -->
+    <div class="row g-4 mb-4">
         <div class="col-md-6">
             <div class="card-dark h-100">
                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -40,7 +70,7 @@ else
                             <select name="month" class="form-select form-select-dark form-select-sm">
                                 @for (int m = 1; m <= 12; m++)
                                 {
-                                    var isSelected = Model.LastOrDefault()?.Month == m;
+                                    var isSelected = Model!.LastOrDefault()?.Month == m;
                                     <option value="@m" selected="@isSelected">@months[m-1]</option>
                                 }
                             </select>
@@ -48,7 +78,7 @@ else
                         <div class="col-6">
                             <label class="form-label small text-muted-custom">Year</label>
                             <select name="year" class="form-select form-select-dark form-select-sm">
-                                @foreach (var y in Model.Select(p => p.Year).Distinct().OrderByDescending(y => y))
+                                @foreach (var y in Model!.Select(p => p.Year).Distinct().OrderByDescending(y => y))
                                 {
                                     <option value="@y">@y</option>
                                 }
@@ -62,7 +92,6 @@ else
             </div>
         </div>
 
-        <!-- Store Comparison Report -->
         <div class="col-md-6">
             <div class="card-dark h-100">
                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -80,7 +109,7 @@ else
                             <select name="month" class="form-select form-select-dark form-select-sm">
                                 @for (int m = 1; m <= 12; m++)
                                 {
-                                    var isSelected = Model.LastOrDefault()?.Month == m;
+                                    var isSelected = Model!.LastOrDefault()?.Month == m;
                                     <option value="@m" selected="@isSelected">@months[m-1]</option>
                                 }
                             </select>
@@ -88,7 +117,7 @@ else
                         <div class="col-6">
                             <label class="form-label small text-muted-custom">Year</label>
                             <select name="year" class="form-select form-select-dark form-select-sm">
-                                @foreach (var y in Model.Select(p => p.Year).Distinct().OrderByDescending(y => y))
+                                @foreach (var y in Model!.Select(p => p.Year).Distinct().OrderByDescending(y => y))
                                 {
                                     <option value="@y">@y</option>
                                 }
@@ -101,20 +130,68 @@ else
                 </form>
             </div>
         </div>
+    </div>
+}
 
-        <!-- Available Periods -->
-        <div class="col-12">
-            <div class="card-dark">
-                <h6 class="mb-3"><i class="bi bi-calendar3 me-2" style="color:oklch(0.5 0.18 25)"></i>Available Data Periods</h6>
-                <div class="d-flex flex-wrap gap-2">
-                    @foreach (var p in Model.OrderByDescending(x => x.Year).ThenByDescending(x => x.Month))
-                    {
-                        <span class="badge" style="background:oklch(0.5 0.18 25 / .12);color:oklch(0.5 0.18 25);border:1px solid oklch(0.5 0.18 25 / .3);padding:6px 12px;border-radius:6px;font-size:12px">
-                            @months[p.Month - 1] @p.Year
-                        </span>
-                    }
-                </div>
-            </div>
+<h5 class="fw-bold mb-3">Deep Analytics</h5>
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="card-dark h-100 d-flex flex-column">
+            <div class="card-icon mb-2" style="background:oklch(0.5 0.18 25 / .12)"><i class="bi bi-hourglass-split" style="color:oklch(0.5 0.18 25)"></i></div>
+            <h6 class="mb-1">90-Day Turnover</h6>
+            <p class="text-muted-custom mb-3 small flex-grow-1">Cohort trend, by-store breakdown, early leavers, and reasons — every cohort</p>
+            <a href="/admin/dashboard/export?reportType=ninety-day" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>Download</a>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card-dark h-100 d-flex flex-column">
+            <div class="card-icon mb-2" style="background:oklch(0.75 0.15 85 / .15)"><i class="bi bi-graph-up-arrow" style="color:oklch(0.6 0.13 82)"></i></div>
+            <h6 class="mb-1">Retention</h6>
+            <p class="text-muted-custom mb-3 small flex-grow-1">Milestones, survival curve, trend, store leaderboard, and tenure distribution</p>
+            <a href="/admin/dashboard/export?reportType=retention" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>Download</a>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card-dark h-100 d-flex flex-column">
+            <div class="card-icon mb-2" style="background:oklch(0.5 0.18 25 / .12)"><i class="bi bi-award-fill" style="color:oklch(0.5 0.18 25)"></i></div>
+            <h6 class="mb-1">Scorecard</h6>
+            <p class="text-muted-custom mb-3 small flex-grow-1">Store Leaders, Operation Consultants, and Operation Managers ranked side by side</p>
+            <a href="/admin/dashboard/export?reportType=scorecard" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>Download</a>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card-dark h-100 d-flex flex-column">
+            <div class="card-icon mb-2" style="background:oklch(0.6 0.22 22 / .12)"><i class="bi bi-exclamation-diamond-fill" style="color:oklch(0.6 0.22 22)"></i></div>
+            <h6 class="mb-1">Early Warning</h6>
+            <p class="text-muted-custom mb-3 small flex-grow-1">Full at-risk watchlist with risk scores and reasons for every flagged employee</p>
+            <a href="/admin/dashboard/export?reportType=early-warning" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>Download</a>
+        </div>
+    </div>
+</div>
+
+<h5 class="fw-bold mb-3">Exit Interviews</h5>
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card-dark h-100 d-flex flex-column">
+            <div class="card-icon mb-2" style="background:oklch(0.65 0.15 190 / .12)"><i class="bi bi-chat-square-text-fill" style="color:oklch(0.55 0.15 190)"></i></div>
+            <h6 class="mb-1">Exit Interview Report</h6>
+            <p class="text-muted-custom mb-3 small flex-grow-1">Reasons, would-return, experience, workload, engagement drivers, and anonymous comments</p>
+            <a href="/admin/dashboard/export?reportType=exit-interviews" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>Download</a>
+        </div>
+    </div>
+</div>
+
+@if (hasPeriods)
+{
+    <div class="card-dark">
+        <h6 class="mb-3"><i class="bi bi-calendar3 me-2" style="color:oklch(0.5 0.18 25)"></i>Available Data Periods</h6>
+        <div class="d-flex flex-wrap gap-2">
+            @foreach (var p in Model!.OrderByDescending(x => x.Year).ThenByDescending(x => x.Month))
+            {
+                <span class="badge" style="background:oklch(0.5 0.18 25 / .12);color:oklch(0.5 0.18 25);border:1px solid oklch(0.5 0.18 25 / .3);padding:6px 12px;border-radius:6px;font-size:12px">
+                    @months[p.Month - 1] @p.Year
+                </span>
+            }
         </div>
     </div>
 }

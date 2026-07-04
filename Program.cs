@@ -56,6 +56,7 @@ builder.Services.AddScoped<IRetentionService, RetentionService>();
 builder.Services.AddScoped<IEarlyWarningService, EarlyWarningService>();
 builder.Services.AddScoped<IScorecardService, ScorecardService>();
 builder.Services.AddScoped<ITargetsService, TargetsService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IGeminiService, GeminiService>();
 

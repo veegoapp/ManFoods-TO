@@ -15,14 +15,16 @@ public class DashboardController : Controller
     private readonly IDashboardService _dashboard;
     private readonly IStoreService _stores;
     private readonly IOtpService _otp;
+    private readonly IReportService _reports;
 
-    public DashboardController(IUploadService uploads, IUserService users, IDashboardService dashboard, IStoreService stores, IOtpService otp)
+    public DashboardController(IUploadService uploads, IUserService users, IDashboardService dashboard, IStoreService stores, IOtpService otp, IReportService reports)
     {
         _uploads = uploads;
         _users = users;
         _dashboard = dashboard;
         _stores = stores;
         _otp = otp;
+        _reports = reports;
     }
 
     public IActionResult Turnover() => View();
@@ -70,83 +72,49 @@ public class DashboardController : Controller
         return View(periods);
     }
 
+    private const string XlsxContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+    private async Task<IActionResult> DownloadWorkbookAsync(XLWorkbook wb, string fileName)
+    {
+        using (wb)
+        {
+            using var stream = new MemoryStream();
+            wb.SaveAs(stream);
+            return File(stream.ToArray(), XlsxContentType, fileName);
+        }
+    }
+
     [HttpGet("admin/dashboard/export")]
     public async Task<IActionResult> Export(int month, int year, string reportType = "summary")
     {
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetAssignedName();
 
-        using var wb = new XLWorkbook();
-        string fileName;
-
-        if (reportType == "stores")
+        switch (reportType)
         {
-            fileName = $"Store_Comparison_{year}_{month:D2}.xlsx";
-            var rows = await _dashboard.GetStoreComparisonAsync(month, year, role, assignedName);
-            var ws = wb.AddWorksheet("Store Comparison");
-            var headers = new[] { "Store", "OC", "OM", "Headcount", "New Hires", "Resignations", "Turnover %" };
-            for (int i = 0; i < headers.Length; i++)
-            {
-                var c = ws.Cell(1, i + 1);
-                c.Value = headers[i]; c.Style.Font.Bold = true;
-                c.Style.Fill.BackgroundColor = XLColor.FromHtml("#C8102E");
-                c.Style.Font.FontColor = XLColor.White;
-                c.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            }
-            for (int r = 0; r < rows.Count; r++)
-            {
-                var row = rows[r];
-                ws.Cell(r + 2, 1).Value = row.StoreName;
-                ws.Cell(r + 2, 2).Value = row.OperationConsultant;
-                ws.Cell(r + 2, 3).Value = row.OperationManager;
-                ws.Cell(r + 2, 4).Value = row.Headcount;
-                ws.Cell(r + 2, 5).Value = row.NewHires;
-                ws.Cell(r + 2, 6).Value = row.Resignations;
-                ws.Cell(r + 2, 7).Value = row.TurnoverRate;
-            }
-            ws.Columns().AdjustToContents();
+            case "stores":
+                return await DownloadWorkbookAsync(
+                    await _reports.BuildStoreComparisonReportAsync(month, year, role, assignedName),
+                    $"Store_Comparison_{year}_{month:D2}.xlsx");
+            case "ninety-day":
+                return await DownloadWorkbookAsync(await _reports.BuildNinetyDayReportAsync(), "90_Day_Turnover_Report.xlsx");
+            case "retention":
+                return await DownloadWorkbookAsync(await _reports.BuildRetentionReportAsync(), "Retention_Report.xlsx");
+            case "exit-interviews":
+                return await DownloadWorkbookAsync(await _reports.BuildExitInterviewReportAsync(), "Exit_Interview_Report.xlsx");
+            case "scorecard":
+                return await DownloadWorkbookAsync(await _reports.BuildScorecardReportAsync(), "Scorecard_Report.xlsx");
+            case "early-warning":
+                return await DownloadWorkbookAsync(await _reports.BuildEarlyWarningReportAsync(), "Early_Warning_Report.xlsx");
+            case "full":
+                return await DownloadWorkbookAsync(
+                    await _reports.BuildFullReportAsync(month, year, role, assignedName),
+                    $"Full_Company_Report_{year}_{month:D2}.xlsx");
+            default:
+                return await DownloadWorkbookAsync(
+                    await _reports.BuildSummaryReportAsync(month, year, role, assignedName),
+                    $"Summary_Report_{year}_{month:D2}.xlsx");
         }
-        else
-        {
-            fileName = $"Summary_Report_{year}_{month:D2}.xlsx";
-            var kpi = await _dashboard.GetKpisAsync(month, year, null, role, assignedName);
-            var jobTitle = await _dashboard.GetTurnoverByJobTitleAsync(month, year, null, role, assignedName);
-            var tenure = await _dashboard.GetTurnoverByTenureAsync(month, year, null, role, assignedName);
-            var gender = await _dashboard.GetGenderBreakdownAsync(month, year, null, role, assignedName);
-
-            var ws1 = wb.AddWorksheet("Summary KPIs");
-            ws1.Cell(1, 1).Value = "Metric"; ws1.Cell(1, 2).Value = "Value";
-            ws1.Row(1).Style.Font.Bold = true;
-            ws1.Cell(2, 1).Value = "Total Headcount"; ws1.Cell(2, 2).Value = kpi.TotalHeadcount;
-            ws1.Cell(3, 1).Value = "New Hires"; ws1.Cell(3, 2).Value = kpi.NewHires;
-            ws1.Cell(4, 1).Value = "Total Resignations"; ws1.Cell(4, 2).Value = kpi.TotalResignations;
-            ws1.Cell(5, 1).Value = "Turnover Rate (%)"; ws1.Cell(5, 2).Value = kpi.TurnoverRate;
-            ws1.Columns().AdjustToContents();
-
-            var ws2 = wb.AddWorksheet("By Job Title");
-            ws2.Cell(1, 1).Value = "Job Title"; ws2.Cell(1, 2).Value = "Resignations";
-            ws2.Row(1).Style.Font.Bold = true;
-            for (int i = 0; i < jobTitle.Count; i++) { ws2.Cell(i + 2, 1).Value = jobTitle[i].Label; ws2.Cell(i + 2, 2).Value = jobTitle[i].Value; }
-            ws2.Columns().AdjustToContents();
-
-            var ws3 = wb.AddWorksheet("By Tenure");
-            ws3.Cell(1, 1).Value = "Tenure Bucket"; ws3.Cell(1, 2).Value = "Resignations";
-            ws3.Row(1).Style.Font.Bold = true;
-            for (int i = 0; i < tenure.Count; i++) { ws3.Cell(i + 2, 1).Value = tenure[i].Label; ws3.Cell(i + 2, 2).Value = tenure[i].Value; }
-            ws3.Columns().AdjustToContents();
-
-            var ws4 = wb.AddWorksheet("By Gender");
-            ws4.Cell(1, 1).Value = "Gender"; ws4.Cell(1, 2).Value = "Resignations";
-            ws4.Row(1).Style.Font.Bold = true;
-            for (int i = 0; i < gender.Count; i++) { ws4.Cell(i + 2, 1).Value = gender[i].Label; ws4.Cell(i + 2, 2).Value = gender[i].Value; }
-            ws4.Columns().AdjustToContents();
-        }
-
-        using var stream = new MemoryStream();
-        wb.SaveAs(stream);
-        return File(stream.ToArray(),
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            fileName);
     }
 
     public async Task<IActionResult> Uploads(int page = 1)
