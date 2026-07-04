@@ -5,52 +5,68 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Retention</h1>
-        <p class="page-subtitle">Company-wide turnover trend and smart insights</p>
+        <p class="page-subtitle">How long new hires actually stay — milestones, survival curve, and long-term trends</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <select id="periodSelect" class="form-select form-select-dark" style="width:180px">
-            <option value="">Select Period</option>
-        </select>
-        <select id="storeSelect" class="form-select form-select-dark" style="width:200px">
+        <select id="rtStoreSelect" class="form-select form-select-dark form-select-sm" style="width:200px">
             <option value="">All Stores</option>
         </select>
     </div>
 </div>
 
-<div id="kpiCards" class="kpi-grid mb-4">
-    <div class="kpi-spinner text-center py-3 w-100">
-        <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 265)"></div>
-    </div>
+<div id="rtEmptyState" class="card-dark text-center py-5" style="display:none">
+    <i class="bi bi-shield-check" style="font-size:3rem;color:oklch(0.5 0.18 265);display:block;margin-bottom:1rem"></i>
+    <h5 class="mb-2">No Retention Data Yet</h5>
+    <p class="text-muted-custom">Upload workforce and resignation data with hire dates to see retention analysis here.</p>
 </div>
 
-<div class="chart-card mb-4">
-    <div class="chart-header d-flex align-items-center justify-content-between">
-        <div>
-            <h6>Turnover Trend</h6>
-            <p id="retTrendSubtitle">Average turnover rate (%) across all stores, by period</p>
+<div id="rtContent">
+    <div id="rtMilestoneCards" class="kpi-grid mb-4">
+        <div class="kpi-spinner text-center py-3 w-100">
+            <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 265)"></div>
         </div>
     </div>
-    <div class="chart-body"><canvas id="retTrendChart" style="max-height:280px"></canvas></div>
-</div>
 
-<div class="row g-3">
-    <div class="col-lg-6">
-        <div class="chart-card h-100">
-            <div class="chart-header"><h6>Turnover by Tenure</h6><p>How long before resignation</p></div>
-            <div class="chart-body"><canvas id="tenureChart"></canvas></div>
+    <div class="chart-card mb-4">
+        <div class="chart-header">
+            <h6>Survival Curve</h6>
+            <p>% of hires still on staff, by days since hire — pooled across every cohort old enough to have reached that day</p>
         </div>
+        <div class="chart-body"><canvas id="rtSurvivalChart" style="max-height:280px"></canvas></div>
     </div>
-    <div class="col-lg-6">
-        <div class="chart-card h-100">
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <i class="bi bi-lightbulb-fill" style="color:oklch(0.75 0.16 75)"></i>
-                <h6 class="mb-0">Smart Insights</h6>
+
+    <div class="chart-card mb-4">
+        <div class="chart-header">
+            <h6>Retention Trend by Milestone</h6>
+            <p>90/180/365-day retention rate per hire-month cohort — dashed segments are still provisional</p>
+        </div>
+        <div class="chart-body"><canvas id="rtTrendChart" style="max-height:280px"></canvas></div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="chart-card h-100">
+                <div class="chart-header"><h6>Store Leaderboard</h6><p>180-day retention rate, best first</p></div>
+                <div class="chart-body"><canvas id="rtLeaderboardChart"></canvas></div>
             </div>
-            <p style="font-size:12px;color:var(--text-3);margin-bottom:14px">Auto-generated from period-over-period trends</p>
-            <div id="retInsights">
-                <div class="text-center py-3 text-muted">
-                    <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...
-                </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="chart-card h-100">
+                <div class="chart-header"><h6>Workforce Tenure Distribution</h6><p>How long today's active employees have been here</p></div>
+                <div class="chart-body"><canvas id="rtTenureChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-lightbulb-fill" style="color:oklch(0.75 0.16 75)"></i>
+        <h5 class="mb-0 fw-bold">Smart Insights</h5>
+        <span class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px">AUTO-GENERATED</span>
+    </div>
+    <div class="chart-card mb-4" id="rtInsightsCard">
+        <div id="rtInsights">
+            <div class="text-center py-3 text-muted">
+                <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...
             </div>
         </div>
     </div>
@@ -58,58 +74,165 @@
 
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="~/js/dashboard.js" asp-append-version="true"></script>
 <script>
-function fmtPeriodRet(pk) {
-    const [y, m] = pk.split('-');
-    return new Date(+y, +m - 1, 1).toLocaleString('default', { month: 'short', year: '2-digit' });
+async function rtFetch(path) {
+    const p = new URLSearchParams();
+    const store = document.getElementById('rtStoreSelect').value;
+    if (store) p.set('store', store);
+    const r = await fetch(`/api/retention/${path}?${p.toString()}`);
+    return r.ok ? r.json() : null;
 }
 
-let retTrendInstance;
-async function retLoadTrend() {
-    const mx = await fetchJson('/api/dashboard/trend-matrix');
-    if (!mx || !mx.periods || !mx.periods.length) return;
-    const avgByPeriod = mx.periods.map(pk => {
-        const vals = mx.rows.map(r => r.periodRates?.[pk]).filter(v => v !== null && v !== undefined);
-        return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+async function rtLoadFilters() {
+    const stores = await rtFetch('stores') || [];
+    const sel = document.getElementById('rtStoreSelect');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">All Stores</option>';
+    stores.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        sel.appendChild(opt);
     });
+    if (cur) sel.value = cur;
 
-    const ctx = document.getElementById('retTrendChart');
+    const hasData = stores.length > 0;
+    document.getElementById('rtEmptyState').style.display = hasData ? 'none' : '';
+    document.getElementById('rtContent').style.display = hasData ? '' : 'none';
+    return hasData;
+}
+
+function rtRenderMilestones(items) {
+    const el = document.getElementById('rtMilestoneCards');
+    if (!items || !items.length) { el.innerHTML = ''; return; }
+    el.innerHTML = items.map(m => {
+        if (!m.totalHires) {
+            return `<div class="kpi-card"><div class="kpi-icon"><i class="bi bi-hourglass"></i></div><div class="kpi-value text-muted" style="font-size:16px">Not yet</div><div class="kpi-label">${m.days}-Day Retention</div></div>`;
+        }
+        return `<div class="kpi-card">
+            <div class="kpi-icon"><i class="bi bi-calendar-check"></i></div>
+            <div class="kpi-value">${m.retentionRate.toFixed(1)}%</div>
+            <div class="kpi-label">${m.days}-Day Retention</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px">${m.retained}/${m.totalHires} hires · through ${m.throughCohortLabel}</div>
+        </div>`;
+    }).join('');
+}
+
+async function rtLoadMilestones() {
+    rtRenderMilestones(await rtFetch('milestones'));
+}
+
+let rtSurvivalInstance;
+async function rtLoadSurvivalCurve() {
+    const data = await rtFetch('survival-curve') || [];
+    const ctx = document.getElementById('rtSurvivalChart');
     if (!ctx) return;
-    if (retTrendInstance) retTrendInstance.destroy();
-    retTrendInstance = new Chart(ctx, {
+    if (rtSurvivalInstance) rtSurvivalInstance.destroy();
+    rtSurvivalInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: mx.periods.map(fmtPeriodRet),
+            labels: data.map(d => `Day ${d.day}`),
             datasets: [{
-                label: 'Avg. Turnover Rate',
-                data: avgByPeriod,
-                borderColor: 'oklch(0.5 0.18 265)',
-                backgroundColor: 'oklch(0.5 0.18 265 / .15)',
-                tension: 0.4, fill: true, pointRadius: 4, spanGaps: true
+                label: 'Retained',
+                data: data.map(d => d.retentionRate),
+                borderColor: 'oklch(0.55 0.19 265)',
+                backgroundColor: 'oklch(0.55 0.19 265 / .15)',
+                tension: 0.3, fill: true, pointRadius: 4, spanGaps: true
             }]
         },
         options: {
             responsive: true,
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { afterLabel: c => `Sample: ${data[c.dataIndex]?.sampleSize ?? 0} hires` } }
+            },
             scales: {
                 x: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } }, grid: { display: false } },
-                y: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 }, callback: v => v + '%' }, grid: { color: 'oklch(0.92 0.008 255)' } }
+                y: { min: 0, max: 100, ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 }, callback: v => v + '%' }, grid: { color: 'oklch(0.92 0.008 255)' } }
             }
         }
     });
 }
 
-function retRenderInsights(items) {
-    const el = document.getElementById('retInsights');
-    if (!items || !items.length) { el.innerHTML = '<div class="text-muted" style="font-size:13px">No insights available — upload data for multiple periods to enable trend analysis.</div>'; return; }
+let rtTrendInstance;
+async function rtLoadTrend() {
+    const data = await rtFetch('trend') || [];
+    const ctx = document.getElementById('rtTrendChart');
+    if (!ctx) return;
+    if (rtTrendInstance) rtTrendInstance.destroy();
+    const series = [
+        { key: 'retention90', prov: 'provisional90', label: '90-Day', color: 'oklch(0.55 0.19 265)' },
+        { key: 'retention180', prov: 'provisional180', label: '180-Day', color: 'oklch(0.7 0.16 145)' },
+        { key: 'retention365', prov: 'provisional365', label: '365-Day', color: 'oklch(0.72 0.17 60)' },
+    ];
+    rtTrendInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => d.label),
+            datasets: series.map(s => ({
+                label: s.label,
+                data: data.map(d => d[s.key]),
+                borderColor: s.color,
+                backgroundColor: 'transparent',
+                segment: { borderDash: c => data[c.p1DataIndex]?.[s.prov] ? [6, 4] : undefined },
+                tension: 0.3, fill: false, pointRadius: 3, spanGaps: true
+            }))
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } } } },
+            scales: {
+                x: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } }, grid: { display: false } },
+                y: { min: 0, max: 100, ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 }, callback: v => v + '%' }, grid: { color: 'oklch(0.92 0.008 255)' } }
+            }
+        }
+    });
+}
+
+let rtLeaderboardInstance;
+async function rtLoadLeaderboard() {
+    const data = await rtFetch('store-leaderboard') || [];
+    const ctx = document.getElementById('rtLeaderboardChart');
+    if (!ctx) return;
+    if (rtLeaderboardInstance) rtLeaderboardInstance.destroy();
+    rtLeaderboardInstance = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: 'oklch(0.7 0.16 145)', borderRadius: 4, maxBarThickness: 26 }] },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { min: 0, max: 100, grid: { color: 'oklch(0.92 0.008 255)' }, ticks: { color: 'oklch(0.5 0.03 258)', callback: v => v + '%' } },
+                y: { grid: { display: false }, ticks: { color: 'oklch(0.5 0.03 258)' } }
+            }
+        }
+    });
+}
+
+const RT_TENURE_COLORS = ['oklch(0.55 0.19 265)', 'oklch(0.65 0.15 190)', 'oklch(0.7 0.16 145)', 'oklch(0.72 0.17 60)', 'oklch(0.62 0.2 15)'];
+let rtTenureInstance;
+async function rtLoadTenureDistribution() {
+    const data = await rtFetch('tenure-distribution') || [];
+    const ctx = document.getElementById('rtTenureChart');
+    if (!ctx) return;
+    if (rtTenureInstance) rtTenureInstance.destroy();
+    if (!data.length) return;
+    rtTenureInstance = new Chart(ctx.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: RT_TENURE_COLORS, borderWidth: 2, borderColor: 'oklch(1 0 0)' }] },
+        options: { cutout: '60%', plugins: { legend: { position: 'bottom', labels: { color: 'oklch(0.5 0.03 258)', boxWidth: 10, boxHeight: 10, padding: 12, font: { size: 11 } } } } }
+    });
+}
+
+function rtRenderInsights(items) {
+    const el = document.getElementById('rtInsights');
+    if (!items || !items.length) { el.innerHTML = '<div class="text-muted" style="font-size:13px">No insights available yet — upload more periods of data to enable trend analysis.</div>'; return; }
     const colorMap = {
         danger:    { bg: 'oklch(0.6 0.22 22 / .08)', border: 'oklch(0.6 0.22 22)', text: 'oklch(0.6 0.22 22)' },
         success:   { bg: 'oklch(0.62 0.15 155 / .1)', border: 'oklch(0.62 0.15 155)', text: 'oklch(0.62 0.15 155)' },
         warning:   { bg: 'oklch(0.75 0.16 75 / .12)', border: 'oklch(0.75 0.16 75)', text: 'oklch(0.6 0.14 75)' },
         secondary: { bg: 'var(--bg-2)', border: 'var(--text-3)', text: 'var(--text-2)' }
     };
-    el.innerHTML = items.slice(0, 5).map(item => {
+    el.innerHTML = items.map(item => {
         const c = colorMap[item.color] || colorMap.secondary;
         return `<div style="background:${c.bg};border-left:3px solid ${c.border};border-radius:8px;padding:12px 14px;margin-bottom:10px">
             <div class="d-flex align-items-start gap-2">
@@ -123,17 +246,19 @@ function retRenderInsights(items) {
     }).join('');
 }
 
-async function retLoadInsights() {
-    if (!periodMonth || !periodYear) return;
-    const items = await fetchJson(`/api/dashboard/smart-insights?month=${periodMonth}&year=${periodYear}`);
-    retRenderInsights(items);
+async function rtLoadInsights() {
+    rtRenderInsights(await rtFetch('insights'));
 }
 
-const _retOrigLoadAll = loadAll;
-loadAll = async function () {
-    await _retOrigLoadAll();
-    await retLoadInsights();
-};
-retLoadTrend();
+async function rtLoadAll() {
+    await Promise.all([rtLoadMilestones(), rtLoadSurvivalCurve(), rtLoadTrend(), rtLoadLeaderboard(), rtLoadTenureDistribution(), rtLoadInsights()]);
+}
+
+document.getElementById('rtStoreSelect').addEventListener('change', rtLoadAll);
+
+(async function init() {
+    const hasData = await rtLoadFilters();
+    if (hasData) await rtLoadAll();
+})();
 </script>
 }

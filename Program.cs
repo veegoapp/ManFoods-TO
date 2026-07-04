@@ -52,6 +52,7 @@ builder.Services.AddScoped<IStoreService, StoreService>();
 builder.Services.AddScoped<IExitInterviewService, ExitInterviewService>();
 builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<INinetyDayTurnoverService, NinetyDayTurnoverService>();
+builder.Services.AddScoped<IRetentionService, RetentionService>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IGeminiService, GeminiService>();
 
