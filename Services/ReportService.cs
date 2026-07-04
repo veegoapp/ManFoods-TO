@@ -6,6 +6,10 @@ namespace MvcApp.Services;
 public class ReportService : IReportService
 {
     private const string BrandRed = "#DA291C";
+    private const string BandFill = "#FAFAFA";
+    private const string GridColor = "#D9D9D9";
+    private const string PercentFormat = "0.0\"%\"";
+    private const string DateFormat = "yyyy-mm-dd";
 
     private readonly IDashboardService _dashboard;
     private readonly INinetyDayTurnoverService _ninetyDay;
@@ -49,19 +53,69 @@ public class ReportService : IReportService
         return wb.AddWorksheet(trimmed);
     }
 
-    private static void SetNullable(IXLCell cell, double? value)
+    private static void SetPercentCell(IXLCell cell, double value)
     {
-        if (value.HasValue) cell.Value = value.Value;
+        cell.Value = value;
+        cell.Style.NumberFormat.Format = PercentFormat;
+    }
+
+    private static void SetNullablePercentCell(IXLCell cell, double? value)
+    {
+        if (value.HasValue) SetPercentCell(cell, value.Value);
         else cell.Value = "—";
     }
 
-    private static void WriteLabelValueSheet(XLWorkbook wb, string sheetName, string labelHeader, string valueHeader, IEnumerable<ChartDataItem> items)
+    private static void SetDateCell(IXLCell cell, DateOnly date)
+    {
+        cell.Value = date.ToDateTime(TimeOnly.MinValue);
+        cell.Style.DateFormat.Format = DateFormat;
+    }
+
+    private static void SetDateCell(IXLCell cell, DateTime? date)
+    {
+        if (date.HasValue)
+        {
+            cell.Value = date.Value;
+            cell.Style.DateFormat.Format = DateFormat;
+        }
+        else cell.Value = "—";
+    }
+
+    /// <summary>Borders, zebra striping, auto-filter, and a frozen header
+    /// row — applied once a sheet's data is fully written.</summary>
+    private static void Finalize(IXLWorksheet ws)
+    {
+        var lastRow = ws.LastRowUsed()?.RowNumber() ?? 1;
+        var lastCol = ws.LastColumnUsed()?.ColumnNumber() ?? 1;
+        if (lastRow < 1 || lastCol < 1) { ws.Columns().AdjustToContents(); return; }
+
+        var range = ws.Range(1, 1, lastRow, lastCol);
+        range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+        range.Style.Border.OutsideBorderColor = XLColor.FromHtml(GridColor);
+        range.Style.Border.InsideBorderColor = XLColor.FromHtml(GridColor);
+
+        for (int r = 3; r <= lastRow; r += 2)
+            ws.Range(r, 1, r, lastCol).Style.Fill.BackgroundColor = XLColor.FromHtml(BandFill);
+
+        if (lastRow > 1) range.SetAutoFilter();
+        ws.SheetView.FreezeRows(1);
+        ws.Columns().AdjustToContents();
+    }
+
+    private static void WriteLabelValueSheet(XLWorkbook wb, string sheetName, string labelHeader, string valueHeader, IEnumerable<ChartDataItem> items, bool asPercent = false)
     {
         var ws = AddSheet(wb, sheetName);
         StyleHeader(ws, new[] { labelHeader, valueHeader });
         int r = 2;
-        foreach (var item in items) { ws.Cell(r, 1).Value = item.Label; ws.Cell(r, 2).Value = item.Value; r++; }
-        ws.Columns().AdjustToContents();
+        foreach (var item in items)
+        {
+            ws.Cell(r, 1).Value = item.Label;
+            if (asPercent) SetPercentCell(ws.Cell(r, 2), item.Value);
+            else ws.Cell(r, 2).Value = item.Value;
+            r++;
+        }
+        Finalize(ws);
     }
 
     // ── Turnover Summary ────────────────────────────────────
@@ -77,8 +131,8 @@ public class ReportService : IReportService
         ws1.Cell(2, 1).Value = "Total Headcount"; ws1.Cell(2, 2).Value = kpi.TotalHeadcount;
         ws1.Cell(3, 1).Value = "New Hires"; ws1.Cell(3, 2).Value = kpi.NewHires;
         ws1.Cell(4, 1).Value = "Total Resignations"; ws1.Cell(4, 2).Value = kpi.TotalResignations;
-        ws1.Cell(5, 1).Value = "Turnover Rate (%)"; ws1.Cell(5, 2).Value = kpi.TurnoverRate;
-        ws1.Columns().AdjustToContents();
+        ws1.Cell(5, 1).Value = "Turnover Rate"; SetPercentCell(ws1.Cell(5, 2), kpi.TurnoverRate);
+        Finalize(ws1);
 
         WriteLabelValueSheet(wb, "By Job Title", "Job Title", "Resignations", jobTitle);
         WriteLabelValueSheet(wb, "By Tenure", "Tenure Bucket", "Resignations", tenure);
@@ -97,7 +151,7 @@ public class ReportService : IReportService
     {
         var rows = await _dashboard.GetStoreComparisonAsync(month, year, role, assignedName);
         var ws = AddSheet(wb, "Store Comparison");
-        StyleHeader(ws, new[] { "Store", "OC", "OM", "Headcount", "New Hires", "Resignations", "Turnover %" });
+        StyleHeader(ws, new[] { "Store", "OC", "OM", "Headcount", "New Hires", "Resignations", "Turnover Rate" });
         for (int r = 0; r < rows.Count; r++)
         {
             var row = rows[r];
@@ -107,9 +161,9 @@ public class ReportService : IReportService
             ws.Cell(r + 2, 4).Value = row.Headcount;
             ws.Cell(r + 2, 5).Value = row.NewHires;
             ws.Cell(r + 2, 6).Value = row.Resignations;
-            ws.Cell(r + 2, 7).Value = row.TurnoverRate;
+            SetPercentCell(ws.Cell(r + 2, 7), row.TurnoverRate);
         }
-        ws.Columns().AdjustToContents();
+        Finalize(ws);
     }
 
     public async Task<XLWorkbook> BuildStoreComparisonReportAsync(int month, int year, string role, string? assignedName)
@@ -126,23 +180,23 @@ public class ReportService : IReportService
         var trend = await _ninetyDay.GetTrendAsync(null);
 
         var wsTrend = AddSheet(wb, "90D Cohort Trend");
-        StyleHeader(wsTrend, new[] { "Cohort", "Total Hires", "Early Leavers", "Rate (%)", "Provisional" });
+        StyleHeader(wsTrend, new[] { "Cohort", "Total Hires", "Early Leavers", "Rate", "Provisional" });
         for (int i = 0; i < trend.Count; i++)
         {
             var t = trend[i];
             wsTrend.Cell(i + 2, 1).Value = t.Label;
             wsTrend.Cell(i + 2, 2).Value = t.TotalHires;
             wsTrend.Cell(i + 2, 3).Value = t.EarlyLeavers;
-            wsTrend.Cell(i + 2, 4).Value = t.Rate;
+            SetPercentCell(wsTrend.Cell(i + 2, 4), t.Rate);
             wsTrend.Cell(i + 2, 5).Value = t.IsProvisional ? "Yes" : "No";
         }
-        wsTrend.Columns().AdjustToContents();
+        Finalize(wsTrend);
 
         if (periods.Count > 0)
         {
             var latest = periods[0]; // most recent first, per GetCohortPeriodsAsync contract
             var byStore = await _ninetyDay.GetByStoreAsync(latest.Month, latest.Year);
-            WriteLabelValueSheet(wb, $"90D By Store ({latest.Month}-{latest.Year})", "Store", "Early Leave Rate (%)", byStore);
+            WriteLabelValueSheet(wb, $"90D By Store ({latest.Month}-{latest.Year})", "Store", "Early Leave Rate", byStore, asPercent: true);
         }
 
         var wsLeavers = AddSheet(wb, "90D Early Leavers (All)");
@@ -159,8 +213,8 @@ public class ReportService : IReportService
                 wsLeavers.Cell(row, 2).Value = lv.Name;
                 wsLeavers.Cell(row, 3).Value = lv.Store;
                 wsLeavers.Cell(row, 4).Value = lv.JobTitle;
-                wsLeavers.Cell(row, 5).Value = lv.HireDate.ToString("yyyy-MM-dd");
-                wsLeavers.Cell(row, 6).Value = lv.ResignationDate.ToString("yyyy-MM-dd");
+                SetDateCell(wsLeavers.Cell(row, 5), lv.HireDate);
+                SetDateCell(wsLeavers.Cell(row, 6), lv.ResignationDate);
                 wsLeavers.Cell(row, 7).Value = lv.TenureDays;
                 row++;
             }
@@ -169,7 +223,7 @@ public class ReportService : IReportService
             foreach (var reason in reasons)
                 reasonTotals[reason.Label] = reasonTotals.GetValueOrDefault(reason.Label) + reason.Value;
         }
-        wsLeavers.Columns().AdjustToContents();
+        Finalize(wsLeavers);
 
         WriteLabelValueSheet(wb, "90D Reasons (Aggregated)", "Reason", "Count",
             reasonTotals.OrderByDescending(kv => kv.Value).Select(kv => new ChartDataItem { Label = kv.Key, Value = kv.Value }));
@@ -193,45 +247,45 @@ public class ReportService : IReportService
         var insights = await _retention.GetInsightsAsync(null);
 
         var wsMilestones = AddSheet(wb, "Retention Milestones");
-        StyleHeader(wsMilestones, new[] { "Days", "Retention Rate (%)", "Total Hires", "Retained", "Through Cohort" });
+        StyleHeader(wsMilestones, new[] { "Days", "Retention Rate", "Total Hires", "Retained", "Through Cohort" });
         for (int i = 0; i < milestones.Count; i++)
         {
             var m = milestones[i];
             wsMilestones.Cell(i + 2, 1).Value = m.Days;
-            wsMilestones.Cell(i + 2, 2).Value = m.RetentionRate;
+            SetPercentCell(wsMilestones.Cell(i + 2, 2), m.RetentionRate);
             wsMilestones.Cell(i + 2, 3).Value = m.TotalHires;
             wsMilestones.Cell(i + 2, 4).Value = m.Retained;
             wsMilestones.Cell(i + 2, 5).Value = m.ThroughCohortLabel;
         }
-        wsMilestones.Columns().AdjustToContents();
+        Finalize(wsMilestones);
 
         var wsSurvival = AddSheet(wb, "Survival Curve");
-        StyleHeader(wsSurvival, new[] { "Day", "Retention Rate (%)", "Sample Size" });
+        StyleHeader(wsSurvival, new[] { "Day", "Retention Rate", "Sample Size" });
         for (int i = 0; i < survival.Count; i++)
         {
             var s = survival[i];
             wsSurvival.Cell(i + 2, 1).Value = s.Day;
-            wsSurvival.Cell(i + 2, 2).Value = s.RetentionRate;
+            SetPercentCell(wsSurvival.Cell(i + 2, 2), s.RetentionRate);
             wsSurvival.Cell(i + 2, 3).Value = s.SampleSize;
         }
-        wsSurvival.Columns().AdjustToContents();
+        Finalize(wsSurvival);
 
         var wsTrend = AddSheet(wb, "Retention Trend");
-        StyleHeader(wsTrend, new[] { "Cohort", "90-Day (%)", "Provisional", "180-Day (%)", "Provisional", "365-Day (%)", "Provisional" });
+        StyleHeader(wsTrend, new[] { "Cohort", "90-Day", "Provisional", "180-Day", "Provisional", "365-Day", "Provisional" });
         for (int i = 0; i < trend.Count; i++)
         {
             var t = trend[i];
             wsTrend.Cell(i + 2, 1).Value = t.Label;
-            SetNullable(wsTrend.Cell(i + 2, 2), t.Retention90);
+            SetNullablePercentCell(wsTrend.Cell(i + 2, 2), t.Retention90);
             wsTrend.Cell(i + 2, 3).Value = t.Provisional90 ? "Yes" : "No";
-            SetNullable(wsTrend.Cell(i + 2, 4), t.Retention180);
+            SetNullablePercentCell(wsTrend.Cell(i + 2, 4), t.Retention180);
             wsTrend.Cell(i + 2, 5).Value = t.Provisional180 ? "Yes" : "No";
-            SetNullable(wsTrend.Cell(i + 2, 6), t.Retention365);
+            SetNullablePercentCell(wsTrend.Cell(i + 2, 6), t.Retention365);
             wsTrend.Cell(i + 2, 7).Value = t.Provisional365 ? "Yes" : "No";
         }
-        wsTrend.Columns().AdjustToContents();
+        Finalize(wsTrend);
 
-        WriteLabelValueSheet(wb, "Store Leaderboard (180d)", "Store", "Retention Rate (%)", leaderboard);
+        WriteLabelValueSheet(wb, "Store Leaderboard (180d)", "Store", "Retention Rate", leaderboard, asPercent: true);
         WriteLabelValueSheet(wb, "Workforce Tenure", "Tenure Bucket", "Employees", tenureDist);
 
         var wsInsights = AddSheet(wb, "Retention Insights");
@@ -241,7 +295,7 @@ public class ReportService : IReportService
             wsInsights.Cell(i + 2, 1).Value = insights[i].Title;
             wsInsights.Cell(i + 2, 2).Value = insights[i].Description;
         }
-        wsInsights.Columns().AdjustToContents();
+        Finalize(wsInsights);
     }
 
     public async Task<XLWorkbook> BuildRetentionReportAsync()
@@ -271,14 +325,14 @@ public class ReportService : IReportService
         WriteLabelValueSheet(wb, "EI Workload Condition", "Answer", "Count", workload);
 
         var wsDrivers = AddSheet(wb, "EI Engagement Drivers");
-        StyleHeader(wsDrivers, new[] { "Driver", "Positive (%)", "Total Responses" });
+        StyleHeader(wsDrivers, new[] { "Driver", "Positive", "Total Responses" });
         for (int i = 0; i < drivers.Count; i++)
         {
             wsDrivers.Cell(i + 2, 1).Value = drivers[i].Label;
-            wsDrivers.Cell(i + 2, 2).Value = drivers[i].PositivePercent;
+            SetPercentCell(wsDrivers.Cell(i + 2, 2), drivers[i].PositivePercent);
             wsDrivers.Cell(i + 2, 3).Value = drivers[i].TotalResponses;
         }
-        wsDrivers.Columns().AdjustToContents();
+        Finalize(wsDrivers);
 
         var wsComments = AddSheet(wb, "EI Comments (Anonymous)");
         StyleHeader(wsComments, new[] { "Store", "Store Leader", "Question", "Comment", "Submitted At" });
@@ -289,9 +343,9 @@ public class ReportService : IReportService
             wsComments.Cell(i + 2, 2).Value = c.StoreLeader;
             wsComments.Cell(i + 2, 3).Value = c.QuestionLabel;
             wsComments.Cell(i + 2, 4).Value = c.Text;
-            wsComments.Cell(i + 2, 5).Value = c.SubmittedAt?.ToString("yyyy-MM-dd") ?? "";
+            SetDateCell(wsComments.Cell(i + 2, 5), c.SubmittedAt);
         }
-        wsComments.Columns().AdjustToContents();
+        Finalize(wsComments);
     }
 
     public async Task<XLWorkbook> BuildExitInterviewReportAsync()
@@ -306,21 +360,21 @@ public class ReportService : IReportService
     {
         var rows = await _scorecard.GetScorecardAsync(dimension);
         var ws = AddSheet(wb, sheetName);
-        StyleHeader(ws, new[] { nameHeader, "Stores", "Headcount", "Turnover Rate (%)", "90-Day Early Leave (%)", "180-Day Retention (%)", "Exit Sentiment (%)", "Exit Responses" });
+        StyleHeader(ws, new[] { nameHeader, "Stores", "Headcount", "Turnover Rate", "90-Day Early Leave", "180-Day Retention", "Exit Sentiment", "Exit Responses" });
         for (int i = 0; i < rows.Count; i++)
         {
             var r = rows[i];
             ws.Cell(i + 2, 1).Value = r.Name;
             ws.Cell(i + 2, 2).Value = r.StoreCount;
             ws.Cell(i + 2, 3).Value = r.Headcount;
-            ws.Cell(i + 2, 4).Value = r.TurnoverRate;
-            ws.Cell(i + 2, 5).Value = r.EarlyLeaver90Rate;
-            ws.Cell(i + 2, 6).Value = r.Retention180Rate;
-            if (r.ExitResponseCount > 0) ws.Cell(i + 2, 7).Value = r.ExitSentimentPercent;
+            SetPercentCell(ws.Cell(i + 2, 4), r.TurnoverRate);
+            SetPercentCell(ws.Cell(i + 2, 5), r.EarlyLeaver90Rate);
+            SetPercentCell(ws.Cell(i + 2, 6), r.Retention180Rate);
+            if (r.ExitResponseCount > 0) SetPercentCell(ws.Cell(i + 2, 7), r.ExitSentimentPercent);
             else ws.Cell(i + 2, 7).Value = "N/A";
             ws.Cell(i + 2, 8).Value = r.ExitResponseCount;
         }
-        ws.Columns().AdjustToContents();
+        Finalize(ws);
     }
 
     private async Task AddScorecardSheetsAsync(XLWorkbook wb)
@@ -348,8 +402,8 @@ public class ReportService : IReportService
         wsSummary.Cell(2, 1).Value = "Total On Watchlist"; wsSummary.Cell(2, 2).Value = summary.TotalWatchlist;
         wsSummary.Cell(3, 1).Value = "High Risk (score 2+)"; wsSummary.Cell(3, 2).Value = summary.HighRiskCount;
         wsSummary.Cell(4, 1).Value = "In First 90 Days"; wsSummary.Cell(4, 2).Value = summary.NewHireWindowCount;
-        wsSummary.Cell(5, 1).Value = "Company Baseline Early-Leave Rate (%)"; wsSummary.Cell(5, 2).Value = summary.CompanyBaselineRate;
-        wsSummary.Columns().AdjustToContents();
+        wsSummary.Cell(5, 1).Value = "Company Baseline Early-Leave Rate"; SetPercentCell(wsSummary.Cell(5, 2), summary.CompanyBaselineRate);
+        Finalize(wsSummary);
 
         var wsWatchlist = AddSheet(wb, "Early Warning Watchlist");
         StyleHeader(wsWatchlist, new[] { "Name", "Store", "Job Title", "Hire Date", "Tenure (days)", "Risk Score", "Reasons" });
@@ -359,12 +413,12 @@ public class ReportService : IReportService
             wsWatchlist.Cell(i + 2, 1).Value = w.Name;
             wsWatchlist.Cell(i + 2, 2).Value = w.Store;
             wsWatchlist.Cell(i + 2, 3).Value = w.JobTitle;
-            wsWatchlist.Cell(i + 2, 4).Value = w.HireDate.ToString("yyyy-MM-dd");
+            SetDateCell(wsWatchlist.Cell(i + 2, 4), w.HireDate);
             wsWatchlist.Cell(i + 2, 5).Value = w.TenureDays;
             wsWatchlist.Cell(i + 2, 6).Value = w.RiskScore;
             wsWatchlist.Cell(i + 2, 7).Value = string.Join(" | ", w.Reasons);
         }
-        wsWatchlist.Columns().AdjustToContents();
+        Finalize(wsWatchlist);
     }
 
     public async Task<XLWorkbook> BuildEarlyWarningReportAsync()
