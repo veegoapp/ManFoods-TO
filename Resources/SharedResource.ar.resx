@@ -326,6 +326,26 @@
   <data name="SC_EarlyLeave" xml:space="preserve"><value>مغادرة مبكرة 90 يوم</value></data>
   <data name="SC_180Retention" xml:space="preserve"><value>احتفاظ 180 يوم</value></data>
   <data name="SC_ExitSentiment" xml:space="preserve"><value>شعور مقابلات الخروج</value></data>
+  <data name="SC_Ranking" xml:space="preserve"><value>الترتيب</value></data>
+  <data name="SC_RankingSub" xml:space="preserve"><value>مجمّع على الفترة المختارة — بيتتبع كل شخص حتى لو اتنقل بين الفروع</value></data>
+  <data name="SC_TrackLeader" xml:space="preserve"><value>تتبع قائد فرع</value></data>
+  <data name="SC_TrackLeaderSub" xml:space="preserve"><value>شوف تاريخ تنقلات القائد بين الفروع ومعدل الدوران بتاعه مع الوقت</value></data>
+  <data name="SC_SelectLeaderPlaceholder" xml:space="preserve"><value>ابحث عن قائد فرع...</value></data>
+  <data name="SC_NoLeaderSelected" xml:space="preserve"><value>اختار قائد فرع من فوق عشان تشوف تاريخه.</value></data>
+  <data name="SC_LeaderHistoryEmpty" xml:space="preserve"><value>مفيش سجلات لهذا القائد في الفترة المختارة.</value></data>
+  <data name="SC_Period" xml:space="preserve"><value>الفترة</value></data>
+  <data name="SC_Resignations" xml:space="preserve"><value>الاستقالات</value></data>
+  <data name="SC_TransferBadge" xml:space="preserve"><value>انتقل هنا</value></data>
+  <data name="Chart_LeaderTurnoverTrend" xml:space="preserve"><value>معدل الدوران عبر الوقت</value></data>
+  <data name="Chart_LeaderTurnoverTrendSub" xml:space="preserve"><value>العلامات المنقطة توضح نقاط انتقال القائد لفرع جديد</value></data>
+  <data name="SC_Rollup" xml:space="preserve"><value>تجميع حسب الأوبريشن كونسلتنت / الأوبريشن مانجر</value></data>
+  <data name="SC_RollupSub" xml:space="preserve"><value>كام قائد فرع تحت كل مسؤول عنده معدل دوران أعلى من المتوسط في الفترة المختارة</value></data>
+  <data name="SC_RollupByOc" xml:space="preserve"><value>حسب الأوبريشن كونسلتنت</value></data>
+  <data name="SC_RollupByOm" xml:space="preserve"><value>حسب الأوبريشن مانجر</value></data>
+  <data name="SC_TotalLeaders" xml:space="preserve"><value>عدد القادة</value></data>
+  <data name="SC_FlaggedLeaders" xml:space="preserve"><value>الأعلى من المتوسط</value></data>
+  <data name="SC_FlaggedPercent" xml:space="preserve"><value>نسبة الأعلى من المتوسط</value></data>
+  <data name="SC_AverageTurnover" xml:space="preserve"><value>متوسط معدل الدوران للقادة في هذه الفترة</value></data>
 
   <!-- Store Profile -->
   <data name="SP_ActiveEmployees" xml:space="preserve"><value>الموظفون الفعليون</value></data>

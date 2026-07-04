@@ -2,49 +2,261 @@
     ViewData["Title"] = L["Page_Scorecard"].Value;
 }
 
+<style>
+.sc-select-wrap { position:relative; }
+.sc-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 34px 0 14px; min-width:110px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.sc-select:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.sc-select-wrap i { position:absolute; top:50%; right:12px; transform:translateY(-50%); font-size:11px; color:var(--text-3); pointer-events:none; }
+[dir="rtl"] .sc-select { padding:0 14px 0 34px; }
+[dir="rtl"] .sc-select-wrap i { right:auto; left:12px; }
+
+.sc-multiselect { position:relative; }
+.sc-multiselect-trigger {
+    display:flex; align-items:center; gap:10px; justify-content:space-between;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 12px 0 14px; min-width:190px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.sc-multiselect-trigger:hover { border-color:var(--card-border-h); }
+.sc-multiselect-trigger i { font-size:11px; color:var(--text-3); flex-shrink:0; }
+.sc-multiselect-chips { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sc-multiselect-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); min-width:230px; padding:8px; max-height:280px; overflow-y:auto;
+}
+.sc-multiselect-panel.open { display:block; }
+[dir="rtl"] .sc-multiselect-panel { left:auto; right:0; }
+.sc-multiselect-actions { display:flex; gap:6px; padding:2px 4px 8px; border-bottom:1px solid var(--card-border); margin-bottom:6px; }
+.sc-ms-action {
+    flex:1; background:var(--card-bg-2); border:1px solid var(--card-border); color:var(--red);
+    border-radius:6px; font-size:11.5px; font-weight:700; padding:6px 8px; cursor:pointer;
+}
+.sc-ms-action:hover { background:var(--red-light); }
+.sc-ms-option { display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:13px; color:var(--text-2); }
+.sc-ms-option:hover { background:var(--card-bg-2); }
+.sc-ms-option input { accent-color:var(--red); width:15px; height:15px; cursor:pointer; }
+
+.sc-combobox { position:relative; }
+.sc-combobox-input {
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:500;
+    height:42px; padding:0 14px; min-width:260px; width:100%;
+    box-shadow:var(--shadow-sm);
+}
+.sc-combobox-input:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.sc-combobox-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); max-height:260px; overflow-y:auto; padding:6px;
+}
+.sc-combobox-panel.open { display:block; }
+.sc-combo-option { padding:8px 10px; border-radius:6px; font-size:13px; color:var(--text-2); cursor:pointer; }
+.sc-combo-option:hover { background:var(--card-bg-2); }
+.sc-combo-option.active { color:var(--red); font-weight:700; background:var(--red-light); }
+
+.sc-dim-btn { background: var(--bg-2); color: var(--text-2); border: 1px solid var(--card-border); }
+.sc-dim-btn.active { background: oklch(0.55 0.19 25); color: #fff; border-color: oklch(0.55 0.19 25); }
+
+.sc-transfer-badge {
+    display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:10px;
+    background:oklch(0.75 0.16 75 / .15); color:oklch(0.6 0.14 75); margin-inline-start:6px;
+}
+
+/* Chart.js draws its tick/legend text on <canvas>, which otherwise inherits
+   the page's dir="rtl" and reorders numeric-leading labels. */
+.chart-body canvas { direction:ltr; }
+
+/* Rollup numbers are always English-formatted — isolate from RTL bidi reordering. */
+#scRollupOc, #scRollupOm { direction:ltr; unicode-bidi:isolate; }
+#scRollupAvg { direction:ltr; unicode-bidi:isolate; }
+</style>
+
 <div class="page-header">
     <div>
         <h1 class="page-title">@L["Page_Scorecard"]</h1>
         <p class="page-subtitle">@L["Page_ScorecardSub"]</p>
     </div>
-    <div class="d-flex gap-2 flex-wrap" role="group">
-        <button class="btn btn-sm sc-dim-btn active" data-dim="leader">@L["SC_StoreLeaders"]</button>
-        <button class="btn btn-sm sc-dim-btn" data-dim="oc">@L["Common_OperationConsultants"]</button>
-        <button class="btn btn-sm sc-dim-btn" data-dim="om">@L["Common_OperationManagers"]</button>
+    <div class="d-flex gap-2 flex-wrap align-items-end">
+        <div class="sc-select-wrap"><select id="scYearSelect" class="sc-select"></select><i class="bi bi-chevron-down"></i></div>
+
+        <div class="sc-multiselect" id="scMonthsMultiselect" data-label-select="@L["Common_SelectMonths"]" data-label-all="@L["Common_AllMonths"]">
+            <button type="button" class="sc-multiselect-trigger" id="scMonthsTrigger">
+                <span class="sc-multiselect-chips" id="scMonthsChips">@L["Common_AllMonths"]</span>
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="sc-multiselect-panel" id="scMonthsPanel">
+                <div class="sc-multiselect-actions">
+                    <button type="button" class="sc-ms-action" id="scMonthsSelectAll">@L["Common_SelectAll"]</button>
+                    <button type="button" class="sc-ms-action" id="scMonthsClearAll">@L["Common_ClearAll"]</button>
+                </div>
+                <div id="scMonthsOptions"></div>
+            </div>
+        </div>
     </div>
 </div>
 
-<style>
-    .sc-dim-btn { background: var(--bg-2); color: var(--text-2); border: 1px solid var(--card-border); }
-    .sc-dim-btn.active { background: oklch(0.55 0.19 25); color: #fff; border-color: oklch(0.55 0.19 25); }
-</style>
+<div id="scEmptyState" class="card-dark text-center py-5" style="display:none">
+    <i class="bi bi-shield-check" style="font-size:3rem;color:oklch(0.5 0.18 25);display:block;margin-bottom:1rem"></i>
+    <h5 class="mb-2">No Scorecard Data Yet</h5>
+    <p class="text-muted-custom">Upload store-reference, workforce, and resignation data to see scorecard rankings here.</p>
+</div>
 
-<div class="chart-card p-0" style="overflow:hidden">
-    <div class="table-responsive" style="max-height:600px;overflow-y:auto">
-        <table class="table table-hover mb-0" style="font-size:13px">
-            <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
-                <tr>
-                    <th class="px-3 py-2" id="scNameHeader">Store Leader</th>
-                    <th class="px-3 py-2 text-center">Stores</th>
-                    <th class="px-3 py-2 text-center">Headcount</th>
-                    <th class="px-3 py-2 text-center">Turnover Rate</th>
-                    <th class="px-3 py-2 text-center">90-Day Early Leave</th>
-                    <th class="px-3 py-2 text-center">180-Day Retention</th>
-                    <th class="px-3 py-2 text-center">Exit Sentiment</th>
-                </tr>
-            </thead>
-            <tbody id="scBody">
-                <tr><td colspan="7" class="text-center py-4 text-muted">
-                    <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
-                </td></tr>
-            </tbody>
-        </table>
+<div id="scContent">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <div class="section-accent"></div>
+            <h5 class="mb-0 fw-bold">@L["SC_Ranking"]</h5>
+        </div>
+        <div class="d-flex gap-2 flex-wrap" role="group">
+            <button class="btn btn-sm sc-dim-btn active" data-dim="leader">@L["SC_StoreLeaders"]</button>
+            <button class="btn btn-sm sc-dim-btn" data-dim="oc">@L["Common_OperationConsultants"]</button>
+            <button class="btn btn-sm sc-dim-btn" data-dim="om">@L["Common_OperationManagers"]</button>
+        </div>
+    </div>
+    <p class="text-muted-custom" style="font-size:13px;margin-top:-8px">@L["SC_RankingSub"]</p>
+
+    <div class="chart-card mb-4 p-0" style="overflow:hidden">
+        <div class="table-responsive" style="max-height:600px;overflow-y:auto">
+            <table class="table table-hover mb-0" style="font-size:13px">
+                <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                    <tr>
+                        <th class="px-3 py-2" id="scNameHeader">Store Leader</th>
+                        <th class="px-3 py-2 text-center">@L["Common_StoreName"]</th>
+                        <th class="px-3 py-2 text-center">@L["Common_Headcount"]</th>
+                        <th class="px-3 py-2 text-center">@L["SC_TurnoverRate"]</th>
+                        <th class="px-3 py-2 text-center">@L["SC_EarlyLeave"]</th>
+                        <th class="px-3 py-2 text-center">@L["SC_180Retention"]</th>
+                        <th class="px-3 py-2 text-center">@L["SC_ExitSentiment"]</th>
+                    </tr>
+                </thead>
+                <tbody id="scBody">
+                    <tr><td colspan="7" class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="section-accent"></div>
+        <h5 class="mb-0 fw-bold">@L["SC_TrackLeader"]</h5>
+    </div>
+    <p class="text-muted-custom" style="font-size:13px;margin-top:-8px">@L["SC_TrackLeaderSub"]</p>
+
+    <div class="chart-card mb-4">
+        <div class="sc-combobox" id="scLeaderCombo">
+            <input type="text" class="sc-combobox-input" id="scLeaderInput" placeholder="@L["SC_SelectLeaderPlaceholder"]" autocomplete="off">
+            <div class="sc-combobox-panel" id="scLeaderPanel"></div>
+        </div>
+    </div>
+
+    <div id="scLeaderDetail" style="display:none" data-transfer-badge="@L["SC_TransferBadge"]">
+        <div class="chart-card mb-4">
+            <div class="chart-header">
+                <h6>@L["Chart_LeaderTurnoverTrend"]</h6>
+                <p>@L["Chart_LeaderTurnoverTrendSub"]</p>
+            </div>
+            <div class="chart-body"><canvas id="scLeaderChart" style="max-height:280px"></canvas></div>
+        </div>
+
+        <div class="chart-card mb-4 p-0" style="overflow:hidden">
+            <div class="table-responsive" style="max-height:400px;overflow-y:auto">
+                <table class="table table-hover mb-0" style="font-size:13px">
+                    <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                        <tr>
+                            <th class="px-3 py-2">@L["Common_StoreName"]</th>
+                            <th class="px-3 py-2 text-center">@L["SC_Period"]</th>
+                            <th class="px-3 py-2 text-center">@L["Common_Headcount"]</th>
+                            <th class="px-3 py-2 text-center">@L["SC_Resignations"]</th>
+                            <th class="px-3 py-2 text-center">@L["SC_TurnoverRate"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scLeaderHistoryBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="scLeaderEmpty" class="text-muted text-center py-4" style="font-size:13px"
+         data-no-selection-text="@L["SC_NoLeaderSelected"]" data-empty-text="@L["SC_LeaderHistoryEmpty"]">@L["SC_NoLeaderSelected"]</div>
+
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="section-accent"></div>
+        <h5 class="mb-0 fw-bold">@L["SC_Rollup"]</h5>
+    </div>
+    <p class="text-muted-custom" style="font-size:13px;margin-top:-8px">
+        @L["SC_RollupSub"] — <span id="scRollupAvg"></span>
+    </p>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="chart-card p-0" style="overflow:hidden">
+                <div class="chart-header px-3 pt-3"><h6>@L["SC_RollupByOc"]</h6></div>
+                <div class="table-responsive" style="max-height:400px;overflow-y:auto">
+                    <table class="table table-hover mb-0" style="font-size:13px">
+                        <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                            <tr>
+                                <th class="px-3 py-2">@L["Common_OperationConsultants"]</th>
+                                <th class="px-3 py-2 text-center">@L["SC_TotalLeaders"]</th>
+                                <th class="px-3 py-2 text-center">@L["SC_FlaggedLeaders"]</th>
+                                <th class="px-3 py-2 text-center">@L["SC_FlaggedPercent"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scRollupOc"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="chart-card p-0" style="overflow:hidden">
+                <div class="chart-header px-3 pt-3"><h6>@L["SC_RollupByOm"]</h6></div>
+                <div class="table-responsive" style="max-height:400px;overflow-y:auto">
+                    <table class="table table-hover mb-0" style="font-size:13px">
+                        <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                            <tr>
+                                <th class="px-3 py-2">@L["Common_OperationManagers"]</th>
+                                <th class="px-3 py-2 text-center">@L["SC_TotalLeaders"]</th>
+                                <th class="px-3 py-2 text-center">@L["SC_FlaggedLeaders"]</th>
+                                <th class="px-3 py-2 text-center">@L["SC_FlaggedPercent"]</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scRollupOm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+/* ── Scorecard page — Year + discrete Months multi-select controls the
+   aggregation window for all three sections: ranking, leader drill-down,
+   and OC/OM rollup. Same filter components as Turnover/Retention/etc. */
+let scYear = null, scMonths = [], scYearMonthsMap = {};
+let scDimension = 'leader';
+let scSelectedLeader = '';
+
 const SC_DIM_LABELS = { leader: 'Store Leader', oc: 'Operation Consultant', om: 'Operation Manager' };
+
+function scMonthShortName(m) { return new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' }); }
+function scMonthLongName(m, y) { return new Date(y, m - 1).toLocaleString('default', { month: 'long', year: 'numeric' }); }
+
+function scBuildQuery(extra) {
+    const q = new URLSearchParams(extra || {});
+    if (scYear) q.set('year', scYear);
+    if (scMonths.length) q.set('months', scMonths.join(','));
+    return q;
+}
 
 function scRateBadge(rate, goodIsHigh) {
     const good = goodIsHigh ? rate >= 70 : rate <= 5;
@@ -54,12 +266,112 @@ function scRateBadge(rate, goodIsHigh) {
     return `<span style="background:${bg};color:${fg};padding:3px 10px;border-radius:12px;font-size:11.5px;font-weight:700">${rate.toFixed(1)}%</span>`;
 }
 
-async function scLoad(dimension) {
-    document.getElementById('scNameHeader').textContent = SC_DIM_LABELS[dimension];
+/* Months multi-select ---------------------------------------------------- */
+function scBuildMonthsOptions() {
+    const container = document.getElementById('scMonthsOptions');
+    const available = (scYearMonthsMap[scYear] || []).slice().sort((a, b) => a - b);
+    container.innerHTML = available.map(m => `
+        <label class="sc-ms-option">
+            <input type="checkbox" value="${m}" ${scMonths.includes(m) ? 'checked' : ''}>
+            <span>${scMonthLongName(m, scYear)}</span>
+        </label>`).join('');
+    container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const m = parseInt(cb.value);
+            if (cb.checked) { if (!scMonths.includes(m)) scMonths.push(m); }
+            else { scMonths = scMonths.filter(x => x !== m); }
+            scMonths.sort((a, b) => a - b);
+            scRenderMonthsChips();
+            scOnMonthsChanged();
+        });
+    });
+}
+
+function scRenderMonthsChips() {
+    const chipsEl = document.getElementById('scMonthsChips');
+    const labels = document.getElementById('scMonthsMultiselect').dataset;
+    const available = scYearMonthsMap[scYear] || [];
+    if (!scMonths.length) { chipsEl.textContent = labels.labelSelect; return; }
+    if (scMonths.length === available.length) { chipsEl.textContent = labels.labelAll; return; }
+    const names = scMonths.map(scMonthShortName);
+    chipsEl.textContent = names.length <= 2 ? names.join('، ') : `${names[0]}، ${names[1]} +${names.length - 2}`;
+}
+
+let scMonthsDebounce;
+function scOnMonthsChanged() {
+    clearTimeout(scMonthsDebounce);
+    scMonthsDebounce = setTimeout(() => { if (scMonths.length) scLoadAll(); }, 250);
+}
+
+document.getElementById('scMonthsSelectAll').addEventListener('click', () => {
+    scMonths = (scYearMonthsMap[scYear] || []).slice().sort((a, b) => a - b);
+    scBuildMonthsOptions(); scRenderMonthsChips(); scOnMonthsChanged();
+});
+document.getElementById('scMonthsClearAll').addEventListener('click', () => {
+    scMonths = [];
+    scBuildMonthsOptions(); scRenderMonthsChips(); scOnMonthsChanged();
+});
+document.getElementById('scMonthsTrigger').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('scMonthsPanel').classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+    if (!document.getElementById('scMonthsMultiselect').contains(e.target))
+        document.getElementById('scMonthsPanel').classList.remove('open');
+});
+
+document.getElementById('scYearSelect').addEventListener('change', async function () {
+    scYear = parseInt(this.value);
+    scMonths = (scYearMonthsMap[scYear] || []).slice().sort((a, b) => a - b);
+    scBuildMonthsOptions(); scRenderMonthsChips();
+    await scLoadAll();
+});
+
+/* Generic searchable single-select combobox ------------------------------ */
+function scCreateCombobox({ inputId, panelId, onSelect }) {
+    const input = document.getElementById(inputId);
+    const panel = document.getElementById(panelId);
+    let options = [];
+    let value = '';
+
+    function render(filterText) {
+        const ft = (filterText || '').toLowerCase();
+        const filtered = options.filter(o => o.toLowerCase().includes(ft));
+        panel.innerHTML = filtered.map(o => `<div class="sc-combo-option${o === value ? ' active' : ''}" data-value="${o.replace(/"/g, '&quot;')}">${o}</div>`).join('')
+            || '<div class="sc-combo-option text-muted">No matches</div>';
+    }
+    function open() { panel.classList.add('open'); render(input.value); }
+    function close() { panel.classList.remove('open'); input.value = value; }
+
+    panel.addEventListener('mousedown', (e) => {
+        const opt = e.target.closest('.sc-combo-option');
+        if (!opt || !opt.dataset.value) return;
+        e.preventDefault();
+        value = opt.dataset.value;
+        input.value = value;
+        panel.classList.remove('open');
+        onSelect(value);
+    });
+    input.addEventListener('focus', open);
+    input.addEventListener('input', () => render(input.value));
+    input.addEventListener('blur', () => setTimeout(close, 150));
+
+    return { setOptions(list) { options = list || []; }, setValue(v) { value = v || ''; input.value = value; } };
+}
+
+const scLeaderCombo = scCreateCombobox({
+    inputId: 'scLeaderInput', panelId: 'scLeaderPanel',
+    onSelect: v => { scSelectedLeader = v; scLoadLeaderDetail(); }
+});
+
+/* Ranking table ----------------------------------------------------------- */
+async function scLoadRanking() {
+    document.getElementById('scNameHeader').textContent = SC_DIM_LABELS[scDimension];
     const tbody = document.getElementById('scBody');
     tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...</td></tr>';
 
-    const res = await fetch(`/api/scorecard?dimension=${dimension}`);
+    const q = scBuildQuery({ dimension: scDimension });
+    const res = await fetch(`/api/scorecard?${q.toString()}`);
     const rows = res.ok ? await res.json() : [];
 
     if (!rows.length) {
@@ -83,10 +395,137 @@ document.querySelectorAll('.sc-dim-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.sc-dim-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        scLoad(btn.dataset.dim);
+        scDimension = btn.dataset.dim;
+        scLoadRanking();
     });
 });
 
-scLoad('leader');
+/* Track a Store Leader ----------------------------------------------------- */
+let scLeaderChartInstance;
+async function scLoadLeaderDetail() {
+    const detail = document.getElementById('scLeaderDetail');
+    const empty = document.getElementById('scLeaderEmpty');
+    const transferBadgeLabel = detail.dataset.transferBadge;
+    if (!scSelectedLeader) { detail.style.display = 'none'; empty.style.display = ''; empty.textContent = empty.dataset.noSelectionText; return; }
+
+    const q = scBuildQuery({ leader: scSelectedLeader });
+    const res = await fetch(`/api/scorecard/leader-history?${q.toString()}`);
+    const rows = res.ok ? await res.json() : [];
+
+    if (!rows.length) {
+        detail.style.display = 'none';
+        empty.style.display = '';
+        empty.textContent = empty.dataset.emptyText;
+        return;
+    }
+
+    detail.style.display = '';
+    empty.style.display = 'none';
+
+    document.getElementById('scLeaderHistoryBody').innerHTML = rows.map(r => `
+        <tr>
+            <td class="px-3 py-2 fw-semibold">${r.store}${r.isStoreTransition ? `<span class="sc-transfer-badge">${transferBadgeLabel}</span>` : ''}</td>
+            <td class="px-3 py-2 text-center">${r.periodLabel}</td>
+            <td class="px-3 py-2 text-center">${r.headcount}</td>
+            <td class="px-3 py-2 text-center">${r.resignations}</td>
+            <td class="px-3 py-2 text-center">${scRateBadge(r.turnoverRate, false)}</td>
+        </tr>`).join('');
+
+    const ctx = document.getElementById('scLeaderChart');
+    if (scLeaderChartInstance) scLeaderChartInstance.destroy();
+    scLeaderChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: rows.map(r => r.periodLabel),
+            datasets: [{
+                label: 'Turnover Rate',
+                data: rows.map(r => r.turnoverRate),
+                borderColor: 'oklch(0.55 0.19 25)',
+                backgroundColor: 'oklch(0.55 0.19 25 / .15)',
+                tension: 0.3, fill: true,
+                pointRadius: rows.map(r => r.isStoreTransition ? 7 : 3),
+                pointBackgroundColor: rows.map(r => r.isStoreTransition ? 'oklch(0.75 0.16 75)' : 'oklch(0.55 0.19 25)'),
+                pointStyle: rows.map(r => r.isStoreTransition ? 'triangle' : 'circle'),
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: c => {
+                            const r = rows[c.dataIndex];
+                            return r.isStoreTransition ? `→ Transferred to ${r.store}` : `Store: ${r.store}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } }, grid: { display: false } },
+                y: { min: 0, ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 }, callback: v => v + '%' }, grid: { color: 'oklch(0.92 0.008 255)' } }
+            }
+        }
+    });
+}
+
+/* Rollup by OC/OM ----------------------------------------------------------- */
+function scRenderRollupTable(elId, rows) {
+    const tbody = document.getElementById(elId);
+    if (!rows || !rows.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No data.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(r => `
+        <tr>
+            <td class="px-3 py-2 fw-semibold">${r.name}</td>
+            <td class="px-3 py-2 text-center">${r.totalLeaders}</td>
+            <td class="px-3 py-2 text-center">${r.flaggedLeaders}</td>
+            <td class="px-3 py-2 text-center">${scRateBadge(r.flaggedPercent, false)}</td>
+        </tr>`).join('');
+}
+
+async function scLoadRollup() {
+    const q = scBuildQuery();
+    const res = await fetch(`/api/scorecard/rollup?${q.toString()}`);
+    const data = res.ok ? await res.json() : { averageTurnoverRate: 0, byOperationConsultant: [], byOperationManager: [] };
+    document.getElementById('scRollupAvg').textContent = `${(data.averageTurnoverRate || 0).toFixed(1)}%`;
+    scRenderRollupTable('scRollupOc', data.byOperationConsultant);
+    scRenderRollupTable('scRollupOm', data.byOperationManager);
+}
+
+/* Initial filter load -------------------------------------------------------- */
+async function scLoadFilters() {
+    const [periods, leaders] = await Promise.all([
+        fetch('/api/dashboard/available-periods').then(r => r.ok ? r.json() : []),
+        fetch('/api/scorecard/leaders').then(r => r.ok ? r.json() : []),
+    ]);
+
+    const hasData = (periods || []).length > 0;
+    document.getElementById('scEmptyState').style.display = hasData ? 'none' : '';
+    document.getElementById('scContent').style.display = hasData ? '' : 'none';
+    if (!hasData) return false;
+
+    scYearMonthsMap = {};
+    (periods || []).forEach(p => { (scYearMonthsMap[p.year] = scYearMonthsMap[p.year] || []).push(p.month); });
+    const years = Object.keys(scYearMonthsMap).map(Number).sort((a, b) => b - a);
+    const yearSel = document.getElementById('scYearSelect');
+    yearSel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    scYear = years[0];
+    yearSel.value = scYear;
+    scMonths = (scYearMonthsMap[scYear] || []).slice().sort((a, b) => a - b);
+    scBuildMonthsOptions();
+    scRenderMonthsChips();
+
+    scLeaderCombo.setOptions(leaders || []);
+    return true;
+}
+
+async function scLoadAll() {
+    if (!scYear || !scMonths.length) return;
+    await Promise.all([scLoadRanking(), scLoadLeaderDetail(), scLoadRollup()]);
+}
+
+(async function init() {
+    const hasData = await scLoadFilters();
+    if (hasData) await scLoadAll();
+})();
 </script>
 }

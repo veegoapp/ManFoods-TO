@@ -24,26 +24,57 @@ public class ScorecardService : IScorecardService
         _ => "",
     };
 
-    private async Task<Dictionary<string, string>> BuildStoreToDimensionMapAsync(string dimension, string? om = null, string? oc = null)
+    private class NameAggregate
     {
-        var periods = await _db.StoreReferences.Select(s => new { s.Month, s.Year }).Distinct().ToListAsync();
-        if (periods.Count == 0) return new Dictionary<string, string>();
-        var latest = periods.OrderByDescending(p => p.Year).ThenByDescending(p => p.Month).First();
+        public HashSet<string> Stores { get; } = new();
+        public Dictionary<(int Month, int Year), int> PeriodHeadcount { get; } = new();
+        public int TotalResignations;
+        public string LatestOc = "";
+        public string LatestOm = "";
+    }
 
-        var rows = await _db.StoreReferences
-            .Where(s => s.Month == latest.Month && s.Year == latest.Year)
-            .ToListAsync();
-        if (!string.IsNullOrEmpty(om)) rows = rows.Where(s => s.OperationManager == om).ToList();
-        if (!string.IsNullOrEmpty(oc)) rows = rows.Where(s => s.OperationConsultant == oc).ToList();
+    // Walks every StoreReference row in the resolved window for the given dimension,
+    // following each person across whichever store(s) they were assigned to in each
+    // period — instead of only looking at the single latest period's assignment.
+    private async Task<Dictionary<string, NameAggregate>> BuildNameAggregatesAsync(
+        string dimension, string? om, string? oc, string? months, int? year)
+    {
+        var periods = DashboardService.ResolvePeriods(null, year, null, null, months);
+        var periodKeys = periods.Select(p => p.Year * 100 + p.Month).ToHashSet();
+        if (periodKeys.Count == 0) return new Dictionary<string, NameAggregate>();
 
-        var map = new Dictionary<string, string>();
-        foreach (var r in rows)
+        var storeRefs = await _db.StoreReferences.Where(s => periodKeys.Contains(s.Year * 100 + s.Month)).ToListAsync();
+        if (!string.IsNullOrEmpty(om)) storeRefs = storeRefs.Where(s => s.OperationManager == om).ToList();
+        if (!string.IsNullOrEmpty(oc)) storeRefs = storeRefs.Where(s => s.OperationConsultant == oc).ToList();
+
+        var headcountMap = (await _db.ActiveEmployees.Where(e => periodKeys.Contains(e.Year * 100 + e.Month))
+            .GroupBy(e => new { e.Store, e.Month, e.Year })
+            .Select(g => new { g.Key.Store, g.Key.Month, g.Key.Year, Count = g.Count() })
+            .ToListAsync()).ToDictionary(x => (x.Store, x.Month, x.Year), x => x.Count);
+
+        var resignMap = (await _db.Resignations.Where(r => periodKeys.Contains(r.Year * 100 + r.Month))
+            .GroupBy(r => new { r.Store, r.Month, r.Year })
+            .Select(g => new { g.Key.Store, g.Key.Month, g.Key.Year, Count = g.Count() })
+            .ToListAsync()).ToDictionary(x => (x.Store, x.Month, x.Year), x => x.Count);
+
+        var result = new Dictionary<string, NameAggregate>();
+        foreach (var sr in storeRefs.OrderBy(s => s.Year).ThenBy(s => s.Month))
         {
-            var value = Pick(r, dimension);
-            if (!string.IsNullOrWhiteSpace(r.StoreName) && !string.IsNullOrWhiteSpace(value))
-                map[r.StoreName] = value;
+            var name = Pick(sr, dimension);
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(sr.StoreName)) continue;
+            if (!result.TryGetValue(name, out var agg)) { agg = new NameAggregate(); result[name] = agg; }
+
+            var period = (sr.Month, sr.Year);
+            var hc = headcountMap.GetValueOrDefault((sr.StoreName, sr.Month, sr.Year));
+            var res = resignMap.GetValueOrDefault((sr.StoreName, sr.Month, sr.Year));
+
+            agg.Stores.Add(sr.StoreName);
+            agg.PeriodHeadcount[period] = agg.PeriodHeadcount.GetValueOrDefault(period) + hc;
+            agg.TotalResignations += res;
+            agg.LatestOc = sr.OperationConsultant;
+            agg.LatestOm = sr.OperationManager;
         }
-        return map;
+        return result;
     }
 
     private class HistoricalRecord
@@ -81,45 +112,21 @@ public class ScorecardService : IScorecardService
         return byEmployee.Values.ToList();
     }
 
-    public async Task<List<ScorecardRow>> GetScorecardAsync(string dimension, string? om = null, string? oc = null)
+    public async Task<List<ScorecardRow>> GetScorecardAsync(string dimension, string? om = null, string? oc = null, string? months = null, int? year = null)
     {
-        var storeMap = await BuildStoreToDimensionMapAsync(dimension, om, oc);
-        if (storeMap.Count == 0) return new List<ScorecardRow>();
-
-        var periods = await _db.ActiveEmployees.Select(e => new { e.Month, e.Year }).Distinct().ToListAsync();
-        (int Month, int Year)? latestPeriod = periods.Count > 0
-            ? periods.OrderByDescending(p => p.Year).ThenByDescending(p => p.Month).Select(p => (p.Month, p.Year)).First()
-            : null;
-
-        var headcountByStore = new Dictionary<string, int>();
-        var resignationsByStore = new Dictionary<string, int>();
-        if (latestPeriod.HasValue)
-        {
-            headcountByStore = (await _db.ActiveEmployees
-                .Where(e => e.Month == latestPeriod.Value.Month && e.Year == latestPeriod.Value.Year)
-                .GroupBy(e => e.Store)
-                .Select(g => new { Store = g.Key, Count = g.Count() })
-                .ToListAsync()).ToDictionary(x => x.Store, x => x.Count);
-
-            resignationsByStore = (await _db.Resignations
-                .Where(r => r.Month == latestPeriod.Value.Month && r.Year == latestPeriod.Value.Year)
-                .GroupBy(r => r.Store)
-                .Select(g => new { Store = g.Key, Count = g.Count() })
-                .ToListAsync()).ToDictionary(x => x.Store, x => x.Count);
-        }
+        var aggregates = await BuildNameAggregatesAsync(dimension, om, oc, months, year);
+        if (aggregates.Count == 0) return new List<ScorecardRow>();
 
         var historical = await LoadHistoricalRecordsAsync();
-        var dimensionStores = storeMap.GroupBy(kv => kv.Value).ToDictionary(g => g.Key, g => g.Select(kv => kv.Key).ToHashSet());
 
         var result = new List<ScorecardRow>();
         // Sequential — EF Core DbContext does not support concurrent queries.
-        foreach (var (name, stores) in dimensionStores)
+        foreach (var (name, agg) in aggregates)
         {
-            var headcount = stores.Sum(s => headcountByStore.GetValueOrDefault(s));
-            var resignations = stores.Sum(s => resignationsByStore.GetValueOrDefault(s));
-            var turnoverRate = headcount > 0 ? Math.Round(resignations * 100.0 / headcount, 1) : 0;
+            var avgHeadcount = agg.PeriodHeadcount.Count > 0 ? agg.PeriodHeadcount.Values.Average() : 0;
+            var turnoverRate = avgHeadcount > 0 ? Math.Round(agg.TotalResignations * 100.0 / avgHeadcount, 1) : 0;
 
-            var records = historical.Where(h => stores.Contains(h.Store)).ToList();
+            var records = historical.Where(h => agg.Stores.Contains(h.Store)).ToList();
             var total = records.Count;
             var early90 = total > 0 ? Math.Round(records.Count(r => r.TenureDays != null && r.TenureDays <= 90) * 100.0 / total, 1) : 0;
             var retained180 = total > 0 ? Math.Round(records.Count(r => r.TenureDays == null || r.TenureDays > 180) * 100.0 / total, 1) : 0;
@@ -136,8 +143,8 @@ public class ScorecardService : IScorecardService
             result.Add(new ScorecardRow
             {
                 Name = name,
-                StoreCount = stores.Count,
-                Headcount = headcount,
+                StoreCount = agg.Stores.Count,
+                Headcount = (int)Math.Round(avgHeadcount),
                 TurnoverRate = turnoverRate,
                 EarlyLeaver90Rate = early90,
                 Retention180Rate = retained180,
@@ -147,5 +154,100 @@ public class ScorecardService : IScorecardService
         }
 
         return result.OrderByDescending(r => r.TurnoverRate).ToList();
+    }
+
+    public async Task<List<string>> GetLeaderNamesAsync() =>
+        await _db.StoreReferences.Where(s => s.StoreLeader != "")
+            .Select(s => s.StoreLeader).Distinct().OrderBy(s => s).ToListAsync();
+
+    public async Task<List<LeaderHistoryRow>> GetLeaderHistoryAsync(string leaderName, string? months = null, int? year = null)
+    {
+        if (string.IsNullOrWhiteSpace(leaderName)) return new List<LeaderHistoryRow>();
+
+        var periods = DashboardService.ResolvePeriods(null, year, null, null, months);
+        var periodKeys = periods.Select(p => p.Year * 100 + p.Month).ToHashSet();
+        if (periodKeys.Count == 0) return new List<LeaderHistoryRow>();
+
+        var rows = await _db.StoreReferences
+            .Where(s => s.StoreLeader == leaderName && periodKeys.Contains(s.Year * 100 + s.Month))
+            .OrderBy(s => s.Year).ThenBy(s => s.Month)
+            .ToListAsync();
+        if (rows.Count == 0) return new List<LeaderHistoryRow>();
+
+        var headcountMap = (await _db.ActiveEmployees.Where(e => periodKeys.Contains(e.Year * 100 + e.Month))
+            .GroupBy(e => new { e.Store, e.Month, e.Year })
+            .Select(g => new { g.Key.Store, g.Key.Month, g.Key.Year, Count = g.Count() })
+            .ToListAsync()).ToDictionary(x => (x.Store, x.Month, x.Year), x => x.Count);
+
+        var resignMap = (await _db.Resignations.Where(r => periodKeys.Contains(r.Year * 100 + r.Month))
+            .GroupBy(r => new { r.Store, r.Month, r.Year })
+            .Select(g => new { g.Key.Store, g.Key.Month, g.Key.Year, Count = g.Count() })
+            .ToListAsync()).ToDictionary(x => (x.Store, x.Month, x.Year), x => x.Count);
+
+        var result = new List<LeaderHistoryRow>();
+        string? previousStore = null;
+        foreach (var r in rows)
+        {
+            var hc = headcountMap.GetValueOrDefault((r.StoreName, r.Month, r.Year));
+            var res = resignMap.GetValueOrDefault((r.StoreName, r.Month, r.Year));
+            result.Add(new LeaderHistoryRow
+            {
+                Store = r.StoreName,
+                Month = r.Month,
+                Year = r.Year,
+                PeriodLabel = $"{r.Month:00}/{r.Year}",
+                Headcount = hc,
+                Resignations = res,
+                TurnoverRate = hc > 0 ? Math.Round(res * 100.0 / hc, 1) : 0,
+                IsStoreTransition = previousStore != null && previousStore != r.StoreName,
+            });
+            previousStore = r.StoreName;
+        }
+        return result;
+    }
+
+    public async Task<ScorecardRollupResult> GetRollupAsync(string? months = null, int? year = null)
+    {
+        var result = new ScorecardRollupResult();
+        var leaderAggregates = await BuildNameAggregatesAsync("leader", null, null, months, year);
+        if (leaderAggregates.Count == 0) return result;
+
+        var leaderRates = leaderAggregates.Select(kv =>
+        {
+            var avgHeadcount = kv.Value.PeriodHeadcount.Count > 0 ? kv.Value.PeriodHeadcount.Values.Average() : 0;
+            var rate = avgHeadcount > 0 ? kv.Value.TotalResignations * 100.0 / avgHeadcount : 0;
+            return (Name: kv.Key, Rate: rate, Oc: kv.Value.LatestOc, Om: kv.Value.LatestOm);
+        }).ToList();
+
+        var average = leaderRates.Average(l => l.Rate);
+        result.AverageTurnoverRate = Math.Round(average, 1);
+
+        result.ByOperationConsultant = leaderRates
+            .Where(l => !string.IsNullOrWhiteSpace(l.Oc))
+            .GroupBy(l => l.Oc)
+            .Select(g => BuildRollupRow(g.Key, g.ToList(), average))
+            .OrderByDescending(r => r.FlaggedPercent)
+            .ToList();
+
+        result.ByOperationManager = leaderRates
+            .Where(l => !string.IsNullOrWhiteSpace(l.Om))
+            .GroupBy(l => l.Om)
+            .Select(g => BuildRollupRow(g.Key, g.ToList(), average))
+            .OrderByDescending(r => r.FlaggedPercent)
+            .ToList();
+
+        return result;
+    }
+
+    private static RollupRow BuildRollupRow(string name, List<(string Name, double Rate, string Oc, string Om)> leaders, double average)
+    {
+        var flagged = leaders.Count(l => l.Rate > average);
+        return new RollupRow
+        {
+            Name = name,
+            TotalLeaders = leaders.Count,
+            FlaggedLeaders = flagged,
+            FlaggedPercent = leaders.Count > 0 ? Math.Round(flagged * 100.0 / leaders.Count, 1) : 0,
+        };
     }
 }

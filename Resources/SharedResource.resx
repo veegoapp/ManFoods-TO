@@ -326,6 +326,26 @@
   <data name="SC_EarlyLeave" xml:space="preserve"><value>90-Day Early Leave</value></data>
   <data name="SC_180Retention" xml:space="preserve"><value>180-Day Retention</value></data>
   <data name="SC_ExitSentiment" xml:space="preserve"><value>Exit Sentiment</value></data>
+  <data name="SC_Ranking" xml:space="preserve"><value>Ranking</value></data>
+  <data name="SC_RankingSub" xml:space="preserve"><value>Aggregated across the selected window — follows each person across store reassignments</value></data>
+  <data name="SC_TrackLeader" xml:space="preserve"><value>Track a Store Leader</value></data>
+  <data name="SC_TrackLeaderSub" xml:space="preserve"><value>See one leader's full store-assignment history and turnover trend over time</value></data>
+  <data name="SC_SelectLeaderPlaceholder" xml:space="preserve"><value>Search for a store leader...</value></data>
+  <data name="SC_NoLeaderSelected" xml:space="preserve"><value>Pick a store leader above to see their history.</value></data>
+  <data name="SC_LeaderHistoryEmpty" xml:space="preserve"><value>No store-assignment records for this leader in the selected window.</value></data>
+  <data name="SC_Period" xml:space="preserve"><value>Period</value></data>
+  <data name="SC_Resignations" xml:space="preserve"><value>Resignations</value></data>
+  <data name="SC_TransferBadge" xml:space="preserve"><value>Transferred here</value></data>
+  <data name="Chart_LeaderTurnoverTrend" xml:space="preserve"><value>Turnover Trend</value></data>
+  <data name="Chart_LeaderTurnoverTrendSub" xml:space="preserve"><value>Dashed markers show where this leader was transferred to a new store</value></data>
+  <data name="SC_Rollup" xml:space="preserve"><value>Rollup by OC / OM</value></data>
+  <data name="SC_RollupSub" xml:space="preserve"><value>How many of each supervisor's Store Leaders have above-average turnover in the selected window</value></data>
+  <data name="SC_RollupByOc" xml:space="preserve"><value>By Operation Consultant</value></data>
+  <data name="SC_RollupByOm" xml:space="preserve"><value>By Operation Manager</value></data>
+  <data name="SC_TotalLeaders" xml:space="preserve"><value>Leaders</value></data>
+  <data name="SC_FlaggedLeaders" xml:space="preserve"><value>Flagged</value></data>
+  <data name="SC_FlaggedPercent" xml:space="preserve"><value>Flagged %</value></data>
+  <data name="SC_AverageTurnover" xml:space="preserve"><value>Average leader turnover in this window</value></data>
 
   <!-- Store Profile -->
   <data name="SP_ActiveEmployees" xml:space="preserve"><value>Active Employees</value></data>
