@@ -159,6 +159,8 @@
   <data name="Page_ExitInterviewsSub" xml:space="preserve"><value>لماذا يغادر الناس، بشكل إجمالي — لا تُحدد الردود الفردية أبدًا</value></data>
   <data name="Page_NinetyDay" xml:space="preserve"><value>دوران 90 يوم</value></data>
   <data name="Page_NinetyDaySub" xml:space="preserve"><value>من بين كل من تم توظيفه في شهر، نسبة من استقال خلال أول 90 يومًا</value></data>
+  <data name="Chart_NinetyDayByCohort" xml:space="preserve"><value>معدل الـ90 يوم لكل شهر تعيين</value></data>
+  <data name="Chart_NinetyDayByCohortSub" xml:space="preserve"><value>المغادرون قبل 90 يوم ÷ عدد المعيّنين لكل شهر تعيين مختار</value></data>
   <data name="Page_AiAssistant" xml:space="preserve"><value>المساعد الذكي</value></data>
   <data name="Page_AiAssistantSub" xml:space="preserve"><value>اسأل أي شيء عن بيانات القوى العاملة</value></data>
   <data name="Page_AiUsage" xml:space="preserve"><value>استخدام الذكاء الاصطناعي</value></data>

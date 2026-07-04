@@ -22,11 +22,11 @@ public interface INinetyDayTurnoverService
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null);
 
     Task<List<EarlyLeaverRow>> GetEarlyLeaversAsync(int month, int year, string? store,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null);
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null);
 
     /// <summary>Reasons for leaving, restricted to early leavers in the given
     /// cohort, joined against exit interviews by employee id (never exposes
     /// the id itself).</summary>
     Task<List<ChartDataItem>> GetEarlyLeaverReasonsAsync(int month, int year, string? store,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null);
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null);
 }

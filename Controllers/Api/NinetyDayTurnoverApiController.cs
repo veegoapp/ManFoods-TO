@@ -46,11 +46,11 @@ public class NinetyDayTurnoverApiController : ControllerBase
 
     [HttpGet("early-leavers")]
     public async Task<IActionResult> EarlyLeavers([FromQuery] int month, [FromQuery] int year, [FromQuery] string? store,
-        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc) =>
-        Ok(await _turnover.GetEarlyLeaversAsync(month, year, store, fromMonth, fromYear, om, oc));
+        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months) =>
+        Ok(await _turnover.GetEarlyLeaversAsync(month, year, store, fromMonth, fromYear, om, oc, months));
 
     [HttpGet("reasons")]
     public async Task<IActionResult> Reasons([FromQuery] int month, [FromQuery] int year, [FromQuery] string? store,
-        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc) =>
-        Ok(await _turnover.GetEarlyLeaverReasonsAsync(month, year, store, fromMonth, fromYear, om, oc));
+        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months) =>
+        Ok(await _turnover.GetEarlyLeaverReasonsAsync(month, year, store, fromMonth, fromYear, om, oc, months));
 }

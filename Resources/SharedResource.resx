@@ -159,6 +159,8 @@
   <data name="Page_ExitInterviewsSub" xml:space="preserve"><value>Why people are leaving, in aggregate — individual responses are never identified</value></data>
   <data name="Page_NinetyDay" xml:space="preserve"><value>90-Day Turnover</value></data>
   <data name="Page_NinetyDaySub" xml:space="preserve"><value>Of everyone hired in a month, the share who resigned within their first 90 days</value></data>
+  <data name="Chart_NinetyDayByCohort" xml:space="preserve"><value>90-Day Rate by Cohort Month</value></data>
+  <data name="Chart_NinetyDayByCohortSub" xml:space="preserve"><value>Early leavers ÷ hires for each selected cohort month</value></data>
   <data name="Page_AiAssistant" xml:space="preserve"><value>AI Assistant</value></data>
   <data name="Page_AiAssistantSub" xml:space="preserve"><value>Ask anything about your workforce data</value></data>
   <data name="Page_AiUsage" xml:space="preserve"><value>AI Usage</value></data>

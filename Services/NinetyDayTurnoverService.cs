@@ -191,10 +191,11 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
     }
 
     public async Task<List<EarlyLeaverRow>> GetEarlyLeaversAsync(int month, int year, string? store,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
     {
         var resTenures = await LoadResignationTenuresAsync();
-        var keys = DashboardService.ExpandRangeKeys(fromMonth ?? month, fromYear ?? year, month, year).ToHashSet();
+        var keys = DashboardService.ResolvePeriods(month, year, fromMonth, fromYear, months)
+            .Select(p => p.Year * 100 + p.Month).ToHashSet();
         var omOcStores = await GetStoresForOmOcAsync(om, oc);
         return resTenures
             .Where(r => keys.Contains(r.HireDate.Year * 100 + r.HireDate.Month) && r.TenureDays <= 90
@@ -214,10 +215,11 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
     }
 
     public async Task<List<ChartDataItem>> GetEarlyLeaverReasonsAsync(int month, int year, string? store,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
     {
         var resTenures = await LoadResignationTenuresAsync();
-        var keys = DashboardService.ExpandRangeKeys(fromMonth ?? month, fromYear ?? year, month, year).ToHashSet();
+        var keys = DashboardService.ResolvePeriods(month, year, fromMonth, fromYear, months)
+            .Select(p => p.Year * 100 + p.Month).ToHashSet();
         var omOcStores = await GetStoresForOmOcAsync(om, oc);
         var earlyLeaverIds = resTenures
             .Where(r => keys.Contains(r.HireDate.Year * 100 + r.HireDate.Month) && r.TenureDays <= 90
