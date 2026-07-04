@@ -15,10 +15,12 @@ public class AppDbContext : DbContext
     public DbSet<ExitInterview> ExitInterviews { get; set; }
     public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
     public DbSet<AppSetting> AppSettings { get; set; }
+    public DbSet<AiUsageDaily> AiUsageDaily { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
+        modelBuilder.Entity<AiUsageDaily>().HasKey(a => new { a.UserId, a.UsageDate });
     }
 }

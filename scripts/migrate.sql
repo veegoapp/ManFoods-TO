@@ -151,6 +151,14 @@ CREATE TABLE IF NOT EXISTS upload_logs (
 ALTER TABLE upload_logs ADD COLUMN IF NOT EXISTS file_content BYTEA;
 ALTER TABLE upload_logs ADD COLUMN IF NOT EXISTS content_type TEXT;
 
+-- ── ai_usage_daily ────────────────────────────
+CREATE TABLE IF NOT EXISTS ai_usage_daily (
+    user_id INTEGER NOT NULL,
+    usage_date DATE NOT NULL,
+    question_count INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, usage_date)
+);
+
 -- ── seed users ────────────────────────────────
 -- admin@mcd.com / 123123654  →  Admin portal
 -- user@mcd.com  / 123123654  →  Home portal

@@ -31,6 +31,12 @@
         </div>
     </div>
     <div class="col-lg-4">
+        <div class="chart-card mb-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <span style="font-size:12.5px;color:var(--text-2)">أسئلة النهاردة</span>
+                <span id="aiUsageBadge" class="badge" style="background:var(--bg-2);color:var(--text-2);font-size:11px">—</span>
+            </div>
+        </div>
         <div class="chart-card">
             <div class="chart-header"><h6>أسئلة جاهزة</h6><p>دوس بدل ما تكتب</p></div>
             <div id="aiQuickPrompts" class="d-flex flex-column gap-2"></div>
@@ -103,6 +109,20 @@ function aiCurrentFilters() {
     return { month, year, store };
 }
 
+function aiRenderUsage(used, limit) {
+    const badge = document.getElementById('aiUsageBadge');
+    if (!badge || used == null || limit == null) return;
+    badge.textContent = `${used}/${limit}`;
+    badge.style.color = used >= limit ? 'oklch(0.6 0.22 22)' : 'var(--text-2)';
+}
+
+async function aiLoadUsage() {
+    const res = await fetch('/api/ai-assistant/usage');
+    if (!res.ok) return;
+    const data = await res.json();
+    aiRenderUsage(data.used, data.limit);
+}
+
 async function aiSend(question) {
     if (!question || aiSendBtn.disabled) return;
     aiAddBubble(question, 'user');
@@ -119,9 +139,15 @@ async function aiSend(question) {
         });
         const data = await res.json();
         loading.remove();
-        const answer = data.answer || 'لم يتم الحصول على إجابة.';
-        aiAddBubble(answer, 'bot');
-        aiSaveMessage(answer, 'bot');
+        if (res.status === 429) {
+            aiAddBubble(data.error || 'وصلت لأقصى عدد أسئلة النهاردة.', 'bot');
+            aiRenderUsage(data.used, data.limit);
+        } else {
+            const answer = data.answer || 'لم يتم الحصول على إجابة.';
+            aiAddBubble(answer, 'bot');
+            aiSaveMessage(answer, 'bot');
+            aiRenderUsage(data.used, data.limit);
+        }
     } catch {
         loading.remove();
         aiAddBubble('تعذر الاتصال بالخادم. حاول مرة أخرى.', 'bot');
@@ -173,5 +199,6 @@ async function aiLoadFilters() {
 
 aiLoadHistory();
 aiLoadFilters();
+aiLoadUsage();
 </script>
 }

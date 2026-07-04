@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using MvcApp.Extensions;
 using MvcApp.Filters;
 using MvcApp.Models.ViewModels;
 using MvcApp.Services;
@@ -15,6 +16,7 @@ public class AiAssistantApiController : ControllerBase
     private readonly INinetyDayTurnoverService _ninetyDay;
     private readonly IExitInterviewService _exitInterviews;
     private readonly ITargetsService _targets;
+    private readonly IAiUsageService _usage;
     private readonly IGeminiService _gemini;
 
     public AiAssistantApiController(
@@ -23,6 +25,7 @@ public class AiAssistantApiController : ControllerBase
         INinetyDayTurnoverService ninetyDay,
         IExitInterviewService exitInterviews,
         ITargetsService targets,
+        IAiUsageService usage,
         IGeminiService gemini)
     {
         _dashboard = dashboard;
@@ -30,7 +33,29 @@ public class AiAssistantApiController : ControllerBase
         _ninetyDay = ninetyDay;
         _exitInterviews = exitInterviews;
         _targets = targets;
+        _usage = usage;
         _gemini = gemini;
+    }
+
+    [HttpGet("usage")]
+    public async Task<IActionResult> Usage()
+    {
+        var userId = HttpContext.Session.GetUserId();
+        if (userId == null) return Unauthorized();
+        var (used, limit) = await _usage.GetUsageAsync(userId.Value);
+        return Ok(new { used, limit });
+    }
+
+    public record SetLimitRequest(int Limit);
+
+    [HttpPost("limit")]
+    [RequireAdminAuth]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetLimit([FromBody] SetLimitRequest request)
+    {
+        if (request.Limit < 1) return BadRequest(new { error = "الحد لازم يكون رقم أكبر من صفر." });
+        await _usage.SetDailyLimitAsync(request.Limit);
+        return Ok(new { limit = request.Limit });
     }
 
     public record ChatRequest(string Question, int? Month, int? Year, string? Store);
@@ -40,6 +65,13 @@ public class AiAssistantApiController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(request.Question))
             return BadRequest(new { error = "السؤال لا يمكن أن يكون فارغًا." });
+
+        var userId = HttpContext.Session.GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var (allowed, used, limit) = await _usage.TryRecordUsageAsync(userId.Value);
+        if (!allowed)
+            return StatusCode(429, new { error = $"وصلت لأقصى عدد أسئلة مسموح بيه النهاردة ({limit}). حاول تاني بكرة.", used, limit });
 
         const string role = "Admin";
         string? assignedName = null;
@@ -81,6 +113,6 @@ public class AiAssistantApiController : ControllerBase
         };
 
         var answer = await _gemini.AskAsync(request.Question, context);
-        return Ok(new { answer });
+        return Ok(new { answer, used, limit });
     }
 }

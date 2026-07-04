@@ -14,7 +14,7 @@
 </div>
 
 <div class="row g-4 mb-4">
-    <div class="col-lg-6">
+    <div class="col-lg-4">
         <div class="card-dark h-100">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="card-icon"><i class="bi bi-people-fill"></i></div>
@@ -27,13 +27,26 @@
             </form>
         </div>
     </div>
-    <div class="col-lg-6">
+    <div class="col-lg-4">
         <div class="card-dark h-100">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="card-icon"><i class="bi bi-key-fill"></i></div>
                 <div><h6 class="mb-0">Generate Bulk OTPs</h6><p class="text-muted-custom mb-0 small">Downloads Email + Phone + OTP for every pending user — send it yourself via bulk SMS. Already-activated users are skipped.</p></div>
             </div>
             <a href="/admin/dashboard/generatebulkotps" class="btn btn-primary btn-sm w-100"><i class="bi bi-file-earmark-arrow-down me-1"></i>Generate &amp; Download OTPs</a>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card-dark h-100">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="card-icon"><i class="bi bi-stars"></i></div>
+                <div><h6 class="mb-0">AI Assistant Daily Limit</h6><p class="text-muted-custom mb-0 small">أقصى عدد أسئلة يقدر أي حد يسألها للـ AI في اليوم الواحد.</p></div>
+            </div>
+            <div class="input-group mb-2">
+                <input type="number" id="aiLimitInput" class="form-control form-control-dark form-control-sm" min="1" step="1" placeholder="مثال: 30"/>
+                <button id="aiLimitSaveBtn" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i></button>
+            </div>
+            <span id="aiLimitSavedMsg" class="text-success small" style="display:none"><i class="bi bi-check-circle-fill me-1"></i>اتحفظ</span>
         </div>
     </div>
 </div>
@@ -212,6 +225,36 @@
         navigator.clipboard.writeText(resultKeyEl.value);
     });
     document.getElementById('recoveryResultCloseBtn').addEventListener('click', () => { resultModal.style.display = 'none'; });
+
+    // ── AI Assistant daily limit ────────────────────────────
+    const aiLimitInput = document.getElementById('aiLimitInput');
+    const aiLimitSaveBtn = document.getElementById('aiLimitSaveBtn');
+    const aiLimitSavedMsg = document.getElementById('aiLimitSavedMsg');
+
+    fetch('/api/ai-assistant/usage')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data && aiLimitInput) aiLimitInput.value = data.limit; });
+
+    if (aiLimitSaveBtn) {
+        aiLimitSaveBtn.addEventListener('click', async () => {
+            const limit = parseInt(aiLimitInput.value, 10);
+            if (!limit || limit < 1) return;
+            aiLimitSaveBtn.disabled = true;
+            try {
+                const res = await fetch('/api/ai-assistant/limit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                    body: JSON.stringify({ limit })
+                });
+                if (res.ok) {
+                    aiLimitSavedMsg.style.display = '';
+                    setTimeout(() => { aiLimitSavedMsg.style.display = 'none'; }, 2500);
+                }
+            } finally {
+                aiLimitSaveBtn.disabled = false;
+            }
+        });
+    }
 })();
 </script>
 }
