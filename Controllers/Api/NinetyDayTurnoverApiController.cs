@@ -6,7 +6,7 @@ namespace MvcApp.Controllers.Api;
 
 [ApiController]
 [Route("api/ninety-day-turnover")]
-[RequireAdminAuth]
+[RequireAuth]
 public class NinetyDayTurnoverApiController : ControllerBase
 {
     private readonly INinetyDayTurnoverService _turnover;

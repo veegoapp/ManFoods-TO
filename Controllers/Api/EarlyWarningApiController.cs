@@ -6,7 +6,7 @@ namespace MvcApp.Controllers.Api;
 
 [ApiController]
 [Route("api/early-warning")]
-[RequireAdminAuth]
+[RequireAuth]
 public class EarlyWarningApiController : ControllerBase
 {
     private readonly IEarlyWarningService _earlyWarning;

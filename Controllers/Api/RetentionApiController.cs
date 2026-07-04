@@ -6,7 +6,7 @@ namespace MvcApp.Controllers.Api;
 
 [ApiController]
 [Route("api/retention")]
-[RequireAdminAuth]
+[RequireAuth]
 public class RetentionApiController : ControllerBase
 {
     private readonly IRetentionService _retention;

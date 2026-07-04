@@ -7,7 +7,7 @@ using MvcApp.Services;
 namespace MvcApp.Areas.Admin.Controllers;
 
 [Area("Admin")]
-[RequireAdminAuth]
+[RequireAuth]
 public class DashboardController : Controller
 {
     private readonly IUploadService _uploads;
@@ -45,7 +45,11 @@ public class DashboardController : Controller
 
     public IActionResult Scorecard() => View();
 
-    public IActionResult Targets() => View();
+    public IActionResult Targets()
+    {
+        ViewBag.IsAdmin = HttpContext.Session.IsAdmin();
+        return View();
+    }
 
     public async Task<IActionResult> StoreProfile(string store)
     {
@@ -117,6 +121,7 @@ public class DashboardController : Controller
         }
     }
 
+    [RequireAdminAuth]
     public async Task<IActionResult> Uploads(int page = 1)
     {
         const int pageSize = 10;
@@ -127,7 +132,7 @@ public class DashboardController : Controller
         return View(items);
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> UploadActiveEmployees(MvcApp.Models.ViewModels.UploadViewModel vm)
     {
         if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = "Please select a file and specify month/year."; return RedirectToAction("Uploads"); }
@@ -136,7 +141,7 @@ public class DashboardController : Controller
         return RedirectToAction("Uploads");
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> UploadResignations(MvcApp.Models.ViewModels.UploadViewModel vm)
     {
         if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = "Please select a file and specify month/year."; return RedirectToAction("Uploads"); }
@@ -145,7 +150,7 @@ public class DashboardController : Controller
         return RedirectToAction("Uploads");
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> UploadStoreReference(MvcApp.Models.ViewModels.UploadViewModel vm)
     {
         if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = "Please select a file and specify month/year."; return RedirectToAction("Uploads"); }
@@ -154,7 +159,7 @@ public class DashboardController : Controller
         return RedirectToAction("Uploads");
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> UploadExitInterviews(MvcApp.Models.ViewModels.ExitInterviewUploadViewModel vm)
     {
         if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = "Please select a file."; return RedirectToAction("Uploads"); }
@@ -164,6 +169,7 @@ public class DashboardController : Controller
     }
 
     [HttpGet("admin/dashboard/download-template")]
+    [RequireAdminAuth]
     public IActionResult DownloadTemplate([FromQuery] string type)
     {
         using var wb = new XLWorkbook();
@@ -331,6 +337,7 @@ public class DashboardController : Controller
             fileName);
     }
 
+    [RequireAdminAuth]
     public async Task<IActionResult> DownloadUploadFile(int id)
     {
         var file = await _uploads.GetFileAsync(id);
@@ -338,7 +345,7 @@ public class DashboardController : Controller
         return File(file.Value.Content, file.Value.ContentType, file.Value.FileName);
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> DeleteUploadLog(int id)
     {
         await _uploads.DeleteLogAsync(id);
@@ -346,15 +353,17 @@ public class DashboardController : Controller
         return RedirectToAction("Uploads");
     }
 
+    [RequireAdminAuth]
     public async Task<IActionResult> Users()
     {
         var users = await _users.GetAllAsync();
         return View(users);
     }
 
+    [RequireAdminAuth]
     public IActionResult CreateUser() => View(new MvcApp.Models.ViewModels.CreateUserViewModel());
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> CreateUser(MvcApp.Models.ViewModels.CreateUserViewModel vm)
     {
         if (!ModelState.IsValid) return View(vm);
@@ -363,6 +372,7 @@ public class DashboardController : Controller
         return RedirectToAction("Users");
     }
 
+    [RequireAdminAuth]
     public async Task<IActionResult> EditUser(int id)
     {
         var user = await _users.GetByIdAsync(id);
@@ -370,7 +380,7 @@ public class DashboardController : Controller
         return View(new MvcApp.Models.ViewModels.EditUserViewModel { Id = user.Id, Email = user.Email, Phone = user.Phone, Role = user.Role });
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> EditUser(int id, MvcApp.Models.ViewModels.EditUserViewModel vm)
     {
         vm.Id = id;
@@ -380,7 +390,7 @@ public class DashboardController : Controller
         return RedirectToAction("Users");
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> DeleteUser(int id)
     {
         await _users.DeleteAsync(id);
@@ -388,7 +398,7 @@ public class DashboardController : Controller
         return RedirectToAction("Users");
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> UploadBulkUsers(MvcApp.Models.ViewModels.BulkUserUploadViewModel vm)
     {
         if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = "Please select a file."; return RedirectToAction("Users"); }
@@ -401,6 +411,7 @@ public class DashboardController : Controller
         return RedirectToAction("Users");
     }
 
+    [RequireAdminAuth]
     public async Task<IActionResult> GenerateBulkOtps()
     {
         var (count, bytes) = await _otp.GenerateBulkOtpsAsync();
@@ -410,7 +421,7 @@ public class DashboardController : Controller
             $"Bulk_OTPs_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx");
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> GenerateOtp(int id)
     {
         var otp = await _otp.GenerateSingleOtpAsync(id);
@@ -418,7 +429,7 @@ public class DashboardController : Controller
         return Json(new { otp });
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> RegenerateRecoveryKey([FromForm] string password)
     {
         var email = HttpContext.Session.GetEmail();

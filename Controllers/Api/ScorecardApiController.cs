@@ -6,7 +6,7 @@ namespace MvcApp.Controllers.Api;
 
 [ApiController]
 [Route("api/scorecard")]
-[RequireAdminAuth]
+[RequireAuth]
 public class ScorecardApiController : ControllerBase
 {
     private readonly IScorecardService _scorecard;

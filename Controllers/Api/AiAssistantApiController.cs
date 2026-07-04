@@ -7,7 +7,7 @@ namespace MvcApp.Controllers.Api;
 
 [ApiController]
 [Route("api/ai-assistant")]
-[RequireAdminAuth]
+[RequireAuth]
 public class AiAssistantApiController : ControllerBase
 {
     private readonly IDashboardService _dashboard;
