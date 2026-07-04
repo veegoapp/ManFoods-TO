@@ -12,13 +12,11 @@ public class DashboardApiController : ControllerBase
 {
     private readonly IDashboardService _dashboard;
     private readonly IStoreService _stores;
-    private readonly IGeminiService _gemini;
 
-    public DashboardApiController(IDashboardService dashboard, IStoreService stores, IGeminiService gemini)
+    public DashboardApiController(IDashboardService dashboard, IStoreService stores)
     {
         _dashboard = dashboard;
         _stores = stores;
-        _gemini = gemini;
     }
 
     [HttpGet("kpis")]
@@ -128,45 +126,4 @@ public class DashboardApiController : ControllerBase
         return Ok(await _dashboard.GetStoreResignationHistoryAsync(store));
     }
 
-    public record AiChatRequest(string Question, int? Month, int? Year, string? Store);
-
-    [HttpPost("ai-chat")]
-    public async Task<IActionResult> AiChat([FromBody] AiChatRequest request)
-    {
-        if (string.IsNullOrWhiteSpace(request.Question))
-            return BadRequest(new { error = "السؤال لا يمكن أن يكون فارغًا." });
-
-        var role = HttpContext.Session.GetRole();
-        var assignedName = HttpContext.Session.GetAssignedName();
-
-        var kpis = await _dashboard.GetKpisAsync(request.Month, request.Year, request.Store, role, assignedName);
-
-        // Run sequentially — EF Core DbContext does not support concurrent queries
-        var jobTitleData = await _dashboard.GetTurnoverByJobTitleAsync(kpis.Month, kpis.Year, request.Store, role, assignedName);
-        var tenureData   = await _dashboard.GetTurnoverByTenureAsync(kpis.Month, kpis.Year, request.Store, role, assignedName);
-        var genderData   = await _dashboard.GetGenderBreakdownAsync(kpis.Month, kpis.Year, request.Store, role, assignedName);
-
-        // Per-store breakdown only when viewing all stores
-        var storeData = string.IsNullOrEmpty(request.Store)
-            ? await _dashboard.GetPerStoreTurnoverAsync(kpis.Month, kpis.Year, role, assignedName)
-            : new List<StoreBreakdown>();
-
-        var context = new GeminiContext
-        {
-            Month             = kpis.Month,
-            Year              = kpis.Year,
-            Store             = request.Store,
-            TotalHeadcount    = kpis.TotalHeadcount,
-            TotalResignations = kpis.TotalResignations,
-            TurnoverRate      = kpis.TurnoverRate,
-            NewHires          = kpis.NewHires,
-            StoreBreakdowns    = storeData,
-            TurnoverByJobTitle = jobTitleData.Select(x => (x.Label, x.Value)).ToList(),
-            TurnoverByTenure   = tenureData.Select(x => (x.Label, x.Value)).ToList(),
-            GenderBreakdown    = genderData.Select(x => (x.Label, x.Value)).ToList()
-        };
-
-        var answer = await _gemini.AskAsync(request.Question, context);
-        return Ok(new { answer });
-    }
 }

@@ -68,6 +68,36 @@ public class GeminiService : IGeminiService
             genderSection.AppendLine();
         }
 
+        // Build retention milestones (company-wide, all cohorts to date)
+        var retentionSection = new StringBuilder();
+        if (ctx.RetentionMilestones.Count > 0)
+        {
+            retentionSection.AppendLine("=== نسبة الاحتفاظ بالموظفين حسب المدة منذ التعيين (كل الكوهورتات) ===");
+            foreach (var (days, rate) in ctx.RetentionMilestones)
+                retentionSection.AppendLine($"  • بعد {days} يوم: {rate:F1}% لسه شغالين");
+            retentionSection.AppendLine();
+        }
+
+        // Build 90-day early-leaver trend by cohort month
+        var ninetyDaySection = new StringBuilder();
+        if (ctx.NinetyDayCohorts.Count > 0)
+        {
+            ninetyDaySection.AppendLine("=== نسبة ترك العمل خلال أول 90 يوم، لكل شهر تعيين ===");
+            foreach (var (label, rate, provisional) in ctx.NinetyDayCohorts)
+                ninetyDaySection.AppendLine($"  • {label}: {rate:F1}%{(provisional ? " (لسه تحت المراجعة، ممكن تتغير)" : "")}");
+            ninetyDaySection.AppendLine();
+        }
+
+        // Build exit interview reasons (never includes names or IDs)
+        var exitReasonsSection = new StringBuilder();
+        if (ctx.ExitInterviewReasons.Count > 0)
+        {
+            exitReasonsSection.AppendLine("=== أكتر أسباب ترك العمل ذكرًا في مقابلات الخروج ===");
+            foreach (var (reason, count) in ctx.ExitInterviewReasons)
+                exitReasonsSection.AppendLine($"  • {reason}: {count} حالة");
+            exitReasonsSection.AppendLine();
+        }
+
         var systemPrompt = $"""
             أنت مساعد HR ذكي متخصص في تحليل بيانات الموارد البشرية لشركة Manfoods McDonald's.
             مهمتك هي الإجابة على أسئلة المدراء بناءً على البيانات المتاحة فقط.
@@ -85,6 +115,9 @@ public class GeminiService : IGeminiService
             {jobTitleSection}
             {tenureSection}
             {genderSection}
+            {retentionSection}
+            {ninetyDaySection}
+            {exitReasonsSection}
 
             قواعد مهمة:
             - أجب دائمًا بشكل موجز ومفيد.
@@ -93,6 +126,7 @@ public class GeminiService : IGeminiService
             - يمكنك الإجابة بالعربية أو الإنجليزية حسب لغة السؤال.
             - قدّم توصيات عملية عند الطلب.
             - عند الإجابة عن "أعلى فرع turnover"، استخدم جدول الفروع مباشرة.
+            - بيانات الاحتفاظ وأول 90 يوم ومقابلات الخروج دي على مستوى الشركة كلها عبر كل الفترات، مش مقتصرة على الفترة/الفرع المختار فوق.
 
             سؤال المستخدم: {userQuestion}
             """;
