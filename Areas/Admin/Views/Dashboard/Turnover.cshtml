@@ -91,6 +91,10 @@
     .tv-gender-body { flex-direction:column; height:auto; }
     .tv-gender-canvas-wrap { flex:0 0 auto; width:100%; height:180px; }
 }
+
+/* Chart.js draws its tick/legend text on <canvas>, which otherwise inherits
+   the page's dir="rtl" and reorders labels like "<3m" into "m3<". */
+.chart-body canvas, .tv-gender-canvas-wrap canvas { direction:ltr; }
 </style>
 
 <div class="page-header">

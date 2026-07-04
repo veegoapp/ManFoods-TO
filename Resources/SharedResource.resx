@@ -201,6 +201,17 @@
   <data name="Chart_MonthlyTrendSub" xml:space="preserve"><value>Turnover rate over time</value></data>
   <data name="Chart_TurnoverByMonth" xml:space="preserve"><value>Turnover Rate by Month</value></data>
   <data name="Chart_TurnoverByMonthSub" xml:space="preserve"><value>Resignations ÷ headcount for each selected month</value></data>
+  <data name="Chart_HeadcountByJobTitle" xml:space="preserve"><value>Headcount by Job Title</value></data>
+  <data name="Chart_HeadcountByJobTitleSub" xml:space="preserve"><value>Active employees grouped by role</value></data>
+  <data name="Chart_HeadcountByPayroll" xml:space="preserve"><value>Headcount by Payroll Group</value></data>
+  <data name="Chart_HeadcountByPayrollSub" xml:space="preserve"><value>Active employees grouped by payroll group</value></data>
+  <data name="Chart_HeadcountByTenure" xml:space="preserve"><value>Team Experience Mix</value></data>
+  <data name="Chart_HeadcountByTenureSub" xml:space="preserve"><value>How long the current team has been with us</value></data>
+  <data name="Chart_HeadcountGender" xml:space="preserve"><value>Gender Mix</value></data>
+  <data name="Chart_HeadcountGenderSub" xml:space="preserve"><value>Active workforce distribution</value></data>
+  <data name="Chart_HeadcountTrend" xml:space="preserve"><value>Headcount Over Time</value></data>
+  <data name="Chart_HeadcountTrendSub" xml:space="preserve"><value>Total active headcount across all available periods</value></data>
+  <data name="Workforce_StoreBreakdown" xml:space="preserve"><value>Headcount by Store</value></data>
   <data name="Chart_SurvivalCurve" xml:space="preserve"><value>Survival Curve</value></data>
   <data name="Chart_RetentionTrend" xml:space="preserve"><value>Retention Trend by Milestone</value></data>
   <data name="Chart_StoreLeaderboard" xml:space="preserve"><value>Store Leaderboard</value></data>

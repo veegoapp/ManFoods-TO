@@ -99,6 +99,10 @@
 #cmpInsightText { direction:ltr; unicode-bidi:isolate; text-align:left; }
 
 .cmp-table-hint { font-size:12px; color:var(--text-3); }
+
+/* Chart.js draws its tick/legend text on <canvas>, which otherwise inherits
+   the page's dir="rtl" and reorders numeric-leading labels. */
+.chart-body canvas { direction:ltr; }
 </style>
 
 <div class="page-header">

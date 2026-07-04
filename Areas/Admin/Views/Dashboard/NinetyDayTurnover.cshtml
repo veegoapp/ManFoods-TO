@@ -65,6 +65,10 @@
 /* KPI card text is always English by design (unlocalized metric names) —
    isolate it from RTL bidi reordering when the page is in Arabic. */
 #ntdKpiCards .kpi-label, #ntdKpiCards .kpi-value { direction:ltr; unicode-bidi:isolate; text-align:left; }
+
+/* Chart.js draws its tick/legend text on <canvas>, which otherwise inherits
+   the page's dir="rtl" and reorders numeric-leading labels. */
+.chart-body canvas { direction:ltr; }
 </style>
 
 <div class="page-header">

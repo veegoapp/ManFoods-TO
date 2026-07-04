@@ -2,18 +2,118 @@
     ViewData["Title"] = L["Page_Workforce"].Value;
 }
 
+<style>
+.wf-select-wrap { position:relative; }
+.wf-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 34px 0 14px; min-width:110px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.wf-select:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.wf-select-wrap i { position:absolute; top:50%; right:12px; transform:translateY(-50%); font-size:11px; color:var(--text-3); pointer-events:none; }
+[dir="rtl"] .wf-select { padding:0 14px 0 34px; }
+[dir="rtl"] .wf-select-wrap i { right:auto; left:12px; }
+
+.wf-multiselect { position:relative; }
+.wf-multiselect-trigger {
+    display:flex; align-items:center; gap:10px; justify-content:space-between;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 12px 0 14px; min-width:190px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.wf-multiselect-trigger:hover { border-color:var(--card-border-h); }
+.wf-multiselect-trigger i { font-size:11px; color:var(--text-3); flex-shrink:0; }
+.wf-multiselect-chips { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.wf-multiselect-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); min-width:230px; padding:8px; max-height:280px; overflow-y:auto;
+}
+.wf-multiselect-panel.open { display:block; }
+[dir="rtl"] .wf-multiselect-panel { left:auto; right:0; }
+.wf-multiselect-actions { display:flex; gap:6px; padding:2px 4px 8px; border-bottom:1px solid var(--card-border); margin-bottom:6px; }
+.wf-ms-action {
+    flex:1; background:var(--card-bg-2); border:1px solid var(--card-border); color:var(--red);
+    border-radius:6px; font-size:11.5px; font-weight:700; padding:6px 8px; cursor:pointer;
+}
+.wf-ms-action:hover { background:var(--red-light); }
+.wf-ms-option { display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:13px; color:var(--text-2); }
+.wf-ms-option:hover { background:var(--card-bg-2); }
+.wf-ms-option input { accent-color:var(--red); width:15px; height:15px; cursor:pointer; }
+
+.wf-combobox { position:relative; }
+.wf-combobox-input {
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:500;
+    height:42px; padding:0 14px; min-width:190px; width:100%;
+    box-shadow:var(--shadow-sm);
+}
+.wf-combobox-input:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.wf-combobox-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); max-height:260px; overflow-y:auto; padding:6px;
+}
+.wf-combobox-panel.open { display:block; }
+.wf-combo-option { padding:8px 10px; border-radius:6px; font-size:13px; color:var(--text-2); cursor:pointer; }
+.wf-combo-option:hover { background:var(--card-bg-2); }
+.wf-combo-option.active { color:var(--red); font-weight:700; background:var(--red-light); }
+
+.wf-gender-body { display:flex; align-items:center; gap:18px; height:220px; }
+.wf-gender-canvas-wrap { flex:0 0 44%; height:100%; position:relative; }
+.wf-gender-list { flex:1; display:flex; flex-direction:column; gap:10px; }
+.wf-gender-row { display:flex; align-items:center; gap:9px; font-size:13px; color:var(--text-2); }
+.wf-gender-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.wf-gender-label { flex:1; }
+.wf-gender-value { font-weight:700; color:var(--text); }
+.wf-gender-pct { font-weight:500; color:var(--text-3); }
+
+.wf-store-gender-mini { display:inline-flex; gap:4px; align-items:center; font-size:11px; color:var(--text-3); }
+.wf-store-gender-mini span { display:inline-flex; align-items:center; gap:2px; }
+.wf-store-gender-dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
+
+/* Chart.js draws its tick/legend text on <canvas>, which otherwise inherits
+   the page's dir="rtl" and reorders labels like "1–2 years" into "years 2–1". */
+.chart-body canvas { direction:ltr; }
+</style>
+
 <div class="page-header">
     <div>
         <h1 class="page-title">@L["Page_Workforce"]</h1>
         <p class="page-subtitle">@L["Page_WorkforceSub"]</p>
     </div>
-    <div class="d-flex gap-2 flex-wrap">
-        <select id="periodSelect" class="form-select form-select-dark" style="width:180px">
-            <option value="">@L["Common_SelectPeriod"]</option>
-        </select>
-        <select id="storeSelect" class="form-select form-select-dark" style="width:200px">
-            <option value="">@L["Common_AllStores"]</option>
-        </select>
+    <div class="d-flex gap-2 flex-wrap align-items-end">
+        <div class="wf-select-wrap"><select id="wfYearSelect" class="wf-select"></select><i class="bi bi-chevron-down"></i></div>
+
+        <div class="wf-multiselect" id="wfMonthsMultiselect" data-label-select="@L["Common_SelectMonths"]" data-label-all="@L["Common_AllMonths"]">
+            <button type="button" class="wf-multiselect-trigger" id="wfMonthsTrigger">
+                <span class="wf-multiselect-chips" id="wfMonthsChips">@L["Common_AllMonths"]</span>
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="wf-multiselect-panel" id="wfMonthsPanel">
+                <div class="wf-multiselect-actions">
+                    <button type="button" class="wf-ms-action" id="wfMonthsSelectAll">@L["Common_SelectAll"]</button>
+                    <button type="button" class="wf-ms-action" id="wfMonthsClearAll">@L["Common_ClearAll"]</button>
+                </div>
+                <div id="wfMonthsOptions"></div>
+            </div>
+        </div>
+
+        <div class="wf-combobox" id="wfStoreCombo">
+            <input type="text" class="wf-combobox-input" id="wfStoreInput" placeholder="@L["Common_AllStores"]" autocomplete="off">
+            <div class="wf-combobox-panel" id="wfStorePanel"></div>
+        </div>
+        <div class="wf-combobox" id="wfOmCombo">
+            <input type="text" class="wf-combobox-input" id="wfOmInput" placeholder="@L["Common_AllOperationManagers"]" autocomplete="off">
+            <div class="wf-combobox-panel" id="wfOmPanel"></div>
+        </div>
+        <div class="wf-combobox" id="wfOcCombo">
+            <input type="text" class="wf-combobox-input" id="wfOcInput" placeholder="@L["Common_AllOperationConsultants"]" autocomplete="off">
+            <div class="wf-combobox-panel" id="wfOcPanel"></div>
+        </div>
     </div>
 </div>
 
@@ -23,22 +123,59 @@
     </div>
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-xl-5">
-        <div class="chart-card h-100">
-            <div class="chart-header"><h6>@L["Common_StoreComparison"]</h6><p>Share of total headcount by store</p></div>
-            <div id="wfDistribution" class="mt-3">
-                <div class="text-center py-4 text-muted">
-                    <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
-                </div>
-            </div>
+<!-- ── Headcount composition ──────────────────────────────────────── -->
+<div class="charts-grid mb-4">
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["Chart_HeadcountByJobTitle"]</h6><p>@L["Chart_HeadcountByJobTitleSub"]</p></div>
+        <div class="chart-body"><canvas id="wfJobTitleChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["Chart_HeadcountByTenure"]</h6><p>@L["Chart_HeadcountByTenureSub"]</p></div>
+        <div class="chart-body"><canvas id="wfTenureChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["Chart_HeadcountByPayroll"]</h6><p>@L["Chart_HeadcountByPayrollSub"]</p></div>
+        <div class="chart-body"><canvas id="wfPayrollChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["Chart_HeadcountGender"]</h6><p>@L["Chart_HeadcountGenderSub"]</p></div>
+        <div class="wf-gender-body">
+            <div class="wf-gender-canvas-wrap"><canvas id="wfGenderChart"></canvas></div>
+            <div class="wf-gender-list" id="wfGenderStatsList"></div>
         </div>
     </div>
-    <div class="col-xl-7">
-        <div class="chart-card h-100">
-            <div class="chart-header"><h6>@L["Chart_TurnoverByJobTitle"]</h6><p>@L["Chart_TurnoverByJobTitleSub"]</p></div>
-            <div class="chart-body"><canvas id="jobTitleChart"></canvas></div>
-        </div>
+</div>
+
+<!-- ── Headcount trend (always full history from the selected year onward) ── -->
+<div class="chart-card mb-4" style="border-radius:14px">
+    <div class="chart-header">
+        <h6>@L["Chart_HeadcountTrend"]</h6>
+        <p>@L["Chart_HeadcountTrendSub"]</p>
+    </div>
+    <div class="chart-body"><canvas id="wfHeadcountTrendChart" style="max-height:260px"></canvas></div>
+</div>
+
+<!-- ── Headcount by store ─────────────────────────────────────────── -->
+<div class="d-flex align-items-center gap-2 mb-3">
+    <div class="section-accent"></div>
+    <h5 class="mb-0 fw-bold">@L["Workforce_StoreBreakdown"]</h5>
+</div>
+<div class="chart-card mb-4 p-0" style="overflow:hidden">
+    <div class="table-responsive" style="max-height:400px;overflow-y:auto">
+        <table class="table table-hover mb-0" style="font-size:13px">
+            <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                <tr>
+                    <th class="px-3 py-2">@L["Common_StoreName"]</th>
+                    <th class="px-3 py-2 text-center">@L["Common_Headcount"]</th>
+                    <th class="px-3 py-2">Gender Mix</th>
+                </tr>
+            </thead>
+            <tbody id="wfStoreTableBody">
+                <tr><td colspan="3" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
+                </td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -103,30 +240,270 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="~/js/dashboard.js" asp-append-version="true"></script>
 <script>
-/* Store distribution ----------------------------------------- */
-function wfRenderDistribution(rows) {
-    const el = document.getElementById('wfDistribution');
-    if (!rows || !rows.length) { el.innerHTML = '<div class="text-center py-3 text-muted">No data for this period.</div>'; return; }
-    const total = rows.reduce((s, r) => s + r.headcount, 0) || 1;
-    const sorted = [...rows].sort((a, b) => b.headcount - a.headcount).slice(0, 8);
-    el.innerHTML = sorted.map(r => {
-        const pct = Math.round((r.headcount / total) * 100);
-        return `<div class="mb-3">
-            <div class="d-flex justify-content-between mb-1" style="font-size:12.5px">
-                <span class="fw-semibold">${r.storeName}</span>
-                <span style="color:var(--text-3)">${r.headcount} · ${pct}%</span>
-            </div>
-            <div style="height:7px;border-radius:20px;background:var(--bg-2);overflow:hidden">
-                <div style="height:100%;border-radius:20px;background:oklch(0.5 0.18 25);width:${Math.min(pct * 2.5, 100)}%"></div>
-            </div>
+/* ── Workforce page — Year + discrete Months multi-select, same filter
+   components as Turnover/Comparisons/90-Day pages. Reuses dashboard.js's
+   loadKpis() (via the overridden buildQuery below) for the top KPI cards,
+   but does NOT use its loadCharts() (that one is resignation-based) —
+   this page renders its own active-headcount composition charts instead. */
+let wfYear = null;
+let wfMonths = [];
+let wfYearMonthsMap = {};
+
+function wfMonthShortName(m) { return new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' }); }
+function wfAnchorMonth() { return wfMonths.length ? Math.max(...wfMonths) : null; }
+
+function buildQuery() {
+    const p = new URLSearchParams();
+    if (wfYear) p.set('year', wfYear);
+    if (wfMonths.length) { p.set('months', wfMonths.join(',')); p.set('month', wfAnchorMonth()); }
+    if (storeFilter) p.set('store', storeFilter);
+    if (omFilter)    p.set('om', omFilter);
+    if (ocFilter)    p.set('oc', ocFilter);
+    return p.toString();
+}
+
+/* Generic searchable single-select combobox ---------------------------- */
+function wfCreateCombobox({ inputId, panelId, onSelect }) {
+    const input = document.getElementById(inputId);
+    const panel = document.getElementById(panelId);
+    const allLabel = input.placeholder;
+    let options = [];
+    let value = '';
+
+    function render(filterText) {
+        const ft = (filterText || '').toLowerCase();
+        const filtered = options.filter(o => o.toLowerCase().includes(ft));
+        let html = `<div class="wf-combo-option${value === '' ? ' active' : ''}" data-value="">${allLabel}</div>`;
+        html += filtered.map(o => `<div class="wf-combo-option${o === value ? ' active' : ''}" data-value="${o.replace(/"/g, '&quot;')}">${o}</div>`).join('');
+        panel.innerHTML = html;
+    }
+    function open() { panel.classList.add('open'); render(''); input.select(); }
+    function close() { panel.classList.remove('open'); input.value = value; }
+
+    panel.addEventListener('mousedown', (e) => {
+        const opt = e.target.closest('.wf-combo-option');
+        if (!opt) return;
+        e.preventDefault();
+        value = opt.dataset.value;
+        input.value = value;
+        panel.classList.remove('open');
+        onSelect(value);
+    });
+    input.addEventListener('focus', open);
+    input.addEventListener('input', () => render(input.value));
+    input.addEventListener('blur', () => setTimeout(close, 150));
+
+    return { setOptions(list) { options = list || []; }, setValue(v) { value = v || ''; input.value = value; } };
+}
+
+const wfStoreCombo = wfCreateCombobox({ inputId: 'wfStoreInput', panelId: 'wfStorePanel', onSelect: v => { storeFilter = v; loadAll(); } });
+const wfOmCombo    = wfCreateCombobox({ inputId: 'wfOmInput',    panelId: 'wfOmPanel',    onSelect: v => { omFilter    = v; loadAll(); } });
+const wfOcCombo    = wfCreateCombobox({ inputId: 'wfOcInput',    panelId: 'wfOcPanel',    onSelect: v => { ocFilter    = v; loadAll(); } });
+
+/* Months multi-select ---------------------------------------------------- */
+function wfBuildMonthsOptions() {
+    const container = document.getElementById('wfMonthsOptions');
+    const available = (wfYearMonthsMap[wfYear] || []).slice().sort((a, b) => a - b);
+    container.innerHTML = available.map(m => `
+        <label class="wf-ms-option">
+            <input type="checkbox" value="${m}" ${wfMonths.includes(m) ? 'checked' : ''}>
+            <span>${monthName(m, wfYear)}</span>
+        </label>`).join('');
+    container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const m = parseInt(cb.value);
+            if (cb.checked) { if (!wfMonths.includes(m)) wfMonths.push(m); }
+            else { wfMonths = wfMonths.filter(x => x !== m); }
+            wfMonths.sort((a, b) => a - b);
+            wfRenderMonthsChips();
+            wfOnMonthsChanged();
+        });
+    });
+}
+
+function wfRenderMonthsChips() {
+    const chipsEl = document.getElementById('wfMonthsChips');
+    const labels = document.getElementById('wfMonthsMultiselect').dataset;
+    const available = wfYearMonthsMap[wfYear] || [];
+    if (!wfMonths.length) { chipsEl.textContent = labels.labelSelect; return; }
+    if (wfMonths.length === available.length) { chipsEl.textContent = labels.labelAll; return; }
+    const names = wfMonths.map(wfMonthShortName);
+    chipsEl.textContent = names.length <= 2 ? names.join('، ') : `${names[0]}، ${names[1]} +${names.length - 2}`;
+}
+
+let wfMonthsDebounce;
+function wfOnMonthsChanged() {
+    clearTimeout(wfMonthsDebounce);
+    wfMonthsDebounce = setTimeout(async () => {
+        if (!wfMonths.length) return;
+        await wfLoadDependentLists();
+        await loadAll();
+    }, 250);
+}
+
+document.getElementById('wfMonthsSelectAll').addEventListener('click', () => {
+    wfMonths = (wfYearMonthsMap[wfYear] || []).slice().sort((a, b) => a - b);
+    wfBuildMonthsOptions(); wfRenderMonthsChips(); wfOnMonthsChanged();
+});
+document.getElementById('wfMonthsClearAll').addEventListener('click', () => {
+    wfMonths = [];
+    wfBuildMonthsOptions(); wfRenderMonthsChips(); wfOnMonthsChanged();
+});
+document.getElementById('wfMonthsTrigger').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('wfMonthsPanel').classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+    if (!document.getElementById('wfMonthsMultiselect').contains(e.target))
+        document.getElementById('wfMonthsPanel').classList.remove('open');
+});
+
+document.getElementById('wfYearSelect').addEventListener('change', async function () {
+    wfYear = parseInt(this.value);
+    wfMonths = (wfYearMonthsMap[wfYear] || []).slice().sort((a, b) => a - b);
+    storeFilter = ''; omFilter = ''; ocFilter = '';
+    wfStoreCombo.setValue(''); wfOmCombo.setValue(''); wfOcCombo.setValue('');
+    wfBuildMonthsOptions(); wfRenderMonthsChips();
+    await wfLoadDependentLists();
+    await loadAll();
+});
+
+async function wfLoadDependentLists() {
+    const anchor = wfAnchorMonth();
+    if (!anchor || !wfYear) return;
+    const [stores, oms, ocs] = await Promise.all([
+        fetchJson(`/api/dashboard/stores?month=${anchor}&year=${wfYear}`),
+        fetchJson(`/api/dashboard/operation-managers?month=${anchor}&year=${wfYear}`),
+        fetchJson(`/api/dashboard/operation-consultants?month=${anchor}&year=${wfYear}`)
+    ]);
+    wfStoreCombo.setOptions(stores.map(s => s.storeName));
+    wfOmCombo.setOptions(oms);
+    wfOcCombo.setOptions(ocs);
+}
+
+async function wfInit() {
+    const periods = await fetchJson('/api/dashboard/available-periods');
+    if (!periods.length) return;
+
+    wfYearMonthsMap = {};
+    periods.forEach(p => { (wfYearMonthsMap[p.year] = wfYearMonthsMap[p.year] || []).push(p.month); });
+    const years = Object.keys(wfYearMonthsMap).map(Number).sort((a, b) => b - a);
+    const yearSel = document.getElementById('wfYearSelect');
+    yearSel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    wfYear = years[0];
+    yearSel.value = wfYear;
+
+    wfMonths = (wfYearMonthsMap[wfYear] || []).slice().sort((a, b) => a - b);
+    wfBuildMonthsOptions();
+    wfRenderMonthsChips();
+
+    await wfLoadDependentLists();
+    await loadAll();
+}
+
+/* ── Composition charts ──────────────────────────────────────────── */
+let wfJobTitleChart, wfPayrollChart, wfTenureChart, wfGenderChart;
+
+async function wfLoadJobTitleChart() {
+    const data = await fetchJson(`/api/dashboard/headcount-by-job-title?${buildQuery()}`);
+    wfJobTitleChart = mkChart(wfJobTitleChart, 'wfJobTitleChart', {
+        type: 'bar',
+        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: '#6D5DFB', borderRadius: 4 }] },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } },
+            scales: { x: { grid: { color: '#E4E2F5' }, ticks: { color: '#5B5875' } }, y: { grid: { display: false }, ticks: { color: '#5B5875' } } } }
+    });
+}
+
+async function wfLoadPayrollChart() {
+    const data = await fetchJson(`/api/dashboard/headcount-by-payroll-group?${buildQuery()}`);
+    wfPayrollChart = mkChart(wfPayrollChart, 'wfPayrollChart', {
+        type: 'bar',
+        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: '#5B3FE0', borderRadius: 4 }] },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } },
+            scales: { x: { grid: { color: '#E4E2F5' }, ticks: { color: '#5B5875' } }, y: { grid: { display: false }, ticks: { color: '#5B5875' } } } }
+    });
+}
+
+async function wfLoadTenureChart() {
+    const data = await fetchJson(`/api/dashboard/headcount-by-tenure?${buildQuery()}`);
+    wfTenureChart = mkChart(wfTenureChart, 'wfTenureChart', {
+        type: 'bar',
+        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: '#A78BFA', borderRadius: 4 }] },
+        options: { plugins: { legend: { display: false } },
+            scales: { x: { grid: { display: false }, ticks: { color: '#5B5875' } }, y: { grid: { color: '#E4E2F5' }, ticks: { color: '#5B5875' } } } }
+    });
+}
+
+async function wfLoadGenderChart() {
+    const data = await fetchJson(`/api/dashboard/gender-breakdown?${buildQuery()}`);
+    wfGenderChart = mkChart(wfGenderChart, 'wfGenderChart', {
+        type: 'doughnut',
+        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: COLORS, borderWidth: 0 }] },
+        options: { plugins: { legend: { display: false } } }
+    });
+
+    const el = document.getElementById('wfGenderStatsList');
+    if (!data.length) { el.innerHTML = ''; return; }
+    const total = data.reduce((s, d) => s + d.value, 0);
+    el.innerHTML = data.map((d, i) => {
+        const pct = total > 0 ? Math.round(d.value / total * 100) : 0;
+        return `<div class="wf-gender-row">
+            <span class="wf-gender-dot" style="background:${COLORS[i % COLORS.length]}"></span>
+            <span class="wf-gender-label">${d.label}</span>
+            <span class="wf-gender-value">${d.value} <span class="wf-gender-pct">(${pct}%)</span></span>
         </div>`;
     }).join('');
 }
 
-async function wfLoadDistribution() {
-    if (!periodMonth || !periodYear) return;
-    const data = await fetchJson(`/api/dashboard/store-comparison?month=${periodMonth}&year=${periodYear}`);
-    wfRenderDistribution(data || []);
+/* Headcount trend — always full history from the selected year onward,
+   unaffected by the Months multi-select (same rule as the Turnover page's
+   Monthly Trend chart). */
+let wfHeadcountTrendChart;
+async function wfLoadHeadcountTrend() {
+    const q = new URLSearchParams();
+    if (storeFilter) q.set('store', storeFilter);
+    if (omFilter)    q.set('om', omFilter);
+    if (ocFilter)    q.set('oc', ocFilter);
+    if (wfYear)      q.set('sinceYear', wfYear);
+    const data = await fetchJson(`/api/dashboard/headcount-trend?${q.toString()}`);
+    const fmt = pk => { const [y, m] = pk.split('-'); return new Date(+y, +m - 1, 1).toLocaleString('default', { month: 'short', year: '2-digit' }); };
+    wfHeadcountTrendChart = mkChart(wfHeadcountTrendChart, 'wfHeadcountTrendChart', {
+        type: 'line',
+        data: {
+            labels: data.map(d => fmt(d.label)),
+            datasets: [{ data: data.map(d => d.value), borderColor: 'oklch(0.5 0.18 25)', backgroundColor: 'oklch(0.5 0.18 25 / .12)', tension: 0.35, fill: true, pointRadius: 3 }]
+        },
+        options: { plugins: { legend: { display: false } },
+            scales: { x: { grid: { display: false }, ticks: { color: '#5B5875' } }, y: { grid: { color: '#E4E2F5' }, ticks: { color: '#5B5875' } } } }
+    });
+}
+
+/* Headcount by store, with a simple gender mix per store -------------- */
+function wfRenderStoreTable(rows) {
+    const tbody = document.getElementById('wfStoreTableBody');
+    if (!rows || !rows.length) { tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">No data for this period.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(r => {
+        const total = Object.values(r.genderBreakdown).reduce((s, v) => s + v, 0) || 1;
+        const genderHtml = Object.entries(r.genderBreakdown).map(([label, value], i) => {
+            const pct = Math.round(value / total * 100);
+            return `<span><span class="wf-store-gender-dot" style="background:${COLORS[i % COLORS.length]}"></span>${label} ${pct}%</span>`;
+        }).join(' ');
+        return `<tr>
+            <td class="px-3 py-2 fw-semibold">${r.storeName}</td>
+            <td class="px-3 py-2 text-center">${r.headcount}</td>
+            <td class="px-3 py-2"><div class="wf-store-gender-mini">${genderHtml}</div></td>
+        </tr>`;
+    }).join('');
+}
+
+async function wfLoadStoreTable() {
+    const anchor = wfAnchorMonth();
+    if (!anchor || !wfYear) return;
+    const q = new URLSearchParams({ month: anchor, year: wfYear });
+    if (omFilter) q.set('om', omFilter);
+    if (ocFilter) q.set('oc', ocFilter);
+    const data = await fetchJson(`/api/dashboard/store-headcount-breakdown?${q.toString()}`);
+    wfRenderStoreTable(data);
 }
 
 /* OC / OM tables (reusing the same rendering approach as Turnover) ------- */
@@ -146,17 +523,28 @@ function wfRenderOcOmTable(tbodyId, rows) {
 }
 
 async function wfLoadOcOm() {
-    if (!periodMonth || !periodYear) return;
-    const data = await fetchJson(`/api/dashboard/oc-om-analysis?month=${periodMonth}&year=${periodYear}`);
+    if (!wfYear || !wfMonths.length) return;
+    const data = await fetchJson(`/api/dashboard/oc-om-analysis?${buildQuery()}`);
     wfRenderOcOmTable('ocTableBody', data.ocRows);
     wfRenderOcOmTable('omTableBody', data.omRows);
 }
 
-const _wfOrigLoadAll = loadAll;
+/* dashboard.js's own #periodSelect/#storeSelect wiring safely no-ops here
+   (those elements don't exist), and its loadCharts() is never called —
+   only loadKpis() is reused, via loadAll below. */
 loadAll = async function () {
-    await _wfOrigLoadAll();
-    await wfLoadDistribution();
-    await wfLoadOcOm();
+    await Promise.all([
+        loadKpis(),
+        wfLoadJobTitleChart(),
+        wfLoadPayrollChart(),
+        wfLoadTenureChart(),
+        wfLoadGenderChart(),
+        wfLoadHeadcountTrend(),
+        wfLoadStoreTable(),
+        wfLoadOcOm()
+    ]);
 };
+
+wfInit();
 </script>
 }

@@ -27,4 +27,15 @@ public interface IDashboardService
     Task<List<StoreResignationRow>> GetStoreResignationHistoryAsync(string store);
     Task<List<string>> GetOperationManagersAsync(int? month, int? year);
     Task<List<string>> GetOperationConsultantsAsync(int? month, int? year);
+
+    // Active-workforce composition (as opposed to the Turnover-page methods above,
+    // which describe who resigned). All are a snapshot of the given month/year.
+    Task<List<ChartDataItem>> GetHeadcountByJobTitleAsync(int? month, int? year, string? store, string role, string? assignedName,
+        string? om = null, string? oc = null);
+    Task<List<ChartDataItem>> GetHeadcountByPayrollGroupAsync(int? month, int? year, string? store, string role, string? assignedName,
+        string? om = null, string? oc = null);
+    Task<List<ChartDataItem>> GetHeadcountByTenureAsync(int? month, int? year, string? store, string role, string? assignedName,
+        string? om = null, string? oc = null);
+    Task<List<ChartDataItem>> GetHeadcountTrendAsync(string? store, string? om, string? oc, int? sinceYear);
+    Task<List<StoreHeadcountRow>> GetStoreHeadcountBreakdownAsync(int month, int year, string? om, string? oc);
 }

@@ -201,6 +201,17 @@
   <data name="Chart_MonthlyTrendSub" xml:space="preserve"><value>معدل الدوران عبر الزمن</value></data>
   <data name="Chart_TurnoverByMonth" xml:space="preserve"><value>معدل الدوران لكل شهر</value></data>
   <data name="Chart_TurnoverByMonthSub" xml:space="preserve"><value>الاستقالات ÷ عدد الموظفين لكل شهر من الشهور المختارة</value></data>
+  <data name="Chart_HeadcountByJobTitle" xml:space="preserve"><value>عدد الموظفين حسب الوظيفة</value></data>
+  <data name="Chart_HeadcountByJobTitleSub" xml:space="preserve"><value>الموظفون النشطون مجمّعون حسب الوظيفة</value></data>
+  <data name="Chart_HeadcountByPayroll" xml:space="preserve"><value>عدد الموظفين حسب فئة الرواتب</value></data>
+  <data name="Chart_HeadcountByPayrollSub" xml:space="preserve"><value>الموظفون النشطون مجمّعون حسب فئة الرواتب</value></data>
+  <data name="Chart_HeadcountByTenure" xml:space="preserve"><value>خبرة الفريق الحالي</value></data>
+  <data name="Chart_HeadcountByTenureSub" xml:space="preserve"><value>مدة عمل الفريق الحالي معنا</value></data>
+  <data name="Chart_HeadcountGender" xml:space="preserve"><value>توزيع الجنس</value></data>
+  <data name="Chart_HeadcountGenderSub" xml:space="preserve"><value>توزيع القوى العاملة النشطة</value></data>
+  <data name="Chart_HeadcountTrend" xml:space="preserve"><value>عدد الموظفين عبر الزمن</value></data>
+  <data name="Chart_HeadcountTrendSub" xml:space="preserve"><value>إجمالي عدد الموظفين النشطين عبر كل الفترات المتاحة</value></data>
+  <data name="Workforce_StoreBreakdown" xml:space="preserve"><value>عدد الموظفين حسب الفرع</value></data>
   <data name="Chart_SurvivalCurve" xml:space="preserve"><value>منحنى البقاء</value></data>
   <data name="Chart_RetentionTrend" xml:space="preserve"><value>اتجاه الاحتفاظ بالمعالم</value></data>
   <data name="Chart_StoreLeaderboard" xml:space="preserve"><value>تصنيف الفروع</value></data>

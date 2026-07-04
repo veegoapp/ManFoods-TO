@@ -705,4 +705,123 @@ public class DashboardService : IDashboardService
             })
             .ToListAsync();
     }
+
+    // ── Active-workforce composition (Workforce page) ──────────────────────
+    // Snapshots of who currently works here, as opposed to the Turnover-page
+    // methods above which describe who resigned.
+
+    public async Task<List<ChartDataItem>> GetHeadcountByJobTitleAsync(int? month, int? year, string? store, string role, string? assignedName,
+        string? om = null, string? oc = null)
+    {
+        var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
+        var q = _db.ActiveEmployees.AsQueryable();
+        if (month.HasValue) q = q.Where(e => e.Month == month);
+        if (year.HasValue) q = q.Where(e => e.Year == year);
+        if (!string.IsNullOrEmpty(store)) q = q.Where(e => e.Store == store);
+        else if (month.HasValue && year.HasValue && await GetStoresForOmOcAsync(month.Value, year.Value, om, oc) is { } omOcStores)
+            q = q.Where(e => omOcStores.Contains(e.Store));
+        else if (accessible != null && accessible.Count > 0) q = q.Where(e => accessible.Contains(e.Store));
+
+        return await q.GroupBy(e => e.JobTitle)
+            .Select(g => new ChartDataItem { Label = g.Key, Value = g.Count() })
+            .OrderByDescending(x => x.Value)
+            .ToListAsync();
+    }
+
+    public async Task<List<ChartDataItem>> GetHeadcountByPayrollGroupAsync(int? month, int? year, string? store, string role, string? assignedName,
+        string? om = null, string? oc = null)
+    {
+        var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
+        var q = _db.ActiveEmployees.AsQueryable();
+        if (month.HasValue) q = q.Where(e => e.Month == month);
+        if (year.HasValue) q = q.Where(e => e.Year == year);
+        if (!string.IsNullOrEmpty(store)) q = q.Where(e => e.Store == store);
+        else if (month.HasValue && year.HasValue && await GetStoresForOmOcAsync(month.Value, year.Value, om, oc) is { } omOcStores)
+            q = q.Where(e => omOcStores.Contains(e.Store));
+        else if (accessible != null && accessible.Count > 0) q = q.Where(e => accessible.Contains(e.Store));
+
+        return await q.Where(e => e.PayrollGroup != "")
+            .GroupBy(e => e.PayrollGroup)
+            .Select(g => new ChartDataItem { Label = g.Key, Value = g.Count() })
+            .OrderByDescending(x => x.Value)
+            .ToListAsync();
+    }
+
+    public async Task<List<ChartDataItem>> GetHeadcountByTenureAsync(int? month, int? year, string? store, string role, string? assignedName,
+        string? om = null, string? oc = null)
+    {
+        var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
+        var q = _db.ActiveEmployees.Where(e => e.HireDate != null);
+        if (month.HasValue) q = q.Where(e => e.Month == month);
+        if (year.HasValue) q = q.Where(e => e.Year == year);
+        if (!string.IsNullOrEmpty(store)) q = q.Where(e => e.Store == store);
+        else if (month.HasValue && year.HasValue && await GetStoresForOmOcAsync(month.Value, year.Value, om, oc) is { } omOcStores)
+            q = q.Where(e => omOcStores.Contains(e.Store));
+        else if (accessible != null && accessible.Count > 0) q = q.Where(e => accessible.Contains(e.Store));
+
+        var hireDates = await q.Select(e => e.HireDate!.Value).ToListAsync();
+        if (hireDates.Count == 0) return new List<ChartDataItem>();
+
+        var asOfYear  = year ?? DateTime.Now.Year;
+        var asOfMonth = month ?? DateTime.Now.Month;
+        var asOf = new DateOnly(asOfYear, asOfMonth, DateTime.DaysInMonth(asOfYear, asOfMonth));
+
+        var buckets = new (string Label, int Min, int Max)[]
+        {
+            ("< 3 months", 0, 90),
+            ("3–6 months", 90, 180),
+            ("6–12 months", 180, 365),
+            ("1–2 years", 365, 730),
+            ("2+ years", 730, int.MaxValue),
+        };
+
+        return buckets
+            .Select(b => new ChartDataItem
+            {
+                Label = b.Label,
+                Value = hireDates.Count(hd => (asOf.DayNumber - hd.DayNumber) >= b.Min && (asOf.DayNumber - hd.DayNumber) < b.Max)
+            })
+            .Where(c => c.Value > 0)
+            .ToList();
+    }
+
+    public async Task<List<ChartDataItem>> GetHeadcountTrendAsync(string? store, string? om, string? oc, int? sinceYear)
+    {
+        var periods = await _db.ActiveEmployees
+            .Select(e => new { e.Month, e.Year })
+            .Distinct()
+            .OrderBy(p => p.Year).ThenBy(p => p.Month)
+            .ToListAsync();
+        if (sinceYear.HasValue) periods = periods.Where(p => p.Year >= sinceYear.Value).ToList();
+
+        var result = new List<ChartDataItem>();
+        foreach (var p in periods)
+        {
+            var q = _db.ActiveEmployees.Where(e => e.Month == p.Month && e.Year == p.Year);
+            if (!string.IsNullOrEmpty(store)) q = q.Where(e => e.Store == store);
+            else if (await GetStoresForOmOcAsync(p.Month, p.Year, om, oc) is { } omOcStores) q = q.Where(e => omOcStores.Contains(e.Store));
+
+            var count = await q.CountAsync();
+            result.Add(new ChartDataItem { Label = $"{p.Year:D4}-{p.Month:D2}", Value = count });
+        }
+        return result;
+    }
+
+    public async Task<List<StoreHeadcountRow>> GetStoreHeadcountBreakdownAsync(int month, int year, string? om, string? oc)
+    {
+        var omOcStores = await GetStoresForOmOcAsync(month, year, om, oc);
+        var q = _db.ActiveEmployees.Where(e => e.Month == month && e.Year == year);
+        if (omOcStores != null) q = q.Where(e => omOcStores.Contains(e.Store));
+
+        var rows = await q.Select(e => new { e.Store, e.Gender }).ToListAsync();
+        return rows.GroupBy(r => r.Store)
+            .Select(g => new StoreHeadcountRow
+            {
+                StoreName       = g.Key,
+                Headcount       = g.Count(),
+                GenderBreakdown = g.GroupBy(x => x.Gender).ToDictionary(gg => gg.Key, gg => gg.Count())
+            })
+            .OrderByDescending(r => r.Headcount)
+            .ToList();
+    }
 }

@@ -154,4 +154,39 @@ public class DashboardApiController : ControllerBase
         return Ok(await _dashboard.GetStoreResignationHistoryAsync(store));
     }
 
+    [HttpGet("headcount-by-job-title")]
+    public async Task<IActionResult> HeadcountByJobTitle([FromQuery] int? month, [FromQuery] int? year, [FromQuery] string? store,
+        [FromQuery] string? om, [FromQuery] string? oc)
+    {
+        var role = HttpContext.Session.GetRole();
+        var assignedName = HttpContext.Session.GetAssignedName();
+        return Ok(await _dashboard.GetHeadcountByJobTitleAsync(month, year, store, role, assignedName, om, oc));
+    }
+
+    [HttpGet("headcount-by-payroll-group")]
+    public async Task<IActionResult> HeadcountByPayrollGroup([FromQuery] int? month, [FromQuery] int? year, [FromQuery] string? store,
+        [FromQuery] string? om, [FromQuery] string? oc)
+    {
+        var role = HttpContext.Session.GetRole();
+        var assignedName = HttpContext.Session.GetAssignedName();
+        return Ok(await _dashboard.GetHeadcountByPayrollGroupAsync(month, year, store, role, assignedName, om, oc));
+    }
+
+    [HttpGet("headcount-by-tenure")]
+    public async Task<IActionResult> HeadcountByTenure([FromQuery] int? month, [FromQuery] int? year, [FromQuery] string? store,
+        [FromQuery] string? om, [FromQuery] string? oc)
+    {
+        var role = HttpContext.Session.GetRole();
+        var assignedName = HttpContext.Session.GetAssignedName();
+        return Ok(await _dashboard.GetHeadcountByTenureAsync(month, year, store, role, assignedName, om, oc));
+    }
+
+    [HttpGet("headcount-trend")]
+    public async Task<IActionResult> HeadcountTrend([FromQuery] string? store, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] int? sinceYear) =>
+        Ok(await _dashboard.GetHeadcountTrendAsync(store, om, oc, sinceYear));
+
+    [HttpGet("store-headcount-breakdown")]
+    public async Task<IActionResult> StoreHeadcountBreakdown([FromQuery] int month, [FromQuery] int year, [FromQuery] string? om, [FromQuery] string? oc) =>
+        Ok(await _dashboard.GetStoreHeadcountBreakdownAsync(month, year, om, oc));
+
 }
