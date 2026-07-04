@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using MvcApp.Data;
+using MvcApp.Extensions;
 using MvcApp.Services;
 using System.Globalization;
 
@@ -10,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
-builder.Services.AddLocalization(opts => opts.ResourcesPath = "Resources");
+builder.Services.AddLocalization(opts => opts.ResourcesPath = "");
 builder.Services.AddControllersWithViews()
     .AddViewLocalization();
 builder.Services.AddHttpContextAccessor();
@@ -81,7 +82,7 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedUICultures = supportedCultures,
     RequestCultureProviders = new List<IRequestCultureProvider>
     {
-        new CookieRequestCultureProvider { CookieName = "mf-lang" }
+        new MfLangCookieProvider()
     }
 });
 

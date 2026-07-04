@@ -80,6 +80,10 @@
 
   <!-- Common UI -->
   <data name="Common_Loading" xml:space="preserve"><value>Loading...</value></data>
+  <data name="Common_HireMonth" xml:space="preserve"><value>Hire Month</value></data>
+  <data name="Common_All" xml:space="preserve"><value>All</value></data>
+  <data name="Common_OperationManager" xml:space="preserve"><value>Operation Manager</value></data>
+  <data name="Common_OperationConsultant" xml:space="preserve"><value>Operation Consultant</value></data>
   <data name="Common_AllStores" xml:space="preserve"><value>All Stores</value></data>
   <data name="Common_AllOperationManagers" xml:space="preserve"><value>All Operation Managers</value></data>
   <data name="Common_AllOperationConsultants" xml:space="preserve"><value>All Operation Consultants</value></data>
@@ -163,6 +167,8 @@
   <data name="Page_VsNetwork" xml:space="preserve"><value>Vs. Network Average</value></data>
 
   <!-- Charts -->
+  <data name="Chart_TurnoverTrend" xml:space="preserve"><value>Turnover Trend</value></data>
+  <data name="Chart_TurnoverTrendSub" xml:space="preserve"><value>This store's turnover rate (%) across all available periods</value></data>
   <data name="Chart_TurnoverByJobTitle" xml:space="preserve"><value>Turnover by Job Title</value></data>
   <data name="Chart_TurnoverByJobTitleSub" xml:space="preserve"><value>Resignations grouped by role</value></data>
   <data name="Chart_TurnoverByTenure" xml:space="preserve"><value>Turnover by Tenure</value></data>
@@ -281,6 +287,9 @@
   <data name="SC_EarlyLeave" xml:space="preserve"><value>90-Day Early Leave</value></data>
   <data name="SC_180Retention" xml:space="preserve"><value>180-Day Retention</value></data>
   <data name="SC_ExitSentiment" xml:space="preserve"><value>Exit Sentiment</value></data>
+
+  <!-- Store Profile -->
+  <data name="SP_ActiveEmployees" xml:space="preserve"><value>Active Employees</value></data>
 
   <!-- Early Warning -->
   <data name="EW_WatchList" xml:space="preserve"><value>Watch List</value></data>

@@ -46,6 +46,10 @@
 
 @section Scripts {
 <script>
+const _L = {
+    selectPeriod: '@L["Common_SelectPeriod"]',
+    allStores: '@L["Common_AllStores"]'
+};
 const AI_QUICK_PROMPTS = [
     'مين أعلى فرع في الاستقالات الفترة دي؟',
     'ليه الاستقالات زادت عن الفترة اللي فاتت؟',
@@ -178,7 +182,7 @@ AI_QUICK_PROMPTS.forEach(q => {
 async function aiLoadFilters() {
     const periods = await (await fetch('/api/dashboard/available-periods')).json();
     const periodSel = document.getElementById('aiPeriodSelect');
-    periodSel.innerHTML = '<option value="">Select Period</option>';
+    periodSel.innerHTML = `<option value="">${_L.selectPeriod}</option>`;
     periods.forEach(p => {
         const opt = document.createElement('option');
         opt.value = `${p.month}-${p.year}`;
@@ -189,7 +193,7 @@ async function aiLoadFilters() {
 
     const stores = await (await fetch(`/api/dashboard/stores?month=${periods[0]?.month || ''}&year=${periods[0]?.year || ''}`)).json();
     const storeSel = document.getElementById('aiStoreSelect');
-    storeSel.innerHTML = '<option value="">All Stores</option>';
+    storeSel.innerHTML = `<option value="">${_L.allStores}</option>`;
     stores.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.storeName; opt.textContent = s.storeName;

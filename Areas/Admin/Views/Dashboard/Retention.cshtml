@@ -89,6 +89,12 @@
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+const _L = {
+    allStores: '@L["Common_AllStores"]',
+    hireMonth: '@L["Common_HireMonth"]',
+    allOperationManagers: '@L["Common_AllOperationManagers"]',
+    allOperationConsultants: '@L["Common_AllOperationConsultants"]'
+};
 function rtMonthName(m, y) {
     return new Date(y, m - 1).toLocaleString('default', { month: 'long', year: 'numeric' });
 }
@@ -121,7 +127,7 @@ async function rtLoadFilters() {
 
     const sel = document.getElementById('rtStoreSelect');
     const cur = sel.value;
-    sel.innerHTML = '<option value="">All Stores</option>';
+    sel.innerHTML = `<option value="">${_L.allStores}</option>`;
     (stores || []).forEach(s => {
         const opt = document.createElement('option');
         opt.value = s; opt.textContent = s;
@@ -132,7 +138,7 @@ async function rtLoadFilters() {
     const fromSel = document.getElementById('rtFromPeriodSelect');
     const toSel   = document.getElementById('rtToPeriodSelect');
     const sortedPeriods = (periods || []).slice().sort((a, b) => (a.year - b.year) || (a.month - b.month));
-    [fromSel, toSel].forEach(s => { s.innerHTML = '<option value="">Hire Month</option>'; });
+    [fromSel, toSel].forEach(s => { s.innerHTML = `<option value="">${_L.hireMonth}</option>`; });
     sortedPeriods.forEach(p => {
         [fromSel, toSel].forEach(s => {
             const opt = document.createElement('option');
@@ -148,7 +154,7 @@ async function rtLoadFilters() {
     }
 
     const omSel = document.getElementById('rtOmSelect');
-    omSel.innerHTML = '<option value="">All Operation Managers</option>';
+    omSel.innerHTML = `<option value="">${_L.allOperationManagers}</option>`;
     (managers || []).forEach(name => {
         const opt = document.createElement('option');
         opt.value = name; opt.textContent = name;
@@ -156,7 +162,7 @@ async function rtLoadFilters() {
     });
 
     const ocSel = document.getElementById('rtOcSelect');
-    ocSel.innerHTML = '<option value="">All Operation Consultants</option>';
+    ocSel.innerHTML = `<option value="">${_L.allOperationConsultants}</option>`;
     (consultants || []).forEach(name => {
         const opt = document.createElement('option');
         opt.value = name; opt.textContent = name;

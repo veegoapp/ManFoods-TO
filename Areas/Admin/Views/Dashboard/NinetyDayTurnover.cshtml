@@ -99,6 +99,12 @@
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+const _L = {
+    cohortMonth: '@L["Common_CohortMonth"]',
+    allStores: '@L["Common_AllStores"]',
+    allOperationManagers: '@L["Common_AllOperationManagers"]',
+    allOperationConsultants: '@L["Common_AllOperationConsultants"]'
+};
 function ntdFmtPeriod(m, y) {
     return new Date(y, m - 1, 1).toLocaleString('default', { month: 'short', year: 'numeric' });
 }
@@ -129,7 +135,7 @@ async function ntdLoadFilters() {
     const fromSel = document.getElementById('ntdFromPeriodSelect');
     const toSel   = document.getElementById('ntdToPeriodSelect');
     const curFrom = fromSel.value, curTo = toSel.value;
-    [fromSel, toSel].forEach(s => { s.innerHTML = '<option value="">Cohort Month</option>'; });
+    [fromSel, toSel].forEach(s => { s.innerHTML = `<option value="">${_L.cohortMonth}</option>`; });
     sortedPeriods.forEach(p => {
         [fromSel, toSel].forEach(s => {
             const opt = document.createElement('option');
@@ -148,7 +154,7 @@ async function ntdLoadFilters() {
 
     const storeSel = document.getElementById('ntdStoreSelect');
     const curStore = storeSel.value;
-    storeSel.innerHTML = '<option value="">All Stores</option>';
+    storeSel.innerHTML = `<option value="">${_L.allStores}</option>`;
     (stores || []).forEach(s => {
         const opt = document.createElement('option');
         opt.value = s; opt.textContent = s;
@@ -157,7 +163,7 @@ async function ntdLoadFilters() {
     if (curStore) storeSel.value = curStore;
 
     const omSel = document.getElementById('ntdOmSelect');
-    omSel.innerHTML = '<option value="">All Operation Managers</option>';
+    omSel.innerHTML = `<option value="">${_L.allOperationManagers}</option>`;
     (managers || []).forEach(name => {
         const opt = document.createElement('option');
         opt.value = name; opt.textContent = name;
@@ -165,7 +171,7 @@ async function ntdLoadFilters() {
     });
 
     const ocSel = document.getElementById('ntdOcSelect');
-    ocSel.innerHTML = '<option value="">All Operation Consultants</option>';
+    ocSel.innerHTML = `<option value="">${_L.allOperationConsultants}</option>`;
     (consultants || []).forEach(name => {
         const opt = document.createElement('option');
         opt.value = name; opt.textContent = name;

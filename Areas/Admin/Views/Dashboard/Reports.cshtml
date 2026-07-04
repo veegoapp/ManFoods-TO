@@ -21,8 +21,8 @@
         <div class="d-flex align-items-center gap-3 flex-wrap">
             <div class="card-icon" style="background:oklch(0.5 0.18 25 / .12)"><i class="bi bi-file-earmark-zip-fill" style="color:oklch(0.5 0.18 25)"></i></div>
             <div class="flex-grow-1" style="min-width:220px">
-                <h6 class="mb-0">@L["RP_FullReport"]</h6>
-                <p class="text-muted-custom mb-0 small">@L["RP_FullReportSub"]</p>
+                <h6 class="mb-0">@L["Rep_FullCompany"]</h6>
+                <p class="text-muted-custom mb-0 small">@L["Rep_FullCompanyDesc"]</p>
             </div>
             <form method="get" action="/admin/dashboard/export" class="d-flex gap-2 align-items-center flex-wrap">
                 <input type="hidden" name="reportType" value="full" />
@@ -52,12 +52,12 @@
     </div>
 }
 
-<h5 class="fw-bold mb-3 mt-2">@L["RP_TurnoverWorkforce"]</h5>
+<h5 class="fw-bold mb-3 mt-2">@L["Rep_TurnoverWorkforce"]</h5>
 @if (!hasPeriods)
 {
     <div class="card-dark text-center py-4 mb-4">
         <i class="bi bi-file-earmark-bar-graph-fill" style="font-size:2.5rem;color:oklch(0.5 0.18 25);display:block;margin-bottom:.75rem"></i>
-        <p class="text-muted-custom mb-0">Upload employee data first to generate period-based reports.</p>
+        <p class="text-muted-custom mb-0">@L["Rep_UploadFirst"]</p>
     </div>
 }
 else
@@ -68,15 +68,15 @@ else
                 <div class="d-flex align-items-center gap-3 mb-3">
                     <div class="card-icon" style="background:rgba(39,174,96,.15)"><i class="bi bi-file-earmark-spreadsheet-fill" style="color:#27ae60"></i></div>
                     <div>
-                        <h6 class="mb-0">Summary Report</h6>
-                        <p class="text-muted-custom mb-0 small">KPIs + Job Title + Tenure + Gender breakdown</p>
+                        <h6 class="mb-0">@L["Rep_Summary"]</h6>
+                        <p class="text-muted-custom mb-0 small">@L["Rep_SummaryDesc"]</p>
                     </div>
                 </div>
                 <form method="get" action="/admin/dashboard/export">
                     <input type="hidden" name="reportType" value="summary" />
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <label class="form-label small text-muted-custom">Month</label>
+                            <label class="form-label small text-muted-custom">@L["Common_Month"]</label>
                             <select name="month" class="form-select form-select-dark form-select-sm">
                                 @for (int m = 1; m <= 12; m++)
                                 {
@@ -86,7 +86,7 @@ else
                             </select>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small text-muted-custom">Year</label>
+                            <label class="form-label small text-muted-custom">@L["Common_Year"]</label>
                             <select name="year" class="form-select form-select-dark form-select-sm">
                                 @foreach (var y in Model!.Select(p => p.Year).Distinct().OrderByDescending(y => y))
                                 {
@@ -95,9 +95,9 @@ else
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label small text-muted-custom">Store</label>
+                            <label class="form-label small text-muted-custom">@L["Common_StoreName"]</label>
                             <select name="store" class="form-select form-select-dark form-select-sm">
-                                <option value="">All Stores</option>
+                                <option value="">@L["Common_AllStores"]</option>
                                 @foreach (var s in stores)
                                 {
                                     <option value="@s">@s</option>
@@ -106,7 +106,7 @@ else
                         </div>
                     </div>
                     <button type="submit" class="btn btn-success w-100 btn-sm">
-                        <i class="bi bi-download me-2"></i>Download Summary Excel
+                        <i class="bi bi-download me-2"></i>@L["Rep_DownloadSummaryExcel"]
                     </button>
                 </form>
             </div>
@@ -117,15 +117,15 @@ else
                 <div class="d-flex align-items-center gap-3 mb-3">
                     <div class="card-icon" style="background:oklch(0.5 0.18 25 / .12)"><i class="bi bi-shop-window" style="color:oklch(0.5 0.18 25)"></i></div>
                     <div>
-                        <h6 class="mb-0">Store Comparison Report</h6>
-                        <p class="text-muted-custom mb-0 small">Turnover by store with OC/OM assignments</p>
+                        <h6 class="mb-0">@L["Rep_StoreComparison"]</h6>
+                        <p class="text-muted-custom mb-0 small">@L["Rep_StoreComparisonDesc"]</p>
                     </div>
                 </div>
                 <form method="get" action="/admin/dashboard/export">
                     <input type="hidden" name="reportType" value="stores" />
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <label class="form-label small text-muted-custom">Month</label>
+                            <label class="form-label small text-muted-custom">@L["Common_Month"]</label>
                             <select name="month" class="form-select form-select-dark form-select-sm">
                                 @for (int m = 1; m <= 12; m++)
                                 {
@@ -135,7 +135,7 @@ else
                             </select>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small text-muted-custom">Year</label>
+                            <label class="form-label small text-muted-custom">@L["Common_Year"]</label>
                             <select name="year" class="form-select form-select-dark form-select-sm">
                                 @foreach (var y in Model!.Select(p => p.Year).Distinct().OrderByDescending(y => y))
                                 {
@@ -144,9 +144,9 @@ else
                             </select>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small text-muted-custom">Operation Manager</label>
+                            <label class="form-label small text-muted-custom">@L["Common_OperationManager"]</label>
                             <select name="om" class="form-select form-select-dark form-select-sm">
-                                <option value="">All</option>
+                                <option value="">@L["Common_All"]</option>
                                 @foreach (var name in operationManagers)
                                 {
                                     <option value="@name">@name</option>
@@ -154,9 +154,9 @@ else
                             </select>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small text-muted-custom">Operation Consultant</label>
+                            <label class="form-label small text-muted-custom">@L["Common_OperationConsultant"]</label>
                             <select name="oc" class="form-select form-select-dark form-select-sm">
-                                <option value="">All</option>
+                                <option value="">@L["Common_All"]</option>
                                 @foreach (var name in operationConsultants)
                                 {
                                     <option value="@name">@name</option>
@@ -165,7 +165,7 @@ else
                         </div>
                     </div>
                     <button type="submit" class="btn btn-danger w-100 btn-sm">
-                        <i class="bi bi-download me-2"></i>Download Store Report Excel
+                        <i class="bi bi-download me-2"></i>@L["Rep_DownloadStoreExcel"]
                     </button>
                 </form>
             </div>
@@ -173,102 +173,102 @@ else
     </div>
 }
 
-<h5 class="fw-bold mb-3">Deep Analytics</h5>
+<h5 class="fw-bold mb-3">@L["Rep_DeepAnalytics"]</h5>
 <div class="row g-4 mb-4">
     <div class="col-md-6 col-lg-3">
         <div class="card-dark h-100 d-flex flex-column">
             <div class="card-icon mb-2" style="background:oklch(0.5 0.18 25 / .12)"><i class="bi bi-hourglass-split" style="color:oklch(0.5 0.18 25)"></i></div>
-            <h6 class="mb-1">90-Day Turnover</h6>
-            <p class="text-muted-custom mb-2 small flex-grow-1">Cohort trend, by-store breakdown, early leavers, and reasons — every cohort</p>
+            <h6 class="mb-1">@L["Rep_NinetyDay"]</h6>
+            <p class="text-muted-custom mb-2 small flex-grow-1">@L["Rep_NinetyDayDesc"]</p>
             <form method="get" action="/admin/dashboard/export">
                 <input type="hidden" name="reportType" value="ninety-day" />
                 <select name="store" class="form-select form-select-dark form-select-sm mb-2">
-                    <option value="">All Stores</option>
+                    <option value="">@L["Common_AllStores"]</option>
                     @foreach (var s in stores)
                     {
                         <option value="@s">@s</option>
                     }
                 </select>
-                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>Download</button>
+                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>@L["Common_Download"]</button>
             </form>
         </div>
     </div>
     <div class="col-md-6 col-lg-3">
         <div class="card-dark h-100 d-flex flex-column">
             <div class="card-icon mb-2" style="background:oklch(0.75 0.15 85 / .15)"><i class="bi bi-graph-up-arrow" style="color:oklch(0.6 0.13 82)"></i></div>
-            <h6 class="mb-1">Retention</h6>
-            <p class="text-muted-custom mb-2 small flex-grow-1">Milestones, survival curve, trend, store leaderboard, and tenure distribution</p>
+            <h6 class="mb-1">@L["Rep_Retention"]</h6>
+            <p class="text-muted-custom mb-2 small flex-grow-1">@L["Rep_RetentionDesc"]</p>
             <form method="get" action="/admin/dashboard/export">
                 <input type="hidden" name="reportType" value="retention" />
                 <select name="store" class="form-select form-select-dark form-select-sm mb-2">
-                    <option value="">All Stores</option>
+                    <option value="">@L["Common_AllStores"]</option>
                     @foreach (var s in stores)
                     {
                         <option value="@s">@s</option>
                     }
                 </select>
-                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>Download</button>
+                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>@L["Common_Download"]</button>
             </form>
         </div>
     </div>
     <div class="col-md-6 col-lg-3">
         <div class="card-dark h-100 d-flex flex-column">
             <div class="card-icon mb-2" style="background:oklch(0.5 0.18 25 / .12)"><i class="bi bi-award-fill" style="color:oklch(0.5 0.18 25)"></i></div>
-            <h6 class="mb-1">Scorecard</h6>
-            <p class="text-muted-custom mb-2 small flex-grow-1">Store Leaders, Operation Consultants, and Operation Managers ranked side by side</p>
+            <h6 class="mb-1">@L["Rep_Scorecard"]</h6>
+            <p class="text-muted-custom mb-2 small flex-grow-1">@L["Rep_ScorecardDesc"]</p>
             <form method="get" action="/admin/dashboard/export">
                 <input type="hidden" name="reportType" value="scorecard" />
                 <select name="om" class="form-select form-select-dark form-select-sm mb-2">
-                    <option value="">All Operation Managers</option>
+                    <option value="">@L["Common_AllOperationManagers"]</option>
                     @foreach (var name in operationManagers)
                     {
                         <option value="@name">@name</option>
                     }
                 </select>
                 <select name="oc" class="form-select form-select-dark form-select-sm mb-2">
-                    <option value="">All Operation Consultants</option>
+                    <option value="">@L["Common_AllOperationConsultants"]</option>
                     @foreach (var name in operationConsultants)
                     {
                         <option value="@name">@name</option>
                     }
                 </select>
-                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>Download</button>
+                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>@L["Common_Download"]</button>
             </form>
         </div>
     </div>
     <div class="col-md-6 col-lg-3">
         <div class="card-dark h-100 d-flex flex-column">
             <div class="card-icon mb-2" style="background:oklch(0.6 0.22 22 / .12)"><i class="bi bi-exclamation-diamond-fill" style="color:oklch(0.6 0.22 22)"></i></div>
-            <h6 class="mb-1">Early Warning</h6>
-            <p class="text-muted-custom mb-2 small flex-grow-1">Full at-risk watchlist with risk scores and reasons for every flagged employee</p>
+            <h6 class="mb-1">@L["Rep_EarlyWarning"]</h6>
+            <p class="text-muted-custom mb-2 small flex-grow-1">@L["Rep_EarlyWarningDesc"]</p>
             <form method="get" action="/admin/dashboard/export">
                 <input type="hidden" name="reportType" value="early-warning" />
                 <select name="store" class="form-select form-select-dark form-select-sm mb-2">
-                    <option value="">All Stores</option>
+                    <option value="">@L["Common_AllStores"]</option>
                     @foreach (var s in stores)
                     {
                         <option value="@s">@s</option>
                     }
                 </select>
-                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>Download</button>
+                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>@L["Common_Download"]</button>
             </form>
         </div>
     </div>
 </div>
 
-<h5 class="fw-bold mb-3">Exit Interviews</h5>
+<h5 class="fw-bold mb-3">@L["Rep_ExitInterviewsSection"]</h5>
 <div class="row g-4 mb-4">
     <div class="col-md-6 col-lg-4">
         <div class="card-dark h-100 d-flex flex-column">
             <div class="card-icon mb-2" style="background:oklch(0.65 0.15 190 / .12)"><i class="bi bi-chat-square-text-fill" style="color:oklch(0.55 0.15 190)"></i></div>
-            <h6 class="mb-1">Exit Interview Report</h6>
-            <p class="text-muted-custom mb-2 small flex-grow-1">Reasons, would-return, experience, workload, engagement drivers, and anonymous comments</p>
+            <h6 class="mb-1">@L["Rep_ExitInterview"]</h6>
+            <p class="text-muted-custom mb-2 small flex-grow-1">@L["Rep_ExitInterviewDesc"]</p>
             <form method="get" action="/admin/dashboard/export">
                 <input type="hidden" name="reportType" value="exit-interviews" />
                 <div class="row g-2 mb-2">
                     <div class="col-12">
                         <select name="store" class="form-select form-select-dark form-select-sm">
-                            <option value="">All Stores</option>
+                            <option value="">@L["Common_AllStores"]</option>
                             @foreach (var s in stores)
                             {
                                 <option value="@s">@s</option>
@@ -277,7 +277,7 @@ else
                     </div>
                     <div class="col-6">
                         <select name="om" class="form-select form-select-dark form-select-sm">
-                            <option value="">All Operation Managers</option>
+                            <option value="">@L["Common_AllOperationManagers"]</option>
                             @foreach (var name in operationManagers)
                             {
                                 <option value="@name">@name</option>
@@ -286,7 +286,7 @@ else
                     </div>
                     <div class="col-6">
                         <select name="oc" class="form-select form-select-dark form-select-sm">
-                            <option value="">All Operation Consultants</option>
+                            <option value="">@L["Common_AllOperationConsultants"]</option>
                             @foreach (var name in operationConsultants)
                             {
                                 <option value="@name">@name</option>
@@ -294,7 +294,7 @@ else
                         </select>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>Download</button>
+                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>@L["Common_Download"]</button>
             </form>
         </div>
     </div>
@@ -303,7 +303,7 @@ else
 @if (hasPeriods)
 {
     <div class="card-dark">
-        <h6 class="mb-3"><i class="bi bi-calendar3 me-2" style="color:oklch(0.5 0.18 25)"></i>Available Data Periods</h6>
+        <h6 class="mb-3"><i class="bi bi-calendar3 me-2" style="color:oklch(0.5 0.18 25)"></i>@L["Rep_AvailablePeriods"]</h6>
         <div class="d-flex flex-wrap gap-2">
             @foreach (var p in Model!.OrderByDescending(x => x.Year).ThenByDescending(x => x.Month))
             {

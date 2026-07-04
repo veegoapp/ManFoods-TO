@@ -52,6 +52,9 @@
 
 @section Scripts {
 <script>
+const _L = {
+    allStores: '@L["Common_AllStores"]'
+};
 async function ewFetch(path) {
     const p = new URLSearchParams();
     const store = document.getElementById('ewStoreSelect').value;
@@ -64,7 +67,7 @@ async function ewLoadFilters() {
     const stores = await ewFetch('stores') || [];
     const sel = document.getElementById('ewStoreSelect');
     const cur = sel.value;
-    sel.innerHTML = '<option value="">All Stores</option>';
+    sel.innerHTML = `<option value="">${_L.allStores}</option>`;
     stores.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s; opt.textContent = s;

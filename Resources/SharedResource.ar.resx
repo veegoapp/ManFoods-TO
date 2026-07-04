@@ -80,6 +80,10 @@
 
   <!-- Common UI -->
   <data name="Common_Loading" xml:space="preserve"><value>جاري التحميل...</value></data>
+  <data name="Common_HireMonth" xml:space="preserve"><value>شهر التعيين</value></data>
+  <data name="Common_All" xml:space="preserve"><value>الكل</value></data>
+  <data name="Common_OperationManager" xml:space="preserve"><value>مدير العمليات</value></data>
+  <data name="Common_OperationConsultant" xml:space="preserve"><value>مستشار العمليات</value></data>
   <data name="Common_AllStores" xml:space="preserve"><value>جميع الفروع</value></data>
   <data name="Common_AllOperationManagers" xml:space="preserve"><value>جميع مديري العمليات</value></data>
   <data name="Common_AllOperationConsultants" xml:space="preserve"><value>جميع مستشاري العمليات</value></data>
@@ -163,6 +167,8 @@
   <data name="Page_VsNetwork" xml:space="preserve"><value>مقارنة بمتوسط الشبكة</value></data>
 
   <!-- Charts -->
+  <data name="Chart_TurnoverTrend" xml:space="preserve"><value>اتجاه الدوران</value></data>
+  <data name="Chart_TurnoverTrendSub" xml:space="preserve"><value>معدل دوران الفرع (%) عبر جميع الفترات المتاحة</value></data>
   <data name="Chart_TurnoverByJobTitle" xml:space="preserve"><value>الدوران حسب المسمى الوظيفي</value></data>
   <data name="Chart_TurnoverByJobTitleSub" xml:space="preserve"><value>الاستقالات مجمّعة حسب الدور</value></data>
   <data name="Chart_TurnoverByTenure" xml:space="preserve"><value>الدوران حسب مدة الخدمة</value></data>
@@ -281,6 +287,9 @@
   <data name="SC_EarlyLeave" xml:space="preserve"><value>مغادرة مبكرة 90 يوم</value></data>
   <data name="SC_180Retention" xml:space="preserve"><value>احتفاظ 180 يوم</value></data>
   <data name="SC_ExitSentiment" xml:space="preserve"><value>شعور مقابلات الخروج</value></data>
+
+  <!-- Store Profile -->
+  <data name="SP_ActiveEmployees" xml:space="preserve"><value>الموظفون الفعليون</value></data>
 
   <!-- Early Warning -->
   <data name="EW_WatchList" xml:space="preserve"><value>قائمة المتابعة</value></data>
