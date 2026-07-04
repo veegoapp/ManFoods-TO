@@ -20,6 +20,7 @@
   <data name="Nav_Dashboard" xml:space="preserve"><value>لوحة التحكم</value></data>
   <data name="Nav_MyWorkspace" xml:space="preserve"><value>مساحتي</value></data>
   <data name="Nav_Turnover" xml:space="preserve"><value>الدوران</value></data>
+  <data name="Nav_Comparisons" xml:space="preserve"><value>المقارنات</value></data>
   <data name="Nav_Workforce" xml:space="preserve"><value>القوى العاملة</value></data>
   <data name="Nav_Retention" xml:space="preserve"><value>الاحتفاظ</value></data>
   <data name="Nav_ExitInterviews" xml:space="preserve"><value>مقابلات الخروج</value></data>
@@ -139,6 +140,17 @@
   <data name="Page_HomeDashboardSub" xml:space="preserve"><value>ذكاء القوى العاملة ومقاييس معدل الدوران</value></data>
   <data name="Page_Turnover" xml:space="preserve"><value>تحليل معدل الدوران</value></data>
   <data name="Page_TurnoverSub" xml:space="preserve"><value>تحليل عميق لأنماط الاستقالات وأداء الفروع</value></data>
+  <data name="Page_Comparisons" xml:space="preserve"><value>مقارنات معدل الدوران</value></data>
+  <data name="Page_ComparisonsSub" xml:space="preserve"><value>قارن معدل الدوران ومؤشرات 90 يوم بين فترتين</value></data>
+  <data name="Comparisons_PeriodA" xml:space="preserve"><value>الفترة A</value></data>
+  <data name="Comparisons_PeriodB" xml:space="preserve"><value>الفترة B</value></data>
+  <data name="Comparisons_CopyToLastYear" xml:space="preserve"><value>نفس شهور A بالسنة اللي فاتت</value></data>
+  <data name="Comparisons_NinetyDayEarlyLeavers" xml:space="preserve"><value>مغادرو أول 90 يوم</value></data>
+  <data name="Comparisons_NinetyDayRate" xml:space="preserve"><value>معدل ترك العمل خلال 90 يوم</value></data>
+  <data name="Comparisons_StoreBreakdown" xml:space="preserve"><value>تفصيل حسب الفرع — A مقابل B</value></data>
+  <data name="Comparisons_StoreBreakdownHint" xml:space="preserve"><value>يظهر لما تكون الفترتين على "كل الفروع"</value></data>
+  <data name="Chart_TurnoverByStoreCompare" xml:space="preserve"><value>معدل الدوران حسب الفرع — A مقابل B</value></data>
+  <data name="Chart_NinetyDayByStoreCompare" xml:space="preserve"><value>معدل 90 يوم حسب الفرع — A مقابل B</value></data>
   <data name="Page_Workforce" xml:space="preserve"><value>القوى العاملة</value></data>
   <data name="Page_WorkforceSub" xml:space="preserve"><value>تكوين وتوزيع الموظفين عبر الفروع</value></data>
   <data name="Page_Retention" xml:space="preserve"><value>الاحتفاظ بالموظفين</value></data>

@@ -32,8 +32,8 @@ public class NinetyDayTurnoverApiController : ControllerBase
 
     [HttpGet("kpi")]
     public async Task<IActionResult> Kpi([FromQuery] int month, [FromQuery] int year, [FromQuery] string? store,
-        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc) =>
-        Ok(await _turnover.GetKpiAsync(month, year, store, fromMonth, fromYear, om, oc));
+        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months) =>
+        Ok(await _turnover.GetKpiAsync(month, year, store, fromMonth, fromYear, om, oc, months));
 
     [HttpGet("trend")]
     public async Task<IActionResult> Trend([FromQuery] string? store, [FromQuery] string? om, [FromQuery] string? oc) =>
@@ -41,8 +41,8 @@ public class NinetyDayTurnoverApiController : ControllerBase
 
     [HttpGet("by-store")]
     public async Task<IActionResult> ByStore([FromQuery] int month, [FromQuery] int year,
-        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc) =>
-        Ok(await _turnover.GetByStoreAsync(month, year, fromMonth, fromYear, om, oc));
+        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months) =>
+        Ok(await _turnover.GetByStoreAsync(month, year, fromMonth, fromYear, om, oc, months));
 
     [HttpGet("early-leavers")]
     public async Task<IActionResult> EarlyLeavers([FromQuery] int month, [FromQuery] int year, [FromQuery] string? store,

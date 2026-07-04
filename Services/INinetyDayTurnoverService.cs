@@ -12,14 +12,14 @@ public interface INinetyDayTurnoverService
     Task<List<string>> GetStoreListAsync();
 
     Task<NinetyDayKpiViewModel> GetKpiAsync(int month, int year, string? store,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null);
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null);
 
     /// <summary>Rate per cohort month across all available cohort periods,
     /// chronological order.</summary>
     Task<List<RateTrendItem>> GetTrendAsync(string? store, string? om = null, string? oc = null);
 
     Task<List<ChartDataItem>> GetByStoreAsync(int month, int year,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null);
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null);
 
     Task<List<EarlyLeaverRow>> GetEarlyLeaversAsync(int month, int year, string? store,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null);

@@ -20,6 +20,7 @@
   <data name="Nav_Dashboard" xml:space="preserve"><value>Dashboard</value></data>
   <data name="Nav_MyWorkspace" xml:space="preserve"><value>My Workspace</value></data>
   <data name="Nav_Turnover" xml:space="preserve"><value>Turnover</value></data>
+  <data name="Nav_Comparisons" xml:space="preserve"><value>Comparisons</value></data>
   <data name="Nav_Workforce" xml:space="preserve"><value>Workforce</value></data>
   <data name="Nav_Retention" xml:space="preserve"><value>Retention</value></data>
   <data name="Nav_ExitInterviews" xml:space="preserve"><value>Exit Interviews</value></data>
@@ -139,6 +140,17 @@
   <data name="Page_HomeDashboardSub" xml:space="preserve"><value>Workforce intelligence and turnover metrics</value></data>
   <data name="Page_Turnover" xml:space="preserve"><value>Turnover Analysis</value></data>
   <data name="Page_TurnoverSub" xml:space="preserve"><value>Deep-dive into resignation patterns and store performance</value></data>
+  <data name="Page_Comparisons" xml:space="preserve"><value>Turnover Comparisons</value></data>
+  <data name="Page_ComparisonsSub" xml:space="preserve"><value>Compare turnover and 90-day metrics between two periods</value></data>
+  <data name="Comparisons_PeriodA" xml:space="preserve"><value>Period A</value></data>
+  <data name="Comparisons_PeriodB" xml:space="preserve"><value>Period B</value></data>
+  <data name="Comparisons_CopyToLastYear" xml:space="preserve"><value>Same months as A, last year</value></data>
+  <data name="Comparisons_NinetyDayEarlyLeavers" xml:space="preserve"><value>90-Day Early Leavers</value></data>
+  <data name="Comparisons_NinetyDayRate" xml:space="preserve"><value>90-Day Turnover Rate</value></data>
+  <data name="Comparisons_StoreBreakdown" xml:space="preserve"><value>Per-Store Breakdown — A vs B</value></data>
+  <data name="Comparisons_StoreBreakdownHint" xml:space="preserve"><value>Shown when both periods use "All Stores"</value></data>
+  <data name="Chart_TurnoverByStoreCompare" xml:space="preserve"><value>Turnover Rate by Store — A vs B</value></data>
+  <data name="Chart_NinetyDayByStoreCompare" xml:space="preserve"><value>90-Day Rate by Store — A vs B</value></data>
   <data name="Page_Workforce" xml:space="preserve"><value>Workforce</value></data>
   <data name="Page_WorkforceSub" xml:space="preserve"><value>Headcount composition and distribution across stores</value></data>
   <data name="Page_Retention" xml:space="preserve"><value>Retention</value></data>

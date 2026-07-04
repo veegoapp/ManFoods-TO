@@ -1,0 +1,654 @@
+@{
+    ViewData["Title"] = L["Page_Comparisons"].Value;
+}
+
+<style>
+.cmp-select-wrap { position:relative; }
+.cmp-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 34px 0 14px; width:100%;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.cmp-select:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.cmp-select-wrap i { position:absolute; top:50%; right:12px; transform:translateY(-50%); font-size:11px; color:var(--text-3); pointer-events:none; }
+[dir="rtl"] .cmp-select { padding:0 14px 0 34px; }
+[dir="rtl"] .cmp-select-wrap i { right:auto; left:12px; }
+
+.cmp-multiselect { position:relative; }
+.cmp-multiselect-trigger {
+    display:flex; align-items:center; gap:10px; justify-content:space-between; width:100%;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 12px 0 14px; box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.cmp-multiselect-trigger:hover { border-color:var(--card-border-h); }
+.cmp-multiselect-trigger i { font-size:11px; color:var(--text-3); flex-shrink:0; }
+.cmp-multiselect-chips { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cmp-multiselect-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); min-width:220px; padding:8px; max-height:260px; overflow-y:auto;
+}
+.cmp-multiselect-panel.open { display:block; }
+[dir="rtl"] .cmp-multiselect-panel { left:auto; right:0; }
+.cmp-multiselect-actions { display:flex; gap:6px; padding:2px 4px 8px; border-bottom:1px solid var(--card-border); margin-bottom:6px; }
+.cmp-ms-action {
+    flex:1; background:var(--card-bg-2); border:1px solid var(--card-border); color:var(--red);
+    border-radius:6px; font-size:11.5px; font-weight:700; padding:6px 8px; cursor:pointer;
+}
+.cmp-ms-action:hover { background:var(--red-light); }
+.cmp-ms-option { display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:13px; color:var(--text-2); }
+.cmp-ms-option:hover { background:var(--card-bg-2); }
+.cmp-ms-option input { accent-color:var(--red); width:15px; height:15px; cursor:pointer; }
+
+.cmp-combobox { position:relative; }
+.cmp-combobox-input {
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:500;
+    height:42px; padding:0 14px; width:100%; box-shadow:var(--shadow-sm);
+}
+.cmp-combobox-input:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.cmp-combobox-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); max-height:240px; overflow-y:auto; padding:6px;
+}
+.cmp-combobox-panel.open { display:block; }
+.cmp-combo-option { padding:8px 10px; border-radius:6px; font-size:13px; color:var(--text-2); cursor:pointer; }
+.cmp-combo-option:hover { background:var(--card-bg-2); }
+.cmp-combo-option.active { color:var(--red); font-weight:700; background:var(--red-light); }
+
+/* Panels */
+.cmp-panel { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow-sm); height:100%; }
+.cmp-panel-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.cmp-panel-title { font-size:15px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px; }
+.cmp-panel-badge { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#fff; }
+.cmp-panel-a .cmp-panel-badge { background:oklch(0.5 0.18 25); }
+.cmp-panel-b .cmp-panel-badge { background:oklch(0.65 0.15 190); }
+.cmp-field { margin-bottom:12px; }
+.cmp-field-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-3); margin-bottom:5px; display:block; }
+.cmp-copy-btn {
+    background:var(--card-bg-2); border:1px solid var(--card-border); color:oklch(0.65 0.15 190);
+    border-radius:7px; font-size:12px; font-weight:700; padding:7px 10px; cursor:pointer; width:100%; margin-top:2px;
+}
+.cmp-copy-btn:hover { background:oklch(0.65 0.15 190 / .1); }
+
+/* KPI comparison cards */
+.cmp-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; }
+.cmp-kpi-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow-sm); }
+.cmp-kpi-label { font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text-3); margin-bottom:10px; direction:ltr; unicode-bidi:isolate; text-align:left; }
+.cmp-kpi-values { display:flex; align-items:baseline; gap:14px; margin-bottom:8px; direction:ltr; }
+.cmp-kpi-val { display:flex; align-items:baseline; gap:5px; }
+.cmp-kpi-tag { font-size:10px; font-weight:800; color:#fff; border-radius:4px; padding:1px 5px; }
+.cmp-kpi-val.a .cmp-kpi-tag { background:oklch(0.5 0.18 25); }
+.cmp-kpi-val.b .cmp-kpi-tag { background:oklch(0.65 0.15 190); }
+.cmp-kpi-num { font-size:20px; font-weight:800; color:var(--text); }
+.cmp-kpi-delta { font-size:12.5px; font-weight:700; display:inline-flex; align-items:center; gap:4px; direction:ltr; unicode-bidi:isolate; }
+.cmp-kpi-delta.good { color:oklch(0.62 0.15 155); }
+.cmp-kpi-delta.bad { color:oklch(0.6 0.22 22); }
+.cmp-kpi-delta.neutral { color:var(--text-3); }
+
+.cmp-insight {
+    background:linear-gradient(135deg, var(--card-bg) 0%, oklch(0.5 0.18 25 / .05) 100%);
+    border:1px solid oklch(0.5 0.18 25 / .2); border-radius:var(--radius); padding:16px 20px;
+    display:flex; align-items:center; gap:14px; font-size:14px; color:var(--text-2);
+}
+.cmp-insight i { font-size:22px; color:oklch(0.5 0.18 25); flex-shrink:0; }
+#cmpInsightText { direction:ltr; unicode-bidi:isolate; text-align:left; }
+
+.cmp-table-hint { font-size:12px; color:var(--text-3); }
+</style>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">@L["Page_Comparisons"]</h1>
+        <p class="page-subtitle">@L["Page_ComparisonsSub"]</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="cmp-panel cmp-panel-a">
+            <div class="cmp-panel-header">
+                <div class="cmp-panel-title"><span class="cmp-panel-badge">A</span>@L["Comparisons_PeriodA"]</div>
+            </div>
+            <div class="row g-2">
+                <div class="col-6">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_Year"]</span>
+                        <div class="cmp-select-wrap"><select id="cmpYearA" class="cmp-select"></select><i class="bi bi-chevron-down"></i></div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_SelectMonths"]</span>
+                        <div class="cmp-multiselect" id="cmpMonthsMultiselectA" data-label-select="@L["Common_SelectMonths"]" data-label-all="@L["Common_AllMonths"]">
+                            <button type="button" class="cmp-multiselect-trigger" id="cmpMonthsTriggerA">
+                                <span class="cmp-multiselect-chips" id="cmpMonthsChipsA">@L["Common_AllMonths"]</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <div class="cmp-multiselect-panel" id="cmpMonthsPanelA">
+                                <div class="cmp-multiselect-actions">
+                                    <button type="button" class="cmp-ms-action" id="cmpMonthsSelectAllA">@L["Common_SelectAll"]</button>
+                                    <button type="button" class="cmp-ms-action" id="cmpMonthsClearAllA">@L["Common_ClearAll"]</button>
+                                </div>
+                                <div id="cmpMonthsOptionsA"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_StoreName"]</span>
+                        <div class="cmp-combobox" id="cmpStoreComboA">
+                            <input type="text" class="cmp-combobox-input" id="cmpStoreInputA" placeholder="@L["Common_AllStores"]" autocomplete="off">
+                            <div class="cmp-combobox-panel" id="cmpStorePanelA"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_OperationManager"]</span>
+                        <div class="cmp-combobox" id="cmpOmComboA">
+                            <input type="text" class="cmp-combobox-input" id="cmpOmInputA" placeholder="@L["Common_AllOperationManagers"]" autocomplete="off">
+                            <div class="cmp-combobox-panel" id="cmpOmPanelA"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_OperationConsultant"]</span>
+                        <div class="cmp-combobox" id="cmpOcComboA">
+                            <input type="text" class="cmp-combobox-input" id="cmpOcInputA" placeholder="@L["Common_AllOperationConsultants"]" autocomplete="off">
+                            <div class="cmp-combobox-panel" id="cmpOcPanelA"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="cmp-panel cmp-panel-b">
+            <div class="cmp-panel-header">
+                <div class="cmp-panel-title"><span class="cmp-panel-badge">B</span>@L["Comparisons_PeriodB"]</div>
+            </div>
+            <div class="row g-2">
+                <div class="col-6">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_Year"]</span>
+                        <div class="cmp-select-wrap"><select id="cmpYearB" class="cmp-select"></select><i class="bi bi-chevron-down"></i></div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_SelectMonths"]</span>
+                        <div class="cmp-multiselect" id="cmpMonthsMultiselectB" data-label-select="@L["Common_SelectMonths"]" data-label-all="@L["Common_AllMonths"]">
+                            <button type="button" class="cmp-multiselect-trigger" id="cmpMonthsTriggerB">
+                                <span class="cmp-multiselect-chips" id="cmpMonthsChipsB">@L["Common_AllMonths"]</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <div class="cmp-multiselect-panel" id="cmpMonthsPanelB">
+                                <div class="cmp-multiselect-actions">
+                                    <button type="button" class="cmp-ms-action" id="cmpMonthsSelectAllB">@L["Common_SelectAll"]</button>
+                                    <button type="button" class="cmp-ms-action" id="cmpMonthsClearAllB">@L["Common_ClearAll"]</button>
+                                </div>
+                                <div id="cmpMonthsOptionsB"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_StoreName"]</span>
+                        <div class="cmp-combobox" id="cmpStoreComboB">
+                            <input type="text" class="cmp-combobox-input" id="cmpStoreInputB" placeholder="@L["Common_AllStores"]" autocomplete="off">
+                            <div class="cmp-combobox-panel" id="cmpStorePanelB"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_OperationManager"]</span>
+                        <div class="cmp-combobox" id="cmpOmComboB">
+                            <input type="text" class="cmp-combobox-input" id="cmpOmInputB" placeholder="@L["Common_AllOperationManagers"]" autocomplete="off">
+                            <div class="cmp-combobox-panel" id="cmpOmPanelB"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_OperationConsultant"]</span>
+                        <div class="cmp-combobox" id="cmpOcComboB">
+                            <input type="text" class="cmp-combobox-input" id="cmpOcInputB" placeholder="@L["Common_AllOperationConsultants"]" autocomplete="off">
+                            <div class="cmp-combobox-panel" id="cmpOcPanelB"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button type="button" class="cmp-copy-btn" id="cmpCopyToLastYear">
+                        <i class="bi bi-arrow-repeat me-1"></i>@L["Comparisons_CopyToLastYear"]
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="cmpInsight" class="cmp-insight mb-4">
+    <i class="bi bi-stars"></i>
+    <div id="cmpInsightText">@L["Common_Loading"]</div>
+</div>
+
+<div class="cmp-kpi-grid mb-4" id="cmpKpiGrid"></div>
+
+<div class="charts-grid mb-4">
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["Chart_TurnoverByStoreCompare"]</h6></div>
+        <div class="chart-body"><canvas id="cmpTurnoverChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["Chart_NinetyDayByStoreCompare"]</h6></div>
+        <div class="chart-body"><canvas id="cmpNinetyChart"></canvas></div>
+    </div>
+</div>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 25),oklch(0.6 0.16 25));border-radius:2px"></div>
+    <h5 class="mb-0 fw-bold">@L["Comparisons_StoreBreakdown"]</h5>
+    <span class="cmp-table-hint">@L["Comparisons_StoreBreakdownHint"]</span>
+</div>
+<div class="chart-card mb-4 p-0" style="overflow:hidden" id="cmpTableCard">
+    <div class="table-responsive" style="max-height:420px;overflow-y:auto">
+        <table class="table table-hover mb-0" style="font-size:13px">
+            <thead style="background:oklch(0.965 0.008 255);position:sticky;top:0;z-index:1">
+                <tr>
+                    <th class="px-3 py-2">@L["Common_StoreName"]</th>
+                    <th class="px-3 py-2 text-center">Turnover% A</th>
+                    <th class="px-3 py-2 text-center">Turnover% B</th>
+                    <th class="px-3 py-2 text-center">Δ</th>
+                    <th class="px-3 py-2 text-center">90-Day% A</th>
+                    <th class="px-3 py-2 text-center">90-Day% B</th>
+                    <th class="px-3 py-2 text-center">Δ</th>
+                </tr>
+            </thead>
+            <tbody id="cmpTableBody">
+                <tr><td colspan="7" class="text-center py-4 text-muted">@L["Common_Loading"]</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="~/js/dashboard.js" asp-append-version="true"></script>
+<script>
+/* ── Comparisons page — two independent filter panels (A / B) ──────────
+   Reuses fetchJson/mkChart/COLORS from dashboard.js; does NOT use
+   dashboard.js's period/store selects or buildQuery/loadAll (those target
+   #periodSelect etc. which don't exist here, so they safely no-op). */
+
+const panels = {
+    A: { year: null, months: [], store: '', om: '', oc: '', yearMonthsMap: {} },
+    B: { year: null, months: [], store: '', om: '', oc: '', yearMonthsMap: {} }
+};
+
+function cmpMonthShortName(m) { return new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' }); }
+
+function cmpAnchor(side) { return panels[side].months.length ? Math.max(...panels[side].months) : null; }
+
+function cmpBuildQuery(side) {
+    const p = panels[side];
+    const q = new URLSearchParams();
+    if (p.year) q.set('year', p.year);
+    if (p.months.length) { q.set('months', p.months.join(',')); q.set('month', Math.max(...p.months)); }
+    if (p.store) q.set('store', p.store);
+    if (p.om)    q.set('om', p.om);
+    if (p.oc)    q.set('oc', p.oc);
+    return q.toString();
+}
+
+function cmpLabel(side) {
+    const p = panels[side];
+    if (!p.months.length) return side;
+    const months = p.months.slice().sort((a, b) => a - b).map(cmpMonthShortName).join('/');
+    return `${side} (${months} ${p.year})`;
+}
+
+/* Generic searchable single-select combobox ---------------------------- */
+function cmpCreateCombobox({ inputId, panelId, onSelect }) {
+    const input = document.getElementById(inputId);
+    const panel = document.getElementById(panelId);
+    const allLabel = input.placeholder;
+    let options = [];
+    let value = '';
+
+    function render(filterText) {
+        const ft = (filterText || '').toLowerCase();
+        const filtered = options.filter(o => o.toLowerCase().includes(ft));
+        let html = `<div class="cmp-combo-option${value === '' ? ' active' : ''}" data-value="">${allLabel}</div>`;
+        html += filtered.map(o => `<div class="cmp-combo-option${o === value ? ' active' : ''}" data-value="${o.replace(/"/g, '&quot;')}">${o}</div>`).join('');
+        panel.innerHTML = html;
+    }
+    function open() { panel.classList.add('open'); render(''); input.select(); }
+    function close() { panel.classList.remove('open'); input.value = value; }
+
+    panel.addEventListener('mousedown', (e) => {
+        const opt = e.target.closest('.cmp-combo-option');
+        if (!opt) return;
+        e.preventDefault();
+        value = opt.dataset.value;
+        input.value = value;
+        panel.classList.remove('open');
+        onSelect(value);
+    });
+    input.addEventListener('focus', open);
+    input.addEventListener('input', () => render(input.value));
+    input.addEventListener('blur', () => setTimeout(close, 150));
+
+    return {
+        setOptions(list) { options = list || []; },
+        setValue(v) { value = v || ''; input.value = value; }
+    };
+}
+
+const combos = {};
+['A', 'B'].forEach(side => {
+    combos[`store${side}`] = cmpCreateCombobox({ inputId: `cmpStoreInput${side}`, panelId: `cmpStorePanel${side}`, onSelect: v => { panels[side].store = v; cmpRefreshAll(); } });
+    combos[`om${side}`]    = cmpCreateCombobox({ inputId: `cmpOmInput${side}`,    panelId: `cmpOmPanel${side}`,    onSelect: v => { panels[side].om    = v; cmpRefreshAll(); } });
+    combos[`oc${side}`]    = cmpCreateCombobox({ inputId: `cmpOcInput${side}`,    panelId: `cmpOcPanel${side}`,    onSelect: v => { panels[side].oc    = v; cmpRefreshAll(); } });
+});
+
+/* Months multi-select ---------------------------------------------------- */
+function cmpBuildMonthsOptions(side) {
+    const container = document.getElementById(`cmpMonthsOptions${side}`);
+    const p = panels[side];
+    const available = (p.yearMonthsMap[p.year] || []).slice().sort((a, b) => a - b);
+    container.innerHTML = available.map(m => `
+        <label class="cmp-ms-option">
+            <input type="checkbox" value="${m}" ${p.months.includes(m) ? 'checked' : ''}>
+            <span>${monthName(m, p.year)}</span>
+        </label>`).join('');
+    container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const m = parseInt(cb.value);
+            if (cb.checked) { if (!p.months.includes(m)) p.months.push(m); }
+            else { p.months = p.months.filter(x => x !== m); }
+            p.months.sort((a, b) => a - b);
+            cmpRenderMonthsChips(side);
+            cmpOnMonthsChanged(side);
+        });
+    });
+}
+
+function cmpRenderMonthsChips(side) {
+    const p = panels[side];
+    const chipsEl = document.getElementById(`cmpMonthsChips${side}`);
+    const labels = document.getElementById(`cmpMonthsMultiselect${side}`).dataset;
+    const available = p.yearMonthsMap[p.year] || [];
+    if (!p.months.length) { chipsEl.textContent = labels.labelSelect; return; }
+    if (p.months.length === available.length) { chipsEl.textContent = labels.labelAll; return; }
+    const names = p.months.map(cmpMonthShortName);
+    chipsEl.textContent = names.length <= 2 ? names.join('، ') : `${names[0]}، ${names[1]} +${names.length - 2}`;
+}
+
+let cmpMonthsDebounce;
+function cmpOnMonthsChanged(side) {
+    clearTimeout(cmpMonthsDebounce);
+    cmpMonthsDebounce = setTimeout(async () => {
+        if (!panels[side].months.length) return;
+        await cmpLoadDependentLists(side);
+        await cmpRefreshAll();
+    }, 250);
+}
+
+['A', 'B'].forEach(side => {
+    document.getElementById(`cmpMonthsSelectAll${side}`).addEventListener('click', () => {
+        const p = panels[side];
+        p.months = (p.yearMonthsMap[p.year] || []).slice().sort((a, b) => a - b);
+        cmpBuildMonthsOptions(side); cmpRenderMonthsChips(side); cmpOnMonthsChanged(side);
+    });
+    document.getElementById(`cmpMonthsClearAll${side}`).addEventListener('click', () => {
+        panels[side].months = [];
+        cmpBuildMonthsOptions(side); cmpRenderMonthsChips(side); cmpOnMonthsChanged(side);
+    });
+    document.getElementById(`cmpMonthsTrigger${side}`).addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById(`cmpMonthsPanel${side}`).classList.toggle('open');
+    });
+});
+document.addEventListener('click', (e) => {
+    ['A', 'B'].forEach(side => {
+        if (!document.getElementById(`cmpMonthsMultiselect${side}`).contains(e.target))
+            document.getElementById(`cmpMonthsPanel${side}`).classList.remove('open');
+    });
+});
+
+/* Year selects ------------------------------------------------------------ */
+['A', 'B'].forEach(side => {
+    document.getElementById(`cmpYear${side}`).addEventListener('change', async function () {
+        const p = panels[side];
+        p.year = parseInt(this.value);
+        p.months = (p.yearMonthsMap[p.year] || []).slice().sort((a, b) => a - b);
+        p.store = ''; p.om = ''; p.oc = '';
+        combos[`store${side}`].setValue(''); combos[`om${side}`].setValue(''); combos[`oc${side}`].setValue('');
+        cmpBuildMonthsOptions(side); cmpRenderMonthsChips(side);
+        await cmpLoadDependentLists(side);
+        await cmpRefreshAll();
+    });
+});
+
+/* "Copy to last year" — mirrors A into B, one year earlier -------------- */
+document.getElementById('cmpCopyToLastYear').addEventListener('click', async () => {
+    const a = panels.A, b = panels.B;
+    const targetYear = a.year - 1;
+    if (!b.yearMonthsMap[targetYear]) return;
+    b.year = targetYear;
+    document.getElementById('cmpYearB').value = targetYear;
+    const availableB = b.yearMonthsMap[targetYear] || [];
+    b.months = a.months.filter(m => availableB.includes(m));
+    b.store = a.store; b.om = a.om; b.oc = a.oc;
+    combos.storeB.setValue(a.store); combos.omB.setValue(a.om); combos.ocB.setValue(a.oc);
+    cmpBuildMonthsOptions('B'); cmpRenderMonthsChips('B');
+    await cmpLoadDependentLists('B');
+    await cmpRefreshAll();
+});
+
+/* Store / OM / OC option lists (scoped to each panel's latest month) ---- */
+async function cmpLoadDependentLists(side) {
+    const anchor = cmpAnchor(side);
+    const p = panels[side];
+    if (!anchor || !p.year) return;
+    const [stores, oms, ocs] = await Promise.all([
+        fetchJson(`/api/dashboard/stores?month=${anchor}&year=${p.year}`),
+        fetchJson(`/api/dashboard/operation-managers?month=${anchor}&year=${p.year}`),
+        fetchJson(`/api/dashboard/operation-consultants?month=${anchor}&year=${p.year}`)
+    ]);
+    combos[`store${side}`].setOptions(stores.map(s => s.storeName));
+    combos[`om${side}`].setOptions(oms);
+    combos[`oc${side}`].setOptions(ocs);
+}
+
+/* Initial load ------------------------------------------------------------ */
+async function cmpInit() {
+    const periods = await fetchJson('/api/dashboard/available-periods');
+    if (!periods.length) return;
+
+    const yearMonthsMap = {};
+    periods.forEach(pd => { (yearMonthsMap[pd.year] = yearMonthsMap[pd.year] || []).push(pd.month); });
+    const years = Object.keys(yearMonthsMap).map(Number).sort((a, b) => b - a);
+
+    for (const side of ['A', 'B']) {
+        panels[side].yearMonthsMap = yearMonthsMap;
+        const yearSel = document.getElementById(`cmpYear${side}`);
+        yearSel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    }
+
+    // A defaults to the latest year/all its months; B defaults to the same
+    // months one year earlier (the most common "vs last year" use case).
+    panels.A.year = years[0];
+    panels.A.months = (yearMonthsMap[panels.A.year] || []).slice().sort((a, b) => a - b);
+    document.getElementById('cmpYearA').value = panels.A.year;
+
+    const prevYear = panels.A.year - 1;
+    if (yearMonthsMap[prevYear]) {
+        panels.B.year = prevYear;
+        panels.B.months = panels.A.months.filter(m => yearMonthsMap[prevYear].includes(m));
+    } else {
+        panels.B.year = years[years.length - 1];
+        panels.B.months = (yearMonthsMap[panels.B.year] || []).slice().sort((a, b) => a - b);
+    }
+    document.getElementById('cmpYearB').value = panels.B.year;
+
+    cmpBuildMonthsOptions('A'); cmpRenderMonthsChips('A');
+    cmpBuildMonthsOptions('B'); cmpRenderMonthsChips('B');
+
+    await Promise.all([cmpLoadDependentLists('A'), cmpLoadDependentLists('B')]);
+    await cmpRefreshAll();
+}
+
+/* Data fetching + rendering ----------------------------------------------- */
+async function cmpFetchSide(side) {
+    const q = cmpBuildQuery(side);
+    const [kpi, ninety] = await Promise.all([
+        fetchJson(`/api/dashboard/kpis?${q}`),
+        fetchJson(`/api/ninety-day-turnover/kpi?${q}`)
+    ]);
+    let byStore = [], ninetyByStore = [];
+    if (!panels[side].store) {
+        [byStore, ninetyByStore] = await Promise.all([
+            fetchJson(`/api/dashboard/store-comparison?${q}`),
+            fetchJson(`/api/ninety-day-turnover/by-store?${q}`)
+        ]);
+    }
+    return { kpi, ninety, byStore, ninetyByStore };
+}
+
+function cmpDeltaBadge(a, b, lowerIsBetter) {
+    const delta = a - b;
+    let cls = 'neutral';
+    if (lowerIsBetter === true)  cls = delta <= 0 ? 'good' : 'bad';
+    if (lowerIsBetter === false) cls = delta >= 0 ? 'good' : 'bad';
+    const sign = delta > 0 ? '+' : '';
+    const icon = delta > 0 ? 'bi-arrow-up-short' : delta < 0 ? 'bi-arrow-down-short' : 'bi-dash';
+    return `<span class="cmp-kpi-delta ${cls}"><i class="bi ${icon}"></i>${sign}${delta.toFixed(1)} (A−B)</span>`;
+}
+
+function cmpRenderKpis(dataA, dataB) {
+    const metrics = [
+        { label: 'Turnover %',          a: dataA.kpi.turnoverRate,        b: dataB.kpi.turnoverRate,        fmt: v => v.toFixed(1) + '%', lowerIsBetter: true },
+        { label: 'Headcount',           a: dataA.kpi.totalHeadcount,      b: dataB.kpi.totalHeadcount,      fmt: v => v,                  lowerIsBetter: null },
+        { label: 'New Hires',           a: dataA.kpi.newHires,            b: dataB.kpi.newHires,            fmt: v => v,                  lowerIsBetter: false },
+        { label: 'Resignations',        a: dataA.kpi.totalResignations,   b: dataB.kpi.totalResignations,   fmt: v => v,                  lowerIsBetter: true },
+        { label: '90-Day Early Leavers',a: dataA.ninety.earlyLeavers,     b: dataB.ninety.earlyLeavers,     fmt: v => v,                  lowerIsBetter: true },
+        { label: '90-Day Turnover Rate',a: dataA.ninety.rate,             b: dataB.ninety.rate,             fmt: v => v.toFixed(1) + '%', lowerIsBetter: true }
+    ];
+
+    document.getElementById('cmpKpiGrid').innerHTML = metrics.map(m => `
+        <div class="cmp-kpi-card">
+            <div class="cmp-kpi-label">${m.label}</div>
+            <div class="cmp-kpi-values">
+                <div class="cmp-kpi-val a"><span class="cmp-kpi-tag">A</span><span class="cmp-kpi-num">${m.fmt(m.a)}</span></div>
+                <div class="cmp-kpi-val b"><span class="cmp-kpi-tag">B</span><span class="cmp-kpi-num">${m.fmt(m.b)}</span></div>
+            </div>
+            ${cmpDeltaBadge(m.a, m.b, m.lowerIsBetter)}
+        </div>
+    `).join('');
+}
+
+function cmpRenderInsight(dataA, dataB) {
+    const dTurnover = dataA.kpi.turnoverRate - dataB.kpi.turnoverRate;
+    const d90 = dataA.ninety.rate - dataB.ninety.rate;
+    const dir = v => v <= 0 ? 'improved' : 'worsened';
+    const arrow = v => v <= 0 ? '↓' : '↑';
+    document.getElementById('cmpInsightText').innerHTML =
+        `<b>${cmpLabel('A')}</b> vs <b>${cmpLabel('B')}</b> — ` +
+        `Turnover ${dir(dTurnover)} ${arrow(dTurnover)} ${Math.abs(dTurnover).toFixed(1)}pt, ` +
+        `90-day rate ${dir(d90)} ${arrow(d90)} ${Math.abs(d90).toFixed(1)}pt.`;
+}
+
+let cmpTurnoverChart, cmpNinetyChart;
+function cmpBuildSeries(dataA, dataB, storeKey, overallA, overallB) {
+    const allA = !panels.A.store, allB = !panels.B.store;
+    if (allA && allB) {
+        const mapA = {}, mapB = {};
+        (dataA[storeKey] || []).forEach(r => mapA[r.label ?? r.storeName] = r.value ?? r.turnoverRate);
+        (dataB[storeKey] || []).forEach(r => mapB[r.label ?? r.storeName] = r.value ?? r.turnoverRate);
+        const stores = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)]))
+            .sort((s1, s2) => ((mapA[s2] || 0) + (mapB[s2] || 0)) - ((mapA[s1] || 0) + (mapB[s1] || 0)))
+            .slice(0, 8);
+        return { labels: stores, seriesA: stores.map(s => mapA[s] || 0), seriesB: stores.map(s => mapB[s] || 0) };
+    }
+    return { labels: ['Overall'], seriesA: [overallA], seriesB: [overallB] };
+}
+
+function cmpRenderCharts(dataA, dataB) {
+    const t = cmpBuildSeries(dataA, dataB, 'byStore', dataA.kpi.turnoverRate, dataB.kpi.turnoverRate);
+    cmpTurnoverChart = mkChart(cmpTurnoverChart, 'cmpTurnoverChart', {
+        type: 'bar',
+        data: { labels: t.labels, datasets: [
+            { label: cmpLabel('A'), data: t.seriesA, backgroundColor: 'oklch(0.5 0.18 25)', borderRadius: 4 },
+            { label: cmpLabel('B'), data: t.seriesB, backgroundColor: 'oklch(0.65 0.15 190)', borderRadius: 4 }
+        ] },
+        options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { ticks: { callback: v => v + '%' } } } }
+    });
+
+    const n = cmpBuildSeries(dataA, dataB, 'ninetyByStore', dataA.ninety.rate, dataB.ninety.rate);
+    cmpNinetyChart = mkChart(cmpNinetyChart, 'cmpNinetyChart', {
+        type: 'bar',
+        data: { labels: n.labels, datasets: [
+            { label: cmpLabel('A'), data: n.seriesA, backgroundColor: 'oklch(0.5 0.18 25)', borderRadius: 4 },
+            { label: cmpLabel('B'), data: n.seriesB, backgroundColor: 'oklch(0.65 0.15 190)', borderRadius: 4 }
+        ] },
+        options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { ticks: { callback: v => v + '%' } } } }
+    });
+}
+
+function cmpRenderTable(dataA, dataB) {
+    const card = document.getElementById('cmpTableCard');
+    if (panels.A.store || panels.B.store) { card.style.display = 'none'; return; }
+    card.style.display = '';
+
+    const turnoverA = {}, turnoverB = {}, ninetyA = {}, ninetyB = {};
+    dataA.byStore.forEach(r => turnoverA[r.storeName] = r.turnoverRate);
+    dataB.byStore.forEach(r => turnoverB[r.storeName] = r.turnoverRate);
+    dataA.ninetyByStore.forEach(r => ninetyA[r.label] = r.value);
+    dataB.ninetyByStore.forEach(r => ninetyB[r.label] = r.value);
+
+    const stores = Array.from(new Set([...Object.keys(turnoverA), ...Object.keys(turnoverB)])).sort();
+    if (!stores.length) {
+        document.getElementById('cmpTableBody').innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No data.</td></tr>`;
+        return;
+    }
+
+    document.getElementById('cmpTableBody').innerHTML = stores.map(s => {
+        const ta = turnoverA[s], tb = turnoverB[s], na = ninetyA[s], nb = ninetyB[s];
+        const fmt = v => v === undefined ? '<span class="text-muted">—</span>' : v.toFixed(1) + '%';
+        const ltr = v => `<span style="direction:ltr;unicode-bidi:isolate">${v}</span>`;
+        const dt = (ta !== undefined && tb !== undefined) ? ltr((ta - tb).toFixed(1)) : '—';
+        const dn = (na !== undefined && nb !== undefined) ? ltr((na - nb).toFixed(1)) : '—';
+        return `<tr>
+            <td class="px-3 py-2 fw-semibold">${s}</td>
+            <td class="px-3 py-2 text-center">${fmt(ta)}</td>
+            <td class="px-3 py-2 text-center">${fmt(tb)}</td>
+            <td class="px-3 py-2 text-center">${dt}</td>
+            <td class="px-3 py-2 text-center">${fmt(na)}</td>
+            <td class="px-3 py-2 text-center">${fmt(nb)}</td>
+            <td class="px-3 py-2 text-center">${dn}</td>
+        </tr>`;
+    }).join('');
+}
+
+async function cmpRefreshAll() {
+    if (!panels.A.months.length || !panels.B.months.length) return;
+    const [dataA, dataB] = await Promise.all([cmpFetchSide('A'), cmpFetchSide('B')]);
+    cmpRenderKpis(dataA, dataB);
+    cmpRenderInsight(dataA, dataB);
+    cmpRenderCharts(dataA, dataB);
+    cmpRenderTable(dataA, dataB);
+}
+
+cmpInit();
+</script>
+}

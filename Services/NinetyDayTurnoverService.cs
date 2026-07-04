@@ -124,13 +124,15 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
     }
 
     public async Task<NinetyDayKpiViewModel> GetKpiAsync(int month, int year, string? store,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
     {
         var activeHires = await LoadActiveHiresAsync();
         var resTenures = await LoadResignationTenuresAsync();
-        var keys = DashboardService.ExpandRangeKeys(fromMonth ?? month, fromYear ?? year, month, year).ToHashSet();
+        var periods = DashboardService.ResolvePeriods(month, year, fromMonth, fromYear, months);
+        var keys = periods.Select(p => p.Year * 100 + p.Month).ToHashSet();
+        var anchor = periods.OrderByDescending(p => p.Year * 100 + p.Month).First();
         var omOcStores = await GetStoresForOmOcAsync(om, oc);
-        return ComputeKpi(activeHires, resTenures, keys, month, year, store, omOcStores);
+        return ComputeKpi(activeHires, resTenures, keys, anchor.Month, anchor.Year, store, omOcStores);
     }
 
     public async Task<List<RateTrendItem>> GetTrendAsync(string? store, string? om = null, string? oc = null)
@@ -163,11 +165,13 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
     }
 
     public async Task<List<ChartDataItem>> GetByStoreAsync(int month, int year,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
     {
         var activeHires = await LoadActiveHiresAsync();
         var resTenures = await LoadResignationTenuresAsync();
-        var keys = DashboardService.ExpandRangeKeys(fromMonth ?? month, fromYear ?? year, month, year).ToHashSet();
+        var periods = DashboardService.ResolvePeriods(month, year, fromMonth, fromYear, months);
+        var keys = periods.Select(p => p.Year * 100 + p.Month).ToHashSet();
+        var anchor = periods.OrderByDescending(p => p.Year * 100 + p.Month).First();
         var omOcStores = await GetStoresForOmOcAsync(om, oc);
 
         var stores = activeHires.Where(a => keys.Contains(a.Year * 100 + a.Month)).Select(a => a.Store)
@@ -179,7 +183,7 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
         var result = new List<ChartDataItem>();
         foreach (var store in stores)
         {
-            var kpi = ComputeKpi(activeHires, resTenures, keys, month, year, store, null);
+            var kpi = ComputeKpi(activeHires, resTenures, keys, anchor.Month, anchor.Year, store, null);
             if (kpi.TotalHires == 0) continue;
             result.Add(new ChartDataItem { Label = store, Value = (int)Math.Round(kpi.Rate) });
         }
