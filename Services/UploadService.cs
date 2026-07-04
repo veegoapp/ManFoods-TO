@@ -3,12 +3,15 @@ using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using MvcApp.Data;
 using MvcApp.Models;
+using MvcApp.Models.ViewModels;
 
 namespace MvcApp.Services;
 
 public class UploadService : IUploadService
 {
     private readonly AppDbContext _db;
+
+    private static readonly HashSet<string> PeriodFileTypes = new() { "active_employees", "resignations", "store_reference" };
 
     public UploadService(AppDbContext db) => _db = db;
 
@@ -65,17 +68,18 @@ public class UploadService : IUploadService
             _ => "application/octet-stream"
         };
 
-    public async Task<(bool, string, int)> UploadActiveEmployeesAsync(IFormFile file, int month, int year, string uploadedBy)
+    private static async Task<byte[]> ReadBytesAsync(IFormFile file)
     {
-        ValidateFile(file);
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms);
-        var fileBytes = ms.ToArray();
-        ms.Position = 0;
+        return ms.ToArray();
+    }
+
+    private static List<ActiveEmployee> ParseActiveEmployees(byte[] fileBytes, int month, int year)
+    {
+        using var ms = new MemoryStream(fileBytes);
         using var wb = new XLWorkbook(ms);
         var ws = wb.Worksheet(1);
-
-        await _db.ActiveEmployees.Where(e => e.Month == month && e.Year == year).ExecuteDeleteAsync();
 
         var records = new List<ActiveEmployee>();
         foreach (var row in ws.RowsUsed().Skip(1))
@@ -97,25 +101,14 @@ public class UploadService : IUploadService
                 HireDate = ColDate(row, ws, "Hire Date", "HireDate", "hire_date", "Join Date"),
             });
         }
-
-        if (records.Count > 0) await _db.ActiveEmployees.AddRangeAsync(records);
-        _db.UploadLogs.Add(new UploadLog { FileType = "active_employees", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
-        await _db.SaveChangesAsync();
-
-        return (true, $"Processed {records.Count} records", records.Count);
+        return records;
     }
 
-    public async Task<(bool, string, int)> UploadResignationsAsync(IFormFile file, int month, int year, string uploadedBy)
+    private static List<Resignation> ParseResignations(byte[] fileBytes, int month, int year)
     {
-        ValidateFile(file);
-        using var ms = new MemoryStream();
-        await file.CopyToAsync(ms);
-        var fileBytes = ms.ToArray();
-        ms.Position = 0;
+        using var ms = new MemoryStream(fileBytes);
         using var wb = new XLWorkbook(ms);
         var ws = wb.Worksheet(1);
-
-        await _db.Resignations.Where(r => r.Month == month && r.Year == year).ExecuteDeleteAsync();
 
         var records = new List<Resignation>();
         foreach (var row in ws.RowsUsed().Skip(1))
@@ -137,25 +130,14 @@ public class UploadService : IUploadService
                 CostCenter = Col(row, ws, "Cost Center", "CostCenter", "cost_center"),
             });
         }
-
-        if (records.Count > 0) await _db.Resignations.AddRangeAsync(records);
-        _db.UploadLogs.Add(new UploadLog { FileType = "resignations", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
-        await _db.SaveChangesAsync();
-
-        return (true, $"Processed {records.Count} records", records.Count);
+        return records;
     }
 
-    public async Task<(bool, string, int)> UploadStoreReferenceAsync(IFormFile file, int month, int year, string uploadedBy)
+    private static List<StoreReference> ParseStoreReference(byte[] fileBytes, int month, int year)
     {
-        ValidateFile(file);
-        using var ms = new MemoryStream();
-        await file.CopyToAsync(ms);
-        var fileBytes = ms.ToArray();
-        ms.Position = 0;
+        using var ms = new MemoryStream(fileBytes);
         using var wb = new XLWorkbook(ms);
         var ws = wb.Worksheet(1);
-
-        await _db.StoreReferences.Where(s => s.Month == month && s.Year == year).ExecuteDeleteAsync();
 
         var records = new List<StoreReference>();
         foreach (var row in ws.RowsUsed().Skip(1))
@@ -172,12 +154,54 @@ public class UploadService : IUploadService
                 OperationManager = Col(row, ws, "Operation Manager", "OperationManager", "OM", "Manager"),
             });
         }
+        return records;
+    }
 
-        if (records.Count > 0) await _db.StoreReferences.AddRangeAsync(records);
-        _db.UploadLogs.Add(new UploadLog { FileType = "store_reference", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
+    public async Task<(bool, string, Dictionary<string, int>)> UploadPeriodDataAsync(
+        IFormFile activeEmployeesFile, IFormFile resignationsFile, IFormFile storeReferenceFile,
+        int month, int year, string uploadedBy)
+    {
+        ValidateFile(activeEmployeesFile);
+        ValidateFile(resignationsFile);
+        ValidateFile(storeReferenceFile);
+
+        var activeBytes = await ReadBytesAsync(activeEmployeesFile);
+        var resignBytes = await ReadBytesAsync(resignationsFile);
+        var storeBytes = await ReadBytesAsync(storeReferenceFile);
+
+        // Parsed before the transaction opens — a bad workbook throws here and
+        // nothing has touched the database, so partial uploads are impossible.
+        var activeRecords = ParseActiveEmployees(activeBytes, month, year);
+        var resignRecords = ParseResignations(resignBytes, month, year);
+        var storeRecords = ParseStoreReference(storeBytes, month, year);
+
+        await using var tx = await _db.Database.BeginTransactionAsync();
+
+        await _db.ActiveEmployees.Where(e => e.Month == month && e.Year == year).ExecuteDeleteAsync();
+        await _db.Resignations.Where(r => r.Month == month && r.Year == year).ExecuteDeleteAsync();
+        await _db.StoreReferences.Where(s => s.Month == month && s.Year == year).ExecuteDeleteAsync();
+        // Re-uploading the same period replaces its log entries too, so the
+        // history table always shows exactly one current set of files per month.
+        await _db.UploadLogs.Where(l => PeriodFileTypes.Contains(l.FileType) && l.Month == month && l.Year == year).ExecuteDeleteAsync();
+
+        if (activeRecords.Count > 0) await _db.ActiveEmployees.AddRangeAsync(activeRecords);
+        if (resignRecords.Count > 0) await _db.Resignations.AddRangeAsync(resignRecords);
+        if (storeRecords.Count > 0) await _db.StoreReferences.AddRangeAsync(storeRecords);
+
+        _db.UploadLogs.Add(new UploadLog { FileType = "active_employees", FileName = activeEmployeesFile.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = activeBytes, ContentType = GetContentType(activeEmployeesFile.FileName) });
+        _db.UploadLogs.Add(new UploadLog { FileType = "resignations", FileName = resignationsFile.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = resignBytes, ContentType = GetContentType(resignationsFile.FileName) });
+        _db.UploadLogs.Add(new UploadLog { FileType = "store_reference", FileName = storeReferenceFile.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = storeBytes, ContentType = GetContentType(storeReferenceFile.FileName) });
+
         await _db.SaveChangesAsync();
+        await tx.CommitAsync();
 
-        return (true, $"Processed {records.Count} records", records.Count);
+        var counts = new Dictionary<string, int>
+        {
+            ["active_employees"] = activeRecords.Count,
+            ["resignations"] = resignRecords.Count,
+            ["store_reference"] = storeRecords.Count,
+        };
+        return (true, $"Uploaded {activeRecords.Count} active employees, {resignRecords.Count} resignations, and {storeRecords.Count} store references.", counts);
     }
 
     private static string NormalizeHeader(string s) => Regex.Replace(s ?? "", @"\s+", " ").Trim();
@@ -307,22 +331,43 @@ public class UploadService : IUploadService
         return (true, $"Processed {parsed.Count} exit interview responses", parsed.Count);
     }
 
-    private static readonly System.Linq.Expressions.Expression<Func<UploadLog, UploadLog>> ProjectWithoutFile = l => new UploadLog
+    public async Task<(List<UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize)
     {
-        Id = l.Id, FileType = l.FileType, FileName = l.FileName,
-        Month = l.Month, Year = l.Year, UploadDate = l.UploadDate,
-        UploadedBy = l.UploadedBy, HasFile = l.FileContent != null
-    };
+        var logs = await _db.UploadLogs.OrderByDescending(l => l.UploadDate)
+            .Select(l => new { l.Id, l.FileType, l.FileName, l.Month, l.Year, l.UploadDate, l.UploadedBy, HasFile = l.FileContent != null })
+            .ToListAsync();
 
-    public async Task<List<UploadLog>> GetLogsAsync() =>
-        await _db.UploadLogs.OrderByDescending(l => l.UploadDate).Select(ProjectWithoutFile).ToListAsync();
+        var items = new List<UploadHistoryItem>();
 
-    public async Task<(List<UploadLog> Items, int TotalCount)> GetLogsPagedAsync(int page, int pageSize)
-    {
-        var q = _db.UploadLogs.OrderByDescending(l => l.UploadDate);
-        var total = await q.CountAsync();
-        var items = await q.Skip((page - 1) * pageSize).Take(pageSize).Select(ProjectWithoutFile).ToListAsync();
-        return (items, total);
+        foreach (var group in logs.Where(l => PeriodFileTypes.Contains(l.FileType)).GroupBy(l => (l.Month, l.Year)))
+        {
+            items.Add(new UploadHistoryItem
+            {
+                Kind = "period",
+                Month = group.Key.Month,
+                Year = group.Key.Year,
+                UploadDate = group.Max(l => l.UploadDate),
+                UploadedBy = group.OrderByDescending(l => l.UploadDate).First().UploadedBy,
+                PrimaryLogId = group.First().Id,
+                Files = group.Select(l => new UploadFileRef { LogId = l.Id, FileType = l.FileType, FileName = l.FileName, HasFile = l.HasFile }).ToList(),
+            });
+        }
+
+        foreach (var l in logs.Where(l => l.FileType == "exit_interviews"))
+        {
+            items.Add(new UploadHistoryItem
+            {
+                Kind = "exit_interviews",
+                UploadDate = l.UploadDate,
+                UploadedBy = l.UploadedBy,
+                PrimaryLogId = l.Id,
+                Files = new List<UploadFileRef> { new() { LogId = l.Id, FileType = l.FileType, FileName = l.FileName, HasFile = l.HasFile } },
+            });
+        }
+
+        var ordered = items.OrderByDescending(i => i.UploadDate).ToList();
+        var page_ = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        return (page_, ordered.Count);
     }
 
     public async Task<(byte[] Content, string ContentType, string FileName)?> GetFileAsync(int id)
@@ -337,16 +382,22 @@ public class UploadService : IUploadService
         var log = await _db.UploadLogs.FindAsync(id);
         if (log == null) return;
 
-        if (log.FileType == "active_employees")
+        if (PeriodFileTypes.Contains(log.FileType))
+        {
+            // The three period files are uploaded and validated together, so
+            // deleting any one of them invalidates the whole month — remove
+            // all three log entries and their underlying data together.
             await _db.ActiveEmployees.Where(e => e.Month == log.Month && e.Year == log.Year).ExecuteDeleteAsync();
-        else if (log.FileType == "resignations")
             await _db.Resignations.Where(r => r.Month == log.Month && r.Year == log.Year).ExecuteDeleteAsync();
-        else if (log.FileType == "store_reference")
             await _db.StoreReferences.Where(s => s.Month == log.Month && s.Year == log.Year).ExecuteDeleteAsync();
-        // exit_interviews is intentionally excluded: each upload is a full,
-        // cumulative Forms export upserted by response id, not a single
-        // month/year snapshot, so deleting one log entry must not wipe data.
+            await _db.UploadLogs.Where(l => PeriodFileTypes.Contains(l.FileType) && l.Month == log.Month && l.Year == log.Year).ExecuteDeleteAsync();
+            return;
+        }
 
+        // exit_interviews is intentionally excluded from period-cascading
+        // deletion: each upload is a full, cumulative Forms export upserted
+        // by response id, not a single month/year snapshot, so deleting one
+        // log entry must not wipe data or other log rows.
         _db.UploadLogs.Remove(log);
         await _db.SaveChangesAsync();
     }

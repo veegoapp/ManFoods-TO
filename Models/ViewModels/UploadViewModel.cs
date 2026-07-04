@@ -2,11 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MvcApp.Models.ViewModels;
 
-public class UploadViewModel
+/// <summary>
+/// Active Employees + Resignations + Store Reference are uploaded together as
+/// one unit: a month's data is only accepted once all three files are present.
+/// </summary>
+public class PeriodUploadViewModel
 {
-    [Required]
-    public IFormFile? File { get; set; }
-
     [Required]
     [Range(1, 12)]
     public int Month { get; set; }
@@ -14,6 +15,15 @@ public class UploadViewModel
     [Required]
     [Range(2000, 2100)]
     public int Year { get; set; }
+
+    [Required]
+    public IFormFile? ActiveEmployeesFile { get; set; }
+
+    [Required]
+    public IFormFile? ResignationsFile { get; set; }
+
+    [Required]
+    public IFormFile? StoreReferenceFile { get; set; }
 }
 
 public class ExitInterviewUploadViewModel

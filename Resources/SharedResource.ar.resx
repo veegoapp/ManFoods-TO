@@ -32,6 +32,39 @@
   <data name="Nav_Stores" xml:space="preserve"><value>الفروع</value></data>
   <data name="Nav_DataManagement" xml:space="preserve"><value>إدارة البيانات</value></data>
   <data name="Nav_Reports" xml:space="preserve"><value>التقارير</value></data>
+
+  <!-- Data Management / Uploads -->
+  <data name="Page_DataManagement" xml:space="preserve"><value>إدارة البيانات</value></data>
+  <data name="Page_DataManagementSub" xml:space="preserve"><value>ارفع بيانات القوى العاملة الشهرية، واحتفظ بسجل كامل، وحمّل أو احذف الرفعات السابقة</value></data>
+  <data name="DM_MonthlyData" xml:space="preserve"><value>بيانات القوى العاملة الشهرية</value></data>
+  <data name="DM_MonthlyDataSub" xml:space="preserve"><value>الأكتيف ليست والاستقالات ومرجع الفروع بيترفعوا مع بعض كوحدة واحدة</value></data>
+  <data name="DM_MonthlyDataRequirement" xml:space="preserve"><value>الثلاث ملفات مطلوبين مع بعض — مينفعش ترفع واحد أو اتنين وتسيب الباقي. لو الشهر ده عنده بيانات بالفعل، الرفع تاني هيستبدلها بالكامل.</value></data>
+  <data name="UL_ActiveEmployees" xml:space="preserve"><value>الأكتيف ليست</value></data>
+  <data name="UL_ActiveEmployeesSub" xml:space="preserve"><value>كل الموظفين الشغالين في الشهر</value></data>
+  <data name="UL_Resignations" xml:space="preserve"><value>الاستقالات</value></data>
+  <data name="UL_ResignationsSub" xml:space="preserve"><value>كل من ترك العمل خلال الشهر</value></data>
+  <data name="UL_StoreReference" xml:space="preserve"><value>مرجع الفروع</value></data>
+  <data name="UL_StoreReferenceSub" xml:space="preserve"><value>قائد الفرع / الأوبريشن كونسلتنت / الأوبريشن مانجر لكل فرع</value></data>
+  <data name="UL_ExitInterviews" xml:space="preserve"><value>مقابلات الخروج</value></data>
+  <data name="UL_ExitInterviewsSub" xml:space="preserve"><value>صدّر الردود من Microsoft Forms وارفعها زي ما هي — من غير أي تعديل</value></data>
+  <data name="UL_ExitInterviewsNote" xml:space="preserve"><value>غير مرتبطة بشهر معين — إعادة رفع كل الردود دايمًا أمان، الردود القديمة بتتحدّث لو موجودة بدل ما تتكرر.</value></data>
+  <data name="UL_TemplateActiveEmployees" xml:space="preserve"><value>نموذج الأكتيف ليست</value></data>
+  <data name="UL_TemplateResignations" xml:space="preserve"><value>نموذج الاستقالات</value></data>
+  <data name="UL_TemplateStoreRef" xml:space="preserve"><value>نموذج مرجع الفروع</value></data>
+  <data name="UL_SampleExitInterviews" xml:space="preserve"><value>عيّنة مقابلات الخروج</value></data>
+  <data name="DM_DropzoneHint" xml:space="preserve"><value>اسحب الملف هنا أو دوس للاختيار</value></data>
+  <data name="DM_ChangeFile" xml:space="preserve"><value>تغيير الملف</value></data>
+  <data name="DM_UploadMonthlyButton" xml:space="preserve"><value>رفع البيانات الشهرية</value></data>
+  <data name="DM_UploadExitInterviewsButton" xml:space="preserve"><value>رفع مقابلات الخروج</value></data>
+  <data name="DM_History" xml:space="preserve"><value>سجل الرفع</value></data>
+  <data name="DM_NoUploads" xml:space="preserve"><value>مفيش رفعات لسه</value></data>
+  <data name="DM_Download" xml:space="preserve"><value>تحميل</value></data>
+  <data name="DM_Delete" xml:space="preserve"><value>حذف</value></data>
+  <data name="DM_DeleteConfirmPeriod" xml:space="preserve"><value>حذف بيانات الشهر ده؟ ده هيمسح الثلاث ملفات (الأكتيف ليست، الاستقالات، مرجع الفروع) وبياناتهم من الداتا بيز.</value></data>
+  <data name="DM_DeleteConfirmExit" xml:space="preserve"><value>حذف سجل رفع مقابلات الخروج ده؟ (الردود نفسها هتفضل موجودة في النظام)</value></data>
+  <data name="DM_PageSummary" xml:space="preserve"><value>عرض صفحة {0} من {1} ({2} إجمالي)</value></data>
+  <data name="DM_MonthlyDataBadge" xml:space="preserve"><value>بيانات شهرية</value></data>
+  <data name="DM_ExitInterviewsBadge" xml:space="preserve"><value>مقابلات خروج</value></data>
   <data name="Nav_Users" xml:space="preserve"><value>المستخدمون</value></data>
   <data name="Nav_Targets" xml:space="preserve"><value>الأهداف</value></data>
 

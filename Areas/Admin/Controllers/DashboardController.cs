@@ -140,7 +140,7 @@ public class DashboardController : Controller
     public async Task<IActionResult> Uploads(int page = 1)
     {
         const int pageSize = 10;
-        var (items, total) = await _uploads.GetLogsPagedAsync(page, pageSize);
+        var (items, total) = await _uploads.GetHistoryPagedAsync(page, pageSize);
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = (int)Math.Ceiling((double)total / pageSize);
         ViewBag.TotalCount = total;
@@ -148,28 +148,19 @@ public class DashboardController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
-    public async Task<IActionResult> UploadActiveEmployees(MvcApp.Models.ViewModels.UploadViewModel vm)
+    public async Task<IActionResult> UploadPeriodData(MvcApp.Models.ViewModels.PeriodUploadViewModel vm)
     {
-        if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = "Please select a file and specify month/year."; return RedirectToAction("Uploads"); }
-        try { var email = HttpContext.Session.GetEmail(); var (_, msg, _) = await _uploads.UploadActiveEmployeesAsync(vm.File, vm.Month, vm.Year, email); TempData["Success"] = msg; }
-        catch (Exception ex) { TempData["Error"] = $"Upload failed: {ex.Message}"; }
-        return RedirectToAction("Uploads");
-    }
-
-    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
-    public async Task<IActionResult> UploadResignations(MvcApp.Models.ViewModels.UploadViewModel vm)
-    {
-        if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = "Please select a file and specify month/year."; return RedirectToAction("Uploads"); }
-        try { var email = HttpContext.Session.GetEmail(); var (_, msg, _) = await _uploads.UploadResignationsAsync(vm.File, vm.Month, vm.Year, email); TempData["Success"] = msg; }
-        catch (Exception ex) { TempData["Error"] = $"Upload failed: {ex.Message}"; }
-        return RedirectToAction("Uploads");
-    }
-
-    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
-    public async Task<IActionResult> UploadStoreReference(MvcApp.Models.ViewModels.UploadViewModel vm)
-    {
-        if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = "Please select a file and specify month/year."; return RedirectToAction("Uploads"); }
-        try { var email = HttpContext.Session.GetEmail(); var (_, msg, _) = await _uploads.UploadStoreReferenceAsync(vm.File, vm.Month, vm.Year, email); TempData["Success"] = msg; }
+        if (!ModelState.IsValid || vm.ActiveEmployeesFile == null || vm.ResignationsFile == null || vm.StoreReferenceFile == null)
+        {
+            TempData["Error"] = "الرجاء رفع الثلاث ملفات (الأكتيف ليست، الاستقالات، ومرجع الفروع) مع تحديد الشهر والسنة — الثلاثة مطلوبين معًا.";
+            return RedirectToAction("Uploads");
+        }
+        try
+        {
+            var email = HttpContext.Session.GetEmail();
+            var (_, msg, _) = await _uploads.UploadPeriodDataAsync(vm.ActiveEmployeesFile, vm.ResignationsFile, vm.StoreReferenceFile, vm.Month, vm.Year, email);
+            TempData["Success"] = msg;
+        }
         catch (Exception ex) { TempData["Error"] = $"Upload failed: {ex.Message}"; }
         return RedirectToAction("Uploads");
     }

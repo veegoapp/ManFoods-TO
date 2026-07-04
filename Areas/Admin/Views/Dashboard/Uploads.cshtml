@@ -1,7 +1,92 @@
-@model List<MvcApp.Models.UploadLog>
+@model List<MvcApp.Models.ViewModels.UploadHistoryItem>
 @{
     ViewData["Title"] = L["Page_DataManagement"].Value;
+    var currentPage = (int)(ViewBag.CurrentPage ?? 1);
+    var totalPages = (int)(ViewBag.TotalPages ?? 1);
+    var totalCount = (int)(ViewBag.TotalCount ?? 0);
 }
+
+<style>
+.dm-select-wrap { position:relative; }
+.dm-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 34px 0 14px; min-width:130px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.dm-select:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.dm-select-wrap i { position:absolute; top:50%; right:12px; transform:translateY(-50%); font-size:11px; color:var(--text-3); pointer-events:none; }
+[dir="rtl"] .dm-select { padding:0 14px 0 34px; }
+[dir="rtl"] .dm-select-wrap i { right:auto; left:12px; }
+
+.dm-template-btn {
+    background:transparent; border:1px solid oklch(0.62 0.15 155 / .4); color:oklch(0.62 0.15 155);
+    font-size:12px; font-weight:600; border-radius:8px; padding:7px 13px;
+    text-decoration:none; display:inline-flex; align-items:center; gap:6px; transition:background .15s,color .15s;
+}
+.dm-template-btn:hover { background:oklch(0.62 0.15 155); color:#fff; }
+
+.dm-requirement-banner {
+    display:flex; align-items:flex-start; gap:10px;
+    background:oklch(0.75 0.16 75 / .1); border:1px solid oklch(0.75 0.16 75 / .35);
+    border-radius:var(--radius-sm); padding:12px 14px; font-size:13px; color:var(--text-2); margin-bottom:18px;
+}
+.dm-requirement-banner i { color:oklch(0.6 0.14 75); font-size:16px; margin-top:1px; flex-shrink:0; }
+
+.dm-dropzone-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:16px; }
+@@media (max-width: 900px) { .dm-dropzone-grid { grid-template-columns:1fr; } }
+
+.dm-dropzone {
+    position:relative; border:2px dashed var(--card-border); border-radius:var(--radius-sm);
+    padding:20px 14px; text-align:center; cursor:pointer; transition:border-color .15s, background .15s;
+    background:var(--bg-2);
+}
+.dm-dropzone:hover, .dm-dropzone.dragover { border-color:oklch(0.55 0.19 25); background:var(--red-light); }
+.dm-dropzone.has-file { border-style:solid; border-color:oklch(0.62 0.15 155); background:oklch(0.62 0.15 155 / .06); }
+.dm-dropzone input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.dm-dropzone-icon { font-size:26px; color:var(--text-3); margin-bottom:8px; display:block; }
+.dm-dropzone.has-file .dm-dropzone-icon { color:oklch(0.62 0.15 155); }
+.dm-dropzone-title { font-weight:700; font-size:13.5px; color:var(--text); margin-bottom:2px; }
+.dm-dropzone-sub { font-size:11.5px; color:var(--text-3); margin-bottom:10px; }
+.dm-dropzone-hint { font-size:12px; color:var(--text-3); }
+.dm-dropzone-filename { font-size:12.5px; font-weight:600; color:oklch(0.55 0.15 155); word-break:break-all; }
+.dm-dropzone-change { font-size:11px; color:var(--text-3); margin-top:2px; }
+
+.dm-form-error {
+    display:none; background:oklch(0.6 0.22 22 / .08); border:1px solid oklch(0.6 0.22 22 / .35); color:oklch(0.55 0.2 22);
+    border-radius:var(--radius-sm); padding:10px 14px; font-size:13px; margin-bottom:14px;
+}
+
+.dm-btn-submit {
+    background:oklch(0.5 0.18 25); color:#fff; border:none; border-radius:var(--radius-sm);
+    font-weight:700; font-size:13.5px; padding:11px 20px; cursor:pointer; transition:background .15s;
+}
+.dm-btn-submit:hover { background:oklch(0.45 0.18 25); }
+
+.dm-history-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:12px; }
+.dm-history-badge.period { background:oklch(0.55 0.19 25 / .12); color:oklch(0.5 0.18 25); }
+.dm-history-badge.exit { background:oklch(0.65 0.15 190 / .12); color:oklch(0.5 0.15 190); }
+
+.dm-file-chip {
+    display:inline-flex; align-items:center; gap:5px; font-size:11.5px; padding:3px 9px; border-radius:10px;
+    background:var(--bg-2); color:var(--text-2); text-decoration:none; margin:2px 3px 2px 0;
+}
+.dm-file-chip:hover { background:oklch(0.62 0.15 155 / .12); color:oklch(0.55 0.15 155); }
+.dm-file-chip i { font-size:11px; }
+.dm-file-chip.disabled { opacity:.5; pointer-events:none; }
+
+.dm-action-btn {
+    display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; border-radius:7px;
+    padding:6px 12px; cursor:pointer; border:1px solid var(--card-border); background:var(--card-bg); color:var(--text-2);
+}
+.dm-action-btn.download:hover { border-color:oklch(0.62 0.15 155); color:oklch(0.55 0.15 155); background:oklch(0.62 0.15 155 / .08); }
+.dm-action-btn.delete:hover { border-color:oklch(0.6 0.22 22); color:oklch(0.55 0.2 22); background:oklch(0.6 0.22 22 / .08); }
+
+.page-link-dm { background:var(--card-bg); border-color:var(--card-border); color:var(--text-2); border-radius:6px !important; }
+.page-link-dm:hover { background:var(--bg-2); color:var(--text); }
+.page-item.active .page-link-dm { background:oklch(0.5 0.18 25); border-color:oklch(0.5 0.18 25); color:#fff; }
+</style>
 
 <div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-3">
     <div>
@@ -9,152 +94,157 @@
         <p class="page-subtitle">@L["Page_DataManagementSub"]</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
-        <a href="/admin/dashboard/download-template?type=active_employees" class="btn btn-outline-template btn-sm">
-            <i class="bi bi-file-earmark-arrow-down me-1"></i>@L["UL_TemplateActiveEmployees"]
-        </a>
-        <a href="/admin/dashboard/download-template?type=resignations" class="btn btn-outline-template btn-sm">
-            <i class="bi bi-file-earmark-arrow-down me-1"></i>@L["UL_TemplateResignations"]
-        </a>
-        <a href="/admin/dashboard/download-template?type=store_reference" class="btn btn-outline-template btn-sm">
-            <i class="bi bi-file-earmark-arrow-down me-1"></i>@L["UL_TemplateStoreRef"]
-        </a>
-        <a href="/admin/dashboard/download-template?type=exit_interviews" class="btn btn-outline-template btn-sm">
-            <i class="bi bi-file-earmark-arrow-down me-1"></i>@L["UL_SampleExitInterviews"]
-        </a>
+        <a href="/admin/dashboard/download-template?type=active_employees" class="dm-template-btn"><i class="bi bi-file-earmark-arrow-down"></i>@L["UL_TemplateActiveEmployees"]</a>
+        <a href="/admin/dashboard/download-template?type=resignations" class="dm-template-btn"><i class="bi bi-file-earmark-arrow-down"></i>@L["UL_TemplateResignations"]</a>
+        <a href="/admin/dashboard/download-template?type=store_reference" class="dm-template-btn"><i class="bi bi-file-earmark-arrow-down"></i>@L["UL_TemplateStoreRef"]</a>
+        <a href="/admin/dashboard/download-template?type=exit_interviews" class="dm-template-btn"><i class="bi bi-file-earmark-arrow-down"></i>@L["UL_SampleExitInterviews"]</a>
     </div>
 </div>
 
-<style>
-    .btn-outline-template {
-        background: transparent;
-        border: 1px solid oklch(0.62 0.15 155);
-        color: oklch(0.62 0.15 155);
-        font-size: 12px;
-        border-radius: 7px;
-        padding: 6px 12px;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        transition: background .15s, color .15s;
-    }
-    .btn-outline-template:hover {
-        background: oklch(0.62 0.15 155);
-        color: #fff;
-    }
-    .btn-download-outline {
-        background: transparent; border: 1px solid oklch(0.5 0.18 25 / .3); color: oklch(0.62 0.15 155);
-        border-radius: 8px; padding: 6px 12px;
-        cursor: pointer; transition: all .2s;
-        font-weight: 600; font-size: 13px; min-height: 34px;
-        display: inline-flex; align-items: center; gap: 4px;
-        text-decoration: none;
-    }
-    .btn-download-outline:hover { background: rgba(39,174,96,.15); border-color: oklch(0.62 0.15 155); color: oklch(0.62 0.15 155); }
-</style>
+<div class="chart-card mb-4">
+    <div class="chart-header">
+        <h6>@L["DM_MonthlyData"]</h6>
+        <p>@L["DM_MonthlyDataSub"]</p>
+    </div>
 
-<div class="row g-4 mb-4">
-    <div class="col-xl-3 col-lg-6">
-        <div class="card-dark">
-            <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="card-icon"><i class="bi bi-people-fill"></i></div>
-                <div><h6 class="mb-0">@L["UL_ActiveEmployees"]</h6><p class="text-muted-custom mb-0 small">@L["UL_ActiveEmployeesSub"]</p></div>
-            </div>
-            <form asp-area="Admin" asp-controller="Dashboard" asp-action="UploadActiveEmployees" method="post" enctype="multipart/form-data">
-                @Html.AntiForgeryToken()
-                <div class="row g-2 mb-2">
-                    <div class="col-6"><select name="Month" class="form-select form-select-dark form-select-sm" required><option value="">Month</option>@for(int m=1;m<=12;m++){<option value="@m">@(new DateTime(2000,m,1).ToString("MMMM"))</option>}</select></div>
-                    <div class="col-6"><select name="Year" class="form-select form-select-dark form-select-sm" required><option value="">Year</option>@for(int y=DateTime.Now.Year;y>=2022;y--){<option value="@y">@y</option>}</select></div>
-                </div>
-                <div class="mb-2"><input type="file" name="File" accept=".xlsx,.xls" class="form-control form-control-dark form-control-sm" required/></div>
-                <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-cloud-upload me-1"></i>Upload Active Employees</button>
-            </form>
-        </div>
+    <div class="dm-requirement-banner">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>@L["DM_MonthlyDataRequirement"]</span>
     </div>
-    <div class="col-xl-3 col-lg-6">
-        <div class="card-dark">
-            <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="card-icon"><i class="bi bi-person-dash-fill"></i></div>
-                <div><h6 class="mb-0">@L["UL_Resignations"]</h6><p class="text-muted-custom mb-0 small">@L["UL_ResignationsSub"]</p></div>
+
+    <form id="dmPeriodForm" asp-area="Admin" asp-controller="Dashboard" asp-action="UploadPeriodData" method="post" enctype="multipart/form-data"
+          data-change-label="@L["DM_ChangeFile"]" data-requirement-text="@L["DM_MonthlyDataRequirement"]">
+        @Html.AntiForgeryToken()
+        <div class="d-flex gap-2 mb-3">
+            <div class="dm-select-wrap">
+                <select name="Month" class="dm-select" required>
+                    <option value="">@L["Common_Month"]</option>
+                    @for (int m = 1; m <= 12; m++) { <option value="@m">@(new DateTime(2000, m, 1).ToString("MMMM"))</option> }
+                </select>
+                <i class="bi bi-chevron-down"></i>
             </div>
-            <form asp-area="Admin" asp-controller="Dashboard" asp-action="UploadResignations" method="post" enctype="multipart/form-data">
-                @Html.AntiForgeryToken()
-                <div class="row g-2 mb-2">
-                    <div class="col-6"><select name="Month" class="form-select form-select-dark form-select-sm" required><option value="">Month</option>@for(int m=1;m<=12;m++){<option value="@m">@(new DateTime(2000,m,1).ToString("MMMM"))</option>}</select></div>
-                    <div class="col-6"><select name="Year" class="form-select form-select-dark form-select-sm" required><option value="">Year</option>@for(int y=DateTime.Now.Year;y>=2022;y--){<option value="@y">@y</option>}</select></div>
-                </div>
-                <div class="mb-2"><input type="file" name="File" accept=".xlsx,.xls" class="form-control form-control-dark form-control-sm" required/></div>
-                <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-cloud-upload me-1"></i>Upload Resignations</button>
-            </form>
-        </div>
-    </div>
-    <div class="col-xl-3 col-lg-6">
-        <div class="card-dark">
-            <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="card-icon"><i class="bi bi-shop"></i></div>
-                <div><h6 class="mb-0">Store Reference</h6><p class="text-muted-custom mb-0 small">Upload store reference with assignments.</p></div>
+            <div class="dm-select-wrap">
+                <select name="Year" class="dm-select" required>
+                    <option value="">@L["Common_Year"]</option>
+                    @for (int y = DateTime.Now.Year + 1; y >= 2022; y--) { <option value="@y">@y</option> }
+                </select>
+                <i class="bi bi-chevron-down"></i>
             </div>
-            <form asp-area="Admin" asp-controller="Dashboard" asp-action="UploadStoreReference" method="post" enctype="multipart/form-data">
-                @Html.AntiForgeryToken()
-                <div class="row g-2 mb-2">
-                    <div class="col-6"><select name="Month" class="form-select form-select-dark form-select-sm" required><option value="">Month</option>@for(int m=1;m<=12;m++){<option value="@m">@(new DateTime(2000,m,1).ToString("MMMM"))</option>}</select></div>
-                    <div class="col-6"><select name="Year" class="form-select form-select-dark form-select-sm" required><option value="">Year</option>@for(int y=DateTime.Now.Year;y>=2022;y--){<option value="@y">@y</option>}</select></div>
-                </div>
-                <div class="mb-2"><input type="file" name="File" accept=".xlsx,.xls" class="form-control form-control-dark form-control-sm" required/></div>
-                <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-cloud-upload me-1"></i>Upload Store Reference</button>
-            </form>
         </div>
-    </div>
-    <div class="col-xl-3 col-lg-6">
-        <div class="card-dark">
-            <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="card-icon"><i class="bi bi-chat-square-text-fill"></i></div>
-                <div><h6 class="mb-0">Exit Interviews</h6><p class="text-muted-custom mb-0 small">Export responses from Microsoft Forms and upload as-is — no reformatting needed.</p></div>
+
+        <div id="dmFormError" class="dm-form-error"></div>
+
+        <div class="dm-dropzone-grid">
+            <div class="dm-dropzone" id="dmZone1" data-title="@L["UL_ActiveEmployees"]" data-sub="@L["UL_ActiveEmployeesSub"]">
+                <i class="bi bi-people-fill dm-dropzone-icon"></i>
+                <div class="dm-dropzone-title">@L["UL_ActiveEmployees"]</div>
+                <div class="dm-dropzone-sub">@L["UL_ActiveEmployeesSub"]</div>
+                <div class="dm-dropzone-hint" data-role="hint">@L["DM_DropzoneHint"]</div>
+                <input type="file" name="ActiveEmployeesFile" accept=".xlsx,.xls">
             </div>
-            <form asp-area="Admin" asp-controller="Dashboard" asp-action="UploadExitInterviews" method="post" enctype="multipart/form-data">
-                @Html.AntiForgeryToken()
-                <div class="mb-2"><input type="file" name="File" accept=".xlsx,.xls" class="form-control form-control-dark form-control-sm" required/></div>
-                <div class="mb-2" style="font-size:11px;color:var(--text-3)">Re-uploading the full export is safe — existing responses are matched and updated, never duplicated.</div>
-                <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-cloud-upload me-1"></i>Upload Exit Interviews</button>
-            </form>
+            <div class="dm-dropzone" id="dmZone2" data-title="@L["UL_Resignations"]" data-sub="@L["UL_ResignationsSub"]">
+                <i class="bi bi-person-dash-fill dm-dropzone-icon"></i>
+                <div class="dm-dropzone-title">@L["UL_Resignations"]</div>
+                <div class="dm-dropzone-sub">@L["UL_ResignationsSub"]</div>
+                <div class="dm-dropzone-hint" data-role="hint">@L["DM_DropzoneHint"]</div>
+                <input type="file" name="ResignationsFile" accept=".xlsx,.xls">
+            </div>
+            <div class="dm-dropzone" id="dmZone3" data-title="@L["UL_StoreReference"]" data-sub="@L["UL_StoreReferenceSub"]">
+                <i class="bi bi-shop dm-dropzone-icon"></i>
+                <div class="dm-dropzone-title">@L["UL_StoreReference"]</div>
+                <div class="dm-dropzone-sub">@L["UL_StoreReferenceSub"]</div>
+                <div class="dm-dropzone-hint" data-role="hint">@L["DM_DropzoneHint"]</div>
+                <input type="file" name="StoreReferenceFile" accept=".xlsx,.xls">
+            </div>
         </div>
-    </div>
+
+        <button type="submit" class="dm-btn-submit"><i class="bi bi-cloud-upload me-1"></i>@L["DM_UploadMonthlyButton"]</button>
+    </form>
 </div>
 
-<div class="card-dark">
-    <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i>Upload History</h6>
-    @{
-        var currentPage = (int)(ViewBag.CurrentPage ?? 1);
-        var totalPages = (int)(ViewBag.TotalPages ?? 1);
-        var totalCount = (int)(ViewBag.TotalCount ?? 0);
-    }
+<div class="chart-card mb-4">
+    <div class="chart-header">
+        <h6>@L["UL_ExitInterviews"]</h6>
+        <p>@L["UL_ExitInterviewsSub"]</p>
+    </div>
+    <div class="dm-requirement-banner">
+        <i class="bi bi-info-circle-fill"></i>
+        <span>@L["UL_ExitInterviewsNote"]</span>
+    </div>
+    <form asp-area="Admin" asp-controller="Dashboard" asp-action="UploadExitInterviews" method="post" enctype="multipart/form-data" data-change-label="@L["DM_ChangeFile"]">
+        @Html.AntiForgeryToken()
+        <div class="dm-dropzone-grid" style="grid-template-columns:1fr;max-width:360px">
+            <div class="dm-dropzone" id="dmZoneExit" data-title="@L["UL_ExitInterviews"]">
+                <i class="bi bi-chat-square-text-fill dm-dropzone-icon"></i>
+                <div class="dm-dropzone-title">@L["UL_ExitInterviews"]</div>
+                <div class="dm-dropzone-hint" data-role="hint">@L["DM_DropzoneHint"]</div>
+                <input type="file" name="File" accept=".xlsx,.xls" required>
+            </div>
+        </div>
+        <button type="submit" class="dm-btn-submit"><i class="bi bi-cloud-upload me-1"></i>@L["DM_UploadExitInterviewsButton"]</button>
+    </form>
+</div>
+
+<div class="chart-card p-0" style="overflow:hidden">
+    <div class="chart-header px-4 pt-4"><h6>@L["DM_History"]</h6></div>
     @if (!Model.Any())
     {
-        <div class="empty-state"><i class="bi bi-inbox"></i><p>No uploads yet</p></div>
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:8px;color:var(--text-3)"></i>
+            @L["DM_NoUploads"]
+        </div>
     }
     else
     {
         <div class="table-responsive">
-            <table class="table table-dark-custom">
-                <thead><tr><th>@L["Upload_FileType"]</th><th>@L["Upload_FileName"]</th><th>@L["Upload_Period"]</th><th>@L["Upload_UploadedBy"]</th><th>@L["Upload_Date"]</th><th></th></tr></thead>
+            <table class="table table-hover mb-0" style="font-size:13px">
+                <thead style="background:var(--bg-2)">
+                    <tr>
+                        <th class="px-3 py-2">@L["Upload_FileType"]</th>
+                        <th class="px-3 py-2">@L["Upload_FileName"]</th>
+                        <th class="px-3 py-2">@L["Upload_Period"]</th>
+                        <th class="px-3 py-2">@L["Upload_UploadedBy"]</th>
+                        <th class="px-3 py-2">@L["Upload_Date"]</th>
+                        <th class="px-3 py-2"></th>
+                    </tr>
+                </thead>
                 <tbody>
-                    @foreach (var log in Model)
+                    @foreach (var item in Model)
                     {
+                        var isPeriod = item.Kind == "period";
                         <tr>
-                            <td><span class="badge-type">@log.FileType.Replace("_"," ")</span></td>
-                            <td class="text-muted-custom small">@log.FileName</td>
-                            <td>@(new DateTime(log.Year,log.Month,1).ToString("MMMM yyyy"))</td>
-                            <td class="text-muted-custom">@log.UploadedBy</td>
-                            <td class="text-muted-custom small">@log.UploadDate.ToString("MMM dd, yyyy HH:mm")</td>
-                            <td class="d-flex gap-2">
-                                @if (log.HasFile)
+                            <td class="px-3 py-2">
+                                <span class="dm-history-badge @(isPeriod ? "period" : "exit")">@(isPeriod ? L["DM_MonthlyDataBadge"] : L["DM_ExitInterviewsBadge"])</span>
+                            </td>
+                            <td class="px-3 py-2">
+                                @foreach (var f in item.Files)
                                 {
-                                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="DownloadUploadFile" asp-route-id="@log.Id" class="btn-download-outline" title="Download original file"><i class="bi bi-download"></i></a>
+                                    if (f.HasFile)
+                                    {
+                                        <a class="dm-file-chip" asp-area="Admin" asp-controller="Dashboard" asp-action="DownloadUploadFile" asp-route-id="@f.LogId" title="@f.FileName">
+                                            <i class="bi bi-download"></i>@f.FileName
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="dm-file-chip disabled" title="@f.FileName"><i class="bi bi-file-earmark"></i>@f.FileName</span>
+                                    }
                                 }
-                                <form asp-area="Admin" asp-controller="Dashboard" asp-action="DeleteUploadLog" method="post" onsubmit="return confirm('Delete this upload and all associated data?')">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@log.Id"/>
-                                    <button type="submit" class="btn-danger-outline"><i class="bi bi-trash3"></i></button>
-                                </form>
+                            </td>
+                            <td class="px-3 py-2 text-muted-custom">
+                                @(isPeriod ? new DateTime(item.Year!.Value, item.Month!.Value, 1).ToString("MMMM yyyy") : "—")
+                            </td>
+                            <td class="px-3 py-2 text-muted-custom">@item.UploadedBy</td>
+                            <td class="px-3 py-2 text-muted-custom small">@item.UploadDate.ToString("MMM dd, yyyy HH:mm")</td>
+                            <td class="px-3 py-2">
+                                <div class="d-flex gap-2">
+                                    <form asp-area="Admin" asp-controller="Dashboard" asp-action="DeleteUploadLog" method="post"
+                                          onsubmit="return confirm('@(isPeriod ? L["DM_DeleteConfirmPeriod"].Value : L["DM_DeleteConfirmExit"].Value)')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.PrimaryLogId"/>
+                                        <button type="submit" class="dm-action-btn delete"><i class="bi bi-trash3"></i>@L["DM_Delete"]</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -162,29 +252,23 @@
             </table>
         </div>
 
-        @if (totalPages > 1)
+        if (totalPages > 1)
         {
-            <div class="d-flex align-items-center justify-content-between mt-3">
-                <span class="text-muted-custom small">Showing page @currentPage of @totalPages (@totalCount total)</span>
+            <div class="d-flex align-items-center justify-content-between px-4 py-3" style="border-top:1px solid var(--card-border)">
+                <span class="text-muted-custom small">@string.Format(L["DM_PageSummary"].Value, currentPage, totalPages, totalCount)</span>
                 <nav>
                     <ul class="pagination pagination-sm mb-0" style="gap:4px">
                         @if (currentPage > 1)
                         {
-                            <li class="page-item">
-                                <a class="page-link page-link-dark" href="?page=@(currentPage-1)"><i class="bi bi-chevron-left"></i></a>
-                            </li>
+                            <li class="page-item"><a class="page-link page-link-dm" href="?page=@(currentPage - 1)"><i class="bi bi-chevron-left"></i></a></li>
                         }
                         @for (int p = Math.Max(1, currentPage - 2); p <= Math.Min(totalPages, currentPage + 2); p++)
                         {
-                            <li class="page-item @(p == currentPage ? "active" : "")">
-                                <a class="page-link page-link-dark" href="?page=@p">@p</a>
-                            </li>
+                            <li class="page-item @(p == currentPage ? "active" : "")"><a class="page-link page-link-dm" href="?page=@p">@p</a></li>
                         }
                         @if (currentPage < totalPages)
                         {
-                            <li class="page-item">
-                                <a class="page-link page-link-dark" href="?page=@(currentPage+1)"><i class="bi bi-chevron-right"></i></a>
-                            </li>
+                            <li class="page-item"><a class="page-link page-link-dm" href="?page=@(currentPage + 1)"><i class="bi bi-chevron-right"></i></a></li>
                         }
                     </ul>
                 </nav>
@@ -193,8 +277,54 @@
     }
 </div>
 
-<style>
-    .page-link-dark { background: var(--card-bg); border-color: var(--card-border); color: var(--text-2); border-radius: 6px !important; }
-    .page-link-dark:hover { background: var(--bg-2); color: var(--text); }
-    .page-item.active .page-link-dark { background: oklch(0.5 0.18 25); border-color: oklch(0.5 0.18 25); color: #fff; }
-</style>
+@section Scripts {
+<script>
+/* Custom dropzone: click-to-browse + drag-and-drop, shows the chosen filename
+   in-place instead of the browser's plain "No file chosen" text. */
+function dmSetupDropzone(zoneId) {
+    const zone = document.getElementById(zoneId);
+    if (!zone) return;
+    const input = zone.querySelector('input[type="file"]');
+    const hint = zone.querySelector('[data-role="hint"]');
+    const defaultHint = hint.textContent;
+    const changeLabel = zone.closest('form').dataset.changeLabel;
+
+    function render() {
+        if (input.files && input.files.length > 0) {
+            zone.classList.add('has-file');
+            hint.innerHTML = `<div class="dm-dropzone-filename">${input.files[0].name}</div><div class="dm-dropzone-change">${changeLabel}</div>`;
+        } else {
+            zone.classList.remove('has-file');
+            hint.textContent = defaultHint;
+        }
+    }
+
+    input.addEventListener('change', render);
+    zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            input.files = e.dataTransfer.files;
+            render();
+        }
+    });
+}
+
+['dmZone1', 'dmZone2', 'dmZone3', 'dmZoneExit'].forEach(dmSetupDropzone);
+
+document.getElementById('dmPeriodForm').addEventListener('submit', function (e) {
+    const inputs = this.querySelectorAll('input[type="file"]');
+    const missing = Array.from(inputs).some(i => !i.files || i.files.length === 0);
+    const errorEl = document.getElementById('dmFormError');
+    if (missing) {
+        e.preventDefault();
+        errorEl.textContent = this.dataset.requirementText;
+        errorEl.style.display = 'block';
+    } else {
+        errorEl.style.display = 'none';
+    }
+});
+</script>
+}
