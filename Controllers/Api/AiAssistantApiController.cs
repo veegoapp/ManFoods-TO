@@ -14,6 +14,7 @@ public class AiAssistantApiController : ControllerBase
     private readonly IRetentionService _retention;
     private readonly INinetyDayTurnoverService _ninetyDay;
     private readonly IExitInterviewService _exitInterviews;
+    private readonly ITargetsService _targets;
     private readonly IGeminiService _gemini;
 
     public AiAssistantApiController(
@@ -21,12 +22,14 @@ public class AiAssistantApiController : ControllerBase
         IRetentionService retention,
         INinetyDayTurnoverService ninetyDay,
         IExitInterviewService exitInterviews,
+        ITargetsService targets,
         IGeminiService gemini)
     {
         _dashboard = dashboard;
         _retention = retention;
         _ninetyDay = ninetyDay;
         _exitInterviews = exitInterviews;
+        _targets = targets;
         _gemini = gemini;
     }
 
@@ -55,6 +58,7 @@ public class AiAssistantApiController : ControllerBase
         var milestones = await _retention.GetMilestonesAsync(request.Store);
         var ninetyDayTrend = await _ninetyDay.GetTrendAsync(request.Store);
         var exitReasons = await _exitInterviews.GetReasonsForLeavingAsync(new ExitInterviewFilter { Store = request.Store }, role, assignedName);
+        var targets = await _targets.GetAsync();
 
         var context = new GeminiContext
         {
@@ -72,6 +76,8 @@ public class AiAssistantApiController : ControllerBase
             RetentionMilestones = milestones.Where(m => m.TotalHires > 0).Select(m => (m.Days, m.RetentionRate)).ToList(),
             NinetyDayCohorts    = ninetyDayTrend.TakeLast(12).Select(c => (c.Label, c.Rate, c.IsProvisional)).ToList(),
             ExitInterviewReasons = exitReasons.Select(r => (r.Label, r.Value)).ToList(),
+            TurnoverRateTarget = targets.TurnoverRateTarget,
+            Retention90Target = targets.Retention90Target,
         };
 
         var answer = await _gemini.AskAsync(request.Question, context);

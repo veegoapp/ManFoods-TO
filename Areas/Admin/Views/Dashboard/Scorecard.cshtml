@@ -1,0 +1,92 @@
+@{
+    ViewData["Title"] = "Scorecard";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Scorecard</h1>
+        <p class="page-subtitle">أداء كل Store Leader / Operation Consultant / Operation Manager في مكان واحد — تيرن أوفر، احتفاظ، ورضا الموظفين المستقيلين</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap" role="group">
+        <button class="btn btn-sm sc-dim-btn active" data-dim="leader">Store Leaders</button>
+        <button class="btn btn-sm sc-dim-btn" data-dim="oc">Operation Consultants</button>
+        <button class="btn btn-sm sc-dim-btn" data-dim="om">Operation Managers</button>
+    </div>
+</div>
+
+<style>
+    .sc-dim-btn { background: var(--bg-2); color: var(--text-2); border: 1px solid var(--card-border); }
+    .sc-dim-btn.active { background: oklch(0.55 0.19 265); color: #fff; border-color: oklch(0.55 0.19 265); }
+</style>
+
+<div class="chart-card p-0" style="overflow:hidden">
+    <div class="table-responsive" style="max-height:600px;overflow-y:auto">
+        <table class="table table-hover mb-0" style="font-size:13px">
+            <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                <tr>
+                    <th class="px-3 py-2" id="scNameHeader">Store Leader</th>
+                    <th class="px-3 py-2 text-center">Stores</th>
+                    <th class="px-3 py-2 text-center">Headcount</th>
+                    <th class="px-3 py-2 text-center">Turnover Rate</th>
+                    <th class="px-3 py-2 text-center">90-Day Early Leave</th>
+                    <th class="px-3 py-2 text-center">180-Day Retention</th>
+                    <th class="px-3 py-2 text-center">Exit Sentiment</th>
+                </tr>
+            </thead>
+            <tbody id="scBody">
+                <tr><td colspan="7" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...
+                </td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const SC_DIM_LABELS = { leader: 'Store Leader', oc: 'Operation Consultant', om: 'Operation Manager' };
+
+function scRateBadge(rate, goodIsHigh) {
+    const good = goodIsHigh ? rate >= 70 : rate <= 5;
+    const warn = goodIsHigh ? (rate >= 40 && rate < 70) : (rate > 5 && rate <= 12);
+    const bg = good ? 'oklch(0.62 0.15 155)' : warn ? 'oklch(0.75 0.16 75)' : 'oklch(0.6 0.22 22)';
+    const fg = warn ? '#1C1C27' : '#fff';
+    return `<span style="background:${bg};color:${fg};padding:3px 10px;border-radius:12px;font-size:11.5px;font-weight:700">${rate.toFixed(1)}%</span>`;
+}
+
+async function scLoad(dimension) {
+    document.getElementById('scNameHeader').textContent = SC_DIM_LABELS[dimension];
+    const tbody = document.getElementById('scBody');
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...</td></tr>';
+
+    const res = await fetch(`/api/scorecard?dimension=${dimension}`);
+    const rows = res.ok ? await res.json() : [];
+
+    if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">مفيش بيانات كفاية لحساب الـ Scorecard ده لسه.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = rows.map(r => `
+        <tr>
+            <td class="px-3 py-2 fw-semibold">${r.name}</td>
+            <td class="px-3 py-2 text-center">${r.storeCount}</td>
+            <td class="px-3 py-2 text-center">${r.headcount}</td>
+            <td class="px-3 py-2 text-center">${scRateBadge(r.turnoverRate, false)}</td>
+            <td class="px-3 py-2 text-center">${scRateBadge(r.earlyLeaver90Rate, false)}</td>
+            <td class="px-3 py-2 text-center">${scRateBadge(r.retention180Rate, true)}</td>
+            <td class="px-3 py-2 text-center">${r.exitResponseCount > 0 ? scRateBadge(r.exitSentimentPercent, true) : '<span class="text-muted" style="font-size:11px">لا يوجد بيانات</span>'}</td>
+        </tr>`).join('');
+}
+
+document.querySelectorAll('.sc-dim-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.sc-dim-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        scLoad(btn.dataset.dim);
+    });
+});
+
+scLoad('leader');
+</script>
+}

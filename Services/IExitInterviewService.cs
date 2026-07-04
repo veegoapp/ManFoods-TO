@@ -10,5 +10,9 @@ public interface IExitInterviewService
     Task<List<ChartDataItem>> GetOverallExperienceAsync(ExitInterviewFilter filter, string role, string? assignedName);
     Task<List<ChartDataItem>> GetWorkloadConditionAsync(ExitInterviewFilter filter, string role, string? assignedName);
     Task<List<EngagementDriverItem>> GetEngagementDriversAsync(ExitInterviewFilter filter, string role, string? assignedName);
+
+    /// <summary>Combined "would return" + "overall experience" positive-sentiment
+    /// rate, for use in leader/consultant/manager scorecards.</summary>
+    Task<ExitSentimentSummary> GetSentimentSummaryAsync(ExitInterviewFilter filter, string role, string? assignedName);
     Task<List<ExitInterviewCommentItem>> GetCommentsAsync(ExitInterviewFilter filter, string role, string? assignedName);
 }

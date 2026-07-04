@@ -59,15 +59,31 @@ async function loadStores() {
     if (cur) sel.value = cur;
 }
 
+let cachedTargets = null;
+async function getTargets() {
+    if (cachedTargets) return cachedTargets;
+    cachedTargets = await fetchJson('/api/targets');
+    return cachedTargets || {};
+}
+
 async function loadKpis() {
     const kpiEl = document.getElementById('kpiCards');
     if (!kpiEl) return;
-    const data = await fetchJson('/api/dashboard/kpis?' + buildQuery());
+    const [data, targets] = await Promise.all([fetchJson('/api/dashboard/kpis?' + buildQuery()), getTargets()]);
+
+    let turnoverExtra = '';
+    if (targets && targets.turnoverRateTarget != null) {
+        const diff = (data.turnoverRate || 0) - targets.turnoverRateTarget;
+        const color = diff <= 0 ? '#198754' : '#dc3545';
+        const sign = diff > 0 ? '+' : '';
+        turnoverExtra = `<div style="font-size:11px;color:${color};margin-top:2px">${sign}${diff.toFixed(1)}pt vs target ${targets.turnoverRateTarget.toFixed(1)}%</div>`;
+    }
+
     kpiEl.innerHTML = `
         <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-people-fill"></i></div><div class="kpi-value">${data.totalHeadcount||0}</div><div class="kpi-label">Total Headcount</div></div>
         <div class="kpi-card"><div class="kpi-icon text-success"><i class="bi bi-person-plus-fill"></i></div><div class="kpi-value text-success">${data.newHires||0}</div><div class="kpi-label">New Hires</div></div>
         <div class="kpi-card"><div class="kpi-icon text-danger"><i class="bi bi-person-dash-fill"></i></div><div class="kpi-value text-danger">${data.totalResignations||0}</div><div class="kpi-label">Resignations</div></div>
-        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-graph-up"></i></div><div class="kpi-value">${(data.turnoverRate||0).toFixed(1)}%</div><div class="kpi-label">Turnover Rate</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-graph-up"></i></div><div class="kpi-value">${(data.turnoverRate||0).toFixed(1)}%</div><div class="kpi-label">Turnover Rate</div>${turnoverExtra}</div>
     `;
 }
 

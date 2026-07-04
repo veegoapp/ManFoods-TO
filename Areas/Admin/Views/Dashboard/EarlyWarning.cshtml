@@ -1,0 +1,124 @@
+@{
+    ViewData["Title"] = "Early Warning";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Early Warning</h1>
+        <p class="page-subtitle">الموظفين الشغالين حاليًا اللي في منطقة خطر — عشان تتحرك قبل ما يسيبوا، مش بعدين</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <select id="ewStoreSelect" class="form-select form-select-dark form-select-sm" style="width:200px">
+            <option value="">All Stores</option>
+        </select>
+    </div>
+</div>
+
+<div id="ewContent">
+    <div id="ewSummaryCards" class="kpi-grid mb-4">
+        <div class="kpi-spinner text-center py-3 w-100">
+            <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 265)"></div>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="section-accent"></div>
+        <h5 class="mb-0 fw-bold">قائمة المتابعة</h5>
+        <span id="ewCountBadge" class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px"></span>
+    </div>
+    <div class="chart-card p-0" style="overflow:hidden">
+        <div class="table-responsive" style="max-height:520px;overflow-y:auto">
+            <table class="table table-hover mb-0" style="font-size:13px">
+                <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                    <tr>
+                        <th class="px-3 py-2">الاسم</th>
+                        <th class="px-3 py-2">الفرع</th>
+                        <th class="px-3 py-2">الوظيفة</th>
+                        <th class="px-3 py-2">تاريخ التعيين</th>
+                        <th class="px-3 py-2">مدة الخدمة (يوم)</th>
+                        <th class="px-3 py-2 text-center">درجة الخطر</th>
+                        <th class="px-3 py-2">الأسباب</th>
+                    </tr>
+                </thead>
+                <tbody id="ewBody">
+                    <tr><td colspan="7" class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 265)"></div>Loading...
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+async function ewFetch(path) {
+    const p = new URLSearchParams();
+    const store = document.getElementById('ewStoreSelect').value;
+    if (store) p.set('store', store);
+    const r = await fetch(`/api/early-warning/${path}?${p.toString()}`);
+    return r.ok ? r.json() : null;
+}
+
+async function ewLoadFilters() {
+    const stores = await ewFetch('stores') || [];
+    const sel = document.getElementById('ewStoreSelect');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">All Stores</option>';
+    stores.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        sel.appendChild(opt);
+    });
+    if (cur) sel.value = cur;
+    return stores.length > 0;
+}
+
+function ewRenderSummary(s) {
+    const el = document.getElementById('ewSummaryCards');
+    if (!s) { el.innerHTML = ''; return; }
+    el.innerHTML = `
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-eye-fill"></i></div><div class="kpi-value">${s.totalWatchlist}</div><div class="kpi-label">في قائمة المتابعة</div></div>
+        <div class="kpi-card"><div class="kpi-icon text-danger"><i class="bi bi-exclamation-triangle-fill"></i></div><div class="kpi-value text-danger">${s.highRiskCount}</div><div class="kpi-label">درجة خطر عالية (2+)</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div><div class="kpi-value">${s.newHireWindowCount}</div><div class="kpi-label">لسه في أول 90 يوم</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-graph-up"></i></div><div class="kpi-value">${s.companyBaselineRate.toFixed(1)}%</div><div class="kpi-label">متوسط ترك العمل المبكر (كل الشركة)</div></div>
+    `;
+}
+
+function ewRiskBadge(score) {
+    const color = score >= 3 ? 'oklch(0.6 0.22 22)' : score >= 2 ? 'oklch(0.75 0.16 75)' : 'oklch(0.55 0.19 265)';
+    const fg = score >= 3 ? '#fff' : score >= 2 ? '#1C1C27' : '#fff';
+    return `<span style="background:${color};color:${fg};padding:3px 10px;border-radius:12px;font-size:11.5px;font-weight:700">${score}</span>`;
+}
+
+function ewRenderTable(rows) {
+    const tbody = document.getElementById('ewBody');
+    const badge = document.getElementById('ewCountBadge');
+    badge.textContent = rows.length + ' موظف';
+    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">مفيش موظفين في منطقة خطر للفلتر ده.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(r => `
+        <tr>
+            <td class="px-3 py-2 fw-semibold">${r.name}</td>
+            <td class="px-3 py-2">${r.store}</td>
+            <td class="px-3 py-2" style="color:var(--text-2)">${r.jobTitle}</td>
+            <td class="px-3 py-2" style="color:var(--text-2)">${r.hireDate}</td>
+            <td class="px-3 py-2">${r.tenureDays}</td>
+            <td class="px-3 py-2 text-center">${ewRiskBadge(r.riskScore)}</td>
+            <td class="px-3 py-2" style="font-size:12px;color:var(--text-2)">${r.reasons.map(x => `• ${x}`).join('<br>')}</td>
+        </tr>`).join('');
+}
+
+async function ewLoadAll() {
+    const [summary, watchlist] = await Promise.all([ewFetch('summary'), ewFetch('watchlist')]);
+    ewRenderSummary(summary);
+    ewRenderTable(watchlist || []);
+}
+
+document.getElementById('ewStoreSelect').addEventListener('change', ewLoadAll);
+
+(async function init() {
+    await ewLoadFilters();
+    await ewLoadAll();
+})();
+</script>
+}

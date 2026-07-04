@@ -106,6 +106,20 @@ public class ExitInterviewService : IExitInterviewService
         return result.OrderBy(d => d.PositivePercent).ToList();
     }
 
+    public async Task<ExitSentimentSummary> GetSentimentSummaryAsync(ExitInterviewFilter filter, string role, string? assignedName)
+    {
+        var rows = await FilteredAsync(filter, role, assignedName);
+        var answers = rows.Select(e => e.WouldReturn).Concat(rows.Select(e => e.OverallExperience))
+            .Where(a => !string.IsNullOrWhiteSpace(a))
+            .ToList();
+
+        return new ExitSentimentSummary
+        {
+            TotalResponses = answers.Count,
+            PositivePercent = answers.Count == 0 ? 0 : Math.Round(answers.Count(a => Sentiment(a) > 0) * 100.0 / answers.Count, 1),
+        };
+    }
+
     public async Task<List<ExitInterviewCommentItem>> GetCommentsAsync(ExitInterviewFilter filter, string role, string? assignedName)
     {
         var rows = await FilteredAsync(filter, role, assignedName);

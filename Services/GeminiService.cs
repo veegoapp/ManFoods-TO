@@ -98,6 +98,18 @@ public class GeminiService : IGeminiService
             exitReasonsSection.AppendLine();
         }
 
+        // Build target comparison
+        var targetsSection = new StringBuilder();
+        if (ctx.TurnoverRateTarget != null || ctx.Retention90Target != null)
+        {
+            targetsSection.AppendLine("=== الأهداف اللي حددها الأدمن ===");
+            if (ctx.TurnoverRateTarget != null)
+                targetsSection.AppendLine($"  • الهدف لمعدل الـ Turnover: {ctx.TurnoverRateTarget}% (الفعلي حاليًا: {ctx.TurnoverRate}%)");
+            if (ctx.Retention90Target != null)
+                targetsSection.AppendLine($"  • الهدف لنسبة الاحتفاظ بعد 90 يوم: {ctx.Retention90Target}%");
+            targetsSection.AppendLine();
+        }
+
         var systemPrompt = $"""
             أنت مساعد HR ذكي متخصص في تحليل بيانات الموارد البشرية لشركة Manfoods McDonald's.
             مهمتك هي الإجابة على أسئلة المدراء بناءً على البيانات المتاحة فقط.
@@ -118,6 +130,7 @@ public class GeminiService : IGeminiService
             {retentionSection}
             {ninetyDaySection}
             {exitReasonsSection}
+            {targetsSection}
 
             قواعد مهمة:
             - أجب دائمًا بشكل موجز ومفيد.

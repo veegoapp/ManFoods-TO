@@ -23,6 +23,12 @@ public class EngagementDriverItem
     public int TotalResponses { get; set; }
 }
 
+public class ExitSentimentSummary
+{
+    public double PositivePercent { get; set; }
+    public int TotalResponses { get; set; }
+}
+
 public class ExitInterviewCommentItem
 {
     public string Store { get; set; } = "";

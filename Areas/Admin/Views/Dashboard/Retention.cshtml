@@ -101,24 +101,33 @@ async function rtLoadFilters() {
     return hasData;
 }
 
-function rtRenderMilestones(items) {
+function rtRenderMilestones(items, targets) {
     const el = document.getElementById('rtMilestoneCards');
     if (!items || !items.length) { el.innerHTML = ''; return; }
     el.innerHTML = items.map(m => {
         if (!m.totalHires) {
             return `<div class="kpi-card"><div class="kpi-icon"><i class="bi bi-hourglass"></i></div><div class="kpi-value text-muted" style="font-size:16px">Not yet</div><div class="kpi-label">${m.days}-Day Retention</div></div>`;
         }
+        let targetLine = '';
+        if (m.days === 90 && targets && targets.retention90Target != null) {
+            const diff = m.retentionRate - targets.retention90Target;
+            const color = diff >= 0 ? '#198754' : '#dc3545';
+            const sign = diff > 0 ? '+' : '';
+            targetLine = `<div style="font-size:11px;color:${color}">${sign}${diff.toFixed(1)}pt vs target ${targets.retention90Target.toFixed(1)}%</div>`;
+        }
         return `<div class="kpi-card">
             <div class="kpi-icon"><i class="bi bi-calendar-check"></i></div>
             <div class="kpi-value">${m.retentionRate.toFixed(1)}%</div>
             <div class="kpi-label">${m.days}-Day Retention</div>
             <div style="font-size:11px;color:var(--text-3);margin-top:2px">${m.retained}/${m.totalHires} hires · through ${m.throughCohortLabel}</div>
+            ${targetLine}
         </div>`;
     }).join('');
 }
 
 async function rtLoadMilestones() {
-    rtRenderMilestones(await rtFetch('milestones'));
+    const [items, targets] = await Promise.all([rtFetch('milestones'), fetch('/api/targets').then(r => r.ok ? r.json() : null)]);
+    rtRenderMilestones(items, targets);
 }
 
 let rtSurvivalInstance;

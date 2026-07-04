@@ -39,6 +39,12 @@ public class DashboardController : Controller
 
     public IActionResult AiAssistant() => View();
 
+    public IActionResult EarlyWarning() => View();
+
+    public IActionResult Scorecard() => View();
+
+    public IActionResult Targets() => View();
+
     public async Task<IActionResult> StoreProfile(string store)
     {
         if (string.IsNullOrWhiteSpace(store)) return RedirectToAction("Turnover");
