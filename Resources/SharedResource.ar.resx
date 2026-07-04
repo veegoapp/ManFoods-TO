@@ -198,6 +198,39 @@
   <data name="Page_AiAssistantSub" xml:space="preserve"><value>اسأل أي شيء عن بيانات القوى العاملة</value></data>
   <data name="Page_AiUsage" xml:space="preserve"><value>استخدام الذكاء الاصطناعي</value></data>
   <data name="Page_AiUsageSub" xml:space="preserve"><value>استهلاك المساعد الذكي — الحدود، عدد الأسئلة، التوكنز، والتكلفة التقديرية</value></data>
+
+  <!-- AI Assistant -->
+  <data name="AI_NewChat" xml:space="preserve"><value>محادثة جديدة</value></data>
+  <data name="AI_TodayQuestions" xml:space="preserve"><value>أسئلة النهاردة</value></data>
+  <data name="AI_QuickPrompts" xml:space="preserve"><value>أسئلة جاهزة</value></data>
+  <data name="AI_QuickPromptsSub" xml:space="preserve"><value>دوس بدل ما تكتب</value></data>
+  <data name="AI_InputPlaceholder" xml:space="preserve"><value>اكتب سؤالك هنا...</value></data>
+  <data name="AI_WelcomeMessage" xml:space="preserve"><value>مرحبًا! 👋 أنا مساعدك الذكي لتحليل بيانات الموظفين — التيرن أوفر، الريتنشن، وأسباب ترك العمل. اسألني ما تريد.</value></data>
+  <data name="AI_NoAnswer" xml:space="preserve"><value>لم يتم الحصول على إجابة. حاول إعادة صياغة السؤال.</value></data>
+  <data name="AI_ConnectionError" xml:space="preserve"><value>تعذر الاتصال بالخادم. حاول مرة أخرى.</value></data>
+  <data name="AI_LimitReached" xml:space="preserve"><value>وصلت لأقصى عدد أسئلة مسموح بيها النهاردة.</value></data>
+
+  <!-- AI Usage -->
+  <data name="AU_DailyLimit" xml:space="preserve"><value>الحد اليومي للأسئلة</value></data>
+  <data name="AU_DailyLimitSub" xml:space="preserve"><value>أقصى عدد أسئلة مسموح بيها لكل مستخدم في اليوم</value></data>
+  <data name="AU_CostRates" xml:space="preserve"><value>أسعار التكلفة</value></data>
+  <data name="AU_CostRatesSub" xml:space="preserve"><value>أسعار Gemini API المستخدمة لتقدير التكلفة</value></data>
+  <data name="AU_InputPrice" xml:space="preserve"><value>سعر الإدخال $/مليون</value></data>
+  <data name="AU_OutputPrice" xml:space="preserve"><value>سعر الإخراج $/مليون</value></data>
+  <data name="AU_SaveRates" xml:space="preserve"><value>حفظ الأسعار</value></data>
+  <data name="AU_UsageTrend" xml:space="preserve"><value>اتجاه الاستخدام</value></data>
+  <data name="AU_UsageTrendSub" xml:space="preserve"><value>الأسئلة والتوكنز خلال آخر 30 يوم</value></data>
+  <data name="AU_TopUsers" xml:space="preserve"><value>أكتر المستخدمين (آخر 30 يوم)</value></data>
+  <data name="AU_Email" xml:space="preserve"><value>البريد الإلكتروني</value></data>
+  <data name="AU_Questions" xml:space="preserve"><value>الأسئلة</value></data>
+  <data name="AU_Tokens" xml:space="preserve"><value>التوكنز</value></data>
+  <data name="AU_EstCost" xml:space="preserve"><value>التكلفة التقديرية</value></data>
+  <data name="AU_Action" xml:space="preserve"><value>إجراء</value></data>
+  <data name="AU_ResetTooltip" xml:space="preserve"><value>إعادة تصفير عدّاد اليوم</value></data>
+  <data name="AU_ResetBtn" xml:space="preserve"><value>تصفير</value></data>
+  <data name="AU_NoUsage" xml:space="preserve"><value>مفيش استخدام مسجل لسه.</value></data>
+  <data name="Common_Saved" xml:space="preserve"><value>تم الحفظ</value></data>
+
   <data name="Page_EarlyWarning" xml:space="preserve"><value>الإنذار المبكر</value></data>
   <data name="Page_EarlyWarningSub" xml:space="preserve"><value>الموظفون في خطر — رُصدوا قبل أن يستقيلوا</value></data>
   <data name="Page_Scorecard" xml:space="preserve"><value>بطاقة الأداء</value></data>
@@ -420,21 +453,6 @@
   <data name="TG_SaveTargets" xml:space="preserve"><value>حفظ الأهداف</value></data>
   <data name="TG_Saved" xml:space="preserve"><value>تم الحفظ!</value></data>
 
-  <!-- AI Usage -->
-  <data name="AIU_DailyLimit" xml:space="preserve"><value>حد الأسئلة اليومي</value></data>
-  <data name="AIU_DailyLimitDesc" xml:space="preserve"><value>أقصى عدد أسئلة يقدر أي شخص يسألها للذكاء الاصطناعي في اليوم الواحد</value></data>
-  <data name="AIU_EstimatedCost" xml:space="preserve"><value>أسعار التكلفة التقديرية</value></data>
-  <data name="AIU_EstimatedCostDesc" xml:space="preserve"><value>سعر تقديري لكل مليون توكن — اتأكد من السعر الفعلي من حساب Google، الرقم ده تقديري وقابل للتعديل.</value></data>
-  <data name="AIU_SaveRates" xml:space="preserve"><value>حفظ الأسعار</value></data>
-  <data name="AIU_Saved" xml:space="preserve"><value>اتحفظ</value></data>
-  <data name="AIU_UsageTrendSub" xml:space="preserve"><value>آخر 30 يوم — عدد الأسئلة والتوكنز على مستوى الشركة كلها</value></data>
-
-  <!-- AI Assistant -->
-  <data name="AI_NewConversation" xml:space="preserve"><value>محادثة جديدة</value></data>
-  <data name="AI_QuestionsToday" xml:space="preserve"><value>أسئلة اليوم</value></data>
-  <data name="AI_QuickPrompts" xml:space="preserve"><value>أسئلة جاهزة</value></data>
-  <data name="AI_ClickToAsk" xml:space="preserve"><value>دوس بدل ما تكتب</value></data>
-  <data name="AI_TypeQuestion" xml:space="preserve"><value>اكتب سؤالك هنا...</value></data>
 
   <!-- Retention -->
   <data name="Ret_MilestoneTitle" xml:space="preserve"><value>معالم الاحتفاظ</value></data>

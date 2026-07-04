@@ -4,6 +4,15 @@
 
 @Html.AntiForgeryToken()
 
+<style>
+/* KPI labels/values here are always English by design (unlocalized metric
+   names) — isolate them from RTL bidi reordering when the page is in Arabic. */
+#auSummaryCards .kpi-label, #auSummaryCards .kpi-value { direction:ltr; unicode-bidi:isolate; text-align:left; }
+/* Chart.js draws its tick/legend text on <canvas>, which otherwise inherits
+   the page's dir="rtl" and reorders numeric-leading labels. */
+.chart-body canvas { direction:ltr; }
+</style>
+
 <div class="page-header">
     <div>
         <h1 class="page-title">@L["Page_AiUsage"]</h1>
@@ -33,11 +42,11 @@
             </div>
             <div class="row g-2 mb-2">
                 <div class="col-6">
-                    <label class="form-label small text-muted-custom mb-1">Input $/1M</label>
+                    <label class="form-label small text-muted-custom mb-1">@L["AU_InputPrice"]</label>
                     <input type="number" id="auInputPriceInput" class="form-control form-control-dark form-control-sm" min="0" step="0.01"/>
                 </div>
                 <div class="col-6">
-                    <label class="form-label small text-muted-custom mb-1">Output $/1M</label>
+                    <label class="form-label small text-muted-custom mb-1">@L["AU_OutputPrice"]</label>
                     <input type="number" id="auOutputPriceInput" class="form-control form-control-dark form-control-sm" min="0" step="0.01"/>
                 </div>
             </div>
@@ -60,18 +69,18 @@
 
 <div class="d-flex align-items-center gap-2 mb-3">
     <div class="section-accent"></div>
-    <h5 class="mb-0 fw-bold">Top Users (Last 30 Days)</h5>
+    <h5 class="mb-0 fw-bold">@L["AU_TopUsers"]</h5>
 </div>
-<div class="chart-card p-0" style="overflow:hidden">
+<div class="chart-card p-0" style="overflow:hidden" data-no-usage="@L["AU_NoUsage"]" data-reset-tooltip="@L["AU_ResetTooltip"]" data-reset-btn="@L["AU_ResetBtn"]">
     <div class="table-responsive" style="max-height:480px;overflow-y:auto">
         <table class="table table-hover mb-0" style="font-size:13px">
             <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
                 <tr>
-                    <th class="px-3 py-2">Email</th>
-                    <th class="px-3 py-2 text-center">Questions</th>
-                    <th class="px-3 py-2 text-center">Tokens</th>
-                    <th class="px-3 py-2 text-center">Est. Cost</th>
-                    <th class="px-3 py-2 text-center">Action</th>
+                    <th class="px-3 py-2">@L["AU_Email"]</th>
+                    <th class="px-3 py-2 text-center">@L["AU_Questions"]</th>
+                    <th class="px-3 py-2 text-center">@L["AU_Tokens"]</th>
+                    <th class="px-3 py-2 text-center">@L["AU_EstCost"]</th>
+                    <th class="px-3 py-2 text-center">@L["AU_Action"]</th>
                 </tr>
             </thead>
             <tbody id="auTopUsersBody">
@@ -161,14 +170,15 @@ async function auLoadTopUsers() {
     const res = await fetch('/api/ai-usage/top-users?days=30');
     const rows = res.ok ? await res.json() : [];
     const tbody = document.getElementById('auTopUsersBody');
-    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">مفيش استخدام مسجل لسه.</td></tr>'; return; }
+    const labels = document.querySelector('[data-no-usage]').dataset;
+    if (!rows.length) { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">${labels.noUsage}</td></tr>`; return; }
     tbody.innerHTML = rows.map(r => `
         <tr>
             <td class="px-3 py-2 fw-semibold">${r.email}</td>
             <td class="px-3 py-2 text-center">${r.questions}</td>
             <td class="px-3 py-2 text-center">${r.tokens.toLocaleString()}</td>
             <td class="px-3 py-2 text-center">$${r.estimatedCost.toFixed(4)}</td>
-            <td class="px-3 py-2 text-center"><button class="btn btn-sm btn-outline-secondary au-reset-btn" data-id="${r.userId}" title="Reset today's count">Reset</button></td>
+            <td class="px-3 py-2 text-center"><button class="btn btn-sm btn-outline-secondary au-reset-btn" data-id="${r.userId}" title="${labels.resetTooltip}">${labels.resetBtn}</button></td>
         </tr>`).join('');
     document.querySelectorAll('.au-reset-btn').forEach(btn => {
         btn.addEventListener('click', () => auResetUser(btn.dataset.id, btn));

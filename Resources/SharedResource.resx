@@ -198,6 +198,39 @@
   <data name="Page_AiAssistantSub" xml:space="preserve"><value>Ask anything about your workforce data</value></data>
   <data name="Page_AiUsage" xml:space="preserve"><value>AI Usage</value></data>
   <data name="Page_AiUsageSub" xml:space="preserve"><value>AI Assistant consumption — limits, questions, tokens, and estimated cost</value></data>
+
+  <!-- AI Assistant -->
+  <data name="AI_NewChat" xml:space="preserve"><value>New Chat</value></data>
+  <data name="AI_TodayQuestions" xml:space="preserve"><value>Today's Questions</value></data>
+  <data name="AI_QuickPrompts" xml:space="preserve"><value>Quick Prompts</value></data>
+  <data name="AI_QuickPromptsSub" xml:space="preserve"><value>Tap instead of typing</value></data>
+  <data name="AI_InputPlaceholder" xml:space="preserve"><value>Type your question here...</value></data>
+  <data name="AI_WelcomeMessage" xml:space="preserve"><value>Welcome! 👋 I'm your smart assistant for analyzing workforce data — turnover, retention, and reasons for leaving. Ask me anything.</value></data>
+  <data name="AI_NoAnswer" xml:space="preserve"><value>No answer was returned. Try rephrasing your question.</value></data>
+  <data name="AI_ConnectionError" xml:space="preserve"><value>Could not connect to the server. Please try again.</value></data>
+  <data name="AI_LimitReached" xml:space="preserve"><value>You've reached today's maximum number of questions.</value></data>
+
+  <!-- AI Usage -->
+  <data name="AU_DailyLimit" xml:space="preserve"><value>Daily Question Limit</value></data>
+  <data name="AU_DailyLimitSub" xml:space="preserve"><value>Maximum number of AI questions allowed per user per day</value></data>
+  <data name="AU_CostRates" xml:space="preserve"><value>Cost Rates</value></data>
+  <data name="AU_CostRatesSub" xml:space="preserve"><value>Gemini API pricing used to estimate cost</value></data>
+  <data name="AU_InputPrice" xml:space="preserve"><value>Input $/1M</value></data>
+  <data name="AU_OutputPrice" xml:space="preserve"><value>Output $/1M</value></data>
+  <data name="AU_SaveRates" xml:space="preserve"><value>Save Rates</value></data>
+  <data name="AU_UsageTrend" xml:space="preserve"><value>Usage Trend</value></data>
+  <data name="AU_UsageTrendSub" xml:space="preserve"><value>Questions and tokens over the last 30 days</value></data>
+  <data name="AU_TopUsers" xml:space="preserve"><value>Top Users (Last 30 Days)</value></data>
+  <data name="AU_Email" xml:space="preserve"><value>Email</value></data>
+  <data name="AU_Questions" xml:space="preserve"><value>Questions</value></data>
+  <data name="AU_Tokens" xml:space="preserve"><value>Tokens</value></data>
+  <data name="AU_EstCost" xml:space="preserve"><value>Est. Cost</value></data>
+  <data name="AU_Action" xml:space="preserve"><value>Action</value></data>
+  <data name="AU_ResetTooltip" xml:space="preserve"><value>Reset today's count</value></data>
+  <data name="AU_ResetBtn" xml:space="preserve"><value>Reset</value></data>
+  <data name="AU_NoUsage" xml:space="preserve"><value>No usage recorded yet.</value></data>
+  <data name="Common_Saved" xml:space="preserve"><value>Saved</value></data>
+
   <data name="Page_EarlyWarning" xml:space="preserve"><value>Early Warning</value></data>
   <data name="Page_EarlyWarningSub" xml:space="preserve"><value>At-risk employees identified before they resign</value></data>
   <data name="Page_Scorecard" xml:space="preserve"><value>Scorecard</value></data>
@@ -419,22 +452,6 @@
   <data name="TG_RetentionTarget" xml:space="preserve"><value>Target 90-Day Retention</value></data>
   <data name="TG_SaveTargets" xml:space="preserve"><value>Save Targets</value></data>
   <data name="TG_Saved" xml:space="preserve"><value>Saved!</value></data>
-
-  <!-- AI Usage -->
-  <data name="AIU_DailyLimit" xml:space="preserve"><value>Daily Question Limit</value></data>
-  <data name="AIU_DailyLimitDesc" xml:space="preserve"><value>Max number of questions anyone can ask the AI per day</value></data>
-  <data name="AIU_EstimatedCost" xml:space="preserve"><value>Estimated Cost Rates</value></data>
-  <data name="AIU_EstimatedCostDesc" xml:space="preserve"><value>Estimated price per million tokens — verify actual price from your Google account. This number is approximate and editable.</value></data>
-  <data name="AIU_SaveRates" xml:space="preserve"><value>Save Rates</value></data>
-  <data name="AIU_Saved" xml:space="preserve"><value>Saved</value></data>
-  <data name="AIU_UsageTrendSub" xml:space="preserve"><value>Last 30 days — number of questions and tokens company-wide</value></data>
-
-  <!-- AI Assistant -->
-  <data name="AI_NewConversation" xml:space="preserve"><value>New Conversation</value></data>
-  <data name="AI_QuestionsToday" xml:space="preserve"><value>Questions Today</value></data>
-  <data name="AI_QuickPrompts" xml:space="preserve"><value>Quick Prompts</value></data>
-  <data name="AI_ClickToAsk" xml:space="preserve"><value>Click to ask</value></data>
-  <data name="AI_TypeQuestion" xml:space="preserve"><value>Type your question here...</value></data>
 
   <!-- Retention -->
   <data name="Ret_MilestoneTitle" xml:space="preserve"><value>Retention Milestones</value></data>
