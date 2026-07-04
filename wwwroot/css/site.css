@@ -913,3 +913,54 @@ a:hover { color: #fff; }
 @media (max-width: 480px) {
     .kpi-grid { grid-template-columns: 1fr; }
 }
+
+/* ══ RTL (Arabic) OVERRIDES ══════════════════════════ */
+[dir="rtl"] body { font-family: 'Segoe UI', 'Cairo', 'Noto Sans Arabic', 'Inter', sans-serif; }
+
+/* Topnav */
+[dir="rtl"] .topnav-brand      { margin-right: 0; margin-left: 12px; }
+[dir="rtl"] .topnav-user       { margin-left: 0;  margin-right: 8px; }
+[dir="rtl"] .topnav-hamburger  { margin-left: 0;  margin-right: auto; }
+
+/* Page title accent bar */
+[dir="rtl"] .page-title        { padding-left: 0; padding-right: 16px; }
+[dir="rtl"] .page-title::before { left: auto; right: 0; }
+[dir="rtl"] .page-subtitle     { margin: 6px 16px 0 0; }
+
+/* Alert banners */
+[dir="rtl"] .alert-banner      { border-left: none; border-right: 4px solid transparent; }
+[dir="rtl"] .alert-success-banner { border-left: none; border-right: 4px solid var(--success); }
+[dir="rtl"] .alert-error-banner   { border-left: none; border-right: 4px solid var(--red); }
+
+/* KPI card decoration bubble */
+[dir="rtl"] .kpi-card::after   { right: auto; left: -20px; }
+
+/* Smart insight */
+[dir="rtl"] .smart-insight-item { flex-direction: row-reverse; text-align: right; }
+
+/* Buttons with icons — flip icon margin */
+[dir="rtl"] .btn-primary i,
+[dir="rtl"] .btn-success i,
+[dir="rtl"] .btn-danger i      { margin-right: 0; margin-left: 0; }
+
+/* Form focus border flip */
+[dir="rtl"] .form-control-dark,
+[dir="rtl"] .form-select-dark  { text-align: right; }
+
+/* Table */
+[dir="rtl"] .table-dark-custom thead th,
+[dir="rtl"] .table-dark-custom tbody td { text-align: right; }
+[dir="rtl"] .table-dark-custom thead th:first-child,
+[dir="rtl"] .table-dark-custom tbody td:first-child { text-align: right; }
+
+/* Topnav links active underline — symmetric, no change needed */
+/* Topnav inner — reverse order on mobile */
+@media (max-width: 900px) {
+    [dir="rtl"] .topnav-hamburger { margin-left: 0; margin-right: auto; }
+}
+
+/* Page header action buttons */
+[dir="rtl"] .page-header { flex-direction: row-reverse; }
+
+/* Insight card */
+[dir="rtl"] .insight-card { flex-direction: row-reverse; text-align: right; }
