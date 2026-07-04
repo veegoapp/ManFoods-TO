@@ -10,7 +10,7 @@ public class RequireAuthAttribute : ActionFilterAttribute
         var userId = context.HttpContext.Session.GetInt32("UserId");
         if (userId == null)
         {
-            context.Result = new RedirectToActionResult("Login", "Account", null);
+            context.Result = new RedirectResult("/login");
         }
     }
 }

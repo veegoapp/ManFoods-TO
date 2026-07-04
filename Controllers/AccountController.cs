@@ -13,13 +13,13 @@ public class AccountController : Controller
                 ? Redirect("/admin/dashboard/turnover")
                 : Redirect("/home/dashboard");
         }
-        return Redirect("/home/account/login");
+        return Redirect("/login");
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public IActionResult Logout()
     {
         HttpContext.Session.Clear();
-        return Redirect("/home/account/login");
+        return Redirect("/login");
     }
 }

@@ -8,7 +8,7 @@ public class HomeController : Controller
     public IActionResult Index()
     {
         if (HttpContext.Session.GetUserId() == null)
-            return Redirect("/home/account/login");
+            return Redirect("/login");
 
         return HttpContext.Session.IsAdmin()
             ? Redirect("/admin/dashboard/turnover")

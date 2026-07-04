@@ -80,9 +80,9 @@ app.MapControllerRoute(
     pattern: "{area:exists}/{controller=Account}/{action=Login}/{id?}");
 
 // ── Root redirects ─────────────────────────────────────
-app.MapGet("/", ctx => { ctx.Response.Redirect("/home/account/login"); return Task.CompletedTask; });
-app.MapGet("/admin", ctx => { ctx.Response.Redirect("/admin/account/login"); return Task.CompletedTask; });
-app.MapGet("/home", ctx => { ctx.Response.Redirect("/home/account/login"); return Task.CompletedTask; });
+app.MapGet("/", ctx => { ctx.Response.Redirect("/login"); return Task.CompletedTask; });
+app.MapGet("/admin", ctx => { ctx.Response.Redirect("/adminlogin"); return Task.CompletedTask; });
+app.MapGet("/home", ctx => { ctx.Response.Redirect("/login"); return Task.CompletedTask; });
 
 // ── API (no area prefix) ───────────────────────────────
 app.MapControllerRoute(

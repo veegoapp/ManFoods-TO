@@ -14,7 +14,7 @@ public class AccountController : Controller
     private readonly IUserService _users;
     public AccountController(IAuthService auth, IUserService users) { _auth = auth; _users = users; }
 
-    [HttpGet]
+    [HttpGet("/adminlogin")]
     public IActionResult Login()
     {
         if (HttpContext.Session.GetUserId() != null && HttpContext.Session.IsAdmin())
@@ -22,7 +22,7 @@ public class AccountController : Controller
         return View(new LoginViewModel());
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost("/adminlogin"), ValidateAntiForgeryToken]
     [EnableRateLimiting("login")]
     public async Task<IActionResult> Login(LoginViewModel vm)
     {
@@ -45,7 +45,7 @@ public class AccountController : Controller
     public IActionResult Logout()
     {
         HttpContext.Session.Clear();
-        return RedirectToAction("Login");
+        return Redirect("/adminlogin");
     }
 
     [HttpGet]
@@ -67,7 +67,7 @@ public class AccountController : Controller
         if (!ok) { ModelState.AddModelError("Email", "No admin account with that email."); return View(vm); }
 
         TempData["Success"] = "Admin password reset successfully. You can now sign in.";
-        return RedirectToAction("Login");
+        return Redirect("/adminlogin");
     }
 
     [HttpGet]
@@ -80,7 +80,7 @@ public class AccountController : Controller
     {
         if (!ModelState.IsValid) return View(vm);
         var userId = HttpContext.Session.GetUserId();
-        if (userId == null) return RedirectToAction("Login");
+        if (userId == null) return Redirect("/adminlogin");
         var ok = await _auth.ChangePasswordAsync(userId.Value, vm.CurrentPassword, vm.NewPassword);
         if (!ok) { ModelState.AddModelError("CurrentPassword", "Current password is incorrect"); return View(vm); }
         TempData["Success"] = "Password changed successfully.";

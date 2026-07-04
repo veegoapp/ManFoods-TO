@@ -11,13 +11,13 @@ public class RequireAdminAuthAttribute : ActionFilterAttribute
         var userId = session.GetInt32("UserId");
         if (userId == null)
         {
-            context.Result = new RedirectToActionResult("Login", "Account", new { area = "Admin" });
+            context.Result = new RedirectResult("/adminlogin");
             return;
         }
         var role = session.GetString("Role") ?? "";
         if (role != "Admin")
         {
-            context.Result = new RedirectToActionResult("Login", "Account", new { area = "Admin" });
+            context.Result = new RedirectResult("/adminlogin");
         }
     }
 }
