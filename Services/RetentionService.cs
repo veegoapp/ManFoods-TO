@@ -10,8 +10,27 @@ public class RetentionService : IRetentionService
 
     public RetentionService(AppDbContext db) => _db = db;
 
-    private static readonly int[] MilestoneDays = { 30, 90, 180, 365 };
-    private static readonly int[] CurveDays = { 0, 7, 30, 60, 90, 120, 180, 270, 365 };
+    // Real "retention" is a long-term measure — 30/90-day attrition is covered by the
+    // dedicated 90-Day Turnover page instead.
+    private static readonly (int Days, string Label)[] Milestones =
+    {
+        (182, "6 Months"), (365, "1 Year"), (730, "2 Years"), (1095, "3 Years"), (1460, "4 Years"), (1825, "5 Years")
+    };
+    private static readonly (int Days, string Label)[] CurvePoints =
+    {
+        (0, "Day 0"), (30, "1mo"), (90, "3mo"), (182, "6mo"), (365, "1yr"), (545, "1.5yr"), (730, "2yr"), (1095, "3yr"), (1460, "4yr"), (1825, "5yr")
+    };
+    private const int LeaderboardDays = 365; // 1-year retention, the standard HR benchmark
+    private static readonly (string Label, int Min, int Max)[] TenureBuckets =
+    {
+        ("< 6 months", 0, 182),
+        ("6–12 months", 182, 365),
+        ("1–2 years", 365, 730),
+        ("2–3 years", 730, 1095),
+        ("3–4 years", 1095, 1460),
+        ("4–5 years", 1460, 1825),
+        ("5+ years", 1825, int.MaxValue),
+    };
 
     private class EmployeeCohort
     {
@@ -39,7 +58,7 @@ public class RetentionService : IRetentionService
     }
 
     private async Task<List<EmployeeCohort>> LoadEmployeeCohortsAsync(
-        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null, string? months = null)
     {
         var activeRows = await _db.ActiveEmployees
             .Where(e => e.HireDate != null)
@@ -82,7 +101,13 @@ public class RetentionService : IRetentionService
 
         IEnumerable<EmployeeCohort> cohorts = byEmployee.Values;
 
-        if (fromMonth.HasValue && fromYear.HasValue && toMonth.HasValue && toYear.HasValue)
+        if (!string.IsNullOrWhiteSpace(months) && toYear.HasValue)
+        {
+            var keys = DashboardService.ResolvePeriods(toMonth, toYear, fromMonth, fromYear, months)
+                .Select(p => p.Year * 100 + p.Month).ToHashSet();
+            cohorts = cohorts.Where(c => keys.Contains(c.CohortYear * 100 + c.CohortMonth));
+        }
+        else if (fromMonth.HasValue && fromYear.HasValue && toMonth.HasValue && toYear.HasValue)
         {
             var keys = DashboardService.ExpandRangeKeys(fromMonth.Value, fromYear.Value, toMonth.Value, toYear.Value).ToHashSet();
             cohorts = cohorts.Where(c => keys.Contains(c.CohortYear * 100 + c.CohortMonth));
@@ -111,18 +136,18 @@ public class RetentionService : IRetentionService
     }
 
     public async Task<List<RetentionMilestoneItem>> GetMilestonesAsync(string? store,
-        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null, string? months = null)
     {
-        var cohorts = await LoadEmployeeCohortsAsync(fromMonth, fromYear, toMonth, toYear, om, oc);
+        var cohorts = await LoadEmployeeCohortsAsync(fromMonth, fromYear, toMonth, toYear, om, oc, months);
         if (store != null) cohorts = cohorts.Where(c => c.Store == store).ToList();
 
         var result = new List<RetentionMilestoneItem>();
-        foreach (var days in MilestoneDays)
+        foreach (var (days, label) in Milestones)
         {
             var included = cohorts.Where(c => CohortReaches(c.CohortMonth, c.CohortYear, days)).ToList();
             if (included.Count == 0)
             {
-                result.Add(new RetentionMilestoneItem { Days = days });
+                result.Add(new RetentionMilestoneItem { Days = days, Label = label });
                 continue;
             }
             var total = included.Count;
@@ -131,6 +156,7 @@ public class RetentionService : IRetentionService
             result.Add(new RetentionMilestoneItem
             {
                 Days = days,
+                Label = label,
                 RetentionRate = Math.Round(retained * 100.0 / total, 1),
                 TotalHires = total,
                 Retained = retained,
@@ -141,13 +167,13 @@ public class RetentionService : IRetentionService
     }
 
     public async Task<List<SurvivalPoint>> GetSurvivalCurveAsync(string? store,
-        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null, string? months = null)
     {
-        var cohorts = await LoadEmployeeCohortsAsync(fromMonth, fromYear, toMonth, toYear, om, oc);
+        var cohorts = await LoadEmployeeCohortsAsync(fromMonth, fromYear, toMonth, toYear, om, oc, months);
         if (store != null) cohorts = cohorts.Where(c => c.Store == store).ToList();
 
         var result = new List<SurvivalPoint>();
-        foreach (var day in CurveDays)
+        foreach (var (day, label) in CurvePoints)
         {
             var included = cohorts.Where(c => CohortReaches(c.CohortMonth, c.CohortYear, day)).ToList();
             if (included.Count == 0) continue;
@@ -156,6 +182,7 @@ public class RetentionService : IRetentionService
             result.Add(new SurvivalPoint
             {
                 Day = day,
+                Label = label,
                 RetentionRate = Math.Round(retained * 100.0 / total, 1),
                 SampleSize = total,
             });
@@ -163,14 +190,16 @@ public class RetentionService : IRetentionService
         return result;
     }
 
-    public async Task<List<RetentionTrendPoint>> GetTrendAsync(string? store,
-        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null)
+    public async Task<List<RetentionTrendPoint>> GetTrendAsync(string? store, string? om = null, string? oc = null, int? sinceYear = null)
     {
-        var cohorts = await LoadEmployeeCohortsAsync(fromMonth, fromYear, toMonth, toYear, om, oc);
+        // Always full history (like the Turnover page's Monthly Trend) — unaffected
+        // by the discrete cohort-month filter used for the milestone cards above.
+        var cohorts = await LoadEmployeeCohortsAsync(om: om, oc: oc);
         if (store != null) cohorts = cohorts.Where(c => c.Store == store).ToList();
 
         var periods = cohorts.Select(c => (c.CohortMonth, c.CohortYear))
             .Distinct()
+            .Where(p => !sinceYear.HasValue || p.CohortYear >= sinceYear.Value)
             .OrderBy(p => p.CohortYear).ThenBy(p => p.CohortMonth)
             .ToList();
 
@@ -181,36 +210,30 @@ public class RetentionService : IRetentionService
             var total = cohortRows.Count;
             if (total == 0) continue;
 
-            double Rate(int days) => Math.Round(cohortRows.Count(c => c.TenureDays == null || c.TenureDays > days) * 100.0 / total, 1);
-
-            result.Add(new RetentionTrendPoint
+            var point = new RetentionTrendPoint { Label = new DateOnly(year, month, 1).ToString("MMM yy") };
+            foreach (var (days, label) in Milestones)
             {
-                Label = new DateOnly(year, month, 1).ToString("MMM yy"),
-                Retention90 = Rate(90),
-                Provisional90 = !CohortReaches(month, year, 90),
-                Retention180 = Rate(180),
-                Provisional180 = !CohortReaches(month, year, 180),
-                Retention365 = Rate(365),
-                Provisional365 = !CohortReaches(month, year, 365),
-            });
+                point.Rates[label] = Math.Round(cohortRows.Count(c => c.TenureDays == null || c.TenureDays > days) * 100.0 / total, 1);
+                point.Provisional[label] = !CohortReaches(month, year, days);
+            }
+            result.Add(point);
         }
         return result;
     }
 
     public async Task<List<ChartDataItem>> GetStoreLeaderboardAsync(
-        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null, string? months = null)
     {
-        const int days = 180;
-        var cohorts = await LoadEmployeeCohortsAsync(fromMonth, fromYear, toMonth, toYear, om, oc);
+        var cohorts = await LoadEmployeeCohortsAsync(fromMonth, fromYear, toMonth, toYear, om, oc, months);
         var included = cohorts
-            .Where(c => !string.IsNullOrWhiteSpace(c.Store) && CohortReaches(c.CohortMonth, c.CohortYear, days))
+            .Where(c => !string.IsNullOrWhiteSpace(c.Store) && CohortReaches(c.CohortMonth, c.CohortYear, LeaderboardDays))
             .ToList();
 
         return included.GroupBy(c => c.Store)
             .Select(g => new ChartDataItem
             {
                 Label = g.Key,
-                Value = (int)Math.Round(g.Count(c => c.TenureDays == null || c.TenureDays > days) * 100.0 / g.Count()),
+                Value = (int)Math.Round(g.Count(c => c.TenureDays == null || c.TenureDays > LeaderboardDays) * 100.0 / g.Count()),
             })
             .OrderByDescending(c => c.Value)
             .ToList();
@@ -232,16 +255,8 @@ public class RetentionService : IRetentionService
         var hireDates = await rowsQuery.Select(e => e.HireDate!.Value).ToListAsync();
 
         var asOf = new DateOnly(latest.Year, latest.Month, DateTime.DaysInMonth(latest.Year, latest.Month));
-        var buckets = new (string Label, int Min, int Max)[]
-        {
-            ("< 3 months", 0, 90),
-            ("3–6 months", 90, 180),
-            ("6–12 months", 180, 365),
-            ("1–2 years", 365, 730),
-            ("2+ years", 730, int.MaxValue),
-        };
 
-        return buckets
+        return TenureBuckets
             .Select(b => new ChartDataItem
             {
                 Label = b.Label,
@@ -251,39 +266,73 @@ public class RetentionService : IRetentionService
             .ToList();
     }
 
+    public async Task<List<StoreTenureRow>> GetTenureDistributionByStoreAsync(string? store, string? om = null, string? oc = null)
+    {
+        var periods = await _db.ActiveEmployees
+            .Where(e => e.HireDate != null)
+            .Select(e => new { e.Month, e.Year })
+            .Distinct()
+            .ToListAsync();
+        if (periods.Count == 0) return new List<StoreTenureRow>();
+        var latest = periods.OrderByDescending(p => p.Year).ThenByDescending(p => p.Month).First();
+
+        var rowsQuery = _db.ActiveEmployees.Where(e => e.Month == latest.Month && e.Year == latest.Year && e.HireDate != null);
+        if (store != null) rowsQuery = rowsQuery.Where(e => e.Store == store);
+        else if (await GetStoresForOmOcAsync(om, oc) is { } omOcStores) rowsQuery = rowsQuery.Where(e => omOcStores.Contains(e.Store));
+        var rows = await rowsQuery.Select(e => new { e.Store, e.HireDate }).ToListAsync();
+
+        var asOf = new DateOnly(latest.Year, latest.Month, DateTime.DaysInMonth(latest.Year, latest.Month));
+
+        return rows.GroupBy(r => r.Store)
+            .Select(g => new StoreTenureRow
+            {
+                StoreName = g.Key,
+                Headcount = g.Count(),
+                Buckets = TenureBuckets.Select(b => new ChartDataItem
+                {
+                    Label = b.Label,
+                    Value = g.Count(x => (asOf.DayNumber - x.HireDate!.Value.DayNumber) >= b.Min && (asOf.DayNumber - x.HireDate!.Value.DayNumber) < b.Max)
+                }).ToList()
+            })
+            .OrderByDescending(r => r.Headcount)
+            .ToList();
+    }
+
     public async Task<List<SmartInsightItem>> GetInsightsAsync(string? store,
-        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null, string? months = null)
     {
         var insights = new List<SmartInsightItem>();
+        const string milestoneKey = "1 Year";
 
-        // 1. Recent vs. prior 90-day retention trend (up to 3 complete cohorts each side).
-        var trend = await GetTrendAsync(store, fromMonth, fromYear, toMonth, toYear, om, oc);
-        var complete90 = trend.Where(t => !t.Provisional90 && t.Retention90 != null).ToList();
-        if (complete90.Count >= 2)
+        // 1. Recent vs. prior 1-year retention trend (up to 3 complete cohorts each side,
+        // full history — not limited to the page's cohort-month filter).
+        var trend = await GetTrendAsync(store, om, oc);
+        var complete = trend.Where(t => t.Rates.TryGetValue(milestoneKey, out var r) && r.HasValue && !t.Provisional[milestoneKey]).ToList();
+        if (complete.Count >= 2)
         {
-            var recent = complete90.TakeLast(Math.Min(3, complete90.Count)).ToList();
-            var priorCount = Math.Min(3, complete90.Count - recent.Count);
+            var recent = complete.TakeLast(Math.Min(3, complete.Count)).ToList();
+            var priorCount = Math.Min(3, complete.Count - recent.Count);
             if (priorCount > 0)
             {
-                var prior = complete90.Skip(complete90.Count - recent.Count - priorCount).Take(priorCount).ToList();
-                var recentAvg = recent.Average(t => t.Retention90!.Value);
-                var priorAvg = prior.Average(t => t.Retention90!.Value);
+                var prior = complete.Skip(complete.Count - recent.Count - priorCount).Take(priorCount).ToList();
+                var recentAvg = recent.Average(t => t.Rates[milestoneKey]!.Value);
+                var priorAvg = prior.Average(t => t.Rates[milestoneKey]!.Value);
                 var diff = Math.Round(recentAvg - priorAvg, 1);
                 if (Math.Abs(diff) >= 1)
                     insights.Add(new SmartInsightItem
                     {
                         Icon = diff > 0 ? "bi-arrow-up-circle-fill" : "bi-arrow-down-circle-fill",
                         Color = diff > 0 ? "success" : "danger",
-                        Title = diff > 0 ? "90-Day Retention Improving" : "90-Day Retention Slipping",
+                        Title = diff > 0 ? "1-Year Retention Improving" : "1-Year Retention Slipping",
                         Description = $"{recentAvg:F1}% avg over the last {recent.Count} cohort(s) vs {priorAvg:F1}% before — {(diff > 0 ? "+" : "")}{diff}pt.",
                     });
             }
         }
 
-        // 2. Best/worst store on 180-day retention (only meaningful company-wide).
+        // 2. Best/worst store on 1-year retention (only meaningful company-wide).
         if (store == null)
         {
-            var leaderboard = await GetStoreLeaderboardAsync(fromMonth, fromYear, toMonth, toYear, om, oc);
+            var leaderboard = await GetStoreLeaderboardAsync(fromMonth, fromYear, toMonth, toYear, om, oc, months);
             if (leaderboard.Count > 0)
             {
                 var best = leaderboard.First();
@@ -291,17 +340,17 @@ public class RetentionService : IRetentionService
                 {
                     Icon = "bi-trophy-fill",
                     Color = "success",
-                    Title = $"Best 180-Day Retention: {best.Label}",
-                    Description = $"{best.Value}% of hires are still there 180 days later.",
+                    Title = $"Best 1-Year Retention: {best.Label}",
+                    Description = $"{best.Value}% of hires are still there after 1 year.",
                 });
                 var worst = leaderboard.Last();
-                if (worst.Label != best.Label && worst.Value < 70)
+                if (worst.Label != best.Label && worst.Value < 50)
                     insights.Add(new SmartInsightItem
                     {
                         Icon = "bi-exclamation-triangle-fill",
                         Color = "danger",
-                        Title = $"Weakest 180-Day Retention: {worst.Label}",
-                        Description = $"Only {worst.Value}% of hires are still there 180 days later.",
+                        Title = $"Weakest 1-Year Retention: {worst.Label}",
+                        Description = $"Only {worst.Value}% of hires are still there after 1 year.",
                     });
             }
         }
@@ -311,7 +360,7 @@ public class RetentionService : IRetentionService
         var totalActive = tenureDist.Sum(t => t.Value);
         if (totalActive > 0)
         {
-            var seasoned = tenureDist.Where(t => t.Label is "1–2 years" or "2+ years").Sum(t => t.Value);
+            var seasoned = tenureDist.Where(t => t.Label is "1–2 years" or "2–3 years" or "3–4 years" or "4–5 years" or "5+ years").Sum(t => t.Value);
             var pct = Math.Round(seasoned * 100.0 / totalActive, 0);
             insights.Add(new SmartInsightItem
             {

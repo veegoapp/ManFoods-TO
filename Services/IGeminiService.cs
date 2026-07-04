@@ -30,7 +30,7 @@ public class GeminiContext
     public List<(string Label, int Value)> GenderBreakdown { get; set; } = new();
 
     // Deeper retention context (company-wide, not tied to the selected period/store)
-    public List<(int Days, double RetentionRate)> RetentionMilestones { get; set; } = new();
+    public List<(string Label, double RetentionRate)> RetentionMilestones { get; set; } = new();
     public List<(string CohortLabel, double Rate, bool IsProvisional)> NinetyDayCohorts { get; set; } = new();
     public List<(string Reason, int Count)> ExitInterviewReasons { get; set; } = new();
 

@@ -212,8 +212,13 @@
   <data name="Chart_HeadcountTrend" xml:space="preserve"><value>عدد الموظفين عبر الزمن</value></data>
   <data name="Chart_HeadcountTrendSub" xml:space="preserve"><value>إجمالي عدد الموظفين النشطين عبر كل الفترات المتاحة</value></data>
   <data name="Workforce_StoreBreakdown" xml:space="preserve"><value>عدد الموظفين حسب الفرع</value></data>
+  <data name="Retention_TenureByStore" xml:space="preserve"><value>خبرة الفريق حسب الفرع</value></data>
+  <data name="Retention_Leaderboard" xml:space="preserve"><value>ترتيب الفروع</value></data>
+  <data name="Retention_LeaderboardSub" xml:space="preserve"><value>نسبة الاستمرار لسنة كاملة، الأفضل أولًا</value></data>
   <data name="Chart_SurvivalCurve" xml:space="preserve"><value>منحنى البقاء</value></data>
+  <data name="Chart_SurvivalCurveSub" xml:space="preserve"><value>% من المعيّنين لسه شغالين عند كل نقطة زمنية منذ التعيين</value></data>
   <data name="Chart_RetentionTrend" xml:space="preserve"><value>اتجاه الاحتفاظ بالمعالم</value></data>
+  <data name="Chart_RetentionTrendSub" xml:space="preserve"><value>معدل الاستمرار عند كل معلم، لكل شهر تعيين، عبر كل الفترات</value></data>
   <data name="Chart_StoreLeaderboard" xml:space="preserve"><value>تصنيف الفروع</value></data>
   <data name="Chart_TenureDistribution" xml:space="preserve"><value>توزيع مدة خدمة القوى العاملة</value></data>
   <data name="Chart_ReasonsForLeaving" xml:space="preserve"><value>أسباب المغادرة</value></data>

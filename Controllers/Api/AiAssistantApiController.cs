@@ -93,7 +93,7 @@ public class AiAssistantApiController : ControllerBase
             TurnoverByJobTitle = jobTitleData.Select(x => (x.Label, x.Value)).ToList(),
             TurnoverByTenure   = tenureData.Select(x => (x.Label, x.Value)).ToList(),
             GenderBreakdown    = genderData.Select(x => (x.Label, x.Value)).ToList(),
-            RetentionMilestones = milestones.Where(m => m.TotalHires > 0).Select(m => (m.Days, m.RetentionRate)).ToList(),
+            RetentionMilestones = milestones.Where(m => m.TotalHires > 0).Select(m => (m.Label, m.RetentionRate)).ToList(),
             NinetyDayCohorts    = ninetyDayTrend.TakeLast(12).Select(c => (c.Label, c.Rate, c.IsProvisional)).ToList(),
             ExitInterviewReasons = exitReasons.Select(r => (r.Label, r.Value)).ToList(),
             TurnoverRateTarget = targets.TurnoverRateTarget,

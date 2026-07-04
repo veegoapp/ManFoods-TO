@@ -73,8 +73,8 @@ public class GeminiService : IGeminiService
         if (ctx.RetentionMilestones.Count > 0)
         {
             retentionSection.AppendLine("=== نسبة الاحتفاظ بالموظفين حسب المدة منذ التعيين (كل الكوهورتات) ===");
-            foreach (var (days, rate) in ctx.RetentionMilestones)
-                retentionSection.AppendLine($"  • بعد {days} يوم: {rate:F1}% لسه شغالين");
+            foreach (var (label, rate) in ctx.RetentionMilestones)
+                retentionSection.AppendLine($"  • بعد {label}: {rate:F1}% لسه شغالين");
             retentionSection.AppendLine();
         }
 

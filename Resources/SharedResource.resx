@@ -212,8 +212,13 @@
   <data name="Chart_HeadcountTrend" xml:space="preserve"><value>Headcount Over Time</value></data>
   <data name="Chart_HeadcountTrendSub" xml:space="preserve"><value>Total active headcount across all available periods</value></data>
   <data name="Workforce_StoreBreakdown" xml:space="preserve"><value>Headcount by Store</value></data>
+  <data name="Retention_TenureByStore" xml:space="preserve"><value>Team Experience by Store</value></data>
+  <data name="Retention_Leaderboard" xml:space="preserve"><value>Store Leaderboard</value></data>
+  <data name="Retention_LeaderboardSub" xml:space="preserve"><value>1-year retention rate, best first</value></data>
   <data name="Chart_SurvivalCurve" xml:space="preserve"><value>Survival Curve</value></data>
+  <data name="Chart_SurvivalCurveSub" xml:space="preserve"><value>% of hires still here at each day mark since hire</value></data>
   <data name="Chart_RetentionTrend" xml:space="preserve"><value>Retention Trend by Milestone</value></data>
+  <data name="Chart_RetentionTrendSub" xml:space="preserve"><value>Retention rate at each milestone, per hire-month cohort, all-time</value></data>
   <data name="Chart_StoreLeaderboard" xml:space="preserve"><value>Store Leaderboard</value></data>
   <data name="Chart_TenureDistribution" xml:space="preserve"><value>Workforce Tenure Distribution</value></data>
   <data name="Chart_ReasonsForLeaving" xml:space="preserve"><value>Reasons for Leaving</value></data>

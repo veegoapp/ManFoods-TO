@@ -3,6 +3,8 @@ namespace MvcApp.Models.ViewModels;
 public class RetentionMilestoneItem
 {
     public int Days { get; set; }
+    /// <summary>Human label for this milestone, e.g. "6 Months", "1 Year".</summary>
+    public string Label { get; set; } = "";
     public double RetentionRate { get; set; }
     public int TotalHires { get; set; }
     public int Retained { get; set; }
@@ -15,6 +17,7 @@ public class RetentionMilestoneItem
 public class SurvivalPoint
 {
     public int Day { get; set; }
+    public string Label { get; set; } = "";
     public double RetentionRate { get; set; }
     public int SampleSize { get; set; }
 }
@@ -22,10 +25,15 @@ public class SurvivalPoint
 public class RetentionTrendPoint
 {
     public string Label { get; set; } = "";
-    public double? Retention90 { get; set; }
-    public bool Provisional90 { get; set; }
-    public double? Retention180 { get; set; }
-    public bool Provisional180 { get; set; }
-    public double? Retention365 { get; set; }
-    public bool Provisional365 { get; set; }
+    /// <summary>Retention rate keyed by milestone label (e.g. "6 Months", "1 Year").</summary>
+    public Dictionary<string, double?> Rates { get; set; } = new();
+    /// <summary>Whether each milestone (by the same label keys) is still provisional for this cohort.</summary>
+    public Dictionary<string, bool> Provisional { get; set; } = new();
+}
+
+public class StoreTenureRow
+{
+    public string StoreName { get; set; } = "";
+    public int Headcount { get; set; }
+    public List<ChartDataItem> Buckets { get; set; } = new();
 }

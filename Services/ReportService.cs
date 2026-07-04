@@ -270,22 +270,23 @@ public class ReportService : IReportService
         }
         Finalize(wsSurvival);
 
+        var milestoneLabels = new[] { "6 Months", "1 Year", "2 Years", "3 Years", "4 Years", "5 Years" };
         var wsTrend = AddSheet(wb, "Retention Trend");
-        StyleHeader(wsTrend, new[] { "Cohort", "90-Day", "Provisional", "180-Day", "Provisional", "365-Day", "Provisional" });
+        StyleHeader(wsTrend, milestoneLabels.SelectMany(l => new[] { l, "Provisional" }).Prepend("Cohort").ToArray());
         for (int i = 0; i < trend.Count; i++)
         {
             var t = trend[i];
             wsTrend.Cell(i + 2, 1).Value = t.Label;
-            SetNullablePercentCell(wsTrend.Cell(i + 2, 2), t.Retention90);
-            wsTrend.Cell(i + 2, 3).Value = t.Provisional90 ? "Yes" : "No";
-            SetNullablePercentCell(wsTrend.Cell(i + 2, 4), t.Retention180);
-            wsTrend.Cell(i + 2, 5).Value = t.Provisional180 ? "Yes" : "No";
-            SetNullablePercentCell(wsTrend.Cell(i + 2, 6), t.Retention365);
-            wsTrend.Cell(i + 2, 7).Value = t.Provisional365 ? "Yes" : "No";
+            for (int m = 0; m < milestoneLabels.Length; m++)
+            {
+                var label = milestoneLabels[m];
+                SetNullablePercentCell(wsTrend.Cell(i + 2, 2 + m * 2), t.Rates.TryGetValue(label, out var rate) ? rate : null);
+                wsTrend.Cell(i + 2, 3 + m * 2).Value = t.Provisional.TryGetValue(label, out var prov) && prov ? "Yes" : "No";
+            }
         }
         Finalize(wsTrend);
 
-        WriteLabelValueSheet(wb, "Store Leaderboard (180d)", "Store", "Retention Rate", leaderboard, asPercent: true);
+        WriteLabelValueSheet(wb, "Store Leaderboard (1yr)", "Store", "Retention Rate", leaderboard, asPercent: true);
         WriteLabelValueSheet(wb, "Workforce Tenure", "Tenure Bucket", "Employees", tenureDist);
 
         var wsInsights = AddSheet(wb, "Retention Insights");
