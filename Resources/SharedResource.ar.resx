@@ -126,6 +126,13 @@
   <data name="Common_FullDataTable" xml:space="preserve"><value>جدول البيانات الكامل</value></data>
   <data name="Common_Of" xml:space="preserve"><value>من</value></data>
   <data name="Common_Total" xml:space="preserve"><value>الإجمالي</value></data>
+  <data name="Common_SelectYear" xml:space="preserve"><value>اختر السنة</value></data>
+  <data name="Common_SelectMonths" xml:space="preserve"><value>اختر الشهور</value></data>
+  <data name="Common_AllMonths" xml:space="preserve"><value>كل الشهور</value></data>
+  <data name="Common_SelectAll" xml:space="preserve"><value>اختيار الكل</value></data>
+  <data name="Common_ClearAll" xml:space="preserve"><value>إلغاء التحديد</value></data>
+  <data name="Common_Search" xml:space="preserve"><value>بحث…</value></data>
+  <data name="Common_MonthsSelected" xml:space="preserve"><value>شهر محدد</value></data>
 
   <!-- Page Titles & Subtitles -->
   <data name="Page_HomeDashboard" xml:space="preserve"><value>لوحة التحكم</value></data>
@@ -178,6 +185,8 @@
   <data name="Chart_GenderBreakdownSub" xml:space="preserve"><value>توزيع القوى العاملة الفعلية</value></data>
   <data name="Chart_MonthlyTrend" xml:space="preserve"><value>اتجاه الدوران الشهري</value></data>
   <data name="Chart_MonthlyTrendSub" xml:space="preserve"><value>معدل الدوران عبر الزمن</value></data>
+  <data name="Chart_TurnoverByMonth" xml:space="preserve"><value>معدل الدوران لكل شهر</value></data>
+  <data name="Chart_TurnoverByMonthSub" xml:space="preserve"><value>الاستقالات ÷ عدد الموظفين لكل شهر من الشهور المختارة</value></data>
   <data name="Chart_SurvivalCurve" xml:space="preserve"><value>منحنى البقاء</value></data>
   <data name="Chart_RetentionTrend" xml:space="preserve"><value>اتجاه الاحتفاظ بالمعالم</value></data>
   <data name="Chart_StoreLeaderboard" xml:space="preserve"><value>تصنيف الفروع</value></data>

@@ -126,6 +126,13 @@
   <data name="Common_FullDataTable" xml:space="preserve"><value>Full Data Table</value></data>
   <data name="Common_Of" xml:space="preserve"><value>of</value></data>
   <data name="Common_Total" xml:space="preserve"><value>total</value></data>
+  <data name="Common_SelectYear" xml:space="preserve"><value>Select Year</value></data>
+  <data name="Common_SelectMonths" xml:space="preserve"><value>Select Months</value></data>
+  <data name="Common_AllMonths" xml:space="preserve"><value>All Months</value></data>
+  <data name="Common_SelectAll" xml:space="preserve"><value>Select All</value></data>
+  <data name="Common_ClearAll" xml:space="preserve"><value>Clear</value></data>
+  <data name="Common_Search" xml:space="preserve"><value>Search…</value></data>
+  <data name="Common_MonthsSelected" xml:space="preserve"><value>months selected</value></data>
 
   <!-- Page Titles & Subtitles -->
   <data name="Page_HomeDashboard" xml:space="preserve"><value>Dashboard</value></data>
@@ -178,6 +185,8 @@
   <data name="Chart_GenderBreakdownSub" xml:space="preserve"><value>Active workforce distribution</value></data>
   <data name="Chart_MonthlyTrend" xml:space="preserve"><value>Monthly Turnover Trend</value></data>
   <data name="Chart_MonthlyTrendSub" xml:space="preserve"><value>Turnover rate over time</value></data>
+  <data name="Chart_TurnoverByMonth" xml:space="preserve"><value>Turnover Rate by Month</value></data>
+  <data name="Chart_TurnoverByMonthSub" xml:space="preserve"><value>Resignations ÷ headcount for each selected month</value></data>
   <data name="Chart_SurvivalCurve" xml:space="preserve"><value>Survival Curve</value></data>
   <data name="Chart_RetentionTrend" xml:space="preserve"><value>Retention Trend by Milestone</value></data>
   <data name="Chart_StoreLeaderboard" xml:space="preserve"><value>Store Leaderboard</value></data>

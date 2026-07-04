@@ -2,29 +2,151 @@
     ViewData["Title"] = L["Page_Turnover"].Value;
 }
 
+<style>
+/* ── Turnover filter bar ─────────────────────────────────── */
+.tv-filterbar { display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; }
+.tv-filter-group { display:flex; flex-direction:column; gap:5px; }
+.tv-filter-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-3); }
+
+.tv-select-wrap { position:relative; }
+.tv-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 34px 0 14px; min-width:110px;
+    box-shadow:var(--shadow-sm); cursor:pointer; transition:border-color .15s, box-shadow .15s;
+}
+.tv-select:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.tv-select-wrap i { position:absolute; top:50%; right:12px; transform:translateY(-50%); font-size:11px; color:var(--text-3); pointer-events:none; }
+[dir="rtl"] .tv-select { padding:0 14px 0 34px; }
+[dir="rtl"] .tv-select-wrap i { right:auto; left:12px; }
+
+/* Months multi-select */
+.tv-multiselect { position:relative; }
+.tv-multiselect-trigger {
+    display:flex; align-items:center; gap:10px; justify-content:space-between;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 12px 0 14px; min-width:190px;
+    box-shadow:var(--shadow-sm); cursor:pointer; transition:border-color .15s, box-shadow .15s;
+}
+.tv-multiselect-trigger:hover { border-color:var(--card-border-h); }
+.tv-multiselect-trigger i { font-size:11px; color:var(--text-3); flex-shrink:0; }
+.tv-multiselect-chips { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tv-multiselect-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); min-width:230px; padding:8px; max-height:280px; overflow-y:auto;
+}
+.tv-multiselect-panel.open { display:block; }
+[dir="rtl"] .tv-multiselect-panel { left:auto; right:0; }
+.tv-multiselect-actions { display:flex; gap:6px; padding:2px 4px 8px; border-bottom:1px solid var(--card-border); margin-bottom:6px; }
+.tv-ms-action {
+    flex:1; background:var(--card-bg-2); border:1px solid var(--card-border); color:var(--red);
+    border-radius:6px; font-size:11.5px; font-weight:700; padding:6px 8px; cursor:pointer; transition:background .15s;
+}
+.tv-ms-action:hover { background:var(--red-light); }
+.tv-ms-option {
+    display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:6px; cursor:pointer;
+    font-size:13px; color:var(--text-2); transition:background .12s;
+}
+.tv-ms-option:hover { background:var(--card-bg-2); }
+.tv-ms-option input { accent-color:var(--red); width:15px; height:15px; cursor:pointer; }
+
+/* Searchable single-select combobox (Store / OM / OC) */
+.tv-combobox { position:relative; }
+.tv-combobox-input {
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:500;
+    height:42px; padding:0 14px; min-width:190px; width:100%;
+    box-shadow:var(--shadow-sm); transition:border-color .15s, box-shadow .15s;
+}
+.tv-combobox-input:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.tv-combobox-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); max-height:260px; overflow-y:auto; padding:6px;
+}
+.tv-combobox-panel.open { display:block; }
+.tv-combo-option { padding:8px 10px; border-radius:6px; font-size:13px; color:var(--text-2); cursor:pointer; }
+.tv-combo-option:hover { background:var(--card-bg-2); }
+.tv-combo-option.active { color:var(--red); font-weight:700; background:var(--red-light); }
+.tv-combo-empty { padding:10px; font-size:12.5px; color:var(--text-3); text-align:center; }
+
+/* Mini "top driver" callout inside a chart card header */
+.tv-stat-callout { font-size:12.5px; color:var(--text-2); margin-top:4px; }
+.tv-stat-callout .tv-stat-highlight { color:var(--red); font-weight:700; }
+
+/* Gender chart: doughnut + side breakdown list */
+.tv-gender-body { display:flex; align-items:center; gap:18px; height:220px; }
+.tv-gender-canvas-wrap { flex:0 0 44%; height:100%; position:relative; }
+.tv-gender-list { flex:1; display:flex; flex-direction:column; gap:10px; }
+.tv-gender-row { display:flex; align-items:center; gap:9px; font-size:13px; color:var(--text-2); }
+.tv-gender-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.tv-gender-label { flex:1; }
+.tv-gender-value { font-weight:700; color:var(--text); }
+.tv-gender-pct { font-weight:500; color:var(--text-3); }
+
+@@media (max-width: 640px) {
+    .tv-gender-body { flex-direction:column; height:auto; }
+    .tv-gender-canvas-wrap { flex:0 0 auto; width:100%; height:180px; }
+}
+</style>
+
 <div class="page-header">
     <div>
         <h1 class="page-title">@L["Page_Turnover"]</h1>
         <p class="page-subtitle">@L["Page_TurnoverSub"]</p>
     </div>
-    <div class="d-flex gap-2 flex-wrap align-items-center">
-        <span class="text-muted" style="font-size:12px">@L["Common_From"]</span>
-        <select id="fromPeriodSelect" class="form-select form-select-dark" style="width:160px">
-            <option value="">@L["Common_SelectPeriod"]</option>
-        </select>
-        <span class="text-muted" style="font-size:12px">@L["Common_To"]</span>
-        <select id="periodSelect" class="form-select form-select-dark" style="width:160px">
-            <option value="">@L["Common_SelectPeriod"]</option>
-        </select>
-        <select id="storeSelect" class="form-select form-select-dark" style="width:180px">
-            <option value="">@L["Common_AllStores"]</option>
-        </select>
-        <select id="omSelect" class="form-select form-select-dark" style="width:190px">
-            <option value="">@L["Common_AllOperationManagers"]</option>
-        </select>
-        <select id="ocSelect" class="form-select form-select-dark" style="width:190px">
-            <option value="">@L["Common_AllOperationConsultants"]</option>
-        </select>
+    <div class="tv-filterbar">
+        <div class="tv-filter-group">
+            <span class="tv-filter-label">@L["Common_Year"]</span>
+            <div class="tv-select-wrap">
+                <select id="tvYearSelect" class="tv-select"></select>
+                <i class="bi bi-chevron-down"></i>
+            </div>
+        </div>
+
+        <div class="tv-filter-group">
+            <span class="tv-filter-label">@L["Common_SelectMonths"]</span>
+            <div class="tv-multiselect" id="tvMonthsMultiselect" data-label-select="@L["Common_SelectMonths"]" data-label-all="@L["Common_AllMonths"]">
+                <button type="button" class="tv-multiselect-trigger" id="tvMonthsTrigger">
+                    <span class="tv-multiselect-chips" id="tvMonthsChips">@L["Common_AllMonths"]</span>
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+                <div class="tv-multiselect-panel" id="tvMonthsPanel">
+                    <div class="tv-multiselect-actions">
+                        <button type="button" class="tv-ms-action" id="tvMonthsSelectAll">@L["Common_SelectAll"]</button>
+                        <button type="button" class="tv-ms-action" id="tvMonthsClearAll">@L["Common_ClearAll"]</button>
+                    </div>
+                    <div id="tvMonthsOptions"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tv-filter-group">
+            <span class="tv-filter-label">@L["Common_StoreName"]</span>
+            <div class="tv-combobox" id="tvStoreCombo">
+                <input type="text" class="tv-combobox-input" id="tvStoreInput" placeholder="@L["Common_AllStores"]" autocomplete="off">
+                <div class="tv-combobox-panel" id="tvStorePanel"></div>
+            </div>
+        </div>
+
+        <div class="tv-filter-group">
+            <span class="tv-filter-label">@L["Common_OperationManager"]</span>
+            <div class="tv-combobox" id="tvOmCombo">
+                <input type="text" class="tv-combobox-input" id="tvOmInput" placeholder="@L["Common_AllOperationManagers"]" autocomplete="off">
+                <div class="tv-combobox-panel" id="tvOmPanel"></div>
+            </div>
+        </div>
+
+        <div class="tv-filter-group">
+            <span class="tv-filter-label">@L["Common_OperationConsultant"]</span>
+            <div class="tv-combobox" id="tvOcCombo">
+                <input type="text" class="tv-combobox-input" id="tvOcInput" placeholder="@L["Common_AllOperationConsultants"]" autocomplete="off">
+                <div class="tv-combobox-panel" id="tvOcPanel"></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -40,10 +162,23 @@
     </div>
 </div>
 
+<!-- ── Turnover Rate by Month (per-month formula, selected months only) ── -->
+<div class="chart-card mb-4" style="border-radius:14px">
+    <div class="chart-header">
+        <h6>@L["Chart_TurnoverByMonth"]</h6>
+        <p>@L["Chart_TurnoverByMonthSub"]</p>
+    </div>
+    <div class="chart-body"><canvas id="turnoverByMonthChart" style="max-height:240px"></canvas></div>
+</div>
+
 <!-- ── Charts ────────────────────────────────────────────── -->
 <div class="charts-grid mb-4">
     <div class="chart-card">
-        <div class="chart-header"><h6>@L["Chart_TurnoverByJobTitle"]</h6><p>@L["Chart_TurnoverByJobTitleSub"]</p></div>
+        <div class="chart-header">
+            <h6>@L["Chart_TurnoverByJobTitle"]</h6>
+            <p>@L["Chart_TurnoverByJobTitleSub"]</p>
+            <div id="jobTitleTopStat" class="tv-stat-callout"></div>
+        </div>
         <div class="chart-body"><canvas id="jobTitleChart"></canvas></div>
     </div>
     <div class="chart-card">
@@ -51,16 +186,22 @@
         <div class="chart-body"><canvas id="tenureChart"></canvas></div>
     </div>
     <div class="chart-card">
-        <div class="chart-header"><h6>@L["Chart_TurnoverByPayroll"]</h6><p>Resignations grouped by payroll group</p></div>
+        <div class="chart-header">
+            <h6>@L["Chart_TurnoverByPayroll"]</h6><p>Resignations grouped by payroll group</p>
+            <div id="payrollTopStat" class="tv-stat-callout"></div>
+        </div>
         <div class="chart-body"><canvas id="payrollGroupChart"></canvas></div>
     </div>
-    <div class="chart-card chart-full">
+    <div class="chart-card">
         <div class="chart-header"><h6>@L["Chart_GenderBreakdown"]</h6><p>@L["Chart_GenderBreakdownSub"]</p></div>
-        <div class="chart-body chart-body-sm"><canvas id="genderChart"></canvas></div>
+        <div class="tv-gender-body">
+            <div class="tv-gender-canvas-wrap"><canvas id="genderChart"></canvas></div>
+            <div class="tv-gender-list" id="genderStatsList"></div>
+        </div>
     </div>
 </div>
 
-<!-- ── Monthly Trend Chart ─────────────────────────────────── -->
+<!-- ── Monthly Trend Chart (always full history from selected year onward) ── -->
 <div class="chart-card mb-4" style="border-radius:14px">
     <div class="chart-header d-flex align-items-center justify-content-between">
         <div>
@@ -187,7 +328,7 @@
     </div>
 </div>
 
-<!-- ── Full Data Table (Trend Matrix) ─────────────────────── -->
+<!-- ── Full Data Table (Trend Matrix) — always from selected year to latest upload ── -->
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
         <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 25),oklch(0.6 0.16 25));border-radius:2px"></div>
@@ -224,7 +365,188 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="~/js/dashboard.js" asp-append-version="true"></script>
 <script>
-/* ── Turnover Analytics — extra sections ────────────────── */
+/* ── Turnover Analytics — filters (Year + discrete Months multi-select
+   + searchable single-select combos for Store/OM/OC) ─────────────────
+   dashboard.js's own #periodSelect/#fromPeriodSelect/#storeSelect/#omSelect/
+   #ocSelect wiring no-ops here (those elements don't exist on this page),
+   so this page owns buildQuery()/loadAll() end-to-end. storeFilter/omFilter/
+   ocFilter globals are declared by dashboard.js and reused as-is. */
+let tvYear = null;
+let tvMonths = [];
+let tvYearMonthsMap = {};
+
+function tvMonthShortName(m) {
+    return new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' });
+}
+
+/* Overrides dashboard.js's buildQuery(): discrete year+months instead of a
+   continuous from/to range. "month" is also sent (= latest selected month)
+   so endpoints that only understand a single period (e.g. gender-breakdown)
+   still get a sensible value. */
+function buildQuery() {
+    const p = new URLSearchParams();
+    if (tvYear) p.set('year', tvYear);
+    if (tvMonths.length) {
+        p.set('months', tvMonths.join(','));
+        p.set('month', Math.max(...tvMonths));
+    }
+    if (storeFilter) p.set('store', storeFilter);
+    if (omFilter)    p.set('om', omFilter);
+    if (ocFilter)    p.set('oc', ocFilter);
+    return p.toString();
+}
+
+function tvAnchorMonth() { return tvMonths.length ? Math.max(...tvMonths) : null; }
+
+/* ── Generic searchable single-select combobox (Store / OM / OC) ────── */
+function tvCreateCombobox({ inputId, panelId, onSelect }) {
+    const input = document.getElementById(inputId);
+    const panel = document.getElementById(panelId);
+    const allLabel = input.placeholder;
+    let options = [];
+    let value = '';
+
+    function render(filterText) {
+        const ft = (filterText || '').toLowerCase();
+        const filtered = options.filter(o => o.toLowerCase().includes(ft));
+        let html = `<div class="tv-combo-option${value === '' ? ' active' : ''}" data-value="">${allLabel}</div>`;
+        html += filtered.map(o => `<div class="tv-combo-option${o === value ? ' active' : ''}" data-value="${o.replace(/"/g, '&quot;')}">${o}</div>`).join('');
+        panel.innerHTML = html;
+    }
+
+    function open() { panel.classList.add('open'); render(''); input.select(); }
+    function close() { panel.classList.remove('open'); input.value = value; }
+
+    panel.addEventListener('mousedown', (e) => {
+        const opt = e.target.closest('.tv-combo-option');
+        if (!opt) return;
+        e.preventDefault();
+        value = opt.dataset.value;
+        input.value = value;
+        panel.classList.remove('open');
+        onSelect(value);
+    });
+    input.addEventListener('focus', open);
+    input.addEventListener('input', () => render(input.value));
+    input.addEventListener('blur', () => setTimeout(close, 150));
+
+    return {
+        setOptions(list) { options = list || []; },
+        setValue(v) { value = v || ''; input.value = value; }
+    };
+}
+
+const tvStoreCombo = tvCreateCombobox({ inputId: 'tvStoreInput', panelId: 'tvStorePanel', onSelect: v => { storeFilter = v; loadAll(); } });
+const tvOmCombo    = tvCreateCombobox({ inputId: 'tvOmInput',    panelId: 'tvOmPanel',    onSelect: v => { omFilter    = v; loadAll(); } });
+const tvOcCombo    = tvCreateCombobox({ inputId: 'tvOcInput',    panelId: 'tvOcPanel',    onSelect: v => { ocFilter    = v; loadAll(); } });
+
+/* ── Months multi-select ─────────────────────────────────────────── */
+function tvBuildMonthsOptions() {
+    const container = document.getElementById('tvMonthsOptions');
+    const available = (tvYearMonthsMap[tvYear] || []).slice().sort((a, b) => a - b);
+    container.innerHTML = available.map(m => `
+        <label class="tv-ms-option">
+            <input type="checkbox" value="${m}" ${tvMonths.includes(m) ? 'checked' : ''}>
+            <span>${monthName(m, tvYear)}</span>
+        </label>`).join('');
+    container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const m = parseInt(cb.value);
+            if (cb.checked) { if (!tvMonths.includes(m)) tvMonths.push(m); }
+            else { tvMonths = tvMonths.filter(x => x !== m); }
+            tvMonths.sort((a, b) => a - b);
+            tvRenderMonthsChips();
+            tvOnMonthsChanged();
+        });
+    });
+}
+
+function tvRenderMonthsChips() {
+    const chipsEl = document.getElementById('tvMonthsChips');
+    const available = tvYearMonthsMap[tvYear] || [];
+    const labels = document.getElementById('tvMonthsMultiselect').dataset;
+    if (!tvMonths.length) { chipsEl.textContent = labels.labelSelect; return; }
+    if (tvMonths.length === available.length) { chipsEl.textContent = labels.labelAll; return; }
+    const names = tvMonths.map(tvMonthShortName);
+    chipsEl.textContent = names.length <= 2 ? names.join('، ') : `${names[0]}، ${names[1]} +${names.length - 2}`;
+}
+
+let tvMonthsDebounce;
+function tvOnMonthsChanged() {
+    clearTimeout(tvMonthsDebounce);
+    tvMonthsDebounce = setTimeout(async () => {
+        if (!tvMonths.length) return;
+        await tvLoadDependentLists();
+        await loadAll();
+    }, 250);
+}
+
+document.getElementById('tvMonthsSelectAll').addEventListener('click', () => {
+    tvMonths = (tvYearMonthsMap[tvYear] || []).slice().sort((a, b) => a - b);
+    tvBuildMonthsOptions(); tvRenderMonthsChips(); tvOnMonthsChanged();
+});
+document.getElementById('tvMonthsClearAll').addEventListener('click', () => {
+    tvMonths = [];
+    tvBuildMonthsOptions(); tvRenderMonthsChips(); tvOnMonthsChanged();
+});
+document.getElementById('tvMonthsTrigger').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('tvMonthsPanel').classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+    if (!document.getElementById('tvMonthsMultiselect').contains(e.target))
+        document.getElementById('tvMonthsPanel').classList.remove('open');
+});
+
+/* ── Year select ──────────────────────────────────────────────────── */
+document.getElementById('tvYearSelect').addEventListener('change', async function () {
+    tvYear = parseInt(this.value);
+    tvMonths = (tvYearMonthsMap[tvYear] || []).slice().sort((a, b) => a - b);
+    storeFilter = ''; omFilter = ''; ocFilter = '';
+    tvStoreCombo.setValue(''); tvOmCombo.setValue(''); tvOcCombo.setValue('');
+    tvBuildMonthsOptions();
+    tvRenderMonthsChips();
+    await tvLoadDependentLists();
+    await loadAll();
+});
+
+/* ── Store / OM / OC option lists (scoped to the latest selected month) ── */
+async function tvLoadDependentLists() {
+    const anchor = tvAnchorMonth();
+    if (!anchor || !tvYear) return;
+    const [stores, oms, ocs] = await Promise.all([
+        fetchJson(`/api/dashboard/stores?month=${anchor}&year=${tvYear}`),
+        fetchJson(`/api/dashboard/operation-managers?month=${anchor}&year=${tvYear}`),
+        fetchJson(`/api/dashboard/operation-consultants?month=${anchor}&year=${tvYear}`)
+    ]);
+    tvStoreCombo.setOptions(stores.map(s => s.storeName));
+    tvOmCombo.setOptions(oms);
+    tvOcCombo.setOptions(ocs);
+}
+
+/* ── Initial load ─────────────────────────────────────────────────── */
+async function tvInitFilters() {
+    const periods = await fetchJson('/api/dashboard/available-periods');
+    if (!periods.length) return;
+
+    tvYearMonthsMap = {};
+    periods.forEach(p => { (tvYearMonthsMap[p.year] = tvYearMonthsMap[p.year] || []).push(p.month); });
+
+    const years = Object.keys(tvYearMonthsMap).map(Number).sort((a, b) => b - a);
+    const yearSel = document.getElementById('tvYearSelect');
+    yearSel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    tvYear = years[0];
+    yearSel.value = tvYear;
+
+    tvMonths = (tvYearMonthsMap[tvYear] || []).slice().sort((a, b) => a - b);
+    tvBuildMonthsOptions();
+    tvRenderMonthsChips();
+
+    await tvLoadDependentLists();
+    await loadAll();
+}
+
+/* ── Extra sections (Smart Insights, Store Comparison, OC/OM, Payroll chart) ── */
 let tvStoreData = [], tvSortCol = 'turnoverRate', tvSortAsc = false;
 
 function tvRateColor(rate) {
@@ -272,7 +594,7 @@ function tvRenderStoreTable() {
 }
 
 async function tvLoadStoreComparison() {
-    if (!periodMonth || !periodYear) return;
+    if (!tvYear || !tvMonths.length) return;
     const data = await fetchJson(`/api/dashboard/store-comparison?${buildQuery()}`);
     tvStoreData = data || [];
     tvRenderStoreTable();
@@ -300,7 +622,7 @@ function tvRenderOcOmTable(tbodyId, rows) {
 }
 
 async function tvLoadOcOmAnalysis() {
-    if (!periodMonth || !periodYear) return;
+    if (!tvYear || !tvMonths.length) return;
     const data = await fetchJson(`/api/dashboard/oc-om-analysis?${buildQuery()}`);
     tvRenderOcOmTable('ocTableBody', data.ocRows);
     tvRenderOcOmTable('omTableBody', data.omRows);
@@ -308,7 +630,7 @@ async function tvLoadOcOmAnalysis() {
 
 /* Smart Insights ------------------------------------------- */
 async function tvLoadSmartInsights() {
-    if (!periodMonth || !periodYear) return;
+    if (!tvYear || !tvMonths.length) return;
     const items     = await fetchJson(`/api/dashboard/smart-insights?${buildQuery()}`);
     const container = document.getElementById('insightsContainer');
 
@@ -346,7 +668,6 @@ document.querySelectorAll('#storeTable .tv-sort').forEach(th => {
         const col = th.dataset.col;
         if (tvSortCol === col) { tvSortAsc = !tvSortAsc; }
         else { tvSortCol = col; tvSortAsc = (col === 'storeName' || col === 'operationConsultant' || col === 'operationManager'); }
-        // Update sort icons
         document.querySelectorAll('#storeTable .tv-sort i').forEach(i => i.className = 'bi bi-arrow-down-up text-muted');
         const icon = th.querySelector('i');
         if (icon) icon.className = tvSortAsc ? 'bi bi-sort-up text-danger' : 'bi bi-sort-down text-danger';
@@ -357,7 +678,23 @@ document.querySelectorAll('#storeTable .tv-sort').forEach(th => {
 /* Search filter -------------------------------------------- */
 document.getElementById('storeSearch').addEventListener('input', tvRenderStoreTable);
 
-/* Payroll Group chart -------------------------------------- */
+/* "Top driver" mini-callout beside a chart card header ----- */
+function tvRenderTopStat(elId, data) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (!data || !data.length) { el.innerHTML = ''; return; }
+    const total = data.reduce((s, d) => s + d.value, 0);
+    const top   = data.slice().sort((a, b) => b.value - a.value)[0];
+    const pct   = total > 0 ? Math.round(top.value / total * 100) : 0;
+    el.innerHTML = `<span class="tv-stat-highlight">${top.label}</span> — ${top.value} (${pct}%)`;
+}
+
+async function tvLoadJobTitleStat() {
+    const data = await fetchJson(`/api/dashboard/turnover-by-job-title?${buildQuery()}`);
+    tvRenderTopStat('jobTitleTopStat', data);
+}
+
+/* Payroll Group chart --------------------------------------- */
 let payrollGroupChart;
 async function tvLoadPayrollGroupChart() {
     const data = await fetchJson(`/api/dashboard/turnover-by-payroll-group?${buildQuery()}`);
@@ -367,21 +704,84 @@ async function tvLoadPayrollGroupChart() {
         options: { indexAxis: 'y', plugins: { legend: { display: false } },
             scales: { x: { grid: { color: '#E4E2F5' }, ticks: { color: '#5B5875' } }, y: { grid: { display: false }, ticks: { color: '#5B5875' } } } }
     });
+    tvRenderTopStat('payrollTopStat', data);
 }
 
-/* Hook into dashboard.js loadAll so extras refresh on period change */
+/* Gender breakdown side list -------------------------------- */
+async function tvLoadGenderStats() {
+    const data = await fetchJson(`/api/dashboard/gender-breakdown?${buildQuery()}`);
+    const el = document.getElementById('genderStatsList');
+    if (!el) return;
+    if (!data || !data.length) { el.innerHTML = ''; return; }
+    const total = data.reduce((s, d) => s + d.value, 0);
+    el.innerHTML = data.map((d, i) => {
+        const pct = total > 0 ? Math.round(d.value / total * 100) : 0;
+        return `<div class="tv-gender-row">
+            <span class="tv-gender-dot" style="background:${COLORS[i % COLORS.length]}"></span>
+            <span class="tv-gender-label">${d.label}</span>
+            <span class="tv-gender-value">${d.value} <span class="tv-gender-pct">(${pct}%)</span></span>
+        </div>`;
+    }).join('');
+}
+
+/* Turnover Rate by Month — one bar per selected month, computed
+   independently as resignations ÷ headcount for that single month. ------ */
+let turnoverByMonthChart;
+async function tvLoadTurnoverByMonthChart() {
+    if (!tvYear || !tvMonths.length) return;
+    const sortedMonths = tvMonths.slice().sort((a, b) => a - b);
+    const results = await Promise.all(sortedMonths.map(m => {
+        const q = new URLSearchParams({ year: tvYear, months: m, month: m });
+        if (storeFilter) q.set('store', storeFilter);
+        if (omFilter)    q.set('om', omFilter);
+        if (ocFilter)    q.set('oc', ocFilter);
+        return fetchJson(`/api/dashboard/kpis?${q.toString()}`);
+    }));
+
+    turnoverByMonthChart = mkChart(turnoverByMonthChart, 'turnoverByMonthChart', {
+        type: 'bar',
+        data: {
+            labels: sortedMonths.map(tvMonthShortName),
+            datasets: [{
+                label: 'Turnover %',
+                data: results.map(r => r.turnoverRate || 0),
+                backgroundColor: 'oklch(0.5 0.18 25)',
+                borderRadius: 6,
+                maxBarThickness: 46
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => `${ctx.parsed.y.toFixed(1)}%` } }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#5B5875' } },
+                y: { ticks: { color: '#5B5875', callback: v => v + '%' }, grid: { color: '#E4E2F5' } }
+            }
+        }
+    });
+}
+
+/* Hook everything into dashboard.js's loadAll() so it all refreshes together */
 const _tvOrigLoadAll = loadAll;
 loadAll = async function () {
     await _tvOrigLoadAll();
-    await tvLoadSmartInsights();
-    await tvLoadStoreComparison();
-    await tvLoadOcOmAnalysis();
-    await tvLoadPayrollGroupChart();
-    await tvLoadTrendMatrix();
+    await Promise.all([
+        tvLoadSmartInsights(),
+        tvLoadStoreComparison(),
+        tvLoadOcOmAnalysis(),
+        tvLoadPayrollGroupChart(),
+        tvLoadTrendMatrix(),
+        tvLoadTurnoverByMonthChart(),
+        tvLoadGenderStats(),
+        tvLoadJobTitleStat()
+    ]);
 };
 
-/* ── Full Data Trend Matrix ─────────────────────────────── */
-let mxData = null;          // { periods: [], rows: [] }
+/* ── Full Data Trend Matrix (unaffected by the Months multi-select —
+   always spans from the selected Year to the latest uploaded period) ── */
+let mxData = null;
 let mxSortCol  = 'avg';
 let mxSortAsc  = false;
 
@@ -405,7 +805,6 @@ function mxRateCell(rate) {
 
 function mxBuildHeader(periods) {
     const tr = document.querySelector('#matrixHead tr');
-    // Remove any previously inserted period cols (between Store th and AVG th)
     const avgTh = tr.querySelector('[data-mcol="avg"]');
     tr.querySelectorAll('[data-mcol^="p-"]').forEach(el => el.remove());
 
@@ -479,6 +878,7 @@ async function tvLoadTrendMatrix() {
     const q = new URLSearchParams();
     if (omFilter) q.set('om', omFilter);
     if (ocFilter) q.set('oc', ocFilter);
+    if (tvYear)   q.set('sinceYear', tvYear);
     mxData = await fetchJson(`/api/dashboard/trend-matrix?${q.toString()}`);
     if (!mxData || !mxData.rows || !mxData.rows.length) {
         body.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No data available.</td></tr>';
@@ -543,5 +943,6 @@ function tvRenderTrendChart() {
     });
 }
 
+tvInitFilters();
 </script>
 }

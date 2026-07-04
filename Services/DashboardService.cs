@@ -32,6 +32,31 @@ public class DashboardService : IDashboardService
         return keys;
     }
 
+    // Resolves the explicit set of (month, year) periods a request should aggregate over.
+    // When "months" (a CSV of month numbers, e.g. "1,3,5") is given together with "year", those
+    // discrete months are used as-is (no requirement that they be contiguous). Otherwise falls
+    // back to the legacy contiguous from/to range behavior.
+    internal static List<(int Month, int Year)> ResolvePeriods(int? month, int? year, int? fromMonth, int? fromYear, string? months)
+    {
+        if (year.HasValue && !string.IsNullOrWhiteSpace(months))
+        {
+            var parsed = months.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(s => int.TryParse(s, out var m) ? m : (int?)null)
+                .Where(m => m.HasValue && m.Value is >= 1 and <= 12)
+                .Select(m => m!.Value)
+                .Distinct()
+                .OrderBy(m => m)
+                .Select(m => (Month: m, Year: year.Value))
+                .ToList();
+            if (parsed.Count > 0) return parsed;
+        }
+
+        var toMonth = month ?? DateTime.Now.Month;
+        var toYear  = year  ?? DateTime.Now.Year;
+        return ExpandRangeKeys(fromMonth ?? toMonth, fromYear ?? toYear, toMonth, toYear)
+            .Select(k => (Month: k % 100, Year: k / 100)).ToList();
+    }
+
     // Stores whose Operation Manager / Operation Consultant (as of the given period) match the filter.
     // Returns null when no OM/OC filter is set (caller should skip the store-list filter entirely).
     private async Task<List<string>?> GetStoresForOmOcAsync(int month, int year, string? om, string? oc)
@@ -62,7 +87,7 @@ public class DashboardService : IDashboardService
     }
 
     public async Task<DashboardKpiViewModel> GetKpisAsync(int? month, int? year, string? store, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
     {
         if (!month.HasValue || !year.HasValue)
         {
@@ -75,14 +100,15 @@ public class DashboardService : IDashboardService
         }
         fromMonth ??= month; fromYear ??= year;
 
-        var cacheKey = $"kpi_{fromMonth}_{fromYear}_{month}_{year}_{store}_{om}_{oc}_{role}_{assignedName}";
+        var cacheKey = $"kpi_{fromMonth}_{fromYear}_{month}_{year}_{store}_{om}_{oc}_{months}_{role}_{assignedName}";
         if (_cache.TryGetValue(cacheKey, out DashboardKpiViewModel? cached) && cached != null)
             return cached;
 
-        var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
-        var omOcStores = await GetStoresForOmOcAsync(month.Value, year.Value, om, oc);
-        var periods = ExpandRangeKeys(fromMonth.Value, fromYear.Value, month.Value, year.Value)
-            .Select(k => (Month: k % 100, Year: k / 100)).ToList();
+        var periods = ResolvePeriods(month, year, fromMonth, fromYear, months);
+        var anchor  = periods.OrderByDescending(p => p.Year * 100 + p.Month).First();
+
+        var accessible = await GetAccessibleStoresAsync(role, assignedName, anchor.Month, anchor.Year);
+        var omOcStores = await GetStoresForOmOcAsync(anchor.Month, anchor.Year, om, oc);
 
         var headcountsPerPeriod = new List<int>();
         var toHeadcount = 0;
@@ -98,7 +124,7 @@ public class DashboardService : IDashboardService
 
             var hc = await empQ.CountAsync();
             headcountsPerPeriod.Add(hc);
-            if (p.Month == month.Value && p.Year == year.Value) toHeadcount = hc;
+            if (p.Month == anchor.Month && p.Year == anchor.Year) toHeadcount = hc;
 
             var resQ = _db.Resignations.Where(r => r.Month == p.Month && r.Year == p.Year);
             if (!string.IsNullOrEmpty(store)) resQ = resQ.Where(r => r.Store == store);
@@ -127,8 +153,8 @@ public class DashboardService : IDashboardService
             NewHires = totalNewHires,
             TotalResignations = totalResignations,
             TurnoverRate = turnoverRate,
-            Month = month.Value,
-            Year = year.Value
+            Month = anchor.Month,
+            Year = anchor.Year
         };
 
         _cache.Set(cacheKey, result, CacheDuration);
@@ -136,17 +162,20 @@ public class DashboardService : IDashboardService
     }
 
     public async Task<List<ChartDataItem>> GetTurnoverByJobTitleAsync(int? month, int? year, string? store, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
         var q = _db.Resignations.AsQueryable();
+        (int Month, int Year)? anchor = null;
         if (month.HasValue && year.HasValue)
         {
-            var keys = ExpandRangeKeys(fromMonth ?? month.Value, fromYear ?? year.Value, month.Value, year.Value);
+            var periods = ResolvePeriods(month, year, fromMonth, fromYear, months);
+            var keys = periods.Select(p => p.Year * 100 + p.Month).ToList();
+            anchor = periods.OrderByDescending(p => p.Year * 100 + p.Month).First();
             q = q.Where(r => keys.Contains(r.Year * 100 + r.Month));
         }
         if (!string.IsNullOrEmpty(store)) q = q.Where(r => r.Store == store);
-        else if (month.HasValue && year.HasValue && await GetStoresForOmOcAsync(month.Value, year.Value, om, oc) is { } omOcStores)
+        else if (anchor is { } a && await GetStoresForOmOcAsync(a.Month, a.Year, om, oc) is { } omOcStores)
             q = q.Where(r => omOcStores.Contains(r.Store));
         else if (accessible != null && accessible.Count > 0) q = q.Where(r => accessible.Contains(r.Store));
 
@@ -157,17 +186,20 @@ public class DashboardService : IDashboardService
     }
 
     public async Task<List<ChartDataItem>> GetTurnoverByPayrollGroupAsync(int? month, int? year, string? store, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
         var q = _db.Resignations.AsQueryable();
+        (int Month, int Year)? anchor = null;
         if (month.HasValue && year.HasValue)
         {
-            var keys = ExpandRangeKeys(fromMonth ?? month.Value, fromYear ?? year.Value, month.Value, year.Value);
+            var periods = ResolvePeriods(month, year, fromMonth, fromYear, months);
+            var keys = periods.Select(p => p.Year * 100 + p.Month).ToList();
+            anchor = periods.OrderByDescending(p => p.Year * 100 + p.Month).First();
             q = q.Where(r => keys.Contains(r.Year * 100 + r.Month));
         }
         if (!string.IsNullOrEmpty(store)) q = q.Where(r => r.Store == store);
-        else if (month.HasValue && year.HasValue && await GetStoresForOmOcAsync(month.Value, year.Value, om, oc) is { } omOcStores)
+        else if (anchor is { } a && await GetStoresForOmOcAsync(a.Month, a.Year, om, oc) is { } omOcStores)
             q = q.Where(r => omOcStores.Contains(r.Store));
         else if (accessible != null && accessible.Count > 0) q = q.Where(r => accessible.Contains(r.Store));
 
@@ -179,17 +211,20 @@ public class DashboardService : IDashboardService
     }
 
     public async Task<List<ChartDataItem>> GetTurnoverByTenureAsync(int? month, int? year, string? store, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
         var q = _db.Resignations.AsQueryable();
+        (int Month, int Year)? anchor = null;
         if (month.HasValue && year.HasValue)
         {
-            var keys = ExpandRangeKeys(fromMonth ?? month.Value, fromYear ?? year.Value, month.Value, year.Value);
+            var periods = ResolvePeriods(month, year, fromMonth, fromYear, months);
+            var keys = periods.Select(p => p.Year * 100 + p.Month).ToList();
+            anchor = periods.OrderByDescending(p => p.Year * 100 + p.Month).First();
             q = q.Where(r => keys.Contains(r.Year * 100 + r.Month));
         }
         if (!string.IsNullOrEmpty(store)) q = q.Where(r => r.Store == store);
-        else if (month.HasValue && year.HasValue && await GetStoresForOmOcAsync(month.Value, year.Value, om, oc) is { } omOcStores)
+        else if (anchor is { } a && await GetStoresForOmOcAsync(a.Month, a.Year, om, oc) is { } omOcStores)
             q = q.Where(r => omOcStores.Contains(r.Store));
         else if (accessible != null && accessible.Count > 0) q = q.Where(r => accessible.Contains(r.Store));
 
@@ -201,10 +236,10 @@ public class DashboardService : IDashboardService
             if (!r.HireDate.HasValue) { buckets[">1y"]++; continue; }
             var hire = r.HireDate.Value.ToDateTime(TimeOnly.MinValue);
             var resign = r.ResignationDate.HasValue ? r.ResignationDate.Value.ToDateTime(TimeOnly.MinValue) : DateTime.Now;
-            var months = (resign.Year - hire.Year) * 12 + (resign.Month - hire.Month);
-            if (months < 3) buckets["<3m"]++;
-            else if (months < 6) buckets["3-6m"]++;
-            else if (months < 12) buckets["6-12m"]++;
+            var tenureMonths = (resign.Year - hire.Year) * 12 + (resign.Month - hire.Month);
+            if (tenureMonths < 3) buckets["<3m"]++;
+            else if (tenureMonths < 6) buckets["3-6m"]++;
+            else if (tenureMonths < 12) buckets["6-12m"]++;
             else buckets[">1y"]++;
         }
 
@@ -239,12 +274,14 @@ public class DashboardService : IDashboardService
     }
 
     public async Task<List<StoreComparisonRow>> GetStoreComparisonAsync(int month, int year, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
-        var keys = ExpandRangeKeys(fromMonth ?? month, fromYear ?? year, month, year);
+        var periods = ResolvePeriods(month, year, fromMonth, fromYear, months);
+        var keys = periods.Select(p => p.Year * 100 + p.Month).ToList();
+        var anchor = periods.OrderByDescending(p => p.Year * 100 + p.Month).First();
 
-        var empQ = _db.ActiveEmployees.Where(e => e.Month == month && e.Year == year);
+        var empQ = _db.ActiveEmployees.Where(e => e.Month == anchor.Month && e.Year == anchor.Year);
         if (accessible != null && accessible.Count > 0)
             empQ = empQ.Where(e => accessible.Contains(e.Store));
 
@@ -276,7 +313,7 @@ public class DashboardService : IDashboardService
 
         // Take first match per store name to avoid duplicate-key issues
         var storeRefList = await _db.StoreReferences
-            .Where(s => s.Month == month && s.Year == year)
+            .Where(s => s.Month == anchor.Month && s.Year == anchor.Year)
             .ToListAsync();
         var storeRefs = storeRefList
             .GroupBy(s => s.StoreName)
@@ -309,9 +346,9 @@ public class DashboardService : IDashboardService
     }
 
     public async Task<OcOmAnalysisResult> GetOcOmAnalysisAsync(int month, int year, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
     {
-        var stores = await GetStoreComparisonAsync(month, year, role, assignedName, fromMonth, fromYear, om, oc);
+        var stores = await GetStoreComparisonAsync(month, year, role, assignedName, fromMonth, fromYear, om, oc, months);
 
         OcOmRow ToRow(IGrouping<string, StoreComparisonRow> g, string type) => new()
         {
@@ -343,10 +380,10 @@ public class DashboardService : IDashboardService
     }
 
     public async Task<List<SmartInsightItem>> GetSmartInsightsAsync(int month, int year, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null)
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
     {
         var insights = new List<SmartInsightItem>();
-        var current  = await GetStoreComparisonAsync(month, year, role, assignedName, fromMonth, fromYear, om, oc);
+        var current  = await GetStoreComparisonAsync(month, year, role, assignedName, fromMonth, fromYear, om, oc, months);
         if (!current.Any()) return insights;
 
         var prevMonth   = month == 1 ? 12 : month - 1;
@@ -530,7 +567,7 @@ public class DashboardService : IDashboardService
             .ToList();
     }
 
-    public async Task<TrendMatrixResult> GetTrendMatrixAsync(string role, string? assignedName, string? om = null, string? oc = null)
+    public async Task<TrendMatrixResult> GetTrendMatrixAsync(string role, string? assignedName, string? om = null, string? oc = null, int? sinceYear = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, null, null);
 
@@ -540,6 +577,9 @@ public class DashboardService : IDashboardService
             .Distinct()
             .OrderBy(p => p.Year).ThenBy(p => p.Month)
             .ToListAsync();
+
+        if (sinceYear.HasValue)
+            periods = periods.Where(p => p.Year >= sinceYear.Value).ToList();
 
         var periodKeys = periods.Select(p => $"{p.Year:D4}-{p.Month:D2}").ToList();
 
