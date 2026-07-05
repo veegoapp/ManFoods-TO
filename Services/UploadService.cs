@@ -400,6 +400,153 @@ public class UploadService : IUploadService
             .ToList();
     }
 
+    public async Task<List<(byte[] Content, string ContentType, string FileName)>> ExportGroupAsync(int primaryLogId)
+    {
+        var pivot = await _db.UploadLogs.AsNoTracking()
+            .Where(l => l.Id == primaryLogId)
+            .Select(l => new { l.FileType, l.Month, l.Year, l.FileName })
+            .FirstOrDefaultAsync();
+
+        if (pivot == null) return new();
+
+        const string xlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        var result = new List<(byte[], string, string)>();
+
+        if (PeriodFileTypes.Contains(pivot.FileType))
+        {
+            var active = await _db.ActiveEmployees.AsNoTracking()
+                .Where(e => e.Month == pivot.Month && e.Year == pivot.Year).ToListAsync();
+            var resigns = await _db.Resignations.AsNoTracking()
+                .Where(r => r.Month == pivot.Month && r.Year == pivot.Year).ToListAsync();
+            var stores = await _db.StoreReferences.AsNoTracking()
+                .Where(s => s.Month == pivot.Month && s.Year == pivot.Year).ToListAsync();
+
+            result.Add((BuildActiveEmployeesExcel(active), xlsx, $"Active_Employees_{pivot.Month}_{pivot.Year}.xlsx"));
+            result.Add((BuildResignationsExcel(resigns), xlsx, $"Resignations_{pivot.Month}_{pivot.Year}.xlsx"));
+            result.Add((BuildStoreReferenceExcel(stores), xlsx, $"Store_Reference_{pivot.Month}_{pivot.Year}.xlsx"));
+        }
+        else
+        {
+            var interviews = await _db.ExitInterviews.AsNoTracking()
+                .Where(e => e.Month == pivot.Month && e.Year == pivot.Year).ToListAsync();
+            result.Add((BuildExitInterviewsExcel(interviews), xlsx, $"Exit_Interviews_{pivot.Month}_{pivot.Year}.xlsx"));
+        }
+
+        return result;
+    }
+
+    private static byte[] BuildActiveEmployeesExcel(List<ActiveEmployee> rows)
+    {
+        using var wb = new XLWorkbook();
+        var ws = wb.Worksheets.Add("Active Employees");
+        string[] headers = ["Employee ID", "Name", "Store", "Job Title", "Grade", "Payroll Group", "Cost Center", "Gender", "Hire Date"];
+        for (int i = 0; i < headers.Length; i++) ws.Cell(1, i + 1).Value = headers[i];
+        ws.Row(1).Style.Font.Bold = true;
+        for (int r = 0; r < rows.Count; r++)
+        {
+            var e = rows[r]; int row = r + 2;
+            ws.Cell(row, 1).Value = e.EmployeeId;
+            ws.Cell(row, 2).Value = e.Name;
+            ws.Cell(row, 3).Value = e.Store;
+            ws.Cell(row, 4).Value = e.JobTitle;
+            ws.Cell(row, 5).Value = e.Grade;
+            ws.Cell(row, 6).Value = e.PayrollGroup;
+            ws.Cell(row, 7).Value = e.CostCenter;
+            ws.Cell(row, 8).Value = e.Gender;
+            ws.Cell(row, 9).Value = e.HireDate.HasValue ? e.HireDate.Value.ToString("yyyy-MM-dd") : "";
+        }
+        ws.Columns().AdjustToContents();
+        using var ms = new MemoryStream(); wb.SaveAs(ms); return ms.ToArray();
+    }
+
+    private static byte[] BuildResignationsExcel(List<Resignation> rows)
+    {
+        using var wb = new XLWorkbook();
+        var ws = wb.Worksheets.Add("Resignations");
+        string[] headers = ["Employee ID", "Name", "Store", "Job Title", "Gender", "Hire Date", "Resignation Date", "Payroll Group", "Cost Center"];
+        for (int i = 0; i < headers.Length; i++) ws.Cell(1, i + 1).Value = headers[i];
+        ws.Row(1).Style.Font.Bold = true;
+        for (int r = 0; r < rows.Count; r++)
+        {
+            var e = rows[r]; int row = r + 2;
+            ws.Cell(row, 1).Value = e.EmployeeId;
+            ws.Cell(row, 2).Value = e.Name;
+            ws.Cell(row, 3).Value = e.Store;
+            ws.Cell(row, 4).Value = e.JobTitle;
+            ws.Cell(row, 5).Value = e.Gender;
+            ws.Cell(row, 6).Value = e.HireDate.HasValue ? e.HireDate.Value.ToString("yyyy-MM-dd") : "";
+            ws.Cell(row, 7).Value = e.ResignationDate.HasValue ? e.ResignationDate.Value.ToString("yyyy-MM-dd") : "";
+            ws.Cell(row, 8).Value = e.PayrollGroup;
+            ws.Cell(row, 9).Value = e.CostCenter;
+        }
+        ws.Columns().AdjustToContents();
+        using var ms = new MemoryStream(); wb.SaveAs(ms); return ms.ToArray();
+    }
+
+    private static byte[] BuildStoreReferenceExcel(List<StoreReference> rows)
+    {
+        using var wb = new XLWorkbook();
+        var ws = wb.Worksheets.Add("Store Reference");
+        string[] headers = ["Store Name", "Store Leader", "Operation Consultant", "Operation Manager"];
+        for (int i = 0; i < headers.Length; i++) ws.Cell(1, i + 1).Value = headers[i];
+        ws.Row(1).Style.Font.Bold = true;
+        for (int r = 0; r < rows.Count; r++)
+        {
+            var e = rows[r]; int row = r + 2;
+            ws.Cell(row, 1).Value = e.StoreName;
+            ws.Cell(row, 2).Value = e.StoreLeader;
+            ws.Cell(row, 3).Value = e.OperationConsultant;
+            ws.Cell(row, 4).Value = e.OperationManager;
+        }
+        ws.Columns().AdjustToContents();
+        using var ms = new MemoryStream(); wb.SaveAs(ms); return ms.ToArray();
+    }
+
+    private static byte[] BuildExitInterviewsExcel(List<ExitInterview> rows)
+    {
+        using var wb = new XLWorkbook();
+        var ws = wb.Worksheets.Add("Exit Interviews");
+        string[] headers = ["Employee ID", "Store", "Store Leader", "Operation Consultant", "Operation Manager", "Job Title",
+            "Reason For Leaving", "Would Return", "Overall Experience", "Workload Condition", "Fair Treatment",
+            "Encourage Opinions", "Complaints Handling", "Benefits Match", "Teamwork", "Communication",
+            "Task Fit", "Training", "Feedback", "Use Personal Abilities",
+            "Reason Other Text", "Work Pressure Reason", "What Would Change", "What Learned", "Final Comments", "Submitted At"];
+        for (int i = 0; i < headers.Length; i++) ws.Cell(1, i + 1).Value = headers[i];
+        ws.Row(1).Style.Font.Bold = true;
+        for (int r = 0; r < rows.Count; r++)
+        {
+            var e = rows[r]; int row = r + 2;
+            ws.Cell(row, 1).Value = e.EmployeeId;
+            ws.Cell(row, 2).Value = e.Store;
+            ws.Cell(row, 3).Value = e.StoreLeader;
+            ws.Cell(row, 4).Value = e.OperationConsultant;
+            ws.Cell(row, 5).Value = e.OperationManager;
+            ws.Cell(row, 6).Value = e.JobTitle;
+            ws.Cell(row, 7).Value = e.ReasonForLeaving;
+            ws.Cell(row, 8).Value = e.WouldReturn;
+            ws.Cell(row, 9).Value = e.OverallExperience;
+            ws.Cell(row, 10).Value = e.WorkloadCondition;
+            ws.Cell(row, 11).Value = e.FairTreatment;
+            ws.Cell(row, 12).Value = e.EncourageOpinions;
+            ws.Cell(row, 13).Value = e.ComplaintsHandling;
+            ws.Cell(row, 14).Value = e.BenefitsMatch;
+            ws.Cell(row, 15).Value = e.Teamwork;
+            ws.Cell(row, 16).Value = e.Communication;
+            ws.Cell(row, 17).Value = e.TaskFit;
+            ws.Cell(row, 18).Value = e.Training;
+            ws.Cell(row, 19).Value = e.Feedback;
+            ws.Cell(row, 20).Value = e.UsePersonalAbilities;
+            ws.Cell(row, 21).Value = e.ReasonOtherText ?? "";
+            ws.Cell(row, 22).Value = e.WorkPressureReasonText ?? "";
+            ws.Cell(row, 23).Value = e.WhatWouldChangeText ?? "";
+            ws.Cell(row, 24).Value = e.WhatLearnedText ?? "";
+            ws.Cell(row, 25).Value = e.FinalCommentsText ?? "";
+            ws.Cell(row, 26).Value = e.SubmittedAt.HasValue ? e.SubmittedAt.Value.ToString("yyyy-MM-dd HH:mm") : "";
+        }
+        ws.Columns().AdjustToContents();
+        using var ms = new MemoryStream(); wb.SaveAs(ms); return ms.ToArray();
+    }
+
     public async Task<(byte[] Content, string ContentType, string FileName)?> GetFileAsync(int id)
     {
         var log = await _db.UploadLogs.AsNoTracking().FirstOrDefaultAsync(l => l.Id == id);

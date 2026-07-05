@@ -330,7 +330,7 @@ public class DashboardController : Controller
     [RequireAdminAuth]
     public async Task<IActionResult> DownloadUploadGroup([FromQuery] int id)
     {
-        var files = await _uploads.GetGroupFilesAsync(id);
+        var files = await _uploads.ExportGroupAsync(id);
         if (files.Count == 0) return NotFound();
 
         if (files.Count == 1)

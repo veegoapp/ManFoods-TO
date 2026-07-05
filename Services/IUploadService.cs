@@ -22,6 +22,7 @@ public interface IUploadService
     Task<(List<MvcApp.Models.ViewModels.UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize);
     Task<List<MvcApp.Models.ViewModels.UploadHistoryItem>> GetAllHistoryAsync();
     Task<List<(byte[] Content, string ContentType, string FileName)>> GetGroupFilesAsync(int primaryLogId);
+    Task<List<(byte[] Content, string ContentType, string FileName)>> ExportGroupAsync(int primaryLogId);
     Task DeleteLogAsync(int id);
     Task<(byte[] Content, string ContentType, string FileName)?> GetFileAsync(int id);
 }
