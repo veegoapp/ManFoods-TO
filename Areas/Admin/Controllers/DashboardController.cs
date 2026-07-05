@@ -50,25 +50,6 @@ public class DashboardController : Controller
 
     public IActionResult Scorecard() => View();
 
-    public async Task<IActionResult> StoreProfile(string store)
-    {
-        if (string.IsNullOrWhiteSpace(store)) return RedirectToAction("Turnover");
-
-        var role = HttpContext.Session.GetRole();
-        var assignedName = HttpContext.Session.GetAssignedName();
-        var storeRefs = (await _stores.GetStoresAsync(null, null, role, assignedName))
-            .Where(s => s.StoreName == store)
-            .ToList();
-        if (!storeRefs.Any()) return NotFound();
-
-        var latest = storeRefs.OrderByDescending(s => s.Year).ThenByDescending(s => s.Month).First();
-        ViewBag.StoreName = store;
-        ViewBag.StoreLeader = latest.StoreLeader;
-        ViewBag.OperationConsultant = latest.OperationConsultant;
-        ViewBag.OperationManager = latest.OperationManager;
-        return View();
-    }
-
     public async Task<IActionResult> Reports()
     {
         var role = HttpContext.Session.GetRole();

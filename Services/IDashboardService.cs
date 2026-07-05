@@ -23,8 +23,6 @@ public interface IDashboardService
     Task<List<SmartInsightItem>> GetSmartInsightsAsync(int month, int year, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null);
     Task<TrendMatrixResult> GetTrendMatrixAsync(string role, string? assignedName, string? om = null, string? oc = null, int? sinceYear = null);
-    Task<List<StoreEmployeeRow>> GetStoreEmployeesAsync(string store, int? month, int? year);
-    Task<List<StoreResignationRow>> GetStoreResignationHistoryAsync(string store);
     Task<List<string>> GetOperationManagersAsync(int? month, int? year);
     Task<List<string>> GetOperationConsultantsAsync(int? month, int? year);
 

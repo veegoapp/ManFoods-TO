@@ -130,30 +130,6 @@ public class DashboardApiController : ControllerBase
         return Ok(await _dashboard.GetTrendMatrixAsync(role, assignedName, om, oc, sinceYear));
     }
 
-    // Role system simplified to Admin/User — no more per-store restriction.
-    private Task<bool> CanAccessStoreAsync(string store, string role, string? assignedName) =>
-        Task.FromResult(true);
-
-    [HttpGet("store-employees")]
-    public async Task<IActionResult> StoreEmployees([FromQuery] string store, [FromQuery] int? month, [FromQuery] int? year)
-    {
-        if (string.IsNullOrWhiteSpace(store)) return BadRequest();
-        var role = HttpContext.Session.GetRole();
-        var assignedName = HttpContext.Session.GetAssignedName();
-        if (!await CanAccessStoreAsync(store, role, assignedName)) return Forbid();
-        return Ok(await _dashboard.GetStoreEmployeesAsync(store, month, year));
-    }
-
-    [HttpGet("store-resignations")]
-    public async Task<IActionResult> StoreResignations([FromQuery] string store)
-    {
-        if (string.IsNullOrWhiteSpace(store)) return BadRequest();
-        var role = HttpContext.Session.GetRole();
-        var assignedName = HttpContext.Session.GetAssignedName();
-        if (!await CanAccessStoreAsync(store, role, assignedName)) return Forbid();
-        return Ok(await _dashboard.GetStoreResignationHistoryAsync(store));
-    }
-
     [HttpGet("headcount-by-job-title")]
     public async Task<IActionResult> HeadcountByJobTitle([FromQuery] int? month, [FromQuery] int? year, [FromQuery] string? store,
         [FromQuery] string? om, [FromQuery] string? oc)

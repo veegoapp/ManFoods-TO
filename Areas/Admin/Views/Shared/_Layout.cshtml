@@ -74,7 +74,7 @@
             <a href="/admin/dashboard/scorecard" class="admin-nav-link @(IsActive("Scorecard") ? "active" : "")">
                 <i class="bi bi-award-fill"></i><span>@L["Nav_Scorecard"]</span>
             </a>
-            <a href="/admin/dashboard/stores" class="admin-nav-link @(IsActive("Stores") || IsActive("StoreProfile") ? "active" : "")">
+            <a href="/admin/dashboard/stores" class="admin-nav-link @(IsActive("Stores") ? "active" : "")">
                 <i class="bi bi-shop"></i><span>@L["Nav_Stores"]</span>
             </a>
             @if (userRole == "Admin")

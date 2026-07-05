@@ -23,6 +23,7 @@
 </div>
 
 @section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="~/js/dashboard.js" asp-append-version="true"></script>
 <script>
 /* Stores page reuses periodSelect (from dashboard.js loadPeriods) but has no
@@ -56,7 +57,7 @@ function stRenderCards() {
     container.innerHTML = rows.map(r => {
         const h = stHealth(r.turnoverRate);
         return `<div class="col-sm-6 col-lg-4 col-xl-3">
-            <a href="/admin/dashboard/storeprofile?store=${encodeURIComponent(r.storeName)}" class="card-dark d-block h-100" style="text-decoration:none;color:inherit">
+            <a href="/admin/dashboard/turnover?store=${encodeURIComponent(r.storeName)}" class="card-dark d-block h-100" style="text-decoration:none;color:inherit">
                 <div class="d-flex align-items-start justify-content-between mb-3">
                     <div>
                         <h6 class="mb-1 fw-bold" style="font-size:14px">${r.storeName}</h6>

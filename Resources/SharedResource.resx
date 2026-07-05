@@ -427,9 +427,6 @@
   <data name="SC_FlaggedPercent" xml:space="preserve"><value>Flagged %</value></data>
   <data name="SC_AverageTurnover" xml:space="preserve"><value>Average leader turnover in this window</value></data>
 
-  <!-- Store Profile -->
-  <data name="SP_ActiveEmployees" xml:space="preserve"><value>Active Employees</value></data>
-
   <!-- Early Warning -->
   <data name="EW_WatchList" xml:space="preserve"><value>Watch List</value></data>
   <data name="EW_HireName" xml:space="preserve"><value>Name</value></data>

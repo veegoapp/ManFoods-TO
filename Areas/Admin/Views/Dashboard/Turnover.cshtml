@@ -547,6 +547,14 @@ async function tvInitFilters() {
     tvRenderMonthsChips();
 
     await tvLoadDependentLists();
+
+    // Deep link from the Stores page cards: /turnover?store=Downtown
+    const urlStore = new URLSearchParams(window.location.search).get('store');
+    if (urlStore) {
+        storeFilter = urlStore;
+        tvStoreCombo.setValue(urlStore);
+    }
+
     await loadAll();
 }
 

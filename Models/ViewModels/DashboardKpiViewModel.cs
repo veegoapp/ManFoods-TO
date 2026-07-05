@@ -72,28 +72,6 @@ public class TrendMatrixResult
     public List<TrendMatrixRow> Rows    { get; set; } = new();
 }
 
-public class StoreEmployeeRow
-{
-    public string EmployeeId { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string JobTitle { get; set; } = "";
-    public string Grade { get; set; } = "";
-    public string Gender { get; set; } = "";
-    public DateOnly? HireDate { get; set; }
-}
-
-public class StoreResignationRow
-{
-    public string EmployeeId { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string JobTitle { get; set; } = "";
-    public string Gender { get; set; } = "";
-    public DateOnly? HireDate { get; set; }
-    public DateOnly? ResignationDate { get; set; }
-    public int Month { get; set; }
-    public int Year { get; set; }
-}
-
 public class StoreHeadcountRow
 {
     public string StoreName { get; set; } = "";
