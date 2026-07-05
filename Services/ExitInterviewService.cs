@@ -18,7 +18,9 @@ public class ExitInterviewService : IExitInterviewService
         if (!string.IsNullOrWhiteSpace(filter.StoreLeader)) q = q.Where(e => e.StoreLeader == filter.StoreLeader);
         if (!string.IsNullOrWhiteSpace(filter.OperationConsultant)) q = q.Where(e => e.OperationConsultant == filter.OperationConsultant);
         if (!string.IsNullOrWhiteSpace(filter.OperationManager)) q = q.Where(e => e.OperationManager == filter.OperationManager);
-        if (filter.Year.HasValue)
+        // Year=0 is the synthetic "undated" sentinel — skip date filtering so
+        // all rows (which have month=0/year=0) are returned unfiltered.
+        if (filter.Year.HasValue && filter.Year.Value > 0)
         {
             var periods = DashboardService.ResolvePeriods(null, filter.Year, null, null, filter.Months);
             var keys = periods.Select(p => p.Year * 100 + p.Month).ToHashSet();
@@ -54,13 +56,27 @@ public class ExitInterviewService : IExitInterviewService
 
     public async Task<List<PeriodItem>> GetAvailablePeriodsAsync()
     {
-        return await _db.ExitInterviews
+        var hasAny = await _db.ExitInterviews.AnyAsync();
+        if (!hasAny) return new List<PeriodItem>();
+
+        // Return real dated periods first; if all rows lack dates (month/year=0
+        // because the Forms export column was unrecognised), return a synthetic
+        // period {0,0} so the page still shows the data without a date filter.
+        var periods = await _db.ExitInterviews
             .Where(e => e.Month > 0 && e.Year > 0)
             .Select(e => new { e.Month, e.Year })
             .Distinct()
             .OrderByDescending(p => p.Year).ThenByDescending(p => p.Month)
             .Select(p => new PeriodItem { Month = p.Month, Year = p.Year })
             .ToListAsync();
+
+        // Add sentinel {0,0} whenever any rows lack a proper date (month=0 or
+        // year=0) — covers both all-undated and mixed dated/undated datasets.
+        var hasUndated = await _db.ExitInterviews.AnyAsync(e => e.Month == 0 || e.Year == 0);
+        if (hasUndated)
+            periods.Add(new PeriodItem { Month = 0, Year = 0 });
+
+        return periods;
     }
 
     public async Task<ExitInterviewFilterOptions> GetFilterOptionsAsync(string role, string? assignedName)

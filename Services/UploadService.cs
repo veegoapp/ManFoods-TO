@@ -240,13 +240,26 @@ public class UploadService : IUploadService
             if (string.IsNullOrWhiteSpace(responseId) && string.IsNullOrWhiteSpace(employeeId)) continue;
 
             DateTime? completed = null;
-            if (headerMap.TryGetValue(NormalizeHeader("Completion time"), out var completedCol))
+            // Microsoft Forms exports use "Completion time" in EN and "وقت الانتهاء"
+            // in AR; the export may also use "Start time" / "وقت البدء" as a fallback.
+            var dateColCandidates = new[] {
+                "Completion time", "وقت الانتهاء", "Start time", "وقت البدء",
+                "Completion Time", "Start Time", "completion time", "start time"
+            };
+            int completedCol = 0;
+            foreach (var candidate in dateColCandidates)
+                if (headerMap.TryGetValue(NormalizeHeader(candidate), out completedCol)) break;
+
+            if (completedCol > 0)
             {
                 var cell = row.Cell(completedCol);
                 if (!cell.IsEmpty())
                 {
                     if (cell.DataType == XLDataType.DateTime) completed = cell.GetDateTime();
-                    else if (DateTime.TryParse(cell.GetString(), out var dt)) completed = dt;
+                    else if (DateTime.TryParse(cell.GetString(),
+                             System.Globalization.CultureInfo.InvariantCulture,
+                             System.Globalization.DateTimeStyles.None, out var dt)) completed = dt;
+                    else if (DateTime.TryParse(cell.GetString(), out var dt2)) completed = dt2;
                 }
             }
 

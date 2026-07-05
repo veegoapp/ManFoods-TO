@@ -211,8 +211,11 @@ function eiMonthLongName(m, y) { return new Date(y, m - 1).toLocaleString('defau
 
 function eiBuildQuery() {
     const p = new URLSearchParams();
-    if (eiYear) p.set('year', eiYear);
-    if (eiMonths.length) p.set('months', eiMonths.join(','));
+    // year=0 is the "undated" sentinel — send it so the backend knows to skip
+    // date filtering; year=null means not yet initialised (don't send anything).
+    if (eiYear !== null && eiYear !== undefined) p.set('year', eiYear);
+    // Don't send months when the only "month" is the 0 sentinel.
+    if (eiMonths.length && !eiMonths.every(m => m === 0)) p.set('months', eiMonths.join(','));
     if (eiStoreFilter)  p.set('store', eiStoreFilter);
     if (eiLeaderFilter) p.set('storeLeader', eiLeaderFilter);
     if (eiOcFilter)      p.set('oc', eiOcFilter);
@@ -321,6 +324,7 @@ document.addEventListener('click', (e) => {
 document.getElementById('eiYearSelect').addEventListener('change', async function () {
     eiYear = parseInt(this.value);
     eiMonths = (eiYearMonthsMap[eiYear] || []).slice().sort((a, b) => a - b);
+    document.getElementById('eiMonthsMultiselect').style.display = eiYear === 0 ? 'none' : '';
     eiBuildMonthsOptions(); eiRenderMonthsChips();
     await eiLoadAll();
 });
@@ -341,10 +345,14 @@ async function eiLoadFilters() {
     (periods || []).forEach(p => { (eiYearMonthsMap[p.year] = eiYearMonthsMap[p.year] || []).push(p.month); });
     const years = Object.keys(eiYearMonthsMap).map(Number).sort((a, b) => b - a);
     const yearSel = document.getElementById('eiYearSelect');
-    yearSel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    // year=0 is the "undated" sentinel — show a friendly label instead of "0".
+    yearSel.innerHTML = years.map(y => `<option value="${y}">${y === 0 ? 'All Data' : y}</option>`).join('');
     eiYear = years[0];
     yearSel.value = eiYear;
     eiMonths = (eiYearMonthsMap[eiYear] || []).slice().sort((a, b) => a - b);
+    // When the sentinel period is active hide the months multi-select (there
+    // is no meaningful month breakdown for undated rows).
+    document.getElementById('eiMonthsMultiselect').style.display = eiYear === 0 ? 'none' : '';
     eiBuildMonthsOptions();
     eiRenderMonthsChips();
 
@@ -454,7 +462,9 @@ async function eiLoadComments() {
 }
 
 async function eiLoadAll() {
-    if (!eiYear || !eiMonths.length) return;
+    // Allow eiYear=0 (undated sentinel). Only bail if year is genuinely unset.
+    if (eiYear === null || eiYear === undefined) return;
+    if (eiYear > 0 && !eiMonths.length) return;
     await Promise.all([
         eiLoadReasons(), eiLoadReturn(), eiLoadExperience(), eiLoadTraining(), eiLoadFairTreatment(),
         eiLoadWorkload(), eiLoadWorkPressure(), eiLoadDrivers(), eiLoadComments(),
