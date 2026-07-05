@@ -161,11 +161,48 @@ body.admin-theme .section-accent { background: var(--red); }
 body.admin-theme .btn-primary {
     background: var(--red);
     border: 1px solid var(--red);
+    color: #fff;           /* override [data-theme="light"] a { color: var(--red) } */
     box-shadow: none;
 }
-body.admin-theme .btn-primary:hover { background: var(--red-dark); border-color: var(--red-dark); }
-body.admin-theme .btn-success { background: var(--success); border-color: var(--success); }
-body.admin-theme .btn-danger  { background: var(--danger);  border-color: var(--danger); }
+body.admin-theme .btn-primary:hover {
+    background: var(--red-dark);
+    border-color: var(--red-dark);
+    color: #fff;
+}
+body.admin-theme .btn-success { background: var(--success); border-color: var(--success); color: #fff; }
+body.admin-theme .btn-success:hover { color: #fff; }
+body.admin-theme .btn-danger  { background: var(--danger);  border-color: var(--danger);  color: #fff; }
+body.admin-theme .btn-danger:hover  { color: #fff; }
+
+/* ── Fix <a> elements styled as btn-outline-secondary ── */
+/* [data-theme="light"] a overrides colour; reassert the correct secondary colour */
+body.admin-theme .btn-outline-secondary {
+    color: var(--text-2);
+}
+body.admin-theme .btn-outline-secondary:hover {
+    color: var(--text);
+}
+
+/* ── Template-download outline button ── */
+body.admin-theme .btn-outline-template {
+    display: inline-flex;
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--red);
+    color: var(--red);
+    border-radius: 44px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all .2s;
+    gap: 6px;
+}
+body.admin-theme .btn-outline-template:hover {
+    background: var(--red-light);
+    color: var(--red);
+}
 
 /* ── Tables ── */
 body.admin-theme .table-dark-custom thead th,
