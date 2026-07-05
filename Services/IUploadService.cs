@@ -20,6 +20,7 @@ public interface IUploadService
     /// data is only valid with all three present.
     /// </summary>
     Task<(List<MvcApp.Models.ViewModels.UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize);
+    Task<List<MvcApp.Models.ViewModels.UploadHistoryItem>> GetAllHistoryAsync();
     Task DeleteLogAsync(int id);
     Task<(byte[] Content, string ContentType, string FileName)?> GetFileAsync(int id);
 }

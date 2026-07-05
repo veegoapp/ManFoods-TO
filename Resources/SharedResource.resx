@@ -57,6 +57,7 @@
   <data name="DM_UploadMonthlyButton" xml:space="preserve"><value>Upload Monthly Data</value></data>
   <data name="DM_UploadExitInterviewsButton" xml:space="preserve"><value>Upload Exit Interviews</value></data>
   <data name="DM_History" xml:space="preserve"><value>Upload History</value></data>
+  <data name="DM_DownloadHistory" xml:space="preserve"><value>Download History</value></data>
   <data name="DM_NoUploads" xml:space="preserve"><value>No uploads yet</value></data>
   <data name="DM_Download" xml:space="preserve"><value>Download</value></data>
   <data name="DM_Delete" xml:space="preserve"><value>Delete</value></data>

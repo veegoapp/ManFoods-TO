@@ -186,7 +186,12 @@
 </div>
 
 <div class="chart-card p-0" style="overflow:hidden">
-    <div class="chart-header px-4 pt-4"><h6>@L["DM_History"]</h6></div>
+    <div class="chart-header px-4 pt-4 d-flex align-items-center justify-content-between">
+        <h6 class="mb-0">@L["DM_History"]</h6>
+        <a href="/admin/dashboard/download-upload-history" class="dm-action-btn download">
+            <i class="bi bi-file-earmark-arrow-down"></i>@L["DM_DownloadHistory"]
+        </a>
+    </div>
     @if (!Model.Any())
     {
         <div class="text-center py-5 text-muted">

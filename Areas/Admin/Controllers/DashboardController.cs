@@ -326,6 +326,47 @@ public class DashboardController : Controller
         return File(file.Value.Content, file.Value.ContentType, file.Value.FileName);
     }
 
+    [HttpGet("admin/dashboard/download-upload-history")]
+    [RequireAdminAuth]
+    public async Task<IActionResult> DownloadUploadHistory()
+    {
+        var items = await _uploads.GetAllHistoryAsync();
+
+        using var wb = new XLWorkbook();
+        var ws = wb.Worksheets.Add("Upload History");
+
+        ws.Cell(1, 1).Value = "Type";
+        ws.Cell(1, 2).Value = "File Names";
+        ws.Cell(1, 3).Value = "Period";
+        ws.Cell(1, 4).Value = "Uploaded By";
+        ws.Cell(1, 5).Value = "Upload Date";
+
+        var header = ws.Range(1, 1, 1, 5);
+        header.Style.Font.Bold = true;
+        header.Style.Fill.BackgroundColor = XLColor.FromArgb(0xC0, 0x39, 0x2B);
+        header.Style.Font.FontColor = XLColor.White;
+
+        int row = 2;
+        foreach (var item in items)
+        {
+            ws.Cell(row, 1).Value = item.Kind == "period" ? "Monthly Data" : "Exit Interviews";
+            ws.Cell(row, 2).Value = string.Join(", ", item.Files.Select(f => f.FileName));
+            ws.Cell(row, 3).Value = item.Kind == "period" && item.Month.HasValue && item.Year.HasValue
+                ? new DateTime(item.Year.Value, item.Month.Value, 1).ToString("MMMM yyyy")
+                : "—";
+            ws.Cell(row, 4).Value = item.UploadedBy;
+            ws.Cell(row, 5).Value = item.UploadDate.ToString("MMM dd, yyyy HH:mm");
+            row++;
+        }
+
+        ws.Columns().AdjustToContents();
+
+        using var ms = new MemoryStream();
+        wb.SaveAs(ms);
+        var fileName = $"Upload_History_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx";
+        return File(ms.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> DeleteUploadLog(int id)
     {

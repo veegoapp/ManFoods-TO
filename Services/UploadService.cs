@@ -370,6 +370,12 @@ public class UploadService : IUploadService
         return (page_, ordered.Count);
     }
 
+    public async Task<List<UploadHistoryItem>> GetAllHistoryAsync()
+    {
+        var (items, _) = await GetHistoryPagedAsync(1, int.MaxValue);
+        return items;
+    }
+
     public async Task<(byte[] Content, string ContentType, string FileName)?> GetFileAsync(int id)
     {
         var log = await _db.UploadLogs.AsNoTracking().FirstOrDefaultAsync(l => l.Id == id);

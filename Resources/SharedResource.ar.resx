@@ -57,6 +57,7 @@
   <data name="DM_UploadMonthlyButton" xml:space="preserve"><value>رفع البيانات الشهرية</value></data>
   <data name="DM_UploadExitInterviewsButton" xml:space="preserve"><value>رفع مقابلات الخروج</value></data>
   <data name="DM_History" xml:space="preserve"><value>سجل الرفع</value></data>
+  <data name="DM_DownloadHistory" xml:space="preserve"><value>تحميل السجل</value></data>
   <data name="DM_NoUploads" xml:space="preserve"><value>مفيش رفعات لسه</value></data>
   <data name="DM_Download" xml:space="preserve"><value>تحميل</value></data>
   <data name="DM_Delete" xml:space="preserve"><value>حذف</value></data>
