@@ -144,6 +144,7 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
         var periods = activeHires.Select(a => (a.Month, a.Year))
             .Concat(resTenures.Select(r => (r.HireDate.Month, r.HireDate.Year)))
             .Distinct()
+            .Where(p => p.Year >= 2026)
             .OrderBy(p => p.Year).ThenBy(p => p.Month)
             .ToList();
 
