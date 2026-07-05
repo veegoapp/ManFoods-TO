@@ -440,6 +440,20 @@
   <data name="EW_HighRisk" xml:space="preserve"><value>خطر عالٍ (2+)</value></data>
   <data name="EW_NewHireWindow" xml:space="preserve"><value>لا يزال في أول 90 يوم</value></data>
   <data name="EW_CompanyBaseline" xml:space="preserve"><value>متوسط معدل المغادرة المبكرة (الشركة)</value></data>
+  <data name="EW_EmployeeCountSuffix" xml:space="preserve"><value>موظف</value></data>
+  <data name="EW_NoWatchlistData" xml:space="preserve"><value>مفيش موظفين في منطقة خطر للفلتر ده.</value></data>
+  <data name="EW_ReasonType_NewHireWindow" xml:space="preserve"><value>أول 90 يوم</value></data>
+  <data name="EW_ReasonType_StoreHistory" xml:space="preserve"><value>تاريخ الفرع</value></data>
+  <data name="EW_ReasonType_RoleHistory" xml:space="preserve"><value>تاريخ الوظيفة</value></data>
+  <data name="EW_ReasonType_PeakWindow" xml:space="preserve"><value>قرب فترة الخطر</value></data>
+  <data name="EW_ReasonNewHireWindow" xml:space="preserve"><value>لسه في أول {window} يوم من التعيين ({days} يوم) — أعلى فترة خطر تاريخيًا</value></data>
+  <data name="EW_ReasonStoreHistory" xml:space="preserve"><value>فرع {store} تاريخيًا معدل ترك العمل المبكر فيه {rate}% (المتوسط العام {companyRate}%)</value></data>
+  <data name="EW_ReasonRoleHistory" xml:space="preserve"><value>وظيفة {jobTitle} تاريخيًا معدل ترك العمل المبكر فيها {rate}% (المتوسط العام {companyRate}%)</value></data>
+  <data name="EW_ReasonPeakWindow" xml:space="preserve"><value>قرب يوصل لفترة كان فيها استقالات كتير تاريخيًا (حوالي {start}-{end} يوم من التعيين)</value></data>
+  <data name="Chart_EwReasonBreakdown" xml:space="preserve"><value>توزيع أسباب الإنذار</value></data>
+  <data name="Chart_EwReasonBreakdownSub" xml:space="preserve"><value>كام حالة في قائمة المتابعة سبّبها كل عامل خطر</value></data>
+  <data name="Chart_EwStoreBreakdown" xml:space="preserve"><value>قائمة المتابعة حسب الفرع</value></data>
+  <data name="Chart_EwStoreBreakdownSub" xml:space="preserve"><value>الموظفين المهددين دلوقتي فين بالظبط</value></data>
 
 
   <!-- Retention -->

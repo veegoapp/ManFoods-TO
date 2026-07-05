@@ -17,8 +17,10 @@ public class EarlyWarningApiController : ControllerBase
     public async Task<IActionResult> Stores() => Ok(await _earlyWarning.GetStoreListAsync());
 
     [HttpGet("watchlist")]
-    public async Task<IActionResult> Watchlist([FromQuery] string? store) => Ok(await _earlyWarning.GetWatchlistAsync(store));
+    public async Task<IActionResult> Watchlist([FromQuery] string? store, [FromQuery] string? months, [FromQuery] int? year) =>
+        Ok(await _earlyWarning.GetWatchlistAsync(store, months, year));
 
     [HttpGet("summary")]
-    public async Task<IActionResult> Summary([FromQuery] string? store) => Ok(await _earlyWarning.GetSummaryAsync(store));
+    public async Task<IActionResult> Summary([FromQuery] string? store, [FromQuery] string? months, [FromQuery] int? year) =>
+        Ok(await _earlyWarning.GetSummaryAsync(store, months, year));
 }

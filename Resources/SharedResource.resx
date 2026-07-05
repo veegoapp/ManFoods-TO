@@ -440,6 +440,20 @@
   <data name="EW_HighRisk" xml:space="preserve"><value>High Risk (2+)</value></data>
   <data name="EW_NewHireWindow" xml:space="preserve"><value>Still in first 90 days</value></data>
   <data name="EW_CompanyBaseline" xml:space="preserve"><value>Avg Early Leave Rate (Company)</value></data>
+  <data name="EW_EmployeeCountSuffix" xml:space="preserve"><value>employees</value></data>
+  <data name="EW_NoWatchlistData" xml:space="preserve"><value>No employees are in a risk zone for this filter.</value></data>
+  <data name="EW_ReasonType_NewHireWindow" xml:space="preserve"><value>New Hire Window</value></data>
+  <data name="EW_ReasonType_StoreHistory" xml:space="preserve"><value>Store History</value></data>
+  <data name="EW_ReasonType_RoleHistory" xml:space="preserve"><value>Role History</value></data>
+  <data name="EW_ReasonType_PeakWindow" xml:space="preserve"><value>Approaching Peak Leave Window</value></data>
+  <data name="EW_ReasonNewHireWindow" xml:space="preserve"><value>Still within the first {window} days of hire ({days} days) — historically the highest-risk period</value></data>
+  <data name="EW_ReasonStoreHistory" xml:space="preserve"><value>{store} has a historical early-leave rate of {rate}% (company average {companyRate}%)</value></data>
+  <data name="EW_ReasonRoleHistory" xml:space="preserve"><value>{jobTitle} has a historical early-leave rate of {rate}% (company average {companyRate}%)</value></data>
+  <data name="EW_ReasonPeakWindow" xml:space="preserve"><value>Approaching a tenure window with historically high resignations (around {start}-{end} days after hire)</value></data>
+  <data name="Chart_EwReasonBreakdown" xml:space="preserve"><value>Risk Reasons Breakdown</value></data>
+  <data name="Chart_EwReasonBreakdownSub" xml:space="preserve"><value>How many watchlist entries triggered each risk factor</value></data>
+  <data name="Chart_EwStoreBreakdown" xml:space="preserve"><value>Watchlist by Store</value></data>
+  <data name="Chart_EwStoreBreakdownSub" xml:space="preserve"><value>Where the at-risk employees currently are</value></data>
 
   <!-- Retention -->
   <data name="Ret_MilestoneTitle" xml:space="preserve"><value>Retention Milestones</value></data>

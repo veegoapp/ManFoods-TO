@@ -1,5 +1,17 @@
 namespace MvcApp.Models.ViewModels;
 
+/// <summary>
+/// A structured risk factor — "Type" identifies which rule triggered (for
+/// charting/counting) and "Params" carries the raw values needed to render
+/// a localized sentence client-side, instead of baking pre-rendered text
+/// (in one language) into the API response.
+/// </summary>
+public class EarlyWarningReason
+{
+    public string Type { get; set; } = "";
+    public Dictionary<string, string> Params { get; set; } = new();
+}
+
 public class EarlyWarningItem
 {
     public string Name { get; set; } = "";
@@ -8,7 +20,7 @@ public class EarlyWarningItem
     public DateOnly HireDate { get; set; }
     public int TenureDays { get; set; }
     public int RiskScore { get; set; }
-    public List<string> Reasons { get; set; } = new();
+    public List<EarlyWarningReason> Reasons { get; set; } = new();
 }
 
 public class EarlyWarningSummary

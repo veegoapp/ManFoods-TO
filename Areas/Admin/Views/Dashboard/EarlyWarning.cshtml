@@ -2,16 +2,118 @@
     ViewData["Title"] = L["Page_EarlyWarning"].Value;
 }
 
+<style>
+.ew-select-wrap { position:relative; }
+.ew-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 34px 0 14px; min-width:110px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.ew-select:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.ew-select-wrap i { position:absolute; top:50%; right:12px; transform:translateY(-50%); font-size:11px; color:var(--text-3); pointer-events:none; }
+[dir="rtl"] .ew-select { padding:0 14px 0 34px; }
+[dir="rtl"] .ew-select-wrap i { right:auto; left:12px; }
+
+.ew-multiselect { position:relative; }
+.ew-multiselect-trigger {
+    display:flex; align-items:center; gap:10px; justify-content:space-between;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 12px 0 14px; min-width:190px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.ew-multiselect-trigger:hover { border-color:var(--card-border-h); }
+.ew-multiselect-trigger i { font-size:11px; color:var(--text-3); flex-shrink:0; }
+.ew-multiselect-chips { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ew-multiselect-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); min-width:230px; padding:8px; max-height:280px; overflow-y:auto;
+}
+.ew-multiselect-panel.open { display:block; }
+[dir="rtl"] .ew-multiselect-panel { left:auto; right:0; }
+.ew-multiselect-actions { display:flex; gap:6px; padding:2px 4px 8px; border-bottom:1px solid var(--card-border); margin-bottom:6px; }
+.ew-ms-action {
+    flex:1; background:var(--card-bg-2); border:1px solid var(--card-border); color:var(--red);
+    border-radius:6px; font-size:11.5px; font-weight:700; padding:6px 8px; cursor:pointer;
+}
+.ew-ms-action:hover { background:var(--red-light); }
+.ew-ms-option { display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:13px; color:var(--text-2); }
+.ew-ms-option:hover { background:var(--card-bg-2); }
+.ew-ms-option input { accent-color:var(--red); width:15px; height:15px; cursor:pointer; }
+
+.ew-combobox { position:relative; }
+.ew-combobox-input {
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:500;
+    height:42px; padding:0 14px; min-width:190px; width:100%;
+    box-shadow:var(--shadow-sm);
+}
+.ew-combobox-input:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.ew-combobox-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); max-height:260px; overflow-y:auto; padding:6px;
+}
+.ew-combobox-panel.open { display:block; }
+.ew-combo-option { padding:8px 10px; border-radius:6px; font-size:13px; color:var(--text-2); cursor:pointer; }
+.ew-combo-option:hover { background:var(--card-bg-2); }
+.ew-combo-option.active { color:var(--red); font-weight:700; background:var(--red-light); }
+
+/* Chart.js draws its tick/legend text on <canvas>, which otherwise inherits
+   the page's dir="rtl" and reorders numeric-leading labels. */
+.chart-body canvas { direction:ltr; }
+</style>
+
 <div class="page-header">
     <div>
         <h1 class="page-title">@L["Page_EarlyWarning"]</h1>
         <p class="page-subtitle">@L["Page_EarlyWarningSub"]</p>
     </div>
-    <div class="d-flex gap-2 flex-wrap">
-        <select id="ewStoreSelect" class="form-select form-select-dark form-select-sm" style="width:200px">
-            <option value="">@L["Common_AllStores"]</option>
-        </select>
+    <div class="d-flex gap-2 flex-wrap align-items-end">
+        <div class="ew-select-wrap"><select id="ewYearSelect" class="ew-select"></select><i class="bi bi-chevron-down"></i></div>
+
+        <div class="ew-multiselect" id="ewMonthsMultiselect" data-label-select="@L["Common_SelectMonths"]" data-label-all="@L["Common_AllMonths"]">
+            <button type="button" class="ew-multiselect-trigger" id="ewMonthsTrigger">
+                <span class="ew-multiselect-chips" id="ewMonthsChips">@L["Common_AllMonths"]</span>
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="ew-multiselect-panel" id="ewMonthsPanel">
+                <div class="ew-multiselect-actions">
+                    <button type="button" class="ew-ms-action" id="ewMonthsSelectAll">@L["Common_SelectAll"]</button>
+                    <button type="button" class="ew-ms-action" id="ewMonthsClearAll">@L["Common_ClearAll"]</button>
+                </div>
+                <div id="ewMonthsOptions"></div>
+            </div>
+        </div>
+
+        <div class="ew-combobox" id="ewStoreCombo">
+            <input type="text" class="ew-combobox-input" id="ewStoreInput" placeholder="@L["Common_AllStores"]" autocomplete="off">
+            <div class="ew-combobox-panel" id="ewStorePanel"></div>
+        </div>
     </div>
+</div>
+
+<div id="ewLocalization" style="display:none"
+     data-kpi-in-watchlist="@L["EW_InWatchList"]"
+     data-kpi-high-risk="@L["EW_HighRisk"]"
+     data-kpi-new-hire-window="@L["EW_NewHireWindow"]"
+     data-kpi-company-baseline="@L["EW_CompanyBaseline"]"
+     data-reason-new-hire-window="@L["EW_ReasonNewHireWindow"]"
+     data-reason-store-history="@L["EW_ReasonStoreHistory"]"
+     data-reason-role-history="@L["EW_ReasonRoleHistory"]"
+     data-reason-peak-window="@L["EW_ReasonPeakWindow"]"
+     data-reason-type-new-hire-window="@L["EW_ReasonType_NewHireWindow"]"
+     data-reason-type-store-history="@L["EW_ReasonType_StoreHistory"]"
+     data-reason-type-role-history="@L["EW_ReasonType_RoleHistory"]"
+     data-reason-type-peak-window="@L["EW_ReasonType_PeakWindow"]"></div>
+
+<div id="ewEmptyState" class="card-dark text-center py-5" style="display:none">
+    <i class="bi bi-shield-check" style="font-size:3rem;color:oklch(0.5 0.18 25);display:block;margin-bottom:1rem"></i>
+    <h5 class="mb-2">No Active Employee Data Yet</h5>
+    <p class="text-muted-custom">Upload workforce data with hire dates to see the early-warning watchlist here.</p>
 </div>
 
 <div id="ewContent">
@@ -21,23 +123,37 @@
         </div>
     </div>
 
-    <div class="d-flex align-items-center gap-2 mb-3">
-        <div class="section-accent"></div>
-        <h5 class="mb-0 fw-bold">قائمة المتابعة</h5>
-        <span id="ewCountBadge" class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px"></span>
+    <div class="charts-grid mb-4">
+        <div class="chart-card">
+            <div class="chart-header"><h6>@L["Chart_EwReasonBreakdown"]</h6><p>@L["Chart_EwReasonBreakdownSub"]</p></div>
+            <div class="chart-body"><canvas id="ewReasonChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header"><h6>@L["Chart_EwStoreBreakdown"]</h6><p>@L["Chart_EwStoreBreakdownSub"]</p></div>
+            <div class="chart-body"><canvas id="ewStoreChart"></canvas></div>
+        </div>
     </div>
-    <div class="chart-card p-0" style="overflow:hidden">
+
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <div class="section-accent"></div>
+            <h5 class="mb-0 fw-bold">@L["EW_WatchList"]</h5>
+            <span id="ewCountBadge" class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px"></span>
+        </div>
+        <input type="text" id="ewSearch" class="form-control form-control-sm" placeholder="@L["Common_Search"]" style="width:220px;border-radius:20px">
+    </div>
+    <div class="chart-card p-0" style="overflow:hidden" data-employee-suffix="@L["EW_EmployeeCountSuffix"]" data-no-data="@L["EW_NoWatchlistData"]">
         <div class="table-responsive" style="max-height:520px;overflow-y:auto">
             <table class="table table-hover mb-0" style="font-size:13px">
                 <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
                     <tr>
-                        <th class="px-3 py-2">الاسم</th>
-                        <th class="px-3 py-2">الفرع</th>
-                        <th class="px-3 py-2">الوظيفة</th>
-                        <th class="px-3 py-2">تاريخ التعيين</th>
-                        <th class="px-3 py-2">مدة الخدمة (يوم)</th>
-                        <th class="px-3 py-2 text-center">درجة الخطر</th>
-                        <th class="px-3 py-2">الأسباب</th>
+                        <th class="px-3 py-2">@L["EW_HireName"]</th>
+                        <th class="px-3 py-2">@L["EW_Store"]</th>
+                        <th class="px-3 py-2">@L["EW_JobTitle"]</th>
+                        <th class="px-3 py-2">@L["EW_HireDate"]</th>
+                        <th class="px-3 py-2">@L["EW_TenureDays"]</th>
+                        <th class="px-3 py-2 text-center">@L["EW_RiskScore"]</th>
+                        <th class="px-3 py-2">@L["EW_Reasons"]</th>
                     </tr>
                 </thead>
                 <tbody id="ewBody">
@@ -51,41 +167,184 @@
 </div>
 
 @section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-const _L = {
-    allStores: '@L["Common_AllStores"]'
-};
+/* ── Early Warning page — Year + discrete Months multi-select (picks which
+   Active Employees snapshot counts as "currently active"), same filter
+   components as other redesigned pages. Historical risk-factor baselines
+   always use all-time data regardless of this filter. */
+let ewYear = null, ewMonths = [], ewYearMonthsMap = {};
+let ewStoreFilter = '';
+let ewWatchlistData = [];
+
+const EW_REASON_TYPES = ['new_hire_window', 'store_history', 'role_history', 'peak_window'];
+const EW_REASON_COLORS = { new_hire_window: 'oklch(0.55 0.19 25)', store_history: 'oklch(0.65 0.15 190)', role_history: 'oklch(0.7 0.16 145)', peak_window: 'oklch(0.72 0.17 60)' };
+const EW_L = document.getElementById('ewLocalization').dataset;
+
+function ewMonthShortName(m) { return new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' }); }
+function ewMonthLongName(m, y) { return new Date(y, m - 1).toLocaleString('default', { month: 'long', year: 'numeric' }); }
+
+function ewBuildQuery(extra) {
+    const q = new URLSearchParams(extra || {});
+    if (ewYear) q.set('year', ewYear);
+    if (ewMonths.length) q.set('months', ewMonths.join(','));
+    if (ewStoreFilter) q.set('store', ewStoreFilter);
+    return q;
+}
+
 async function ewFetch(path) {
-    const p = new URLSearchParams();
-    const store = document.getElementById('ewStoreSelect').value;
-    if (store) p.set('store', store);
-    const r = await fetch(`/api/early-warning/${path}?${p.toString()}`);
+    const r = await fetch(`/api/early-warning/${path}?${ewBuildQuery().toString()}`);
     return r.ok ? r.json() : null;
 }
 
-async function ewLoadFilters() {
-    const stores = await ewFetch('stores') || [];
-    const sel = document.getElementById('ewStoreSelect');
-    const cur = sel.value;
-    sel.innerHTML = `<option value="">${_L.allStores}</option>`;
-    stores.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s; opt.textContent = s;
-        sel.appendChild(opt);
+/* Generic searchable single-select combobox ------------------------------ */
+function ewCreateCombobox({ inputId, panelId, onSelect }) {
+    const input = document.getElementById(inputId);
+    const panel = document.getElementById(panelId);
+    const allLabel = input.placeholder;
+    let options = [];
+    let value = '';
+
+    function render(filterText) {
+        const ft = (filterText || '').toLowerCase();
+        const filtered = options.filter(o => o.toLowerCase().includes(ft));
+        let html = `<div class="ew-combo-option${value === '' ? ' active' : ''}" data-value="">${allLabel}</div>`;
+        html += filtered.map(o => `<div class="ew-combo-option${o === value ? ' active' : ''}" data-value="${o.replace(/"/g, '&quot;')}">${o}</div>`).join('');
+        panel.innerHTML = html;
+    }
+    function open() { panel.classList.add('open'); render(''); input.select(); }
+    function close() { panel.classList.remove('open'); input.value = value; }
+
+    panel.addEventListener('mousedown', (e) => {
+        const opt = e.target.closest('.ew-combo-option');
+        if (!opt) return;
+        e.preventDefault();
+        value = opt.dataset.value;
+        input.value = value;
+        panel.classList.remove('open');
+        onSelect(value);
     });
-    if (cur) sel.value = cur;
-    return stores.length > 0;
+    input.addEventListener('focus', open);
+    input.addEventListener('input', () => render(input.value));
+    input.addEventListener('blur', () => setTimeout(close, 150));
+
+    return { setOptions(list) { options = list || []; }, setValue(v) { value = v || ''; input.value = value; } };
+}
+
+const ewStoreCombo = ewCreateCombobox({ inputId: 'ewStoreInput', panelId: 'ewStorePanel', onSelect: v => { ewStoreFilter = v; ewLoadAll(); } });
+
+/* Months multi-select ---------------------------------------------------- */
+function ewBuildMonthsOptions() {
+    const container = document.getElementById('ewMonthsOptions');
+    const available = (ewYearMonthsMap[ewYear] || []).slice().sort((a, b) => a - b);
+    container.innerHTML = available.map(m => `
+        <label class="ew-ms-option">
+            <input type="checkbox" value="${m}" ${ewMonths.includes(m) ? 'checked' : ''}>
+            <span>${ewMonthLongName(m, ewYear)}</span>
+        </label>`).join('');
+    container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const m = parseInt(cb.value);
+            if (cb.checked) { if (!ewMonths.includes(m)) ewMonths.push(m); }
+            else { ewMonths = ewMonths.filter(x => x !== m); }
+            ewMonths.sort((a, b) => a - b);
+            ewRenderMonthsChips();
+            ewOnMonthsChanged();
+        });
+    });
+}
+
+function ewRenderMonthsChips() {
+    const chipsEl = document.getElementById('ewMonthsChips');
+    const labels = document.getElementById('ewMonthsMultiselect').dataset;
+    const available = ewYearMonthsMap[ewYear] || [];
+    if (!ewMonths.length) { chipsEl.textContent = labels.labelSelect; return; }
+    if (ewMonths.length === available.length) { chipsEl.textContent = labels.labelAll; return; }
+    const names = ewMonths.map(ewMonthShortName);
+    chipsEl.textContent = names.length <= 2 ? names.join('، ') : `${names[0]}، ${names[1]} +${names.length - 2}`;
+}
+
+let ewMonthsDebounce;
+function ewOnMonthsChanged() {
+    clearTimeout(ewMonthsDebounce);
+    ewMonthsDebounce = setTimeout(() => { if (ewMonths.length) ewLoadAll(); }, 250);
+}
+
+document.getElementById('ewMonthsSelectAll').addEventListener('click', () => {
+    ewMonths = (ewYearMonthsMap[ewYear] || []).slice().sort((a, b) => a - b);
+    ewBuildMonthsOptions(); ewRenderMonthsChips(); ewOnMonthsChanged();
+});
+document.getElementById('ewMonthsClearAll').addEventListener('click', () => {
+    ewMonths = [];
+    ewBuildMonthsOptions(); ewRenderMonthsChips(); ewOnMonthsChanged();
+});
+document.getElementById('ewMonthsTrigger').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('ewMonthsPanel').classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+    if (!document.getElementById('ewMonthsMultiselect').contains(e.target))
+        document.getElementById('ewMonthsPanel').classList.remove('open');
+});
+
+document.getElementById('ewYearSelect').addEventListener('change', async function () {
+    ewYear = parseInt(this.value);
+    ewMonths = (ewYearMonthsMap[ewYear] || []).slice().sort((a, b) => a - b);
+    ewBuildMonthsOptions(); ewRenderMonthsChips();
+    await ewLoadAll();
+});
+
+/* Initial filter load ------------------------------------------------------ */
+async function ewLoadFilters() {
+    const [periods, stores] = await Promise.all([
+        fetch('/api/dashboard/available-periods').then(r => r.ok ? r.json() : []),
+        fetch('/api/early-warning/stores').then(r => r.ok ? r.json() : []),
+    ]);
+
+    const hasData = (periods || []).length > 0;
+    document.getElementById('ewEmptyState').style.display = hasData ? 'none' : '';
+    document.getElementById('ewContent').style.display = hasData ? '' : 'none';
+    if (!hasData) return false;
+
+    ewYearMonthsMap = {};
+    (periods || []).forEach(p => { (ewYearMonthsMap[p.year] = ewYearMonthsMap[p.year] || []).push(p.month); });
+    const years = Object.keys(ewYearMonthsMap).map(Number).sort((a, b) => b - a);
+    const yearSel = document.getElementById('ewYearSelect');
+    yearSel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    ewYear = years[0];
+    yearSel.value = ewYear;
+    ewMonths = (ewYearMonthsMap[ewYear] || []).slice().sort((a, b) => a - b);
+    ewBuildMonthsOptions();
+    ewRenderMonthsChips();
+
+    ewStoreCombo.setOptions(stores || []);
+    return true;
 }
 
 function ewRenderSummary(s) {
     const el = document.getElementById('ewSummaryCards');
     if (!s) { el.innerHTML = ''; return; }
     el.innerHTML = `
-        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-eye-fill"></i></div><div class="kpi-value">${s.totalWatchlist}</div><div class="kpi-label">في قائمة المتابعة</div></div>
-        <div class="kpi-card"><div class="kpi-icon text-danger"><i class="bi bi-exclamation-triangle-fill"></i></div><div class="kpi-value text-danger">${s.highRiskCount}</div><div class="kpi-label">درجة خطر عالية (2+)</div></div>
-        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div><div class="kpi-value">${s.newHireWindowCount}</div><div class="kpi-label">لسه في أول 90 يوم</div></div>
-        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-graph-up"></i></div><div class="kpi-value">${s.companyBaselineRate.toFixed(1)}%</div><div class="kpi-label">متوسط ترك العمل المبكر (كل الشركة)</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-eye-fill"></i></div><div class="kpi-value">${s.totalWatchlist}</div><div class="kpi-label">${EW_L.kpiInWatchlist}</div></div>
+        <div class="kpi-card"><div class="kpi-icon text-danger"><i class="bi bi-exclamation-triangle-fill"></i></div><div class="kpi-value text-danger">${s.highRiskCount}</div><div class="kpi-label">${EW_L.kpiHighRisk}</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div><div class="kpi-value">${s.newHireWindowCount}</div><div class="kpi-label">${EW_L.kpiNewHireWindow}</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-graph-up"></i></div><div class="kpi-value">${s.companyBaselineRate.toFixed(1)}%</div><div class="kpi-label">${EW_L.kpiCompanyBaseline}</div></div>
     `;
+}
+
+async function ewLoadSummary() {
+    ewRenderSummary(await ewFetch('summary'));
+}
+
+function ewReasonText(reason) {
+    const templates = {
+        new_hire_window: EW_L.reasonNewHireWindow,
+        store_history: EW_L.reasonStoreHistory,
+        role_history: EW_L.reasonRoleHistory,
+        peak_window: EW_L.reasonPeakWindow,
+    };
+    const t = templates[reason.type] || '';
+    return t.replace(/\{(\w+)\}/g, (_, k) => reason.params?.[k] ?? '');
 }
 
 function ewRiskBadge(score) {
@@ -96,10 +355,18 @@ function ewRiskBadge(score) {
 
 function ewRenderTable(rows) {
     const tbody = document.getElementById('ewBody');
+    const labels = document.querySelector('[data-employee-suffix]').dataset;
+    const search = (document.getElementById('ewSearch').value || '').toLowerCase();
+    const filtered = rows.filter(r =>
+        r.name.toLowerCase().includes(search) ||
+        (r.store || '').toLowerCase().includes(search) ||
+        (r.jobTitle || '').toLowerCase().includes(search)
+    );
+
     const badge = document.getElementById('ewCountBadge');
-    badge.textContent = rows.length + ' موظف';
-    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">مفيش موظفين في منطقة خطر للفلتر ده.</td></tr>'; return; }
-    tbody.innerHTML = rows.map(r => `
+    badge.textContent = `${filtered.length} ${labels.employeeSuffix}`;
+    if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">${labels.noData}</td></tr>`; return; }
+    tbody.innerHTML = filtered.map(r => `
         <tr>
             <td class="px-3 py-2 fw-semibold">${r.name}</td>
             <td class="px-3 py-2">${r.store}</td>
@@ -107,21 +374,87 @@ function ewRenderTable(rows) {
             <td class="px-3 py-2" style="color:var(--text-2)">${r.hireDate}</td>
             <td class="px-3 py-2">${r.tenureDays}</td>
             <td class="px-3 py-2 text-center">${ewRiskBadge(r.riskScore)}</td>
-            <td class="px-3 py-2" style="font-size:12px;color:var(--text-2)">${r.reasons.map(x => `• ${x}`).join('<br>')}</td>
+            <td class="px-3 py-2" style="font-size:12px;color:var(--text-2)">${r.reasons.map(x => `• ${ewReasonText(x)}`).join('<br>')}</td>
         </tr>`).join('');
 }
 
-async function ewLoadAll() {
-    const [summary, watchlist] = await Promise.all([ewFetch('summary'), ewFetch('watchlist')]);
-    ewRenderSummary(summary);
-    ewRenderTable(watchlist || []);
+/* Charts — derived client-side from the watchlist response ---------------- */
+let ewReasonChartInstance, ewStoreChartInstance;
+
+function ewLoadReasonChart(rows) {
+    const counts = {};
+    EW_REASON_TYPES.forEach(t => counts[t] = 0);
+    rows.forEach(r => r.reasons.forEach(x => { if (counts[x.type] != null) counts[x.type]++; }));
+
+    const labelMap = {
+        new_hire_window: EW_L.reasonTypeNewHireWindow,
+        store_history: EW_L.reasonTypeStoreHistory,
+        role_history: EW_L.reasonTypeRoleHistory,
+        peak_window: EW_L.reasonTypePeakWindow,
+    };
+
+    const ctx = document.getElementById('ewReasonChart');
+    if (!ctx) return;
+    if (ewReasonChartInstance) ewReasonChartInstance.destroy();
+    ewReasonChartInstance = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: EW_REASON_TYPES.map(t => labelMap[t]),
+            datasets: [{ data: EW_REASON_TYPES.map(t => counts[t]), backgroundColor: EW_REASON_TYPES.map(t => EW_REASON_COLORS[t]), borderRadius: 4, maxBarThickness: 34 }],
+        },
+        options: {
+            indexAxis: 'y', maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: 'oklch(0.5 0.03 258)' }, grid: { color: 'oklch(0.92 0.008 255)' } },
+                y: { ticks: { color: 'oklch(0.5 0.03 258)' }, grid: { display: false } },
+            },
+        },
+    });
 }
 
-document.getElementById('ewStoreSelect').addEventListener('change', ewLoadAll);
+function ewLoadStoreChart(rows) {
+    const counts = {};
+    rows.forEach(r => { if (r.store) counts[r.store] = (counts[r.store] || 0) + 1; });
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+    const ctx = document.getElementById('ewStoreChart');
+    if (!ctx) return;
+    if (ewStoreChartInstance) ewStoreChartInstance.destroy();
+    ewStoreChartInstance = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: entries.map(e => e[0]),
+            datasets: [{ data: entries.map(e => e[1]), backgroundColor: 'oklch(0.55 0.19 25)', borderRadius: 4, maxBarThickness: 34 }],
+        },
+        options: {
+            indexAxis: 'y', maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: 'oklch(0.5 0.03 258)', precision: 0 }, grid: { color: 'oklch(0.92 0.008 255)' } },
+                y: { ticks: { color: 'oklch(0.5 0.03 258)' }, grid: { display: false } },
+            },
+        },
+    });
+}
+
+async function ewLoadWatchlist() {
+    ewWatchlistData = await ewFetch('watchlist') || [];
+    ewRenderTable(ewWatchlistData);
+    ewLoadReasonChart(ewWatchlistData);
+    ewLoadStoreChart(ewWatchlistData);
+}
+
+async function ewLoadAll() {
+    if (!ewYear || !ewMonths.length) return;
+    await Promise.all([ewLoadSummary(), ewLoadWatchlist()]);
+}
+
+document.getElementById('ewSearch').addEventListener('input', () => ewRenderTable(ewWatchlistData));
 
 (async function init() {
-    await ewLoadFilters();
-    await ewLoadAll();
+    const hasData = await ewLoadFilters();
+    if (hasData) await ewLoadAll();
 })();
 </script>
 }
