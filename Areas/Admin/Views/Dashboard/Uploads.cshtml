@@ -186,12 +186,7 @@
 </div>
 
 <div class="chart-card p-0" style="overflow:hidden">
-    <div class="chart-header px-4 pt-4 d-flex align-items-center justify-content-between">
-        <h6 class="mb-0">@L["DM_History"]</h6>
-        <a href="/admin/dashboard/download-upload-history" class="dm-action-btn download">
-            <i class="bi bi-file-earmark-arrow-down"></i>@L["DM_DownloadHistory"]
-        </a>
-    </div>
+    <div class="chart-header px-4 pt-4"><h6>@L["DM_History"]</h6></div>
     @if (!Model.Any())
     {
         <div class="text-center py-5 text-muted">
@@ -243,6 +238,10 @@
                             <td class="px-3 py-2 text-muted-custom small">@item.UploadDate.ToString("MMM dd, yyyy HH:mm")</td>
                             <td class="px-3 py-2">
                                 <div class="d-flex gap-2">
+                                    <a href="/admin/dashboard/download-upload-group?id=@item.PrimaryLogId"
+                                       class="dm-action-btn download">
+                                        <i class="bi bi-download"></i>@L["DM_Download"]
+                                    </a>
                                     <form asp-area="Admin" asp-controller="Dashboard" asp-action="DeleteUploadLog" method="post"
                                           onsubmit="return confirm('@(isPeriod ? L["DM_DeleteConfirmPeriod"].Value : L["DM_DeleteConfirmExit"].Value)')">
                                         @Html.AntiForgeryToken()

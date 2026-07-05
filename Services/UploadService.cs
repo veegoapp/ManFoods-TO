@@ -376,6 +376,30 @@ public class UploadService : IUploadService
         return items;
     }
 
+    public async Task<List<(byte[] Content, string ContentType, string FileName)>> GetGroupFilesAsync(int primaryLogId)
+    {
+        var pivot = await _db.UploadLogs.AsNoTracking()
+            .Where(l => l.Id == primaryLogId)
+            .Select(l => new { l.FileType, l.Month, l.Year })
+            .FirstOrDefaultAsync();
+
+        if (pivot == null) return new();
+
+        List<UploadLog> logs;
+        if (PeriodFileTypes.Contains(pivot.FileType))
+            logs = await _db.UploadLogs.AsNoTracking()
+                .Where(l => PeriodFileTypes.Contains(l.FileType) && l.Month == pivot.Month && l.Year == pivot.Year && l.FileContent != null)
+                .ToListAsync();
+        else
+            logs = await _db.UploadLogs.AsNoTracking()
+                .Where(l => l.Id == primaryLogId && l.FileContent != null)
+                .ToListAsync();
+
+        return logs
+            .Select(l => (l.FileContent!, l.ContentType ?? "application/octet-stream", l.FileName))
+            .ToList();
+    }
+
     public async Task<(byte[] Content, string ContentType, string FileName)?> GetFileAsync(int id)
     {
         var log = await _db.UploadLogs.AsNoTracking().FirstOrDefaultAsync(l => l.Id == id);
