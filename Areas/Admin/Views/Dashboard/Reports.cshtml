@@ -1,12 +1,34 @@
 @model List<MvcApp.Models.ViewModels.PeriodItem>
 @{
     ViewData["Title"] = L["Page_Reports"].Value;
-    var months = new[] { "January","February","March","April","May","June","July","August","September","October","November","December" };
-    var hasPeriods = Model != null && Model.Count > 0;
-    var stores = (ViewBag.Stores as List<string>) ?? new List<string>();
-    var operationManagers = (ViewBag.OperationManagers as List<string>) ?? new List<string>();
-    var operationConsultants = (ViewBag.OperationConsultants as List<string>) ?? new List<string>();
+    var hasPeriods  = Model != null && Model.Count > 0;
+    var stores      = (ViewBag.Stores              as List<string>) ?? new List<string>();
+    var oms         = (ViewBag.OperationManagers   as List<string>) ?? new List<string>();
+    var ocs         = (ViewBag.OperationConsultants as List<string>) ?? new List<string>();
+    var monthNames  = new[] { "January","February","March","April","May","June",
+                               "July","August","September","October","November","December" };
+    var latest      = Model?.OrderByDescending(p => p.Year).ThenByDescending(p => p.Month).FirstOrDefault();
+    var years       = Model?.Select(p => p.Year).Distinct().OrderByDescending(y => y).ToList() ?? new List<int>();
+    var periodsJson = System.Text.Json.JsonSerializer.Serialize(
+        (Model ?? new()).OrderByDescending(p => p.Year).ThenByDescending(p => p.Month)
+                        .Select(p => new { year = p.Year, month = p.Month, label = monthNames[p.Month - 1] })
+                        .ToList());
 }
+
+<style>
+.rep-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; font-weight: 600; padding: 2px 8px;
+    border-radius: 4px; white-space: nowrap;
+}
+.rep-badge-period { background: oklch(0.5 0.18 25 / .10); color: oklch(0.5 0.18 25); border: 1px solid oklch(0.5 0.18 25 / .25); }
+.rep-badge-year   { background: oklch(0.5 0.18 25 / .08); color: oklch(0.5 0.18 25); border: 1px solid oklch(0.5 0.18 25 / .20); }
+.rep-badge-store  { background: oklch(0.55 0.15 258 / .10); color: oklch(0.45 0.12 258); border: 1px solid oklch(0.55 0.15 258 / .25); }
+.rep-badge-omoc   { background: oklch(0.6 0.13 82 / .10); color: oklch(0.5 0.12 82); border: 1px solid oklch(0.6 0.13 82 / .25); }
+.rep-section-bar  { width: 4px; height: 20px; border-radius: 2px; flex-shrink: 0; }
+.rep-dl-btn { transition: background .15s, transform .1s; }
+.rep-dl-btn:active { transform: scale(.97); }
+</style>
 
 <div class="page-header">
     <div>
@@ -15,302 +37,359 @@
     </div>
 </div>
 
-@if (hasPeriods)
-{
-    <div class="card-dark mb-4" style="border-left:4px solid oklch(0.5 0.18 25)">
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-            <div class="card-icon" style="background:oklch(0.5 0.18 25 / .12)"><i class="bi bi-file-earmark-zip-fill" style="color:oklch(0.5 0.18 25)"></i></div>
-            <div class="flex-grow-1" style="min-width:220px">
-                <h6 class="mb-0">@L["Rep_FullCompany"]</h6>
-                <p class="text-muted-custom mb-0 small">@L["Rep_FullCompanyDesc"]</p>
-            </div>
-            <form method="get" action="/admin/dashboard/export" class="d-flex gap-2 align-items-center flex-wrap">
-                <input type="hidden" name="reportType" value="full" />
-                <select name="month" class="form-select form-select-dark form-select-sm" style="width:130px">
-                    @for (int m = 1; m <= 12; m++)
-                    {
-                        var isSelected = Model!.LastOrDefault()?.Month == m;
-                        <option value="@m" selected="@isSelected">@months[m-1]</option>
-                    }
-                </select>
-                <select name="year" class="form-select form-select-dark form-select-sm" style="width:100px">
-                    @foreach (var y in Model!.Select(p => p.Year).Distinct().OrderByDescending(y => y))
-                    {
-                        <option value="@y">@y</option>
-                    }
-                </select>
-                <select name="store" class="form-select form-select-dark form-select-sm" style="width:170px">
-                    <option value="">@L["Common_AllStores"]</option>
-                    @foreach (var s in stores)
-                    {
-                        <option value="@s">@s</option>
-                    }
-                </select>
-                <button type="submit" class="btn btn-primary btn-sm text-nowrap"><i class="bi bi-download me-1"></i>@L["Common_Download"]</button>
-            </form>
-        </div>
-    </div>
-}
-
-<h5 class="fw-bold mb-3 mt-2">@L["Rep_TurnoverWorkforce"]</h5>
 @if (!hasPeriods)
 {
-    <div class="card-dark text-center py-4 mb-4">
-        <i class="bi bi-file-earmark-bar-graph-fill" style="font-size:2.5rem;color:oklch(0.5 0.18 25);display:block;margin-bottom:.75rem"></i>
-        <p class="text-muted-custom mb-0">@L["Rep_UploadFirst"]</p>
+    <div class="card-dark text-center py-5">
+        <i class="bi bi-file-earmark-bar-graph-fill d-block mb-3" style="font-size:3rem;color:oklch(0.5 0.18 25)"></i>
+        <h5 class="mb-1">@L["Rep_UploadFirst"]</h5>
+        <p class="text-muted-custom mb-0 small">Upload payroll data to unlock all reports.</p>
     </div>
 }
 else
 {
+    <!-- ═══════════════════════════════════════════════════════
+         GLOBAL FILTER BAR
+    ═══════════════════════════════════════════════════════ -->
+    <div class="card-dark mb-4" style="border-left:4px solid oklch(0.5 0.18 25)">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="bi bi-funnel-fill" style="color:oklch(0.5 0.18 25)"></i>
+            <span class="fw-semibold" style="font-size:14px">Global Filters</span>
+            <span class="text-muted-custom small">— set once, applies to every download</span>
+        </div>
+        <div class="row g-2 align-items-end">
+            <div class="col-6 col-sm-4 col-md-2">
+                <label class="form-label small text-muted-custom mb-1">Year</label>
+                <select id="gf-year" class="form-select form-select-dark form-select-sm" onchange="repUpdateMonths()">
+                    @foreach (var y in years)
+                    {
+                        <option value="@y" selected="@(y == latest?.Year)">@y</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-sm-4 col-md-2">
+                <label class="form-label small text-muted-custom mb-1">Month</label>
+                <select id="gf-month" class="form-select form-select-dark form-select-sm">
+                    <!-- populated by JS -->
+                </select>
+            </div>
+            <div class="col-12 col-sm-4 col-md-3">
+                <label class="form-label small text-muted-custom mb-1">Store</label>
+                <select id="gf-store" class="form-select form-select-dark form-select-sm">
+                    <option value="">All Stores</option>
+                    @foreach (var s in stores) { <option value="@s">@s</option> }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small text-muted-custom mb-1">Operation Manager</label>
+                <select id="gf-om" class="form-select form-select-dark form-select-sm">
+                    <option value="">All OMs</option>
+                    @foreach (var m in oms) { <option value="@m">@m</option> }
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small text-muted-custom mb-1">Operation Consultant</label>
+                <select id="gf-oc" class="form-select form-select-dark form-select-sm">
+                    <option value="">All OCs</option>
+                    @foreach (var c in ocs) { <option value="@c">@c</option> }
+                </select>
+            </div>
+        </div>
+        <!-- Available periods -->
+        <div class="mt-3 pt-3 d-flex flex-wrap align-items-center gap-1" style="border-top:1px solid oklch(0.88 0.01 258)">
+            <span class="text-muted-custom small me-1">Available periods:</span>
+            @foreach (var p in (Model ?? new()).OrderByDescending(x => x.Year).ThenByDescending(x => x.Month))
+            {
+                <span style="background:oklch(0.5 0.18 25 / .09);color:oklch(0.5 0.18 25);border:1px solid oklch(0.5 0.18 25 / .22);padding:3px 9px;border-radius:5px;font-size:11px;font-weight:600">
+                    @monthNames[p.Month - 1] @p.Year
+                </span>
+            }
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         FULL PACKAGE
+    ═══════════════════════════════════════════════════════ -->
+    <div class="card-dark mb-4" style="background:linear-gradient(135deg,oklch(0.14 0.02 258),oklch(0.185 0.025 258));border:1px solid oklch(0.5 0.18 25 / .35)">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="card-icon flex-shrink-0" style="background:oklch(0.5 0.18 25 / .15);width:52px;height:52px;border-radius:14px">
+                <i class="bi bi-file-earmark-zip-fill" style="font-size:1.5rem;color:oklch(0.68 0.18 25)"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                    <h5 class="fw-bold mb-0">Full Company Report</h5>
+                    <span class="rep-badge rep-badge-period">📅 Period</span>
+                    <span class="rep-badge rep-badge-store">🏪 Store</span>
+                </div>
+                <p class="text-muted-custom mb-0 small">
+                    Everything in one workbook — Summary, Store Comparison, Trend Matrix, 90-Day Turnover,
+                    Retention, Exit Interviews, Scorecard, and Early Warning.
+                </p>
+            </div>
+            <button class="btn btn-primary text-nowrap flex-shrink-0 rep-dl-btn" onclick="repDownload('full','period','store')">
+                <i class="bi bi-download me-2"></i>Download Full Package
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 1 — TURNOVER & WORKFORCE
+    ═══════════════════════════════════════════════════════ -->
+    <div class="d-flex align-items-center gap-2 mb-3 mt-1">
+        <div class="rep-section-bar" style="background:oklch(0.5 0.18 25)"></div>
+        <h5 class="fw-bold mb-0">Turnover &amp; Workforce</h5>
+    </div>
     <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div class="card-dark h-100">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="card-icon" style="background:rgba(39,174,96,.15)"><i class="bi bi-file-earmark-spreadsheet-fill" style="color:#27ae60"></i></div>
+
+        <!-- Summary -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card-dark h-100 d-flex flex-column">
+                <div class="d-flex gap-3 mb-3">
+                    <div class="card-icon flex-shrink-0" style="background:rgba(39,174,96,.12)">
+                        <i class="bi bi-file-earmark-spreadsheet-fill" style="color:#27ae60"></i>
+                    </div>
                     <div>
-                        <h6 class="mb-0">@L["Rep_Summary"]</h6>
-                        <p class="text-muted-custom mb-0 small">@L["Rep_SummaryDesc"]</p>
+                        <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
+                            <h6 class="mb-0">Monthly Summary</h6>
+                            <span class="rep-badge rep-badge-period">📅 Period</span>
+                            <span class="rep-badge rep-badge-store">🏪 Store</span>
+                        </div>
+                        <p class="text-muted-custom mb-0 small">
+                            Headcount, New Hires, Resignations, and Turnover Rate for the selected month —
+                            broken down by Job Title, Tenure, and Gender.
+                        </p>
                     </div>
                 </div>
-                <form method="get" action="/admin/dashboard/export">
-                    <input type="hidden" name="reportType" value="summary" />
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label small text-muted-custom">@L["Common_Month"]</label>
-                            <select name="month" class="form-select form-select-dark form-select-sm">
-                                @for (int m = 1; m <= 12; m++)
-                                {
-                                    var isSelected = Model!.LastOrDefault()?.Month == m;
-                                    <option value="@m" selected="@isSelected">@months[m-1]</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small text-muted-custom">@L["Common_Year"]</label>
-                            <select name="year" class="form-select form-select-dark form-select-sm">
-                                @foreach (var y in Model!.Select(p => p.Year).Distinct().OrderByDescending(y => y))
-                                {
-                                    <option value="@y">@y</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small text-muted-custom">@L["Common_StoreName"]</label>
-                            <select name="store" class="form-select form-select-dark form-select-sm">
-                                <option value="">@L["Common_AllStores"]</option>
-                                @foreach (var s in stores)
-                                {
-                                    <option value="@s">@s</option>
-                                }
-                            </select>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-success w-100 btn-sm">
-                        <i class="bi bi-download me-2"></i>@L["Rep_DownloadSummaryExcel"]
-                    </button>
-                </form>
+                <button class="btn btn-outline-secondary btn-sm w-100 mt-auto rep-dl-btn"
+                        onclick="repDownload('summary','period','store')">
+                    <i class="bi bi-download me-2"></i>Download Excel
+                </button>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card-dark h-100">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="card-icon" style="background:oklch(0.5 0.18 25 / .12)"><i class="bi bi-shop-window" style="color:oklch(0.5 0.18 25)"></i></div>
+        <!-- Store Comparison -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card-dark h-100 d-flex flex-column">
+                <div class="d-flex gap-3 mb-3">
+                    <div class="card-icon flex-shrink-0" style="background:oklch(0.5 0.18 25 / .10)">
+                        <i class="bi bi-shop-window" style="color:oklch(0.5 0.18 25)"></i>
+                    </div>
                     <div>
-                        <h6 class="mb-0">@L["Rep_StoreComparison"]</h6>
-                        <p class="text-muted-custom mb-0 small">@L["Rep_StoreComparisonDesc"]</p>
+                        <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
+                            <h6 class="mb-0">Store Comparison</h6>
+                            <span class="rep-badge rep-badge-period">📅 Period</span>
+                            <span class="rep-badge rep-badge-omoc">👤 OM / OC</span>
+                        </div>
+                        <p class="text-muted-custom mb-0 small">
+                            Side-by-side view of all stores for the selected month — Headcount, Hires,
+                            Resignations, and Turnover Rate per store.
+                        </p>
                     </div>
                 </div>
-                <form method="get" action="/admin/dashboard/export">
-                    <input type="hidden" name="reportType" value="stores" />
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label small text-muted-custom">@L["Common_Month"]</label>
-                            <select name="month" class="form-select form-select-dark form-select-sm">
-                                @for (int m = 1; m <= 12; m++)
-                                {
-                                    var isSelected = Model!.LastOrDefault()?.Month == m;
-                                    <option value="@m" selected="@isSelected">@months[m-1]</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small text-muted-custom">@L["Common_Year"]</label>
-                            <select name="year" class="form-select form-select-dark form-select-sm">
-                                @foreach (var y in Model!.Select(p => p.Year).Distinct().OrderByDescending(y => y))
-                                {
-                                    <option value="@y">@y</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small text-muted-custom">@L["Common_OperationManager"]</label>
-                            <select name="om" class="form-select form-select-dark form-select-sm">
-                                <option value="">@L["Common_All"]</option>
-                                @foreach (var name in operationManagers)
-                                {
-                                    <option value="@name">@name</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small text-muted-custom">@L["Common_OperationConsultant"]</label>
-                            <select name="oc" class="form-select form-select-dark form-select-sm">
-                                <option value="">@L["Common_All"]</option>
-                                @foreach (var name in operationConsultants)
-                                {
-                                    <option value="@name">@name</option>
-                                }
-                            </select>
-                        </div>
+                <button class="btn btn-outline-secondary btn-sm w-100 mt-auto rep-dl-btn"
+                        onclick="repDownload('stores','period','omoc')">
+                    <i class="bi bi-download me-2"></i>Download Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- Trend Matrix -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card-dark h-100 d-flex flex-column">
+                <div class="d-flex gap-3 mb-3">
+                    <div class="card-icon flex-shrink-0" style="background:oklch(0.55 0.15 258 / .10)">
+                        <i class="bi bi-table" style="color:oklch(0.5 0.15 258)"></i>
                     </div>
-                    <button type="submit" class="btn btn-danger w-100 btn-sm">
-                        <i class="bi bi-download me-2"></i>@L["Rep_DownloadStoreExcel"]
-                    </button>
-                </form>
+                    <div>
+                        <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
+                            <h6 class="mb-0">Turnover Trend Matrix</h6>
+                            <span class="rep-badge rep-badge-year">📅 Year</span>
+                            <span class="rep-badge rep-badge-omoc">👤 OM / OC</span>
+                        </div>
+                        <p class="text-muted-custom mb-0 small">
+                            Full data table — one row per store, one column per month, showing Turnover %
+                            across all available periods from the selected year onward, with an average column.
+                        </p>
+                    </div>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm w-100 mt-auto rep-dl-btn"
+                        onclick="repDownload('trend-matrix','year','omoc')">
+                    <i class="bi bi-download me-2"></i>Download Excel
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 2 — DEEP ANALYTICS
+    ═══════════════════════════════════════════════════════ -->
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="rep-section-bar" style="background:oklch(0.55 0.15 258)"></div>
+        <h5 class="fw-bold mb-0">Deep Analytics</h5>
+    </div>
+    <div class="row g-4 mb-4">
+
+        <!-- 90-Day -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card-dark h-100 d-flex flex-column">
+                <div class="card-icon mb-2" style="background:oklch(0.5 0.18 25 / .10)">
+                    <i class="bi bi-hourglass-split" style="color:oklch(0.5 0.18 25)"></i>
+                </div>
+                <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
+                    <h6 class="mb-0">90-Day Turnover</h6>
+                    <span class="rep-badge rep-badge-store">🏪 Store</span>
+                </div>
+                <p class="text-muted-custom mb-3 small flex-grow-1">
+                    Cohort trend, full list of early leavers, by-store rates, and aggregated reasons —
+                    across all available periods.
+                </p>
+                <button class="btn btn-outline-secondary btn-sm w-100 rep-dl-btn"
+                        onclick="repDownload('ninety-day','store')">
+                    <i class="bi bi-download me-2"></i>Download Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- Retention -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card-dark h-100 d-flex flex-column">
+                <div class="card-icon mb-2" style="background:oklch(0.75 0.15 85 / .12)">
+                    <i class="bi bi-graph-up-arrow" style="color:oklch(0.6 0.13 82)"></i>
+                </div>
+                <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
+                    <h6 class="mb-0">Retention</h6>
+                    <span class="rep-badge rep-badge-store">🏪 Store</span>
+                </div>
+                <p class="text-muted-custom mb-3 small flex-grow-1">
+                    Milestone rates (90d–5yr), survival curve, multi-year trend, store leaderboard,
+                    and workforce tenure distribution.
+                </p>
+                <button class="btn btn-outline-secondary btn-sm w-100 rep-dl-btn"
+                        onclick="repDownload('retention','store')">
+                    <i class="bi bi-download me-2"></i>Download Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- Scorecard -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card-dark h-100 d-flex flex-column">
+                <div class="card-icon mb-2" style="background:oklch(0.5 0.18 25 / .10)">
+                    <i class="bi bi-award-fill" style="color:oklch(0.5 0.18 25)"></i>
+                </div>
+                <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
+                    <h6 class="mb-0">Scorecard</h6>
+                    <span class="rep-badge rep-badge-omoc">👤 OM / OC</span>
+                </div>
+                <p class="text-muted-custom mb-3 small flex-grow-1">
+                    KPI rankings for Store Leaders, Operation Consultants, and Operation Managers —
+                    Turnover, 90-Day, Retention, and Exit Sentiment.
+                </p>
+                <button class="btn btn-outline-secondary btn-sm w-100 rep-dl-btn"
+                        onclick="repDownload('scorecard','omoc')">
+                    <i class="bi bi-download me-2"></i>Download Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- Early Warning -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card-dark h-100 d-flex flex-column">
+                <div class="card-icon mb-2" style="background:oklch(0.6 0.22 22 / .10)">
+                    <i class="bi bi-exclamation-diamond-fill" style="color:oklch(0.6 0.22 22)"></i>
+                </div>
+                <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
+                    <h6 class="mb-0">Early Warning</h6>
+                    <span class="rep-badge rep-badge-store">🏪 Store</span>
+                </div>
+                <p class="text-muted-custom mb-3 small flex-grow-1">
+                    At-risk employee watchlist with ★ risk stars (7 scoring criteria), flagged reasons,
+                    hire date, and tenure — scoped to the selected store.
+                </p>
+                <button class="btn btn-outline-secondary btn-sm w-100 rep-dl-btn"
+                        onclick="repDownload('early-warning','store')">
+                    <i class="bi bi-download me-2"></i>Download Excel
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 3 — EXIT INTERVIEWS
+    ═══════════════════════════════════════════════════════ -->
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="rep-section-bar" style="background:oklch(0.55 0.15 190)"></div>
+        <h5 class="fw-bold mb-0">Exit Interviews</h5>
+    </div>
+    <div class="row g-4 mb-2">
+        <div class="col-md-8 col-lg-6">
+            <div class="card-dark h-100 d-flex flex-column">
+                <div class="d-flex gap-3 mb-3">
+                    <div class="card-icon flex-shrink-0" style="background:oklch(0.65 0.15 190 / .12)">
+                        <i class="bi bi-chat-square-text-fill" style="color:oklch(0.55 0.15 190)"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
+                            <h6 class="mb-0">Exit Interviews Report</h6>
+                            <span class="rep-badge rep-badge-store">🏪 Store</span>
+                            <span class="rep-badge rep-badge-omoc">👤 OM / OC</span>
+                        </div>
+                        <p class="text-muted-custom mb-0 small">
+                            Reasons for leaving, engagement drivers, workload ratings, overall experience,
+                            and anonymous comments — aggregated across all periods matching the selected filters.
+                        </p>
+                    </div>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm w-100 mt-auto rep-dl-btn"
+                        onclick="repDownload('exit-interviews','store','omoc')">
+                    <i class="bi bi-download me-2"></i>Download Excel
+                </button>
             </div>
         </div>
     </div>
 }
 
-<h5 class="fw-bold mb-3">@L["Rep_DeepAnalytics"]</h5>
-<div class="row g-4 mb-4">
-    <div class="col-md-6 col-lg-3">
-        <div class="card-dark h-100 d-flex flex-column">
-            <div class="card-icon mb-2" style="background:oklch(0.5 0.18 25 / .12)"><i class="bi bi-hourglass-split" style="color:oklch(0.5 0.18 25)"></i></div>
-            <h6 class="mb-1">@L["Rep_NinetyDay"]</h6>
-            <p class="text-muted-custom mb-2 small flex-grow-1">@L["Rep_NinetyDayDesc"]</p>
-            <form method="get" action="/admin/dashboard/export">
-                <input type="hidden" name="reportType" value="ninety-day" />
-                <select name="store" class="form-select form-select-dark form-select-sm mb-2">
-                    <option value="">@L["Common_AllStores"]</option>
-                    @foreach (var s in stores)
-                    {
-                        <option value="@s">@s</option>
-                    }
-                </select>
-                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>@L["Common_Download"]</button>
-            </form>
-        </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card-dark h-100 d-flex flex-column">
-            <div class="card-icon mb-2" style="background:oklch(0.75 0.15 85 / .15)"><i class="bi bi-graph-up-arrow" style="color:oklch(0.6 0.13 82)"></i></div>
-            <h6 class="mb-1">@L["Rep_Retention"]</h6>
-            <p class="text-muted-custom mb-2 small flex-grow-1">@L["Rep_RetentionDesc"]</p>
-            <form method="get" action="/admin/dashboard/export">
-                <input type="hidden" name="reportType" value="retention" />
-                <select name="store" class="form-select form-select-dark form-select-sm mb-2">
-                    <option value="">@L["Common_AllStores"]</option>
-                    @foreach (var s in stores)
-                    {
-                        <option value="@s">@s</option>
-                    }
-                </select>
-                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>@L["Common_Download"]</button>
-            </form>
-        </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card-dark h-100 d-flex flex-column">
-            <div class="card-icon mb-2" style="background:oklch(0.5 0.18 25 / .12)"><i class="bi bi-award-fill" style="color:oklch(0.5 0.18 25)"></i></div>
-            <h6 class="mb-1">@L["Rep_Scorecard"]</h6>
-            <p class="text-muted-custom mb-2 small flex-grow-1">@L["Rep_ScorecardDesc"]</p>
-            <form method="get" action="/admin/dashboard/export">
-                <input type="hidden" name="reportType" value="scorecard" />
-                <select name="om" class="form-select form-select-dark form-select-sm mb-2">
-                    <option value="">@L["Common_AllOperationManagers"]</option>
-                    @foreach (var name in operationManagers)
-                    {
-                        <option value="@name">@name</option>
-                    }
-                </select>
-                <select name="oc" class="form-select form-select-dark form-select-sm mb-2">
-                    <option value="">@L["Common_AllOperationConsultants"]</option>
-                    @foreach (var name in operationConsultants)
-                    {
-                        <option value="@name">@name</option>
-                    }
-                </select>
-                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>@L["Common_Download"]</button>
-            </form>
-        </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card-dark h-100 d-flex flex-column">
-            <div class="card-icon mb-2" style="background:oklch(0.6 0.22 22 / .12)"><i class="bi bi-exclamation-diamond-fill" style="color:oklch(0.6 0.22 22)"></i></div>
-            <h6 class="mb-1">@L["Rep_EarlyWarning"]</h6>
-            <p class="text-muted-custom mb-2 small flex-grow-1">@L["Rep_EarlyWarningDesc"]</p>
-            <form method="get" action="/admin/dashboard/export">
-                <input type="hidden" name="reportType" value="early-warning" />
-                <select name="store" class="form-select form-select-dark form-select-sm mb-2">
-                    <option value="">@L["Common_AllStores"]</option>
-                    @foreach (var s in stores)
-                    {
-                        <option value="@s">@s</option>
-                    }
-                </select>
-                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>@L["Common_Download"]</button>
-            </form>
-        </div>
-    </div>
-</div>
+@section Scripts {
+<script>
+const repPeriods = @Html.Raw(periodsJson);
 
-<h5 class="fw-bold mb-3">@L["Rep_ExitInterviewsSection"]</h5>
-<div class="row g-4 mb-4">
-    <div class="col-md-6 col-lg-4">
-        <div class="card-dark h-100 d-flex flex-column">
-            <div class="card-icon mb-2" style="background:oklch(0.65 0.15 190 / .12)"><i class="bi bi-chat-square-text-fill" style="color:oklch(0.55 0.15 190)"></i></div>
-            <h6 class="mb-1">@L["Rep_ExitInterview"]</h6>
-            <p class="text-muted-custom mb-2 small flex-grow-1">@L["Rep_ExitInterviewDesc"]</p>
-            <form method="get" action="/admin/dashboard/export">
-                <input type="hidden" name="reportType" value="exit-interviews" />
-                <div class="row g-2 mb-2">
-                    <div class="col-12">
-                        <select name="store" class="form-select form-select-dark form-select-sm">
-                            <option value="">@L["Common_AllStores"]</option>
-                            @foreach (var s in stores)
-                            {
-                                <option value="@s">@s</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-6">
-                        <select name="om" class="form-select form-select-dark form-select-sm">
-                            <option value="">@L["Common_AllOperationManagers"]</option>
-                            @foreach (var name in operationManagers)
-                            {
-                                <option value="@name">@name</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-6">
-                        <select name="oc" class="form-select form-select-dark form-select-sm">
-                            <option value="">@L["Common_AllOperationConsultants"]</option>
-                            @foreach (var name in operationConsultants)
-                            {
-                                <option value="@name">@name</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-2"></i>@L["Common_Download"]</button>
-            </form>
-        </div>
-    </div>
-</div>
+/* Populate the Month dropdown based on the selected Year */
+function repUpdateMonths() {
+    const year   = parseInt(document.getElementById('gf-year').value);
+    const sel    = document.getElementById('gf-month');
+    const prev   = parseInt(sel.value) || 0;
+    sel.innerHTML = '';
+    repPeriods.filter(p => p.year === year).forEach(p => {
+        const o = document.createElement('option');
+        o.value = p.month;
+        o.textContent = p.label;
+        if (p.month === prev) o.selected = true;
+        sel.appendChild(o);
+    });
+}
 
-@if (hasPeriods)
-{
-    <div class="card-dark">
-        <h6 class="mb-3"><i class="bi bi-calendar3 me-2" style="color:oklch(0.5 0.18 25)"></i>@L["Rep_AvailablePeriods"]</h6>
-        <div class="d-flex flex-wrap gap-2">
-            @foreach (var p in Model!.OrderByDescending(x => x.Year).ThenByDescending(x => x.Month))
-            {
-                <span class="badge" style="background:oklch(0.5 0.18 25 / .12);color:oklch(0.5 0.18 25);border:1px solid oklch(0.5 0.18 25 / .3);padding:6px 12px;border-radius:6px;font-size:12px">
-                    @months[p.Month - 1] @p.Year
-                </span>
-            }
-        </div>
-    </div>
+/*
+  repDownload(type, ...filters)
+  filters can include: 'period', 'year', 'store', 'omoc'
+  Each flag adds the relevant query-string parameters from the global filter bar.
+*/
+function repDownload(type, ...filters) {
+    const year  = document.getElementById('gf-year').value;
+    const month = document.getElementById('gf-month').value;
+    const store = document.getElementById('gf-store').value;
+    const om    = document.getElementById('gf-om').value;
+    const oc    = document.getElementById('gf-oc').value;
+
+    const p = new URLSearchParams({ reportType: type });
+    if (filters.includes('period')) { p.set('year', year); p.set('month', month); }
+    else if (filters.includes('year')) { p.set('year', year); }
+    if (filters.includes('store') && store) p.set('store', store);
+    if (filters.includes('omoc')) { if (om) p.set('om', om); if (oc) p.set('oc', oc); }
+
+    window.location.href = '/admin/dashboard/export?' + p.toString();
+}
+
+repUpdateMonths();
+</script>
 }

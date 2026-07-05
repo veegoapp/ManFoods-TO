@@ -401,13 +401,13 @@ public class ReportService : IReportService
         var wsSummary = AddSheet(wb, "Early Warning Summary");
         StyleHeader(wsSummary, new[] { "Metric", "Value" });
         wsSummary.Cell(2, 1).Value = "Total On Watchlist"; wsSummary.Cell(2, 2).Value = summary.TotalWatchlist;
-        wsSummary.Cell(3, 1).Value = "High Risk (score 2+)"; wsSummary.Cell(3, 2).Value = summary.HighRiskCount;
+        wsSummary.Cell(3, 1).Value = "High Risk (4–5 stars)"; wsSummary.Cell(3, 2).Value = summary.HighRiskCount;
         wsSummary.Cell(4, 1).Value = "In First 90 Days"; wsSummary.Cell(4, 2).Value = summary.NewHireWindowCount;
         wsSummary.Cell(5, 1).Value = "Company Baseline Early-Leave Rate"; SetPercentCell(wsSummary.Cell(5, 2), summary.CompanyBaselineRate);
         Finalize(wsSummary);
 
         var wsWatchlist = AddSheet(wb, "Early Warning Watchlist");
-        StyleHeader(wsWatchlist, new[] { "Name", "Store", "Job Title", "Hire Date", "Tenure (days)", "Risk Score", "Reasons" });
+        StyleHeader(wsWatchlist, new[] { "Name", "Store", "Job Title", "Hire Date", "Tenure (days)", "Risk Stars (1-5)", "Raw Score", "Reasons" });
         for (int i = 0; i < watchlist.Count; i++)
         {
             var w = watchlist[i];
@@ -416,8 +416,9 @@ public class ReportService : IReportService
             wsWatchlist.Cell(i + 2, 3).Value = w.JobTitle;
             SetDateCell(wsWatchlist.Cell(i + 2, 4), w.HireDate);
             wsWatchlist.Cell(i + 2, 5).Value = w.TenureDays;
-            wsWatchlist.Cell(i + 2, 6).Value = w.RiskScore;
-            wsWatchlist.Cell(i + 2, 7).Value = string.Join(" | ", w.Reasons);
+            wsWatchlist.Cell(i + 2, 6).Value = new string('★', w.Stars) + new string('☆', 5 - w.Stars);
+            wsWatchlist.Cell(i + 2, 7).Value = w.RiskScore;
+            wsWatchlist.Cell(i + 2, 8).Value = string.Join(" | ", w.Reasons.Select(r => r.Type));
         }
         Finalize(wsWatchlist);
     }
@@ -429,12 +430,52 @@ public class ReportService : IReportService
         return wb;
     }
 
+    // ── Trend Matrix ─────────────────────────────────────────
+    private async Task AddTrendMatrixSheetAsync(XLWorkbook wb, string role, string? assignedName, string? om = null, string? oc = null, int? sinceYear = null)
+    {
+        var result = await _dashboard.GetTrendMatrixAsync(role, assignedName, om, oc, sinceYear);
+        var ws = AddSheet(wb, "Turnover Trend Matrix");
+
+        var headerList = new List<string> { "OC", "OM", "Store" };
+        headerList.AddRange(result.Periods);
+        headerList.Add("AVG");
+        StyleHeader(ws, headerList.ToArray());
+
+        for (int i = 0; i < result.Rows.Count; i++)
+        {
+            var row = result.Rows[i];
+            ws.Cell(i + 2, 1).Value = row.OperationConsultant;
+            ws.Cell(i + 2, 2).Value = row.OperationManager;
+            ws.Cell(i + 2, 3).Value = row.StoreName;
+            for (int p = 0; p < result.Periods.Count; p++)
+            {
+                if (row.PeriodRates.TryGetValue(result.Periods[p], out var rate) && rate.HasValue)
+                    SetPercentCell(ws.Cell(i + 2, 4 + p), rate.Value);
+                else
+                    ws.Cell(i + 2, 4 + p).Value = "—";
+            }
+            if (row.AvgRate.HasValue)
+                SetPercentCell(ws.Cell(i + 2, 4 + result.Periods.Count), row.AvgRate.Value);
+            else
+                ws.Cell(i + 2, 4 + result.Periods.Count).Value = "—";
+        }
+        Finalize(ws);
+    }
+
+    public async Task<XLWorkbook> BuildTrendMatrixReportAsync(string role, string? assignedName, string? om = null, string? oc = null, int? sinceYear = null)
+    {
+        var wb = new XLWorkbook();
+        await AddTrendMatrixSheetAsync(wb, role, assignedName, om, oc, sinceYear);
+        return wb;
+    }
+
     // ── Full Company Report — everything in one workbook ────
     public async Task<XLWorkbook> BuildFullReportAsync(int month, int year, string role, string? assignedName, string? store = null)
     {
         var wb = new XLWorkbook();
         await AddSummarySheetsAsync(wb, month, year, role, assignedName, store);
         await AddStoreComparisonSheetAsync(wb, month, year, role, assignedName);
+        await AddTrendMatrixSheetAsync(wb, role, assignedName, sinceYear: year);
         await AddNinetyDaySheetsAsync(wb, store);
         await AddRetentionSheetsAsync(wb, store);
         await AddExitInterviewSheetsAsync(wb, new ExitInterviewFilter { Store = store });

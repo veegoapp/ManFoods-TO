@@ -100,6 +100,10 @@ public class DashboardController : Controller
                 return await DownloadWorkbookAsync(await _reports.BuildScorecardReportAsync(om, oc), "Scorecard_Report.xlsx");
             case "early-warning":
                 return await DownloadWorkbookAsync(await _reports.BuildEarlyWarningReportAsync(store), "Early_Warning_Report.xlsx");
+            case "trend-matrix":
+                return await DownloadWorkbookAsync(
+                    await _reports.BuildTrendMatrixReportAsync(role, assignedName, om, oc, year > 0 ? year : null),
+                    $"Turnover_Trend_Matrix_{year}.xlsx");
             case "full":
                 return await DownloadWorkbookAsync(
                     await _reports.BuildFullReportAsync(month, year, role, assignedName, store),
