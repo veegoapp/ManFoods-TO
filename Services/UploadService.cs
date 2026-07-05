@@ -554,6 +554,52 @@ public class UploadService : IUploadService
         return (log.FileContent, log.ContentType ?? "application/octet-stream", log.FileName);
     }
 
+    public async Task<(bool, string)> UpdateSingleFileAsync(
+        string fileType, int month, int year, IFormFile file, string uploadedBy)
+    {
+        ValidateFile(file);
+        var fileBytes = await ReadBytesAsync(file);
+
+        await using var tx = await _db.Database.BeginTransactionAsync();
+
+        // Delete only the data rows and log entry for this specific file type
+        switch (fileType)
+        {
+            case "active_employees":
+                await _db.ActiveEmployees.Where(e => e.Month == month && e.Year == year).ExecuteDeleteAsync();
+                var activeRecords = ParseActiveEmployees(fileBytes, month, year);
+                if (activeRecords.Count > 0) await _db.ActiveEmployees.AddRangeAsync(activeRecords);
+                await _db.UploadLogs.Where(l => l.FileType == "active_employees" && l.Month == month && l.Year == year).ExecuteDeleteAsync();
+                _db.UploadLogs.Add(new UploadLog { FileType = "active_employees", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
+                await _db.SaveChangesAsync();
+                await tx.CommitAsync();
+                return (true, $"Updated Active Employees for {new DateTime(year, month, 1):MMMM yyyy} — {activeRecords.Count} records.");
+
+            case "resignations":
+                await _db.Resignations.Where(r => r.Month == month && r.Year == year).ExecuteDeleteAsync();
+                var resignRecords = ParseResignations(fileBytes, month, year);
+                if (resignRecords.Count > 0) await _db.Resignations.AddRangeAsync(resignRecords);
+                await _db.UploadLogs.Where(l => l.FileType == "resignations" && l.Month == month && l.Year == year).ExecuteDeleteAsync();
+                _db.UploadLogs.Add(new UploadLog { FileType = "resignations", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
+                await _db.SaveChangesAsync();
+                await tx.CommitAsync();
+                return (true, $"Updated Resignations for {new DateTime(year, month, 1):MMMM yyyy} — {resignRecords.Count} records.");
+
+            case "store_reference":
+                await _db.StoreReferences.Where(s => s.Month == month && s.Year == year).ExecuteDeleteAsync();
+                var storeRecords = ParseStoreReference(fileBytes, month, year);
+                if (storeRecords.Count > 0) await _db.StoreReferences.AddRangeAsync(storeRecords);
+                await _db.UploadLogs.Where(l => l.FileType == "store_reference" && l.Month == month && l.Year == year).ExecuteDeleteAsync();
+                _db.UploadLogs.Add(new UploadLog { FileType = "store_reference", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
+                await _db.SaveChangesAsync();
+                await tx.CommitAsync();
+                return (true, $"Updated Store Reference for {new DateTime(year, month, 1):MMMM yyyy} — {storeRecords.Count} records.");
+
+            default:
+                return (false, "Unknown file type.");
+        }
+    }
+
     public async Task DeleteLogAsync(int id)
     {
         var log = await _db.UploadLogs.FindAsync(id);

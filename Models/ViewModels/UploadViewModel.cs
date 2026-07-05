@@ -37,3 +37,21 @@ public class BulkUserUploadViewModel
     [Required]
     public IFormFile? File { get; set; }
 }
+
+public class UpdateSingleFileViewModel
+{
+    [Required]
+    [Range(1, 12)]
+    public int Month { get; set; }
+
+    [Required]
+    [Range(2000, 2100)]
+    public int Year { get; set; }
+
+    /// <summary>active_employees | resignations | store_reference</summary>
+    [Required]
+    public string FileType { get; set; } = "";
+
+    [Required]
+    public IFormFile? File { get; set; }
+}

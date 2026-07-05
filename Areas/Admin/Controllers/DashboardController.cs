@@ -141,6 +141,25 @@ public class DashboardController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
+    public async Task<IActionResult> UpdatePeriodFile(MvcApp.Models.ViewModels.UpdateSingleFileViewModel vm)
+    {
+        var validTypes = new[] { "active_employees", "resignations", "store_reference" };
+        if (!ModelState.IsValid || vm.File == null || !validTypes.Contains(vm.FileType))
+        {
+            TempData["Error"] = "الرجاء اختيار نوع الملف وتحديد ملف إكسيل صحيح.";
+            return RedirectToAction("Uploads");
+        }
+        try
+        {
+            var email = HttpContext.Session.GetEmail();
+            var (_, msg) = await _uploads.UpdateSingleFileAsync(vm.FileType, vm.Month, vm.Year, vm.File, email);
+            TempData["Success"] = msg;
+        }
+        catch { TempData["Error"] = "Upload failed. Please check the file format and try again."; }
+        return RedirectToAction("Uploads");
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> UploadExitInterviews(MvcApp.Models.ViewModels.ExitInterviewUploadViewModel vm)
     {
         if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = "Please select a file."; return RedirectToAction("Uploads"); }

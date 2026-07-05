@@ -25,4 +25,12 @@ public interface IUploadService
     Task<List<(byte[] Content, string ContentType, string FileName)>> ExportGroupAsync(int primaryLogId);
     Task DeleteLogAsync(int id);
     Task<(byte[] Content, string ContentType, string FileName)?> GetFileAsync(int id);
+
+    /// <summary>
+    /// Replaces a single file type (active_employees, resignations, or
+    /// store_reference) for a period that already exists, leaving the
+    /// other two files untouched.
+    /// </summary>
+    Task<(bool success, string message)> UpdateSingleFileAsync(
+        string fileType, int month, int year, IFormFile file, string uploadedBy);
 }

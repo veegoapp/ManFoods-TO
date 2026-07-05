@@ -61,6 +61,12 @@
   <data name="DM_NoUploads" xml:space="preserve"><value>مفيش رفعات لسه</value></data>
   <data name="DM_Download" xml:space="preserve"><value>تحميل</value></data>
   <data name="DM_Delete" xml:space="preserve"><value>حذف</value></data>
+  <data name="DM_UpdateFile" xml:space="preserve"><value>تحديث ملف</value></data>
+  <data name="DM_UpdateFileTitle" xml:space="preserve"><value>تحديث ملف واحد</value></data>
+  <data name="DM_UpdateFileSub" xml:space="preserve"><value>اختر الملف اللي عايز تستبدله — الملفين التانيين للشهر ده مش هيتأثروا.</value></data>
+  <data name="DM_UpdateFileType" xml:space="preserve"><value>إيه الملف اللي عايز تحدثه؟</value></data>
+  <data name="DM_UpdateFileSubmit" xml:space="preserve"><value>رفع الملف المحدّث</value></data>
+  <data name="DM_UpdateFileConfirm" xml:space="preserve"><value>تحديث ملف لشهر</value></data>
   <data name="DM_DeleteConfirmPeriod" xml:space="preserve"><value>حذف بيانات الشهر ده؟ ده هيمسح الثلاث ملفات (الأكتيف ليست، الاستقالات، مرجع الفروع) وبياناتهم من الداتا بيز.</value></data>
   <data name="DM_DeleteConfirmExit" xml:space="preserve"><value>حذف سجل رفع مقابلات الخروج ده؟ (الردود نفسها هتفضل موجودة في النظام)</value></data>
   <data name="DM_PageSummary" xml:space="preserve"><value>عرض صفحة {0} من {1} ({2} إجمالي)</value></data>

@@ -61,6 +61,12 @@
   <data name="DM_NoUploads" xml:space="preserve"><value>No uploads yet</value></data>
   <data name="DM_Download" xml:space="preserve"><value>Download</value></data>
   <data name="DM_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="DM_UpdateFile" xml:space="preserve"><value>Update File</value></data>
+  <data name="DM_UpdateFileTitle" xml:space="preserve"><value>Update a Single File</value></data>
+  <data name="DM_UpdateFileSub" xml:space="preserve"><value>Choose which file to replace — the other two files for this period stay untouched.</value></data>
+  <data name="DM_UpdateFileType" xml:space="preserve"><value>Which file do you want to update?</value></data>
+  <data name="DM_UpdateFileSubmit" xml:space="preserve"><value>Upload Updated File</value></data>
+  <data name="DM_UpdateFileConfirm" xml:space="preserve"><value>Update file for</value></data>
   <data name="DM_DeleteConfirmPeriod" xml:space="preserve"><value>Delete this month's data? This removes all three files (Active Employees, Resignations, Store Reference) and their data from the database.</value></data>
   <data name="DM_DeleteConfirmExit" xml:space="preserve"><value>Delete this exit-interview upload log? (The responses themselves stay in the system.)</value></data>
   <data name="DM_PageSummary" xml:space="preserve"><value>Showing page {0} of {1} ({2} total)</value></data>

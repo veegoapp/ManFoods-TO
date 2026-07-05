@@ -82,6 +82,31 @@
 }
 .dm-action-btn.download:hover { border-color:oklch(0.62 0.15 155); color:oklch(0.55 0.15 155); background:oklch(0.62 0.15 155 / .08); }
 .dm-action-btn.delete:hover { border-color:oklch(0.6 0.22 22); color:oklch(0.55 0.2 22); background:oklch(0.6 0.22 22 / .08); }
+.dm-action-btn.update:hover { border-color:oklch(0.55 0.19 250); color:oklch(0.48 0.18 250); background:oklch(0.55 0.19 250 / .08); }
+
+/* Update-file modal */
+.dm-filetype-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:14px 0 20px; }
+.dm-filetype-card { position:relative; }
+.dm-filetype-card input[type="radio"] { position:absolute; opacity:0; width:0; height:0; }
+.dm-filetype-card label {
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px;
+    border:2px solid var(--card-border); border-radius:var(--radius-sm); cursor:pointer;
+    font-size:12.5px; font-weight:600; color:var(--text-2); text-align:center;
+    transition:border-color .15s, background .15s;
+}
+.dm-filetype-card label i { font-size:22px; color:var(--text-3); }
+.dm-filetype-card input:checked + label {
+    border-color:oklch(0.5 0.18 25); background:oklch(0.5 0.18 25 / .07); color:oklch(0.45 0.18 25);
+}
+.dm-filetype-card input:checked + label i { color:oklch(0.5 0.18 25); }
+.dm-update-dropzone {
+    border:2px dashed var(--card-border); border-radius:var(--radius-sm);
+    padding:22px 14px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s;
+    background:var(--bg-2); position:relative; margin-bottom:18px;
+}
+.dm-update-dropzone:hover,.dm-update-dropzone.dragover { border-color:oklch(0.55 0.19 25); background:var(--red-light); }
+.dm-update-dropzone.has-file { border-style:solid; border-color:oklch(0.62 0.15 155); background:oklch(0.62 0.15 155 / .06); }
+.dm-update-dropzone input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; }
 
 .page-link-dm { background:var(--card-bg); border-color:var(--card-border); color:var(--text-2); border-radius:6px !important; }
 .page-link-dm:hover { background:var(--bg-2); color:var(--text); }
@@ -237,11 +262,18 @@
                             <td class="px-3 py-2 text-muted-custom">@item.UploadedBy</td>
                             <td class="px-3 py-2 text-muted-custom small">@item.UploadDate.ToString("MMM dd, yyyy HH:mm")</td>
                             <td class="px-3 py-2">
-                                <div class="d-flex gap-2">
+                                <div class="d-flex gap-2 flex-wrap">
                                     <a href="/admin/dashboard/download-upload-group?id=@item.PrimaryLogId"
                                        class="dm-action-btn download">
                                         <i class="bi bi-download"></i>@L["DM_Download"]
                                     </a>
+                                    @if (isPeriod)
+                                    {
+                                        <button type="button" class="dm-action-btn update"
+                                                onclick="dmOpenUpdateModal(@item.Month, @item.Year, '@(new DateTime(item.Year!.Value, item.Month!.Value, 1).ToString("MMMM yyyy"))')">
+                                            <i class="bi bi-arrow-repeat"></i>@L["DM_UpdateFile"]
+                                        </button>
+                                    }
                                     <form asp-area="Admin" asp-controller="Dashboard" asp-action="DeleteUploadLog" method="post"
                                           onsubmit="return confirm('@(isPeriod ? L["DM_DeleteConfirmPeriod"].Value : L["DM_DeleteConfirmExit"].Value)')">
                                         @Html.AntiForgeryToken()
@@ -279,6 +311,61 @@
             </div>
         }
     }
+</div>
+
+<div class="modal fade" id="dmUpdateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:480px">
+        <div class="modal-content" style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius)">
+            <div class="modal-header" style="border-bottom:1px solid var(--card-border)">
+                <h6 class="modal-title fw-bold" style="color:var(--text)"><i class="bi bi-arrow-repeat me-2" style="color:oklch(0.5 0.18 25)"></i>@L["DM_UpdateFileTitle"]</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:var(--btn-close-filter,none)"></button>
+            </div>
+            <form id="dmUpdateForm" asp-area="Admin" asp-controller="Dashboard" asp-action="UpdatePeriodFile"
+                  method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Month" id="dmUpdateMonth"/>
+                <input type="hidden" name="Year" id="dmUpdateYear"/>
+                <input type="hidden" name="FileType" id="dmUpdateFileType" value="active_employees"/>
+                <div class="modal-body px-4 py-3">
+                    <p class="text-muted-custom small mb-3">
+                        @L["DM_UpdateFileSub"]
+                        <strong id="dmUpdatePeriodLabel" style="color:var(--text)"></strong>
+                    </p>
+
+                    <div class="fw-semibold mb-2" style="font-size:13px;color:var(--text-2)">@L["DM_UpdateFileType"]</div>
+                    <div class="dm-filetype-grid">
+                        <div class="dm-filetype-card">
+                            <input type="radio" name="_fileTypeRadio" id="dmFtActive" value="active_employees" checked onchange="dmUpdateFileType(this.value)">
+                            <label for="dmFtActive"><i class="bi bi-people-fill"></i>@L["UL_ActiveEmployees"]</label>
+                        </div>
+                        <div class="dm-filetype-card">
+                            <input type="radio" name="_fileTypeRadio" id="dmFtResign" value="resignations" onchange="dmUpdateFileType(this.value)">
+                            <label for="dmFtResign"><i class="bi bi-person-dash-fill"></i>@L["UL_Resignations"]</label>
+                        </div>
+                        <div class="dm-filetype-card">
+                            <input type="radio" name="_fileTypeRadio" id="dmFtStore" value="store_reference" onchange="dmUpdateFileType(this.value)">
+                            <label for="dmFtStore"><i class="bi bi-shop"></i>@L["UL_StoreReference"]</label>
+                        </div>
+                    </div>
+
+                    <div class="dm-update-dropzone" id="dmUpdateZone">
+                        <i class="bi bi-file-earmark-arrow-up" style="font-size:26px;color:var(--text-3);display:block;margin-bottom:8px"></i>
+                        <div style="font-weight:700;font-size:13.5px;color:var(--text);margin-bottom:4px" id="dmUpdateZoneTitle">@L["DM_DropzoneHint"]</div>
+                        <div style="font-size:11.5px;color:var(--text-3)" id="dmUpdateZoneHint">@L["DM_DropzoneHint"]</div>
+                        <input type="file" name="File" id="dmUpdateFileInput" accept=".xlsx,.xls" required>
+                    </div>
+
+                    <div id="dmUpdateError" style="display:none;background:oklch(0.6 0.22 22 / .08);border:1px solid oklch(0.6 0.22 22 / .35);color:oklch(0.55 0.2 22);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px"></div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--card-border)">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">@L["Common_Cancel"]</button>
+                    <button type="submit" class="dm-btn-submit btn-sm" id="dmUpdateSubmitBtn" disabled>
+                        <i class="bi bi-cloud-upload me-1"></i>@L["DM_UpdateFileSubmit"]
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -330,5 +417,61 @@ document.getElementById('dmPeriodForm').addEventListener('submit', function (e) 
         errorEl.style.display = 'none';
     }
 });
+
+/* ── Update-file modal ──────────────────────────────── */
+const dmUpdateInput  = document.getElementById('dmUpdateFileInput');
+const dmUpdateZone   = document.getElementById('dmUpdateZone');
+const dmUpdateZoneHint  = document.getElementById('dmUpdateZoneHint');
+const dmUpdateSubmitBtn = document.getElementById('dmUpdateSubmitBtn');
+const changeLabel = '@L["DM_ChangeFile"]';
+const dropzoneHint = '@L["DM_DropzoneHint"]';
+
+function dmUpdateFileType(val) {
+    document.getElementById('dmUpdateFileType').value = val;
+    // reset file selection when type changes
+    dmUpdateInput.value = '';
+    dmUpdateZone.classList.remove('has-file');
+    dmUpdateZoneHint.innerHTML = dropzoneHint;
+    dmUpdateSubmitBtn.disabled = true;
+}
+
+function dmRenderUpdateFile() {
+    if (dmUpdateInput.files && dmUpdateInput.files.length > 0) {
+        dmUpdateZone.classList.add('has-file');
+        dmUpdateZoneHint.innerHTML = `<div class="dm-dropzone-filename">${dmUpdateInput.files[0].name}</div><div class="dm-dropzone-change">${changeLabel}</div>`;
+        dmUpdateSubmitBtn.disabled = false;
+    } else {
+        dmUpdateZone.classList.remove('has-file');
+        dmUpdateZoneHint.innerHTML = dropzoneHint;
+        dmUpdateSubmitBtn.disabled = true;
+    }
+}
+
+dmUpdateInput.addEventListener('change', dmRenderUpdateFile);
+dmUpdateZone.addEventListener('dragover', (e) => { e.preventDefault(); dmUpdateZone.classList.add('dragover'); });
+dmUpdateZone.addEventListener('dragleave', () => dmUpdateZone.classList.remove('dragover'));
+dmUpdateZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dmUpdateZone.classList.remove('dragover');
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        dmUpdateInput.files = e.dataTransfer.files;
+        dmRenderUpdateFile();
+    }
+});
+
+function dmOpenUpdateModal(month, year, periodLabel) {
+    document.getElementById('dmUpdateMonth').value = month;
+    document.getElementById('dmUpdateYear').value  = year;
+    document.getElementById('dmUpdatePeriodLabel').textContent = periodLabel;
+    // reset form state
+    document.getElementById('dmFtActive').checked = true;
+    document.getElementById('dmUpdateFileType').value = 'active_employees';
+    dmUpdateInput.value = '';
+    dmUpdateZone.classList.remove('has-file');
+    dmUpdateZoneHint.innerHTML = dropzoneHint;
+    dmUpdateSubmitBtn.disabled = true;
+    document.getElementById('dmUpdateError').style.display = 'none';
+    new bootstrap.Modal(document.getElementById('dmUpdateModal')).show();
+}
 </script>
 }
