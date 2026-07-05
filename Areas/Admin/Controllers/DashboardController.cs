@@ -328,7 +328,7 @@ public class DashboardController : Controller
 
     [HttpGet("admin/dashboard/download-upload-group")]
     [RequireAdminAuth]
-    public async Task<IActionResult> DownloadUploadGroup(int id)
+    public async Task<IActionResult> DownloadUploadGroup([FromQuery] int id)
     {
         var files = await _uploads.GetGroupFilesAsync(id);
         if (files.Count == 0) return NotFound();
