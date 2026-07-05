@@ -457,6 +457,12 @@
   <data name="EW_ReasonStoreHistory" xml:space="preserve"><value>{store} has a historical early-leave rate of {rate}% (company average {companyRate}%)</value></data>
   <data name="EW_ReasonRoleHistory" xml:space="preserve"><value>{jobTitle} has a historical early-leave rate of {rate}% (company average {companyRate}%)</value></data>
   <data name="EW_ReasonPeakWindow" xml:space="preserve"><value>Approaching a tenure window with historically high resignations (around {start}-{end} days after hire)</value></data>
+ <data name="EW_ReasonType_GenderHistory" xml:space="preserve"><value>Gender Pattern</value></data>
+ <data name="EW_ReasonType_ExitInterviewScore" xml:space="preserve"><value>Store Exit Sentiment</value></data>
+ <data name="EW_ReasonType_StoreLeaderHistory" xml:space="preserve"><value>Store Leader History</value></data>
+ <data name="EW_ReasonGenderHistory" xml:space="preserve"><value>{gender} employees have a historical early-leave rate of {rate}% (company average {companyRate}%)</value></data>
+ <data name="EW_ReasonExitInterviewScore" xml:space="preserve"><value>Exit interviews at {store} show {negRate}% negative sentiment on key engagement factors</value></data>
+ <data name="EW_ReasonStoreLeaderHistory" xml:space="preserve"><value>Store Leader {leader} has a historical early-leave rate of {rate}% across managed stores (company avg {companyRate}%)</value></data>
   <data name="Chart_EwReasonBreakdown" xml:space="preserve"><value>Risk Reasons Breakdown</value></data>
   <data name="Chart_EwReasonBreakdownSub" xml:space="preserve"><value>How many watchlist entries triggered each risk factor</value></data>
   <data name="Chart_EwStoreBreakdown" xml:space="preserve"><value>Watchlist by Store</value></data>

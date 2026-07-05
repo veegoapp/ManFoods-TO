@@ -457,6 +457,12 @@
   <data name="EW_ReasonStoreHistory" xml:space="preserve"><value>فرع {store} تاريخيًا معدل ترك العمل المبكر فيه {rate}% (المتوسط العام {companyRate}%)</value></data>
   <data name="EW_ReasonRoleHistory" xml:space="preserve"><value>وظيفة {jobTitle} تاريخيًا معدل ترك العمل المبكر فيها {rate}% (المتوسط العام {companyRate}%)</value></data>
   <data name="EW_ReasonPeakWindow" xml:space="preserve"><value>قرب يوصل لفترة كان فيها استقالات كتير تاريخيًا (حوالي {start}-{end} يوم من التعيين)</value></data>
+ <data name="EW_ReasonType_GenderHistory" xml:space="preserve"><value>نمط الجنس</value></data>
+ <data name="EW_ReasonType_ExitInterviewScore" xml:space="preserve"><value>مشاعر مغادرة الفرع</value></data>
+ <data name="EW_ReasonType_StoreLeaderHistory" xml:space="preserve"><value>تاريخ مدير الفرع</value></data>
+ <data name="EW_ReasonGenderHistory" xml:space="preserve"><value>موظفين {gender} تاريخيًا معدل مغادرتهم المبكرة {rate}% (المتوسط العام {companyRate}%)</value></data>
+ <data name="EW_ReasonExitInterviewScore" xml:space="preserve"><value>مقابلات المغادرة في فرع {store} تُظهر {negRate}% آراء سلبية في عوامل الالتزام الرئيسية</value></data>
+ <data name="EW_ReasonStoreLeaderHistory" xml:space="preserve"><value>مدير الفرع {leader} لديه معدل مغادرة مبكرة تاريخي {rate}% في الفروع التي أدارها (المتوسط العام {companyRate}%)</value></data>
   <data name="Chart_EwReasonBreakdown" xml:space="preserve"><value>توزيع أسباب الإنذار</value></data>
   <data name="Chart_EwReasonBreakdownSub" xml:space="preserve"><value>كام حالة في قائمة المتابعة سبّبها كل عامل خطر</value></data>
   <data name="Chart_EwStoreBreakdown" xml:space="preserve"><value>قائمة المتابعة حسب الفرع</value></data>

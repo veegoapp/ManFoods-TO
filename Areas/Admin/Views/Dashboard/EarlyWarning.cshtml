@@ -105,10 +105,16 @@
      data-reason-store-history="@L["EW_ReasonStoreHistory"]"
      data-reason-role-history="@L["EW_ReasonRoleHistory"]"
      data-reason-peak-window="@L["EW_ReasonPeakWindow"]"
+     data-reason-gender-history="@L["EW_ReasonGenderHistory"]"
+     data-reason-exit-interview-score="@L["EW_ReasonExitInterviewScore"]"
+     data-reason-store-leader-history="@L["EW_ReasonStoreLeaderHistory"]"
      data-reason-type-new-hire-window="@L["EW_ReasonType_NewHireWindow"]"
      data-reason-type-store-history="@L["EW_ReasonType_StoreHistory"]"
      data-reason-type-role-history="@L["EW_ReasonType_RoleHistory"]"
-     data-reason-type-peak-window="@L["EW_ReasonType_PeakWindow"]"></div>
+     data-reason-type-peak-window="@L["EW_ReasonType_PeakWindow"]"
+     data-reason-type-gender-history="@L["EW_ReasonType_GenderHistory"]"
+     data-reason-type-exit-interview-score="@L["EW_ReasonType_ExitInterviewScore"]"
+     data-reason-type-store-leader-history="@L["EW_ReasonType_StoreLeaderHistory"]"></div>
 
 <div id="ewEmptyState" class="card-dark text-center py-5" style="display:none">
     <i class="bi bi-shield-check" style="font-size:3rem;color:oklch(0.5 0.18 25);display:block;margin-bottom:1rem"></i>
@@ -177,8 +183,16 @@ let ewYear = null, ewMonths = [], ewYearMonthsMap = {};
 let ewStoreFilter = '';
 let ewWatchlistData = [];
 
-const EW_REASON_TYPES = ['new_hire_window', 'store_history', 'role_history', 'peak_window'];
-const EW_REASON_COLORS = { new_hire_window: 'oklch(0.55 0.19 25)', store_history: 'oklch(0.65 0.15 190)', role_history: 'oklch(0.7 0.16 145)', peak_window: 'oklch(0.72 0.17 60)' };
+const EW_REASON_TYPES = ['new_hire_window', 'store_history', 'role_history', 'peak_window', 'gender_history', 'exit_interview_score', 'store_leader_history'];
+const EW_REASON_COLORS = {
+    new_hire_window:      'oklch(0.55 0.19 25)',
+    store_history:        'oklch(0.65 0.15 190)',
+    role_history:         'oklch(0.7 0.16 145)',
+    peak_window:          'oklch(0.72 0.17 60)',
+    gender_history:       'oklch(0.68 0.15 310)',
+    exit_interview_score: 'oklch(0.62 0.18 15)',
+    store_leader_history: 'oklch(0.66 0.14 230)',
+};
 const EW_L = document.getElementById('ewLocalization').dataset;
 
 function ewMonthShortName(m) { return new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' }); }
@@ -338,19 +352,26 @@ async function ewLoadSummary() {
 
 function ewReasonText(reason) {
     const templates = {
-        new_hire_window: EW_L.reasonNewHireWindow,
-        store_history: EW_L.reasonStoreHistory,
-        role_history: EW_L.reasonRoleHistory,
-        peak_window: EW_L.reasonPeakWindow,
+        new_hire_window:      EW_L.reasonNewHireWindow,
+        store_history:        EW_L.reasonStoreHistory,
+        role_history:         EW_L.reasonRoleHistory,
+        peak_window:          EW_L.reasonPeakWindow,
+        gender_history:       EW_L.reasonGenderHistory,
+        exit_interview_score: EW_L.reasonExitInterviewScore,
+        store_leader_history: EW_L.reasonStoreLeaderHistory,
     };
     const t = templates[reason.type] || '';
     return t.replace(/\{(\w+)\}/g, (_, k) => reason.params?.[k] ?? '');
 }
 
-function ewRiskBadge(score) {
-    const color = score >= 3 ? 'oklch(0.6 0.22 22)' : score >= 2 ? 'oklch(0.75 0.16 75)' : 'oklch(0.55 0.19 25)';
-    const fg = score >= 3 ? '#fff' : score >= 2 ? '#1C1C27' : '#fff';
-    return `<span style="background:${color};color:${fg};padding:3px 10px;border-radius:12px;font-size:11.5px;font-weight:700">${score}</span>`;
+function ewRiskBadge(stars) {
+    const color = stars >= 4 ? 'oklch(0.6 0.22 22)'
+                : stars >= 3 ? 'oklch(0.72 0.19 50)'
+                : stars >= 2 ? 'oklch(0.75 0.16 75)'
+                :              'oklch(0.55 0.15 25)';
+    const filled = '★'.repeat(stars);
+    const empty  = '☆'.repeat(5 - stars);
+    return `<span style="color:${color};font-size:15px;letter-spacing:1px;line-height:1" title="${stars}/5">${filled}${empty}</span>`;
 }
 
 function ewRenderTable(rows) {
@@ -373,7 +394,7 @@ function ewRenderTable(rows) {
             <td class="px-3 py-2" style="color:var(--text-2)">${r.jobTitle}</td>
             <td class="px-3 py-2" style="color:var(--text-2)">${r.hireDate}</td>
             <td class="px-3 py-2">${r.tenureDays}</td>
-            <td class="px-3 py-2 text-center">${ewRiskBadge(r.riskScore)}</td>
+            <td class="px-3 py-2 text-center">${ewRiskBadge(r.stars)}</td>
             <td class="px-3 py-2" style="font-size:12px;color:var(--text-2)">${r.reasons.map(x => `• ${ewReasonText(x)}`).join('<br>')}</td>
         </tr>`).join('');
 }
@@ -387,10 +408,13 @@ function ewLoadReasonChart(rows) {
     rows.forEach(r => r.reasons.forEach(x => { if (counts[x.type] != null) counts[x.type]++; }));
 
     const labelMap = {
-        new_hire_window: EW_L.reasonTypeNewHireWindow,
-        store_history: EW_L.reasonTypeStoreHistory,
-        role_history: EW_L.reasonTypeRoleHistory,
-        peak_window: EW_L.reasonTypePeakWindow,
+        new_hire_window:      EW_L.reasonTypeNewHireWindow,
+        store_history:        EW_L.reasonTypeStoreHistory,
+        role_history:         EW_L.reasonTypeRoleHistory,
+        peak_window:          EW_L.reasonTypePeakWindow,
+        gender_history:       EW_L.reasonTypeGenderHistory,
+        exit_interview_score: EW_L.reasonTypeExitInterviewScore,
+        store_leader_history: EW_L.reasonTypeStoreLeaderHistory,
     };
 
     const ctx = document.getElementById('ewReasonChart');
