@@ -186,6 +186,8 @@
 
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>Chart.register(ChartDataLabels);</script>
 <script>
 /* ── Retention page — Year + discrete cohort-Months multi-select, same
    filter components as Turnover/Comparisons/90-Day/Workforce. */
@@ -395,7 +397,8 @@ async function rtLoadSurvivalCurve() {
             responsive: true,
             plugins: {
                 legend: { display: false },
-                tooltip: { callbacks: { afterLabel: c => `Sample: ${data[c.dataIndex]?.sampleSize ?? 0} hires` } }
+                tooltip: { callbacks: { afterLabel: c => `Sample: ${data[c.dataIndex]?.sampleSize ?? 0} hires` } },
+                datalabels: { display: false }
             },
             scales: {
                 x: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } }, grid: { display: false } },
@@ -434,7 +437,7 @@ async function rtLoadTrend() {
         },
         options: {
             responsive: true,
-            plugins: { legend: { labels: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } } } },
+            plugins: { legend: { labels: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } } }, datalabels: { display: false } },
             scales: {
                 x: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } }, grid: { display: false } },
                 y: { min: 0, max: 100, ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 }, callback: v => v + '%' }, grid: { color: 'oklch(0.92 0.008 255)' } }
@@ -454,7 +457,7 @@ async function rtLoadLeaderboard() {
         data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: 'oklch(0.7 0.16 145)', borderRadius: 4, maxBarThickness: 26 }] },
         options: {
             indexAxis: 'y',
-            plugins: { legend: { display: false } },
+            plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: 'oklch(0.5 0.03 258)', font: { size: 11, weight: '600' }, formatter: v => v > 0 ? v.toFixed(1) + '%' : '' } },
             scales: {
                 x: { min: 0, max: 100, grid: { color: 'oklch(0.92 0.008 255)' }, ticks: { color: 'oklch(0.5 0.03 258)', callback: v => v + '%' } },
                 y: { grid: { display: false }, ticks: { color: 'oklch(0.5 0.03 258)' } }
