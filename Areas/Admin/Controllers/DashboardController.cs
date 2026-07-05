@@ -7,7 +7,7 @@ using MvcApp.Services;
 namespace MvcApp.Areas.Admin.Controllers;
 
 [Area("Admin")]
-[RequireAuth]
+[RequireAdminAuth]
 public class DashboardController : Controller
 {
     private readonly IUploadService _uploads;
@@ -136,7 +136,7 @@ public class DashboardController : Controller
             var (_, msg, _) = await _uploads.UploadPeriodDataAsync(vm.ActiveEmployeesFile, vm.ResignationsFile, vm.StoreReferenceFile, vm.Month, vm.Year, email);
             TempData["Success"] = msg;
         }
-        catch (Exception ex) { TempData["Error"] = $"Upload failed: {ex.Message}"; }
+        catch { TempData["Error"] = "Upload failed. Please check the file format and try again."; }
         return RedirectToAction("Uploads");
     }
 
@@ -145,7 +145,7 @@ public class DashboardController : Controller
     {
         if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = "Please select a file."; return RedirectToAction("Uploads"); }
         try { var email = HttpContext.Session.GetEmail(); var (_, msg, _) = await _uploads.UploadExitInterviewsAsync(vm.File, email); TempData["Success"] = msg; }
-        catch (Exception ex) { TempData["Error"] = $"Upload failed: {ex.Message}"; }
+        catch { TempData["Error"] = "Upload failed. Please check the file format and try again."; }
         return RedirectToAction("Uploads");
     }
 
@@ -412,7 +412,7 @@ public class DashboardController : Controller
             var (created, skipped) = await _users.UploadBulkUsersAsync(vm.File);
             TempData["Success"] = $"Created {created} pending user(s)." + (skipped > 0 ? $" Skipped {skipped} (already existed)." : "");
         }
-        catch (Exception ex) { TempData["Error"] = $"Upload failed: {ex.Message}"; }
+        catch { TempData["Error"] = "Upload failed. Please check the file format and try again."; }
         return RedirectToAction("Users");
     }
 

@@ -7,5 +7,5 @@ namespace MvcApp.Areas.Home.Controllers;
 [RequireUserAuth]
 public class DashboardController : Controller
 {
-    public IActionResult Index() => Redirect("/admin/dashboard/turnover");
+    public IActionResult Index() => Redirect("/dashboard");
 }
