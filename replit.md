@@ -30,5 +30,6 @@ ASP.NET Core 9 MVC Web Application built with C#.
 - `MvcApp.sln` — solution file
 
 ## User preferences
+- الردود دايماً بالعربي البسيط المفهوم، من غير مصطلحات تقنية إلا لما تكون ضرورية
 
 - Pure C# ASP.NET Core MVC — no Node.js, no React, no frontend frameworks.
