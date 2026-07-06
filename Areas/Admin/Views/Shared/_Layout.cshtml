@@ -17,7 +17,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " — Manfoods" : "Manfoods McDonald's")</title>
+    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " — Workforce Intelligence" : "Workforce Intelligence – Crew Level")</title>
     <link rel="icon" type="image/png" href="~/images/mclogo.png"/>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
@@ -33,9 +33,9 @@
     <!-- ══ SIDEBAR ════════════════════════════════════════ -->
     <aside class="admin-sidebar" id="adminSidebar">
         <a class="admin-sidebar-brand" href="/admin/dashboard/turnover" style="text-decoration:none">
-            <div class="admin-sidebar-logo"><img src="/images/mclogo.png" alt="Manfoods"/></div>
+            <div class="admin-sidebar-logo"><img src="/images/mclogo.png" alt="WI"/></div>
             <div>
-                <div class="admin-sidebar-brand-main">Manfoods</div>
+                <div class="admin-sidebar-brand-main">Workforce Intelligence</div>
                 <div class="admin-sidebar-brand-sub">@(userRole == "Admin" ? L["Layout_AdminPortal"] : L["Layout_EmployeePortal"])</div>
             </div>
         </a>

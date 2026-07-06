@@ -99,7 +99,7 @@ public class GeminiService : IGeminiService
         }
 
         var systemPrompt = $"""
-            أنت مساعد HR ذكي متخصص في تحليل بيانات الموارد البشرية لشركة Manfoods McDonald's.
+            أنت مساعد HR ذكي متخصص في تحليل بيانات الموارد البشرية لمنصة Workforce Intelligence – Crew Level.
             مهمتك هي الإجابة على أسئلة المدراء بناءً على البيانات المتاحة فقط.
 
             === الملخص العام ===

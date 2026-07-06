@@ -1,6 +1,6 @@
 version = "1.0"
   kind = "web"
-  title = "Manfoods Workforce Analytics"
+  title = "Workforce Intelligence – Crew Level"
   previewPath = "/"
 
   [[services]]
