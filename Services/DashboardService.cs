@@ -386,10 +386,43 @@ public class DashboardService : IDashboardService
         var current  = await GetStoreComparisonAsync(month, year, role, assignedName, fromMonth, fromYear, om, oc, months);
         if (!current.Any()) return insights;
 
-        var prevMonth   = month == 1 ? 12 : month - 1;
-        var prevYear    = month == 1 ? year - 1 : year;
-        var previous    = await GetStoreComparisonAsync(prevMonth, prevYear, role, assignedName, om: om, oc: oc);
+        // ── Build the equivalent PREVIOUS window (same length as the current selection) ──
+        // This ensures comparisons are apples-to-apples regardless of how many months
+        // the user has selected (fixes single-month fallback bug).
+        var currentPeriods = ResolvePeriods(month, year, fromMonth, fromYear, months);
+        var periodCount    = currentPeriods.Count;
+
+        int  prevAnchorMonth, prevAnchorYear;
+        int? prevFromMonth = null, prevFromYear = null;
+        string? prevMonths = null;
+
+        if (!string.IsNullOrWhiteSpace(months))
+        {
+            // Discrete month selection (e.g. "1,3,5" in 2024) → same months, prior year
+            prevAnchorMonth = month;
+            prevAnchorYear  = year - 1;
+            prevMonths      = months;
+        }
+        else
+        {
+            // Contiguous range → shift the entire window back by periodCount months
+            var anchorShifted = new DateTime(year, month, 1).AddMonths(-periodCount);
+            prevAnchorMonth   = anchorShifted.Month;
+            prevAnchorYear    = anchorShifted.Year;
+
+            if (fromMonth.HasValue && fromYear.HasValue)
+            {
+                var fromShifted = new DateTime(fromYear.Value, fromMonth.Value, 1).AddMonths(-periodCount);
+                prevFromMonth   = fromShifted.Month;
+                prevFromYear    = fromShifted.Year;
+            }
+        }
+
+        var previous    = await GetStoreComparisonAsync(prevAnchorMonth, prevAnchorYear, role, assignedName, prevFromMonth, prevFromYear, om, oc, prevMonths);
         var prevByStore = previous.ToDictionary(s => s.StoreName);
+
+        // Human-readable label for comparison window used in descriptions
+        var periodLabel = periodCount == 1 ? "last month" : $"prior {periodCount}-month period";
 
         // 1. Highest turnover store
         var highest = current.First();
@@ -413,7 +446,7 @@ public class DashboardService : IDashboardService
                 Description = $"Lowest turnover at {best.TurnoverRate:F1}% with only {best.Resignations} resignation(s)."
             });
 
-        // 3. Spike detection (>= 5% jump vs previous month)
+        // 3. Spike detection (>= 5% jump vs equivalent prior window)
         var spikes = current
             .Where(s => prevByStore.TryGetValue(s.StoreName, out var p) && s.TurnoverRate - p.TurnoverRate >= 5)
             .OrderByDescending(s => s.TurnoverRate - prevByStore[s.StoreName].TurnoverRate)
@@ -429,7 +462,7 @@ public class DashboardService : IDashboardService
                 Icon        = "bi-graph-up-arrow",
                 Color       = "warning",
                 Title       = $"Turnover Spike: {spike.StoreName}",
-                Description = $"↑ +{delta:F1}% from last month ({prev.TurnoverRate:F1}% → {spike.TurnoverRate:F1}%)."
+                Description = $"↑ +{delta:F1}% vs {periodLabel} ({prev.TurnoverRate:F1}% → {spike.TurnoverRate:F1}%)."
             });
         }
 
@@ -445,8 +478,8 @@ public class DashboardService : IDashboardService
                 Color       = diff > 0 ? "danger" : diff < 0 ? "success" : "secondary",
                 Title       = diff > 0 ? "Trend: Worsening" : diff < 0 ? "Trend: Improving" : "Trend: Stable",
                 Description = diff != 0
-                    ? $"Resignations {(diff > 0 ? "increased" : "decreased")} by {Math.Abs(diff)} vs last month ({prevTotal} → {currTotal})."
-                    : $"Same number of resignations ({currTotal}) as last month."
+                    ? $"Resignations {(diff > 0 ? "increased" : "decreased")} by {Math.Abs(diff)} vs {periodLabel} ({prevTotal} → {currTotal})."
+                    : $"Same number of resignations ({currTotal}) as {periodLabel}."
             });
         }
 
