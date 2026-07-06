@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+builder.WebHost.ConfigureKestrel(o => o.AddServerHeader = false);
 
 builder.Services.AddLocalization(opts => opts.ResourcesPath = "");
 builder.Services.AddControllersWithViews()
@@ -42,6 +44,8 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.Name = "manfoods.session";
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
 var connectionString = BuildConnectionString();
@@ -67,6 +71,12 @@ builder.Services.AddScoped<IGeminiService, GeminiService>();
 
 var app = builder.Build();
 
+// ── Reverse-proxy trust (Replit / any TLS-terminating proxy) ──
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
+});
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/error");
@@ -83,6 +93,27 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     {
         new MfLangCookieProvider()
     }
+});
+
+// ── Security headers ──────────────────────────────────
+app.Use(async (context, next) =>
+{
+    var h = context.Response.Headers;
+    h["X-Content-Type-Options"]  = "nosniff";
+    h["X-Frame-Options"]         = "SAMEORIGIN";
+    h["Referrer-Policy"]         = "strict-origin-when-cross-origin";
+    h["X-Permitted-Cross-Domain-Policies"] = "none";
+    // Baseline CSP: allow same-origin resources + trusted CDNs used by the app
+    h["Content-Security-Policy"] =
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; " +
+        "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; " +
+        "img-src 'self' data:; " +
+        "connect-src 'self'; " +
+        "frame-ancestors 'self';";
+    h.Remove("X-Powered-By");
+    await next();
 });
 
 app.UseStaticFiles();
