@@ -281,14 +281,23 @@ public class DashboardService : IDashboardService
         var keys = periods.Select(p => p.Year * 100 + p.Month).ToList();
         var anchor = periods.OrderByDescending(p => p.Year * 100 + p.Month).First();
 
-        var empQ = _db.ActiveEmployees.Where(e => e.Month == anchor.Month && e.Year == anchor.Year);
+        // ── Headcount: average across ALL selected periods per store ──────────
+        // Querying each period separately and averaging gives a fair denominator
+        // even when the number of months varies (fixes anchor-only bug).
+        var allEmpQ = _db.ActiveEmployees.Where(e => keys.Contains(e.Year * 100 + e.Month));
         if (accessible != null && accessible.Count > 0)
-            empQ = empQ.Where(e => accessible.Contains(e.Store));
+            allEmpQ = allEmpQ.Where(e => accessible.Contains(e.Store));
 
-        var headcounts = await empQ
-            .GroupBy(e => e.Store)
-            .Select(g => new { Store = g.Key, Count = g.Count() })
+        var headcountsByPeriod = await allEmpQ
+            .GroupBy(e => new { e.Store, e.Month, e.Year })
+            .Select(g => new { g.Key.Store, Count = g.Count() })
             .ToListAsync();
+
+        // Average headcount per store across the resolved periods
+        var headcounts = headcountsByPeriod
+            .GroupBy(x => x.Store)
+            .Select(g => new { Store = g.Key, AvgCount = g.Average(x => x.Count) })
+            .ToList();
 
         var resQ = _db.Resignations.Where(r => keys.Contains(r.Year * 100 + r.Month));
         if (accessible != null && accessible.Count > 0)
@@ -324,16 +333,17 @@ public class DashboardService : IDashboardService
         var rows = headcounts
             .Select(h =>
             {
-                var res = resByStore.TryGetValue(h.Store, out var r) ? r : 0;
-                var nh  = newHiresByStore.TryGetValue(h.Store, out var n) ? n : 0;
+                var res        = resByStore.TryGetValue(h.Store, out var r) ? r : 0;
+                var nh         = newHiresByStore.TryGetValue(h.Store, out var n) ? n : 0;
+                var headcount  = (int)Math.Round(h.AvgCount);
                 storeRefs.TryGetValue(h.Store, out var sr);
                 return new StoreComparisonRow
                 {
                     StoreName           = h.Store,
-                    Headcount           = h.Count,
+                    Headcount           = headcount,
                     NewHires            = nh,
                     Resignations        = res,
-                    TurnoverRate        = h.Count > 0 ? Math.Round((double)res / h.Count * 100, 1) : 0,
+                    TurnoverRate        = h.AvgCount > 0 ? Math.Round(res / h.AvgCount * 100, 1) : 0,
                     OperationConsultant = sr?.OperationConsultant ?? "",
                     OperationManager    = sr?.OperationManager    ?? ""
                 };
@@ -466,20 +476,27 @@ public class DashboardService : IDashboardService
             });
         }
 
-        // 4. Overall trend
+        // 4. Overall trend — compare turnover RATES (not raw counts) so a growing
+        //    workforce does not falsely appear as "Worsening".
         if (previous.Any())
         {
-            var currTotal = current.Sum(s => s.Resignations);
-            var prevTotal = previous.Sum(s => s.Resignations);
-            var diff      = currTotal - prevTotal;
+            var currRes  = current.Sum(s => s.Resignations);
+            var prevRes  = previous.Sum(s => s.Resignations);
+            var currHead = current.Sum(s => s.Headcount);
+            var prevHead = previous.Sum(s => s.Headcount);
+
+            var currRate = currHead > 0 ? Math.Round(currRes * 100.0 / currHead, 1) : 0;
+            var prevRate = prevHead > 0 ? Math.Round(prevRes * 100.0 / prevHead, 1) : 0;
+            var rateDiff = Math.Round(currRate - prevRate, 1);
+
             insights.Add(new SmartInsightItem
             {
-                Icon        = diff > 0 ? "bi-arrow-up-circle-fill" : diff < 0 ? "bi-arrow-down-circle-fill" : "bi-dash-circle-fill",
-                Color       = diff > 0 ? "danger" : diff < 0 ? "success" : "secondary",
-                Title       = diff > 0 ? "Trend: Worsening" : diff < 0 ? "Trend: Improving" : "Trend: Stable",
-                Description = diff != 0
-                    ? $"Resignations {(diff > 0 ? "increased" : "decreased")} by {Math.Abs(diff)} vs {periodLabel} ({prevTotal} → {currTotal})."
-                    : $"Same number of resignations ({currTotal}) as {periodLabel}."
+                Icon        = rateDiff > 0 ? "bi-arrow-up-circle-fill" : rateDiff < 0 ? "bi-arrow-down-circle-fill" : "bi-dash-circle-fill",
+                Color       = rateDiff > 0 ? "danger" : rateDiff < 0 ? "success" : "secondary",
+                Title       = rateDiff > 0 ? "Trend: Worsening" : rateDiff < 0 ? "Trend: Improving" : "Trend: Stable",
+                Description = rateDiff != 0
+                    ? $"Turnover rate {(rateDiff > 0 ? "increased" : "decreased")} by {Math.Abs(rateDiff):F1}% vs {periodLabel} ({prevRate:F1}% → {currRate:F1}%)."
+                    : $"Turnover rate unchanged at {currRate:F1}% vs {periodLabel}."
             });
         }
 
