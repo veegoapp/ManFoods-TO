@@ -26,12 +26,12 @@ public interface IRetentionService
     Task<List<ChartDataItem>> GetStoreLeaderboardAsync(
         int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null, string? months = null);
 
-    /// <summary>Tenure buckets for the currently active workforce (latest upload snapshot),
-    /// aggregated company-wide (or for the given store/om/oc scope).</summary>
-    Task<List<ChartDataItem>> GetTenureDistributionAsync(string? store, string? om = null, string? oc = null);
+    /// <summary>Tenure buckets for the active workforce as of the given month/year snapshot
+    /// (falls back to the latest available upload when no month/year is supplied).</summary>
+    Task<List<ChartDataItem>> GetTenureDistributionAsync(string? store, string? om = null, string? oc = null, int? month = null, int? year = null);
 
-    /// <summary>Same tenure buckets as above, broken out per store (latest upload snapshot).</summary>
-    Task<List<StoreTenureRow>> GetTenureDistributionByStoreAsync(string? store, string? om = null, string? oc = null);
+    /// <summary>Same tenure buckets as above, broken out per store.</summary>
+    Task<List<StoreTenureRow>> GetTenureDistributionByStoreAsync(string? store, string? om = null, string? oc = null, int? month = null, int? year = null);
 
     Task<List<SmartInsightItem>> GetInsightsAsync(string? store,
         int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null, string? months = null);

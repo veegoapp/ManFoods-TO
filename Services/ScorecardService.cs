@@ -81,13 +81,16 @@ public class ScorecardService : IScorecardService
     {
         public string Store { get; set; } = "";
         public int? TenureDays { get; set; }
+        /// <summary>YYYYMM key derived from the employee's hire date — used to scope
+        /// early-leaver / retention rates to the selected period.</summary>
+        public int HireDateKey { get; set; }
     }
 
     private async Task<List<HistoricalRecord>> LoadHistoricalRecordsAsync()
     {
         var activeRows = await _db.ActiveEmployees
             .Where(e => e.HireDate != null)
-            .Select(e => new { e.EmployeeId, e.Store })
+            .Select(e => new { e.EmployeeId, e.Store, e.HireDate })
             .ToListAsync();
         var resignationRows = await _db.Resignations
             .Where(r => r.HireDate != null && r.ResignationDate != null)
@@ -98,15 +101,21 @@ public class ScorecardService : IScorecardService
         foreach (var a in activeRows)
         {
             if (string.IsNullOrWhiteSpace(a.EmployeeId)) continue;
-            byEmployee[a.EmployeeId] = new HistoricalRecord { Store = a.Store, TenureDays = null };
+            byEmployee[a.EmployeeId] = new HistoricalRecord
+            {
+                Store       = a.Store,
+                TenureDays  = null,
+                HireDateKey = a.HireDate!.Value.Year * 100 + a.HireDate!.Value.Month,
+            };
         }
         foreach (var r in resignationRows)
         {
             if (string.IsNullOrWhiteSpace(r.EmployeeId)) continue;
             byEmployee[r.EmployeeId] = new HistoricalRecord
             {
-                Store = r.Store,
-                TenureDays = r.ResignationDate!.Value.DayNumber - r.HireDate!.Value.DayNumber,
+                Store       = r.Store,
+                TenureDays  = r.ResignationDate!.Value.DayNumber - r.HireDate!.Value.DayNumber,
+                HireDateKey = r.HireDate!.Value.Year * 100 + r.HireDate!.Value.Month,
             };
         }
         return byEmployee.Values.ToList();
@@ -119,6 +128,16 @@ public class ScorecardService : IScorecardService
 
         var historical = await LoadHistoricalRecordsAsync();
 
+        // Scope early-leaver / retention rates to the selected period (hires whose hire
+        // date falls within the resolved window). Falls back to all-time when no period
+        // is specified so the scorecard is always populated.
+        var periodKeys = DashboardService.ResolvePeriods(null, year, null, null, months)
+            .Select(p => p.Year * 100 + p.Month)
+            .ToHashSet();
+        var periodFiltered = periodKeys.Count > 0
+            ? historical.Where(h => periodKeys.Contains(h.HireDateKey)).ToList()
+            : historical;
+
         var result = new List<ScorecardRow>();
         // Sequential — EF Core DbContext does not support concurrent queries.
         foreach (var (name, agg) in aggregates)
@@ -126,7 +145,7 @@ public class ScorecardService : IScorecardService
             var avgHeadcount = agg.PeriodHeadcount.Count > 0 ? agg.PeriodHeadcount.Values.Average() : 0;
             var turnoverRate = avgHeadcount > 0 ? Math.Round(agg.TotalResignations * 100.0 / avgHeadcount, 1) : 0;
 
-            var records = historical.Where(h => agg.Stores.Contains(h.Store)).ToList();
+            var records = periodFiltered.Where(h => agg.Stores.Contains(h.Store)).ToList();
             var total = records.Count;
             var early90 = total > 0 ? Math.Round(records.Count(r => r.TenureDays != null && r.TenureDays <= 90) * 100.0 / total, 1) : 0;
             var retained180 = total > 0 ? Math.Round(records.Count(r => r.TenureDays == null || r.TenureDays > 180) * 100.0 / total, 1) : 0;

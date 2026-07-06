@@ -50,12 +50,14 @@ public class RetentionApiController : ControllerBase
         Ok(await _retention.GetStoreLeaderboardAsync(fromMonth, fromYear, toMonth, toYear, om, oc, months));
 
     [HttpGet("tenure-distribution")]
-    public async Task<IActionResult> TenureDistribution([FromQuery] string? store, [FromQuery] string? om, [FromQuery] string? oc) =>
-        Ok(await _retention.GetTenureDistributionAsync(store, om, oc));
+    public async Task<IActionResult> TenureDistribution([FromQuery] string? store, [FromQuery] string? om, [FromQuery] string? oc,
+        [FromQuery] int? month, [FromQuery] int? year) =>
+        Ok(await _retention.GetTenureDistributionAsync(store, om, oc, month, year));
 
     [HttpGet("tenure-distribution-by-store")]
-    public async Task<IActionResult> TenureDistributionByStore([FromQuery] string? store, [FromQuery] string? om, [FromQuery] string? oc) =>
-        Ok(await _retention.GetTenureDistributionByStoreAsync(store, om, oc));
+    public async Task<IActionResult> TenureDistributionByStore([FromQuery] string? store, [FromQuery] string? om, [FromQuery] string? oc,
+        [FromQuery] int? month, [FromQuery] int? year) =>
+        Ok(await _retention.GetTenureDistributionByStoreAsync(store, om, oc, month, year));
 
     [HttpGet("insights")]
     public async Task<IActionResult> Insights([FromQuery] string? store,

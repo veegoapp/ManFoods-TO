@@ -239,7 +239,7 @@ public class RetentionService : IRetentionService
             .ToList();
     }
 
-    public async Task<List<ChartDataItem>> GetTenureDistributionAsync(string? store, string? om = null, string? oc = null)
+    public async Task<List<ChartDataItem>> GetTenureDistributionAsync(string? store, string? om = null, string? oc = null, int? month = null, int? year = null)
     {
         var periods = await _db.ActiveEmployees
             .Where(e => e.HireDate != null)
@@ -247,14 +247,18 @@ public class RetentionService : IRetentionService
             .Distinct()
             .ToListAsync();
         if (periods.Count == 0) return new List<ChartDataItem>();
-        var latest = periods.OrderByDescending(p => p.Year).ThenByDescending(p => p.Month).First();
 
-        var rowsQuery = _db.ActiveEmployees.Where(e => e.Month == latest.Month && e.Year == latest.Year && e.HireDate != null);
+        // Use the user-selected month/year as the snapshot anchor; fall back to latest.
+        var anchor = (month.HasValue && year.HasValue && periods.Any(p => p.Month == month && p.Year == year))
+            ? (Month: month.Value, Year: year.Value)
+            : periods.Select(p => (p.Month, p.Year)).OrderByDescending(p => p.Year).ThenByDescending(p => p.Month).First();
+
+        var rowsQuery = _db.ActiveEmployees.Where(e => e.Month == anchor.Month && e.Year == anchor.Year && e.HireDate != null);
         if (store != null) rowsQuery = rowsQuery.Where(e => e.Store == store);
         else if (await GetStoresForOmOcAsync(om, oc) is { } omOcStores) rowsQuery = rowsQuery.Where(e => omOcStores.Contains(e.Store));
         var hireDates = await rowsQuery.Select(e => e.HireDate!.Value).ToListAsync();
 
-        var asOf = new DateOnly(latest.Year, latest.Month, DateTime.DaysInMonth(latest.Year, latest.Month));
+        var asOf = new DateOnly(anchor.Year, anchor.Month, DateTime.DaysInMonth(anchor.Year, anchor.Month));
 
         return TenureBuckets
             .Select(b => new ChartDataItem
@@ -266,7 +270,7 @@ public class RetentionService : IRetentionService
             .ToList();
     }
 
-    public async Task<List<StoreTenureRow>> GetTenureDistributionByStoreAsync(string? store, string? om = null, string? oc = null)
+    public async Task<List<StoreTenureRow>> GetTenureDistributionByStoreAsync(string? store, string? om = null, string? oc = null, int? month = null, int? year = null)
     {
         var periods = await _db.ActiveEmployees
             .Where(e => e.HireDate != null)
@@ -274,14 +278,18 @@ public class RetentionService : IRetentionService
             .Distinct()
             .ToListAsync();
         if (periods.Count == 0) return new List<StoreTenureRow>();
-        var latest = periods.OrderByDescending(p => p.Year).ThenByDescending(p => p.Month).First();
 
-        var rowsQuery = _db.ActiveEmployees.Where(e => e.Month == latest.Month && e.Year == latest.Year && e.HireDate != null);
+        // Use the user-selected month/year as the snapshot anchor; fall back to latest.
+        var anchor = (month.HasValue && year.HasValue && periods.Any(p => p.Month == month && p.Year == year))
+            ? (Month: month.Value, Year: year.Value)
+            : periods.Select(p => (p.Month, p.Year)).OrderByDescending(p => p.Year).ThenByDescending(p => p.Month).First();
+
+        var rowsQuery = _db.ActiveEmployees.Where(e => e.Month == anchor.Month && e.Year == anchor.Year && e.HireDate != null);
         if (store != null) rowsQuery = rowsQuery.Where(e => e.Store == store);
         else if (await GetStoresForOmOcAsync(om, oc) is { } omOcStores) rowsQuery = rowsQuery.Where(e => omOcStores.Contains(e.Store));
         var rows = await rowsQuery.Select(e => new { e.Store, e.HireDate }).ToListAsync();
 
-        var asOf = new DateOnly(latest.Year, latest.Month, DateTime.DaysInMonth(latest.Year, latest.Month));
+        var asOf = new DateOnly(anchor.Year, anchor.Month, DateTime.DaysInMonth(anchor.Year, anchor.Month));
 
         return rows.GroupBy(r => r.Store)
             .Select(g => new StoreTenureRow
