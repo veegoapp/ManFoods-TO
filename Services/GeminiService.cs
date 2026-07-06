@@ -153,7 +153,7 @@ public class GeminiService : IGeminiService
         try
         {
             var client = _httpFactory.CreateClient();
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={apiKey}";
+            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={apiKey}";
             var json = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -163,12 +163,14 @@ public class GeminiService : IGeminiService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Gemini API error {Status}: {Body}", response.StatusCode, responseJson);
-                return new GeminiAnswer
+                var errorText = (int)response.StatusCode switch
                 {
-                    Text = response.StatusCode == System.Net.HttpStatusCode.TooManyRequests
-                        ? "⚠️ تم تجاوز حد الطلبات على الـ AI. انتظر دقيقة وحاول مجدداً."
-                        : $"⚠️ خطأ في الاتصال بالـ AI (كود {(int)response.StatusCode}). حاول مرة أخرى.",
+                    403 => "⚠️ الـ API Key مش عنده صلاحية على هذا الـ model. تأكد إن الـ Gemini_API_Key صحيح وفعّال من Google AI Studio.",
+                    429 => "⚠️ تم تجاوز حد الطلبات على الـ AI. انتظر دقيقة وحاول مجدداً.",
+                    400 => "⚠️ طلب غير صحيح. حاول إعادة صياغة السؤال.",
+                    _   => $"⚠️ خطأ في الاتصال بالـ AI (كود {(int)response.StatusCode}). حاول مرة أخرى.",
                 };
+                return new GeminiAnswer { Text = errorText };
             }
 
             using var doc = JsonDocument.Parse(responseJson);
