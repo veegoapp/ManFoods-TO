@@ -46,7 +46,7 @@ echo "  ✅ Packages restored."
 
 # ── [3/4] Push database schema ────────────────
 echo ""
-echo "[3/4] Pushing database schema to Neon..."
+echo "[3/4] Pushing database schema..."
 bash scripts/db-update.sh
 echo "  ✅ Schema is up to date."
 
