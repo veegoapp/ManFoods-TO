@@ -1,0 +1,279 @@
+@using MvcApp.Models.ViewModels
+@model List<PeriodItem>
+@{
+    var reportId = (ViewBag.ReportType as string) ?? "";
+    var rep = ReportCatalog.Find(reportId);
+    if (rep == null)
+    {
+        <div class="card-dark text-center py-5">
+            <h5 class="mb-1">Report not found</h5>
+        </div>
+        return;
+    }
+    ViewData["Title"] = rep.Title;
+    var stores      = (ViewBag.Stores              as List<string>) ?? new List<string>();
+    var oms         = (ViewBag.OperationManagers   as List<string>) ?? new List<string>();
+    var ocs         = (ViewBag.OperationConsultants as List<string>) ?? new List<string>();
+    var monthNames  = new[] { "January","February","March","April","May","June",
+                               "July","August","September","October","November","December" };
+    var latest      = Model?.OrderByDescending(p => p.Year).ThenByDescending(p => p.Month).FirstOrDefault();
+    var years       = Model?.Select(p => p.Year).Distinct().OrderByDescending(y => y).ToList() ?? new List<int>();
+    var periodsJson = System.Text.Json.JsonSerializer.Serialize(
+        (Model ?? new()).OrderByDescending(p => p.Year).ThenByDescending(p => p.Month)
+                        .Select(p => new { year = p.Year, month = p.Month, label = monthNames[p.Month - 1] })
+                        .ToList());
+    var __area = ViewContext.RouteData.Values["area"]?.ToString();
+    var __areaPrefix = string.Equals(__area, "Home", StringComparison.OrdinalIgnoreCase) ? "/home" : "/admin";
+}
+
+<style>
+.rd-multiselect { position:relative; }
+.rd-multiselect-trigger {
+    display:flex; align-items:center; gap:10px; justify-content:space-between;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 12px 0 14px; width:100%;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.rd-multiselect-trigger:hover { border-color:var(--card-border-h); }
+.rd-multiselect-trigger i { font-size:11px; color:var(--text-3); flex-shrink:0; }
+.rd-multiselect-chips { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rd-multiselect-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); min-width:230px; padding:8px; max-height:280px; overflow-y:auto;
+}
+.rd-multiselect-panel.open { display:block; }
+.rd-multiselect-actions { display:flex; gap:6px; padding:2px 4px 8px; border-bottom:1px solid var(--card-border); margin-bottom:6px; }
+.rd-ms-action {
+    flex:1; background:var(--card-bg-2); border:1px solid var(--card-border); color:var(--red);
+    border-radius:6px; font-size:11.5px; font-weight:700; padding:6px 8px; cursor:pointer;
+}
+.rd-ms-action:hover { background:var(--red-light); }
+.rd-ms-option { display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:13px; color:var(--text-2); }
+.rd-ms-option:hover { background:var(--card-bg-2); }
+.rd-ms-option input { accent-color:var(--red); width:15px; height:15px; cursor:pointer; }
+.rd-back-btn { display:inline-flex; align-items:center; gap:6px; font-size:13.5px; font-weight:600; color:var(--text-2); text-decoration:none; margin-bottom:14px; }
+.rd-back-btn:hover { color:var(--red); }
+.rd-back-btn i { font-size:12px; }
+[dir="rtl"] .rd-back-btn i { transform:scaleX(-1); }
+</style>
+
+<a class="rd-back-btn" href="@(__areaPrefix)/dashboard/reports">
+    <i class="bi bi-arrow-left"></i>@L["Common_Back"]
+</a>
+
+<div class="page-header">
+    <div class="d-flex align-items-center gap-3">
+        <div class="card-icon flex-shrink-0" style="background:@rep.IconBg;width:52px;height:52px;border-radius:14px">
+            <i class="bi @rep.Icon" style="font-size:1.5rem;color:@rep.IconColor"></i>
+        </div>
+        <div>
+            <h1 class="page-title">@rep.Title</h1>
+            <p class="page-subtitle">@rep.Description</p>
+        </div>
+    </div>
+</div>
+
+@if (Model == null || Model.Count == 0)
+{
+    <div class="card-dark text-center py-5">
+        <i class="bi bi-file-earmark-bar-graph-fill d-block mb-3" style="font-size:3rem;color:oklch(0.5 0.18 25)"></i>
+        <h5 class="mb-1">@L["Rep_UploadFirst"]</h5>
+        <p class="text-muted-custom mb-0 small">Upload payroll data to unlock all reports.</p>
+    </div>
+}
+else
+{
+    <div class="card-dark mb-4" style="border-left:4px solid @rep.IconColor">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="bi bi-funnel-fill" style="color:@rep.IconColor"></i>
+            <span class="fw-semibold" style="font-size:14px">Filters</span>
+            <span class="text-muted-custom small">— leave a filter empty for "all"</span>
+        </div>
+        <div class="row g-3 align-items-end">
+            @if (rep.UsesPeriod)
+            {
+                <div class="col-6 col-sm-4 col-md-2">
+                    <label class="form-label small text-muted-custom mb-1">@L["Common_Year"]</label>
+                    <select id="rd-year" class="form-select form-select-dark form-select-sm" onchange="rdUpdateMonths()">
+                        @foreach (var y in years)
+                        {
+                            <option value="@y" selected="@(y == latest?.Year)">@y</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-6 col-sm-4 col-md-2">
+                    <label class="form-label small text-muted-custom mb-1">@L["Common_Month"]</label>
+                    <select id="rd-month" class="form-select form-select-dark form-select-sm"></select>
+                </div>
+            }
+            @if (rep.UsesYear)
+            {
+                <div class="col-6 col-sm-4 col-md-2">
+                    <label class="form-label small text-muted-custom mb-1">@L["Common_Year"] (since)</label>
+                    <select id="rd-since-year" class="form-select form-select-dark form-select-sm">
+                        @foreach (var y in years)
+                        {
+                            <option value="@y" selected="@(y == latest?.Year)">@y</option>
+                        }
+                    </select>
+                </div>
+            }
+            @if (rep.UsesStore)
+            {
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small text-muted-custom mb-1">@L["Common_AllStores"]</label>
+                    <div class="rd-multiselect" id="rd-store-ms" data-all-label="@L["Common_AllStores"]">
+                        <button type="button" class="rd-multiselect-trigger" id="rd-store-trigger">
+                            <span class="rd-multiselect-chips" id="rd-store-chips">@L["Common_AllStores"]</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="rd-multiselect-panel" id="rd-store-panel">
+                            <div class="rd-multiselect-actions">
+                                <button type="button" class="rd-ms-action" id="rd-store-selectall">@L["Common_SelectAll"]</button>
+                                <button type="button" class="rd-ms-action" id="rd-store-clearall">@L["Common_ClearAll"]</button>
+                            </div>
+                            <div id="rd-store-options">
+                                @foreach (var s in stores)
+                                {
+                                    <label class="rd-ms-option"><input type="checkbox" value="@s"><span>@s</span></label>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            @if (rep.UsesOmOc)
+            {
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small text-muted-custom mb-1">@L["Common_AllOperationManagers"]</label>
+                    <div class="rd-multiselect" id="rd-om-ms" data-all-label="@L["Common_AllOperationManagers"]">
+                        <button type="button" class="rd-multiselect-trigger" id="rd-om-trigger">
+                            <span class="rd-multiselect-chips" id="rd-om-chips">@L["Common_AllOperationManagers"]</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="rd-multiselect-panel" id="rd-om-panel">
+                            <div class="rd-multiselect-actions">
+                                <button type="button" class="rd-ms-action" id="rd-om-selectall">@L["Common_SelectAll"]</button>
+                                <button type="button" class="rd-ms-action" id="rd-om-clearall">@L["Common_ClearAll"]</button>
+                            </div>
+                            <div id="rd-om-options">
+                                @foreach (var m in oms)
+                                {
+                                    <label class="rd-ms-option"><input type="checkbox" value="@m"><span>@m</span></label>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small text-muted-custom mb-1">@L["Common_AllOperationConsultants"]</label>
+                    <div class="rd-multiselect" id="rd-oc-ms" data-all-label="@L["Common_AllOperationConsultants"]">
+                        <button type="button" class="rd-multiselect-trigger" id="rd-oc-trigger">
+                            <span class="rd-multiselect-chips" id="rd-oc-chips">@L["Common_AllOperationConsultants"]</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="rd-multiselect-panel" id="rd-oc-panel">
+                            <div class="rd-multiselect-actions">
+                                <button type="button" class="rd-ms-action" id="rd-oc-selectall">@L["Common_SelectAll"]</button>
+                                <button type="button" class="rd-ms-action" id="rd-oc-clearall">@L["Common_ClearAll"]</button>
+                            </div>
+                            <div id="rd-oc-options">
+                                @foreach (var c in ocs)
+                                {
+                                    <label class="rd-ms-option"><input type="checkbox" value="@c"><span>@c</span></label>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card-dark text-center py-4">
+        <button class="btn btn-primary btn-lg rep-dl-btn" onclick="rdDownload()">
+            <i class="bi bi-download me-2"></i>@L["Common_Download"] Excel
+        </button>
+    </div>
+}
+
+<script>
+const rdPeriods = @Html.Raw(periodsJson);
+const __AREA_PREFIX = '@__areaPrefix';
+const RD_REPORT_ID = '@rep.Id';
+
+function rdUpdateMonths() {
+    const yearEl = document.getElementById('rd-year');
+    if (!yearEl) return;
+    const year = parseInt(yearEl.value);
+    const sel  = document.getElementById('rd-month');
+    const prev = parseInt(sel.value) || 0;
+    sel.innerHTML = '';
+    rdPeriods.filter(p => p.year === year).forEach(p => {
+        const o = document.createElement('option');
+        o.value = p.month;
+        o.textContent = p.label;
+        if (p.month === prev) o.selected = true;
+        sel.appendChild(o);
+    });
+}
+
+/* Generic multi-select checkbox dropdown ---------------------------------- */
+function rdCreateMultiselect(prefix) {
+    const root    = document.getElementById(`rd-${prefix}-ms`);
+    if (!root) return { getSelected: () => [] };
+    const trigger = document.getElementById(`rd-${prefix}-trigger`);
+    const panel   = document.getElementById(`rd-${prefix}-panel`);
+    const chips   = document.getElementById(`rd-${prefix}-chips`);
+    const allLabel = root.dataset.allLabel;
+    const checkboxes = () => Array.from(panel.querySelectorAll('input[type=checkbox]'));
+
+    function renderChips() {
+        const selected = checkboxes().filter(cb => cb.checked).map(cb => cb.value);
+        if (selected.length === 0) { chips.textContent = allLabel; return; }
+        chips.textContent = selected.length <= 2 ? selected.join('، ') : `${selected[0]}، ${selected[1]} +${selected.length - 2}`;
+    }
+
+    checkboxes().forEach(cb => cb.addEventListener('change', renderChips));
+    trigger.addEventListener('click', (e) => { e.stopPropagation(); panel.classList.toggle('open'); });
+    document.addEventListener('click', (e) => { if (!root.contains(e.target)) panel.classList.remove('open'); });
+    document.getElementById(`rd-${prefix}-selectall`)?.addEventListener('click', () => {
+        checkboxes().forEach(cb => cb.checked = true); renderChips();
+    });
+    document.getElementById(`rd-${prefix}-clearall`)?.addEventListener('click', () => {
+        checkboxes().forEach(cb => cb.checked = false); renderChips();
+    });
+
+    return { getSelected: () => checkboxes().filter(cb => cb.checked).map(cb => cb.value) };
+}
+
+const rdStoreMs = rdCreateMultiselect('store');
+const rdOmMs    = rdCreateMultiselect('om');
+const rdOcMs    = rdCreateMultiselect('oc');
+
+function rdDownload() {
+    const p = new URLSearchParams({ reportType: RD_REPORT_ID });
+
+    const yearEl = document.getElementById('rd-year');
+    const monthEl = document.getElementById('rd-month');
+    if (yearEl && monthEl) { p.set('year', yearEl.value); p.set('month', monthEl.value); }
+
+    const sinceYearEl = document.getElementById('rd-since-year');
+    if (sinceYearEl) p.set('year', sinceYearEl.value);
+
+    const selectedStores = rdStoreMs.getSelected();
+    if (selectedStores.length) p.set('store', selectedStores.join(','));
+
+    const selectedOms = rdOmMs.getSelected();
+    if (selectedOms.length) p.set('om', selectedOms.join(','));
+
+    const selectedOcs = rdOcMs.getSelected();
+    if (selectedOcs.length) p.set('oc', selectedOcs.join(','));
+
+    window.location.href = __AREA_PREFIX + '/dashboard/export?' + p.toString();
+}
+
+rdUpdateMonths();
+</script>

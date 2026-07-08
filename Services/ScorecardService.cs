@@ -59,8 +59,8 @@ public class ScorecardService : IScorecardService
         if (periodKeys.Count == 0) return new Dictionary<string, NameAggregate>();
 
         var storeRefs = await _db.StoreReferences.Where(s => periodKeys.Contains(s.Year * 100 + s.Month)).ToListAsync();
-        if (!string.IsNullOrEmpty(om)) storeRefs = storeRefs.Where(s => s.OperationManager == om).ToList();
-        if (!string.IsNullOrEmpty(oc)) storeRefs = storeRefs.Where(s => s.OperationConsultant == oc).ToList();
+        if (MultiValueFilter.Split(om) is { } oms) storeRefs = storeRefs.Where(s => oms.Contains(s.OperationManager)).ToList();
+        if (MultiValueFilter.Split(oc) is { } ocs) storeRefs = storeRefs.Where(s => ocs.Contains(s.OperationConsultant)).ToList();
 
         var headcountMap = (await _db.ActiveEmployees.Where(e => periodKeys.Contains(e.Year * 100 + e.Month))
             .GroupBy(e => new { e.Store, e.Month, e.Year })

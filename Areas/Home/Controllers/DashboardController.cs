@@ -45,6 +45,15 @@ public class DashboardController : Controller
 
     public async Task<IActionResult> Reports()
     {
+        var periods = await _dashboard.GetAvailablePeriodsAsync();
+        return View(periods);
+    }
+
+    [HttpGet("home/dashboard/reports/{reportType}")]
+    public async Task<IActionResult> ReportDetail(string reportType)
+    {
+        if (MvcApp.Models.ViewModels.ReportCatalog.Find(reportType) == null) return NotFound();
+
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetAssignedName();
         var periods = await _dashboard.GetAvailablePeriodsAsync();
@@ -52,6 +61,7 @@ public class DashboardController : Controller
         ViewBag.Stores = stores.Select(s => s.StoreName).Distinct().OrderBy(s => s).ToList();
         ViewBag.OperationManagers = await _dashboard.GetOperationManagersAsync(null, null);
         ViewBag.OperationConsultants = await _dashboard.GetOperationConsultantsAsync(null, null);
+        ViewBag.ReportType = reportType;
         return View(periods);
     }
 

@@ -362,8 +362,8 @@ public class EarlyWarningService : IEarlyWarningService
         // ── Load raw data ─────────────────────────────────────────────────────
         var historical = await LoadHistoricalRecordsAsync();
         var candidates = await LoadActiveCandidatesAsync(months, year);
-        if (!string.IsNullOrWhiteSpace(store))
-            candidates = candidates.Where(c => c.Store == store).ToList();
+        if (MultiValueFilter.Split(store) is { } stores)
+            candidates = candidates.Where(c => stores.Contains(c.Store)).ToList();
 
         // ── Company-wide baseline ─────────────────────────────────────────────
         var companyTotal    = historical.Count;

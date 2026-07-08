@@ -109,6 +109,7 @@ public class DashboardService : IDashboardService
 
         var accessible = await GetAccessibleStoresAsync(role, assignedName, anchor.Month, anchor.Year);
         var omOcStores = await GetStoresForOmOcAsync(anchor.Month, anchor.Year, om, oc);
+        var stores = MultiValueFilter.Split(store);
 
         var headcountsPerPeriod = new List<int>();
         var toHeadcount = 0;
@@ -118,7 +119,7 @@ public class DashboardService : IDashboardService
         foreach (var p in periods)
         {
             var empQ = _db.ActiveEmployees.Where(e => e.Month == p.Month && e.Year == p.Year);
-            if (!string.IsNullOrEmpty(store)) empQ = empQ.Where(e => e.Store == store);
+            if (stores != null) empQ = empQ.Where(e => stores.Contains(e.Store));
             else if (omOcStores != null) empQ = empQ.Where(e => omOcStores.Contains(e.Store));
             else if (accessible != null && accessible.Count > 0) empQ = empQ.Where(e => accessible.Contains(e.Store));
 
@@ -127,7 +128,7 @@ public class DashboardService : IDashboardService
             if (p.Month == anchor.Month && p.Year == anchor.Year) toHeadcount = hc;
 
             var resQ = _db.Resignations.Where(r => r.Month == p.Month && r.Year == p.Year);
-            if (!string.IsNullOrEmpty(store)) resQ = resQ.Where(r => r.Store == store);
+            if (stores != null) resQ = resQ.Where(r => stores.Contains(r.Store));
             else if (omOcStores != null) resQ = resQ.Where(r => omOcStores.Contains(r.Store));
             else if (accessible != null && accessible.Count > 0) resQ = resQ.Where(r => accessible.Contains(r.Store));
             totalResignations += await resQ.CountAsync();
@@ -135,7 +136,7 @@ public class DashboardService : IDashboardService
             var prevMonth = p.Month == 1 ? 12 : p.Month - 1;
             var prevYear = p.Month == 1 ? p.Year - 1 : p.Year;
             var prevQ = _db.ActiveEmployees.Where(e => e.Month == prevMonth && e.Year == prevYear);
-            if (!string.IsNullOrEmpty(store)) prevQ = prevQ.Where(e => e.Store == store);
+            if (stores != null) prevQ = prevQ.Where(e => stores.Contains(e.Store));
             else if (omOcStores != null) prevQ = prevQ.Where(e => omOcStores.Contains(e.Store));
             else if (accessible != null && accessible.Count > 0) prevQ = prevQ.Where(e => accessible.Contains(e.Store));
 
@@ -174,7 +175,7 @@ public class DashboardService : IDashboardService
             anchor = periods.OrderByDescending(p => p.Year * 100 + p.Month).First();
             q = q.Where(r => keys.Contains(r.Year * 100 + r.Month));
         }
-        if (!string.IsNullOrEmpty(store)) q = q.Where(r => r.Store == store);
+        if (MultiValueFilter.Split(store) is { } stores) q = q.Where(r => stores.Contains(r.Store));
         else if (anchor is { } a && await GetStoresForOmOcAsync(a.Month, a.Year, om, oc) is { } omOcStores)
             q = q.Where(r => omOcStores.Contains(r.Store));
         else if (accessible != null && accessible.Count > 0) q = q.Where(r => accessible.Contains(r.Store));
@@ -223,7 +224,7 @@ public class DashboardService : IDashboardService
             anchor = periods.OrderByDescending(p => p.Year * 100 + p.Month).First();
             q = q.Where(r => keys.Contains(r.Year * 100 + r.Month));
         }
-        if (!string.IsNullOrEmpty(store)) q = q.Where(r => r.Store == store);
+        if (MultiValueFilter.Split(store) is { } stores) q = q.Where(r => stores.Contains(r.Store));
         else if (anchor is { } a && await GetStoresForOmOcAsync(a.Month, a.Year, om, oc) is { } omOcStores)
             q = q.Where(r => omOcStores.Contains(r.Store));
         else if (accessible != null && accessible.Count > 0) q = q.Where(r => accessible.Contains(r.Store));
@@ -253,7 +254,7 @@ public class DashboardService : IDashboardService
         var q = _db.ActiveEmployees.AsQueryable();
         if (month.HasValue) q = q.Where(e => e.Month == month);
         if (year.HasValue) q = q.Where(e => e.Year == year);
-        if (!string.IsNullOrEmpty(store)) q = q.Where(e => e.Store == store);
+        if (MultiValueFilter.Split(store) is { } stores) q = q.Where(e => stores.Contains(e.Store));
         else if (month.HasValue && year.HasValue && await GetStoresForOmOcAsync(month.Value, year.Value, om, oc) is { } omOcStores)
             q = q.Where(e => omOcStores.Contains(e.Store));
         else if (accessible != null && accessible.Count > 0) q = q.Where(e => accessible.Contains(e.Store));
@@ -349,8 +350,8 @@ public class DashboardService : IDashboardService
                 };
             });
 
-        if (!string.IsNullOrEmpty(om)) rows = rows.Where(r => r.OperationManager == om);
-        if (!string.IsNullOrEmpty(oc)) rows = rows.Where(r => r.OperationConsultant == oc);
+        if (MultiValueFilter.Split(om) is { } oms) rows = rows.Where(r => oms.Contains(r.OperationManager));
+        if (MultiValueFilter.Split(oc) is { } ocs) rows = rows.Where(r => ocs.Contains(r.OperationConsultant));
 
         return rows.OrderByDescending(s => s.TurnoverRate).ToList();
     }
@@ -669,8 +670,8 @@ public class DashboardService : IDashboardService
                                     .ToDictionary(g => g.Key, g => g.Sum(x => x.Count));
 
         var allStores = headcounts.Select(h => h.Store).Distinct().OrderBy(s => s).ToList();
-        if (!string.IsNullOrEmpty(om)) allStores = allStores.Where(s => omByStore.TryGetValue(s, out var v) && v == om).ToList();
-        if (!string.IsNullOrEmpty(oc)) allStores = allStores.Where(s => ocByStore.TryGetValue(s, out var v) && v == oc).ToList();
+        if (MultiValueFilter.Split(om) is { } oms) allStores = allStores.Where(s => omByStore.TryGetValue(s, out var v) && oms.Contains(v)).ToList();
+        if (MultiValueFilter.Split(oc) is { } ocs) allStores = allStores.Where(s => ocByStore.TryGetValue(s, out var v) && ocs.Contains(v)).ToList();
 
         var rows = allStores.Select(store =>
         {

@@ -14,10 +14,10 @@ public class ExitInterviewService : IExitInterviewService
     private static IQueryable<ExitInterview> ApplyFilter(IQueryable<ExitInterview> q, ExitInterviewFilter filter, string role, string? assignedName)
     {
         // Role system simplified to Admin/User — no more per-store restriction.
-        if (!string.IsNullOrWhiteSpace(filter.Store)) q = q.Where(e => e.Store == filter.Store);
+        if (MultiValueFilter.Split(filter.Store) is { } stores) q = q.Where(e => stores.Contains(e.Store));
         if (!string.IsNullOrWhiteSpace(filter.StoreLeader)) q = q.Where(e => e.StoreLeader == filter.StoreLeader);
-        if (!string.IsNullOrWhiteSpace(filter.OperationConsultant)) q = q.Where(e => e.OperationConsultant == filter.OperationConsultant);
-        if (!string.IsNullOrWhiteSpace(filter.OperationManager)) q = q.Where(e => e.OperationManager == filter.OperationManager);
+        if (MultiValueFilter.Split(filter.OperationConsultant) is { } ocs) q = q.Where(e => ocs.Contains(e.OperationConsultant));
+        if (MultiValueFilter.Split(filter.OperationManager) is { } oms) q = q.Where(e => oms.Contains(e.OperationManager));
         // Year=0 is the synthetic "undated" sentinel — skip date filtering so
         // all rows (which have month=0/year=0) are returned unfiltered.
         if (filter.Year.HasValue && filter.Year.Value > 0)

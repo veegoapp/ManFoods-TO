@@ -139,7 +139,7 @@ public class RetentionService : IRetentionService
         int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null, string? months = null)
     {
         var cohorts = await LoadEmployeeCohortsAsync(fromMonth, fromYear, toMonth, toYear, om, oc, months);
-        if (store != null) cohorts = cohorts.Where(c => c.Store == store).ToList();
+        if (MultiValueFilter.Split(store) is { } stores) cohorts = cohorts.Where(c => stores.Contains(c.Store)).ToList();
 
         var result = new List<RetentionMilestoneItem>();
         foreach (var (days, label) in Milestones)
@@ -170,7 +170,7 @@ public class RetentionService : IRetentionService
         int? fromMonth = null, int? fromYear = null, int? toMonth = null, int? toYear = null, string? om = null, string? oc = null, string? months = null)
     {
         var cohorts = await LoadEmployeeCohortsAsync(fromMonth, fromYear, toMonth, toYear, om, oc, months);
-        if (store != null) cohorts = cohorts.Where(c => c.Store == store).ToList();
+        if (MultiValueFilter.Split(store) is { } stores) cohorts = cohorts.Where(c => stores.Contains(c.Store)).ToList();
 
         var result = new List<SurvivalPoint>();
         foreach (var (day, label) in CurvePoints)
@@ -195,7 +195,7 @@ public class RetentionService : IRetentionService
         // Always full history (like the Turnover page's Monthly Trend) — unaffected
         // by the discrete cohort-month filter used for the milestone cards above.
         var cohorts = await LoadEmployeeCohortsAsync(om: om, oc: oc);
-        if (store != null) cohorts = cohorts.Where(c => c.Store == store).ToList();
+        if (MultiValueFilter.Split(store) is { } stores) cohorts = cohorts.Where(c => stores.Contains(c.Store)).ToList();
 
         var periods = cohorts.Select(c => (c.CohortMonth, c.CohortYear))
             .Distinct()
@@ -254,7 +254,7 @@ public class RetentionService : IRetentionService
             : periods.Select(p => (p.Month, p.Year)).OrderByDescending(p => p.Year).ThenByDescending(p => p.Month).First();
 
         var rowsQuery = _db.ActiveEmployees.Where(e => e.Month == anchor.Month && e.Year == anchor.Year && e.HireDate != null);
-        if (store != null) rowsQuery = rowsQuery.Where(e => e.Store == store);
+        if (MultiValueFilter.Split(store) is { } stores) rowsQuery = rowsQuery.Where(e => stores.Contains(e.Store));
         else if (await GetStoresForOmOcAsync(om, oc) is { } omOcStores) rowsQuery = rowsQuery.Where(e => omOcStores.Contains(e.Store));
         var hireDates = await rowsQuery.Select(e => e.HireDate!.Value).ToListAsync();
 
