@@ -103,6 +103,10 @@ public class ReportService : IReportService
         ws.Columns().AdjustToContents();
     }
 
+    /// <summary>ClosedXML 0.100+ requires explicit double cast — int has no
+    /// direct implicit conversion to XLCellValue.</summary>
+    private static void SetIntCell(IXLCell cell, int value) => cell.Value = (double)value;
+
     private static void WriteLabelValueSheet(XLWorkbook wb, string sheetName, string labelHeader, string valueHeader, IEnumerable<ChartDataItem> items, bool asPercent = false)
     {
         var ws = AddSheet(wb, sheetName);
@@ -112,7 +116,7 @@ public class ReportService : IReportService
         {
             ws.Cell(r, 1).Value = item.Label;
             if (asPercent) SetPercentCell(ws.Cell(r, 2), item.Value);
-            else ws.Cell(r, 2).Value = item.Value;
+            else SetIntCell(ws.Cell(r, 2), item.Value);
             r++;
         }
         Finalize(ws);
