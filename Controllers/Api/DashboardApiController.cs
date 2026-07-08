@@ -123,11 +123,11 @@ public class DashboardApiController : ControllerBase
     }
 
     [HttpGet("trend-matrix")]
-    public async Task<IActionResult> TrendMatrix([FromQuery] string? om, [FromQuery] string? oc, [FromQuery] int? sinceYear)
+    public async Task<IActionResult> TrendMatrix([FromQuery] string? om, [FromQuery] string? oc, [FromQuery] int? sinceYear, [FromQuery] string? months)
     {
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetAssignedName();
-        return Ok(await _dashboard.GetTrendMatrixAsync(role, assignedName, om, oc, sinceYear));
+        return Ok(await _dashboard.GetTrendMatrixAsync(role, assignedName, om, oc, sinceYear, months));
     }
 
     [HttpGet("headcount-by-job-title")]

@@ -17,6 +17,9 @@ public class ReportDefinition
     public bool UsesStore { get; set; }
     /// <summary>Multi-select Operation Manager / Operation Consultant filters.</summary>
     public bool UsesOmOc { get; set; }
+    /// <summary>Multi-select Months filter, tied to the Year field — narrows which
+    /// month columns appear in a trend-matrix-style export.</summary>
+    public bool UsesMonths { get; set; }
 }
 
 public static class ReportCatalog
@@ -49,7 +52,7 @@ public static class ReportCatalog
             Id = "trend-matrix", Section = "Turnover & Workforce", Title = "Turnover Trend Matrix",
             Description = "Full data table — one row per store, one column per month, showing Turnover % across all available periods from the selected year onward, with an average column.",
             Icon = "bi-table", IconBg = "oklch(0.55 0.15 258 / .10)", IconColor = "oklch(0.5 0.15 258)",
-            UsesYear = true, UsesOmOc = true,
+            UsesYear = true, UsesMonths = true, UsesOmOc = true,
         },
         new ReportDefinition
         {
@@ -57,6 +60,13 @@ public static class ReportCatalog
             Description = "Cohort trend, full list of early leavers, by-store rates, and aggregated reasons — across all available periods.",
             Icon = "bi-hourglass-split", IconBg = "oklch(0.5 0.18 25 / .10)", IconColor = "oklch(0.5 0.18 25)",
             UsesStore = true,
+        },
+        new ReportDefinition
+        {
+            Id = "ninety-day-trend-matrix", Section = "Deep Analytics", Title = "90-Day Trend Matrix",
+            Description = "Full data table — one row per store, one column per hire-cohort month, showing the 90-day early-leave rate across all available cohorts, with an average column.",
+            Icon = "bi-table", IconBg = "oklch(0.5 0.18 25 / .10)", IconColor = "oklch(0.5 0.18 25)",
+            UsesYear = true, UsesMonths = true, UsesOmOc = true,
         },
         new ReportDefinition
         {

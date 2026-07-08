@@ -618,7 +618,7 @@ public class DashboardService : IDashboardService
             .ToList();
     }
 
-    public async Task<TrendMatrixResult> GetTrendMatrixAsync(string role, string? assignedName, string? om = null, string? oc = null, int? sinceYear = null)
+    public async Task<TrendMatrixResult> GetTrendMatrixAsync(string role, string? assignedName, string? om = null, string? oc = null, int? sinceYear = null, string? months = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, null, null);
 
@@ -631,6 +631,10 @@ public class DashboardService : IDashboardService
 
         if (sinceYear.HasValue)
             periods = periods.Where(p => p.Year >= sinceYear.Value).ToList();
+
+        var monthFilter = MultiValueFilter.Split(months)?.Select(int.Parse).ToHashSet();
+        if (monthFilter != null)
+            periods = periods.Where(p => monthFilter.Contains(p.Month)).ToList();
 
         var periodKeys = periods.Select(p => $"{p.Year:D4}-{p.Month:D2}").ToList();
 

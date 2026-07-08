@@ -29,4 +29,9 @@ public interface INinetyDayTurnoverService
     /// the id itself).</summary>
     Task<List<ChartDataItem>> GetEarlyLeaverReasonsAsync(int month, int year, string? store,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null);
+
+    /// <summary>One row per store, one column per hire-cohort month, showing the
+    /// 90-day early-leave rate for that cohort — mirrors DashboardService.GetTrendMatrixAsync
+    /// but for the 90-day metric instead of overall turnover.</summary>
+    Task<TrendMatrixResult> GetTrendMatrixAsync(string? om = null, string? oc = null, string? months = null, int? sinceYear = null);
 }

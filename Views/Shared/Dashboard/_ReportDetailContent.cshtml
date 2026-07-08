@@ -112,12 +112,31 @@ else
             {
                 <div class="col-6 col-sm-4 col-md-2">
                     <label class="form-label small text-muted-custom mb-1">@L["Common_Year"] (since)</label>
-                    <select id="rd-since-year" class="form-select form-select-dark form-select-sm">
+                    <select id="rd-since-year" class="form-select form-select-dark form-select-sm" onchange="rdUpdateMonthsMultiselect()">
                         @foreach (var y in years)
                         {
                             <option value="@y" selected="@(y == latest?.Year)">@y</option>
                         }
                     </select>
+                </div>
+            }
+            @if (rep.UsesMonths)
+            {
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small text-muted-custom mb-1">@L["Common_AllMonths"]</label>
+                    <div class="rd-multiselect" id="rd-months-ms" data-all-label="@L["Common_AllMonths"]">
+                        <button type="button" class="rd-multiselect-trigger" id="rd-months-trigger">
+                            <span class="rd-multiselect-chips" id="rd-months-chips">@L["Common_AllMonths"]</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="rd-multiselect-panel" id="rd-months-panel">
+                            <div class="rd-multiselect-actions">
+                                <button type="button" class="rd-ms-action" id="rd-months-selectall">@L["Common_SelectAll"]</button>
+                                <button type="button" class="rd-ms-action" id="rd-months-clearall">@L["Common_ClearAll"]</button>
+                            </div>
+                            <div id="rd-months-options"></div>
+                        </div>
+                    </div>
                 </div>
             }
             @if (rep.UsesStore)
@@ -220,23 +239,26 @@ function rdUpdateMonths() {
     });
 }
 
-/* Generic multi-select checkbox dropdown ---------------------------------- */
+/* Generic multi-select checkbox dropdown — uses event delegation on the
+   options container so callers (e.g. the Months multiselect) can rebuild
+   the checkbox list on the fly via setOptionsHtml() without re-wiring. */
 function rdCreateMultiselect(prefix) {
     const root    = document.getElementById(`rd-${prefix}-ms`);
-    if (!root) return { getSelected: () => [] };
+    if (!root) return { getSelected: () => [], setOptionsHtml: () => {} };
     const trigger = document.getElementById(`rd-${prefix}-trigger`);
     const panel   = document.getElementById(`rd-${prefix}-panel`);
     const chips   = document.getElementById(`rd-${prefix}-chips`);
+    const optionsEl = document.getElementById(`rd-${prefix}-options`);
     const allLabel = root.dataset.allLabel;
-    const checkboxes = () => Array.from(panel.querySelectorAll('input[type=checkbox]'));
+    const checkboxes = () => Array.from(optionsEl.querySelectorAll('input[type=checkbox]'));
 
     function renderChips() {
-        const selected = checkboxes().filter(cb => cb.checked).map(cb => cb.value);
+        const selected = checkboxes().filter(cb => cb.checked).map(cb => cb.dataset.label || cb.value);
         if (selected.length === 0) { chips.textContent = allLabel; return; }
         chips.textContent = selected.length <= 2 ? selected.join('، ') : `${selected[0]}، ${selected[1]} +${selected.length - 2}`;
     }
 
-    checkboxes().forEach(cb => cb.addEventListener('change', renderChips));
+    optionsEl.addEventListener('change', (e) => { if (e.target.matches('input[type=checkbox]')) renderChips(); });
     trigger.addEventListener('click', (e) => { e.stopPropagation(); panel.classList.toggle('open'); });
     document.addEventListener('click', (e) => { if (!root.contains(e.target)) panel.classList.remove('open'); });
     document.getElementById(`rd-${prefix}-selectall`)?.addEventListener('click', () => {
@@ -246,12 +268,32 @@ function rdCreateMultiselect(prefix) {
         checkboxes().forEach(cb => cb.checked = false); renderChips();
     });
 
-    return { getSelected: () => checkboxes().filter(cb => cb.checked).map(cb => cb.value) };
+    return {
+        getSelected: () => checkboxes().filter(cb => cb.checked).map(cb => cb.value),
+        setOptionsHtml: (html) => { optionsEl.innerHTML = html; renderChips(); },
+    };
 }
 
-const rdStoreMs = rdCreateMultiselect('store');
-const rdOmMs    = rdCreateMultiselect('om');
-const rdOcMs    = rdCreateMultiselect('oc');
+const rdStoreMs  = rdCreateMultiselect('store');
+const rdOmMs     = rdCreateMultiselect('om');
+const rdOcMs     = rdCreateMultiselect('oc');
+const rdMonthsMs = rdCreateMultiselect('months');
+
+const RD_MONTH_NAMES = ["January","February","March","April","May","June",
+                         "July","August","September","October","November","December"];
+
+/* Months multiselect is tied to the "since year" select — options are
+   whichever months actually have data in that year. */
+function rdUpdateMonthsMultiselect() {
+    const yearEl = document.getElementById('rd-since-year');
+    if (!yearEl) return;
+    const year = parseInt(yearEl.value);
+    const months = rdPeriods.filter(p => p.year === year).map(p => p.month).sort((a, b) => a - b);
+    const html = months.map(m =>
+        `<label class="rd-ms-option"><input type="checkbox" value="${m}" data-label="${RD_MONTH_NAMES[m - 1]}"><span>${RD_MONTH_NAMES[m - 1]}</span></label>`
+    ).join('');
+    rdMonthsMs.setOptionsHtml(html);
+}
 
 function rdDownload() {
     const p = new URLSearchParams({ reportType: RD_REPORT_ID });
@@ -272,8 +314,12 @@ function rdDownload() {
     const selectedOcs = rdOcMs.getSelected();
     if (selectedOcs.length) p.set('oc', selectedOcs.join(','));
 
+    const selectedMonths = rdMonthsMs.getSelected();
+    if (selectedMonths.length) p.set('months', selectedMonths.join(','));
+
     window.location.href = __AREA_PREFIX + '/dashboard/export?' + p.toString();
 }
 
 rdUpdateMonths();
+rdUpdateMonthsMultiselect();
 </script>

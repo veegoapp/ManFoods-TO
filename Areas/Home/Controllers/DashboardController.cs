@@ -81,13 +81,14 @@ public class DashboardController : Controller
     // calls) so the shared Reports view's download buttons work under the Home area too.
     [HttpGet("home/dashboard/export")]
     public async Task<IActionResult> Export(int month, int year, string reportType = "summary",
-        string? store = null, string? om = null, string? oc = null)
+        string? store = null, string? om = null, string? oc = null, string? months = null)
     {
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetAssignedName();
         store = string.IsNullOrWhiteSpace(store) ? null : store;
         om = string.IsNullOrWhiteSpace(om) ? null : om;
         oc = string.IsNullOrWhiteSpace(oc) ? null : oc;
+        months = string.IsNullOrWhiteSpace(months) ? null : months;
 
         switch (reportType)
         {
@@ -107,8 +108,12 @@ public class DashboardController : Controller
                 return await DownloadWorkbookAsync(await _reports.BuildEarlyWarningReportAsync(store), "Early_Warning_Report.xlsx");
             case "trend-matrix":
                 return await DownloadWorkbookAsync(
-                    await _reports.BuildTrendMatrixReportAsync(role, assignedName, om, oc, year > 0 ? year : null),
+                    await _reports.BuildTrendMatrixReportAsync(role, assignedName, om, oc, year > 0 ? year : null, months),
                     $"Turnover_Trend_Matrix_{year}.xlsx");
+            case "ninety-day-trend-matrix":
+                return await DownloadWorkbookAsync(
+                    await _reports.BuildNinetyDayTrendMatrixReportAsync(om, oc, months, year > 0 ? year : null),
+                    "90_Day_Trend_Matrix_Report.xlsx");
             case "full":
                 return await DownloadWorkbookAsync(
                     await _reports.BuildFullReportAsync(month, year, role, assignedName, store),

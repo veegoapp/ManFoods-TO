@@ -435,10 +435,9 @@ public class ReportService : IReportService
     }
 
     // ── Trend Matrix ─────────────────────────────────────────
-    private async Task AddTrendMatrixSheetAsync(XLWorkbook wb, string role, string? assignedName, string? om = null, string? oc = null, int? sinceYear = null)
+    private static void WriteTrendMatrixSheet(XLWorkbook wb, string sheetName, TrendMatrixResult result)
     {
-        var result = await _dashboard.GetTrendMatrixAsync(role, assignedName, om, oc, sinceYear);
-        var ws = AddSheet(wb, "Turnover Trend Matrix");
+        var ws = AddSheet(wb, sheetName);
 
         var headerList = new List<string> { "OC", "OM", "Store" };
         headerList.AddRange(result.Periods);
@@ -466,10 +465,25 @@ public class ReportService : IReportService
         Finalize(ws);
     }
 
-    public async Task<XLWorkbook> BuildTrendMatrixReportAsync(string role, string? assignedName, string? om = null, string? oc = null, int? sinceYear = null)
+    private async Task AddTrendMatrixSheetAsync(XLWorkbook wb, string role, string? assignedName, string? om = null, string? oc = null, int? sinceYear = null, string? months = null)
+    {
+        var result = await _dashboard.GetTrendMatrixAsync(role, assignedName, om, oc, sinceYear, months);
+        WriteTrendMatrixSheet(wb, "Turnover Trend Matrix", result);
+    }
+
+    public async Task<XLWorkbook> BuildTrendMatrixReportAsync(string role, string? assignedName, string? om = null, string? oc = null, int? sinceYear = null, string? months = null)
     {
         var wb = new XLWorkbook();
-        await AddTrendMatrixSheetAsync(wb, role, assignedName, om, oc, sinceYear);
+        await AddTrendMatrixSheetAsync(wb, role, assignedName, om, oc, sinceYear, months);
+        return wb;
+    }
+
+    // ── 90-Day Trend Matrix ────────────────────────────────────
+    public async Task<XLWorkbook> BuildNinetyDayTrendMatrixReportAsync(string? om = null, string? oc = null, string? months = null, int? sinceYear = null)
+    {
+        var wb = new XLWorkbook();
+        var result = await _ninetyDay.GetTrendMatrixAsync(om, oc, months, sinceYear);
+        WriteTrendMatrixSheet(wb, "90-Day Trend Matrix", result);
         return wb;
     }
 

@@ -53,4 +53,8 @@ public class NinetyDayTurnoverApiController : ControllerBase
     public async Task<IActionResult> Reasons([FromQuery] int month, [FromQuery] int year, [FromQuery] string? store,
         [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months) =>
         Ok(await _turnover.GetEarlyLeaverReasonsAsync(month, year, store, fromMonth, fromYear, om, oc, months));
+
+    [HttpGet("trend-matrix")]
+    public async Task<IActionResult> TrendMatrix([FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months, [FromQuery] int? sinceYear) =>
+        Ok(await _turnover.GetTrendMatrixAsync(om, oc, months, sinceYear));
 }

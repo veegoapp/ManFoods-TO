@@ -246,4 +246,68 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
             .OrderByDescending(c => c.Value)
             .ToList();
     }
+
+    public async Task<TrendMatrixResult> GetTrendMatrixAsync(string? om = null, string? oc = null, string? months = null, int? sinceYear = null)
+    {
+        var activeHires = await LoadActiveHiresAsync();
+        var resTenures = await LoadResignationTenuresAsync();
+        var omOcStores = await GetStoresForOmOcAsync(om, oc);
+        var monthFilter = MultiValueFilter.Split(months)?.Select(int.Parse).ToHashSet();
+
+        var periods = activeHires.Select(a => (a.Month, a.Year))
+            .Concat(resTenures.Select(r => (r.HireDate.Month, r.HireDate.Year)))
+            .Distinct()
+            .Where(p => !sinceYear.HasValue || p.Year >= sinceYear.Value)
+            .Where(p => monthFilter == null || monthFilter.Contains(p.Month))
+            .OrderBy(p => p.Year).ThenBy(p => p.Month)
+            .ToList();
+        var periodKeys = periods.Select(p => $"{p.Year:D4}-{p.Month:D2}").ToList();
+
+        var allStores = activeHires.Select(a => a.Store)
+            .Concat(resTenures.Select(r => r.Store))
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct()
+            .OrderBy(s => s)
+            .ToList();
+        if (omOcStores != null) allStores = allStores.Where(s => omOcStores.Contains(s)).ToList();
+
+        var storeRefList = await _db.StoreReferences.ToListAsync();
+        var latestRefByStore = storeRefList.GroupBy(s => s.StoreName)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(s => s.Year).ThenByDescending(s => s.Month).First());
+        var ocByStore = latestRefByStore.ToDictionary(kv => kv.Key, kv => kv.Value.OperationConsultant ?? "");
+        var omByStore = latestRefByStore.ToDictionary(kv => kv.Key, kv => kv.Value.OperationManager ?? "");
+
+        var rows = allStores.Select(store =>
+        {
+            var periodRates = new Dictionary<string, double?>();
+            var nonNullRates = new List<double>();
+            var storeList = new List<string> { store };
+
+            foreach (var (m, y) in periods)
+            {
+                var pk = $"{y:D4}-{m:D2}";
+                var kpi = ComputeKpi(activeHires, resTenures, new HashSet<int> { y * 100 + m }, m, y, storeList, null);
+                if (kpi.TotalHires > 0)
+                {
+                    periodRates[pk] = kpi.Rate;
+                    nonNullRates.Add(kpi.Rate);
+                }
+                else
+                {
+                    periodRates[pk] = null;
+                }
+            }
+
+            return new TrendMatrixRow
+            {
+                StoreName           = store,
+                OperationConsultant = ocByStore.TryGetValue(store, out var ocVal) ? ocVal : "",
+                OperationManager    = omByStore.TryGetValue(store, out var omVal) ? omVal : "",
+                PeriodRates         = periodRates,
+                AvgRate             = nonNullRates.Count > 0 ? Math.Round(nonNullRates.Average(), 1) : null,
+            };
+        }).ToList();
+
+        return new TrendMatrixResult { Periods = periodKeys, Rows = rows };
+    }
 }
