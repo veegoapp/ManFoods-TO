@@ -33,6 +33,21 @@ public class ScorecardService : IScorecardService
         public string LatestOm = "";
     }
 
+    /// <summary>
+    /// When no year is supplied by the caller, returns the latest year present
+    /// in store_reference so the scorecard is never blank due to DateTime.Now
+    /// drifting ahead of the data. Returns null only when the table is empty.
+    /// </summary>
+    private async Task<int?> ResolveEffectiveYearAsync(int? year)
+    {
+        if (year.HasValue) return year;
+        var latest = await _db.StoreReferences
+            .OrderByDescending(s => s.Year).ThenByDescending(s => s.Month)
+            .Select(s => new { s.Year })
+            .FirstOrDefaultAsync();
+        return latest?.Year;
+    }
+
     // Walks every StoreReference row in the resolved window for the given dimension,
     // following each person across whichever store(s) they were assigned to in each
     // period — instead of only looking at the single latest period's assignment.
@@ -123,7 +138,11 @@ public class ScorecardService : IScorecardService
 
     public async Task<List<ScorecardRow>> GetScorecardAsync(string dimension, string? om = null, string? oc = null, string? months = null, int? year = null)
     {
-        var aggregates = await BuildNameAggregatesAsync(dimension, om, oc, months, year);
+        // Resolve once so both aggregates and the historical period window use
+        // the same effective year (latest data year when caller passes no year).
+        var effectiveYear = await ResolveEffectiveYearAsync(year);
+
+        var aggregates = await BuildNameAggregatesAsync(dimension, om, oc, months, effectiveYear);
         if (aggregates.Count == 0) return new List<ScorecardRow>();
 
         var historical = await LoadHistoricalRecordsAsync();
@@ -131,7 +150,7 @@ public class ScorecardService : IScorecardService
         // Scope early-leaver / retention rates to the selected period (hires whose hire
         // date falls within the resolved window). Falls back to all-time when no period
         // is specified so the scorecard is always populated.
-        var periodKeys = DashboardService.ResolvePeriods(null, year, null, null, months)
+        var periodKeys = DashboardService.ResolvePeriods(null, effectiveYear, null, null, months)
             .Select(p => p.Year * 100 + p.Month)
             .ToHashSet();
         var periodFiltered = periodKeys.Count > 0

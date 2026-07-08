@@ -151,13 +151,15 @@ public class ExitInterviewService : IExitInterviewService
     public async Task<ExitSentimentSummary> GetSentimentSummaryAsync(ExitInterviewFilter filter, string role, string? assignedName)
     {
         var rows = await FilteredAsync(filter, role, assignedName);
+        // Sentiment is derived from WouldReturn + OverallExperience, but
+        // TotalResponses must count forms (rows), not the sum of two answer columns.
         var answers = rows.Select(e => e.WouldReturn).Concat(rows.Select(e => e.OverallExperience))
             .Where(a => !string.IsNullOrWhiteSpace(a))
             .ToList();
 
         return new ExitSentimentSummary
         {
-            TotalResponses = answers.Count,
+            TotalResponses = rows.Count,
             PositivePercent = answers.Count == 0 ? 0 : Math.Round(answers.Count(a => Sentiment(a) > 0) * 100.0 / answers.Count, 1),
         };
     }
