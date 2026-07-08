@@ -8,7 +8,7 @@ public class ReportService : IReportService
     private const string BrandRed = "#DA291C";
     private const string BandFill = "#FAFAFA";
     private const string GridColor = "#D9D9D9";
-    private const string PercentFormat = "0.0\"%\"";
+    private const string PercentFormat = "0.0%";
     private const string DateFormat = "yyyy-mm-dd";
 
     private readonly IDashboardService _dashboard;
@@ -55,7 +55,7 @@ public class ReportService : IReportService
 
     private static void SetPercentCell(IXLCell cell, double value)
     {
-        cell.Value = value;
+        cell.Value = value / 100.0;
         cell.Style.NumberFormat.Format = PercentFormat;
     }
 
