@@ -132,9 +132,9 @@ public class ReportService : IReportService
 
         var ws1 = AddSheet(wb, "Summary KPIs");
         StyleHeader(ws1, new[] { "Metric", "Value" });
-        ws1.Cell(2, 1).Value = "Total Headcount"; ws1.Cell(2, 2).Value = kpi.TotalHeadcount;
-        ws1.Cell(3, 1).Value = "New Hires"; ws1.Cell(3, 2).Value = kpi.NewHires;
-        ws1.Cell(4, 1).Value = "Total Resignations"; ws1.Cell(4, 2).Value = kpi.TotalResignations;
+        ws1.Cell(2, 1).Value = "Total Headcount"; SetIntCell(ws1.Cell(2, 2), kpi.TotalHeadcount);
+        ws1.Cell(3, 1).Value = "New Hires"; SetIntCell(ws1.Cell(3, 2), kpi.NewHires);
+        ws1.Cell(4, 1).Value = "Total Resignations"; SetIntCell(ws1.Cell(4, 2), kpi.TotalResignations);
         ws1.Cell(5, 1).Value = "Turnover Rate"; SetPercentCell(ws1.Cell(5, 2), kpi.TurnoverRate);
         Finalize(ws1);
 
@@ -162,9 +162,9 @@ public class ReportService : IReportService
             ws.Cell(r + 2, 1).Value = row.StoreName;
             ws.Cell(r + 2, 2).Value = row.OperationConsultant;
             ws.Cell(r + 2, 3).Value = row.OperationManager;
-            ws.Cell(r + 2, 4).Value = row.Headcount;
-            ws.Cell(r + 2, 5).Value = row.NewHires;
-            ws.Cell(r + 2, 6).Value = row.Resignations;
+            SetIntCell(ws.Cell(r + 2, 4), row.Headcount);
+            SetIntCell(ws.Cell(r + 2, 5), row.NewHires);
+            SetIntCell(ws.Cell(r + 2, 6), row.Resignations);
             SetPercentCell(ws.Cell(r + 2, 7), row.TurnoverRate);
         }
         Finalize(ws);
@@ -189,8 +189,8 @@ public class ReportService : IReportService
         {
             var t = trend[i];
             wsTrend.Cell(i + 2, 1).Value = t.Label;
-            wsTrend.Cell(i + 2, 2).Value = t.TotalHires;
-            wsTrend.Cell(i + 2, 3).Value = t.EarlyLeavers;
+            SetIntCell(wsTrend.Cell(i + 2, 2), t.TotalHires);
+            SetIntCell(wsTrend.Cell(i + 2, 3), t.EarlyLeavers);
             SetPercentCell(wsTrend.Cell(i + 2, 4), t.Rate);
             wsTrend.Cell(i + 2, 5).Value = t.IsProvisional ? "Yes" : "No";
         }
@@ -219,7 +219,7 @@ public class ReportService : IReportService
                 wsLeavers.Cell(row, 4).Value = lv.JobTitle;
                 SetDateCell(wsLeavers.Cell(row, 5), lv.HireDate);
                 SetDateCell(wsLeavers.Cell(row, 6), lv.ResignationDate);
-                wsLeavers.Cell(row, 7).Value = lv.TenureDays;
+                SetIntCell(wsLeavers.Cell(row, 7), lv.TenureDays);
                 row++;
             }
 
@@ -255,10 +255,10 @@ public class ReportService : IReportService
         for (int i = 0; i < milestones.Count; i++)
         {
             var m = milestones[i];
-            wsMilestones.Cell(i + 2, 1).Value = m.Days;
+            SetIntCell(wsMilestones.Cell(i + 2, 1), m.Days);
             SetPercentCell(wsMilestones.Cell(i + 2, 2), m.RetentionRate);
-            wsMilestones.Cell(i + 2, 3).Value = m.TotalHires;
-            wsMilestones.Cell(i + 2, 4).Value = m.Retained;
+            SetIntCell(wsMilestones.Cell(i + 2, 3), m.TotalHires);
+            SetIntCell(wsMilestones.Cell(i + 2, 4), m.Retained);
             wsMilestones.Cell(i + 2, 5).Value = m.ThroughCohortLabel;
         }
         Finalize(wsMilestones);
@@ -268,9 +268,9 @@ public class ReportService : IReportService
         for (int i = 0; i < survival.Count; i++)
         {
             var s = survival[i];
-            wsSurvival.Cell(i + 2, 1).Value = s.Day;
+            SetIntCell(wsSurvival.Cell(i + 2, 1), s.Day);
             SetPercentCell(wsSurvival.Cell(i + 2, 2), s.RetentionRate);
-            wsSurvival.Cell(i + 2, 3).Value = s.SampleSize;
+            SetIntCell(wsSurvival.Cell(i + 2, 3), s.SampleSize);
         }
         Finalize(wsSurvival);
 
@@ -335,7 +335,7 @@ public class ReportService : IReportService
         {
             wsDrivers.Cell(i + 2, 1).Value = drivers[i].Label;
             SetPercentCell(wsDrivers.Cell(i + 2, 2), drivers[i].PositivePercent);
-            wsDrivers.Cell(i + 2, 3).Value = drivers[i].TotalResponses;
+            SetIntCell(wsDrivers.Cell(i + 2, 3), drivers[i].TotalResponses);
         }
         Finalize(wsDrivers);
 
@@ -370,14 +370,14 @@ public class ReportService : IReportService
         {
             var r = rows[i];
             ws.Cell(i + 2, 1).Value = r.Name;
-            ws.Cell(i + 2, 2).Value = r.StoreCount;
-            ws.Cell(i + 2, 3).Value = r.Headcount;
+            SetIntCell(ws.Cell(i + 2, 2), r.StoreCount);
+            SetIntCell(ws.Cell(i + 2, 3), r.Headcount);
             SetPercentCell(ws.Cell(i + 2, 4), r.TurnoverRate);
             SetPercentCell(ws.Cell(i + 2, 5), r.EarlyLeaver90Rate);
             SetPercentCell(ws.Cell(i + 2, 6), r.Retention180Rate);
             if (r.ExitResponseCount > 0) SetPercentCell(ws.Cell(i + 2, 7), r.ExitSentimentPercent);
             else ws.Cell(i + 2, 7).Value = "N/A";
-            ws.Cell(i + 2, 8).Value = r.ExitResponseCount;
+            SetIntCell(ws.Cell(i + 2, 8), r.ExitResponseCount);
         }
         Finalize(ws);
     }
@@ -404,9 +404,9 @@ public class ReportService : IReportService
 
         var wsSummary = AddSheet(wb, "Early Warning Summary");
         StyleHeader(wsSummary, new[] { "Metric", "Value" });
-        wsSummary.Cell(2, 1).Value = "Total On Watchlist"; wsSummary.Cell(2, 2).Value = summary.TotalWatchlist;
-        wsSummary.Cell(3, 1).Value = "High Risk (4–5 stars)"; wsSummary.Cell(3, 2).Value = summary.HighRiskCount;
-        wsSummary.Cell(4, 1).Value = "In First 90 Days"; wsSummary.Cell(4, 2).Value = summary.NewHireWindowCount;
+        wsSummary.Cell(2, 1).Value = "Total On Watchlist"; SetIntCell(wsSummary.Cell(2, 2), summary.TotalWatchlist);
+        wsSummary.Cell(3, 1).Value = "High Risk (4–5 stars)"; SetIntCell(wsSummary.Cell(3, 2), summary.HighRiskCount);
+        wsSummary.Cell(4, 1).Value = "In First 90 Days"; SetIntCell(wsSummary.Cell(4, 2), summary.NewHireWindowCount);
         wsSummary.Cell(5, 1).Value = "Company Baseline Early-Leave Rate"; SetPercentCell(wsSummary.Cell(5, 2), summary.CompanyBaselineRate);
         Finalize(wsSummary);
 
@@ -419,9 +419,9 @@ public class ReportService : IReportService
             wsWatchlist.Cell(i + 2, 2).Value = w.Store;
             wsWatchlist.Cell(i + 2, 3).Value = w.JobTitle;
             SetDateCell(wsWatchlist.Cell(i + 2, 4), w.HireDate);
-            wsWatchlist.Cell(i + 2, 5).Value = w.TenureDays;
+            SetIntCell(wsWatchlist.Cell(i + 2, 5), w.TenureDays);
             wsWatchlist.Cell(i + 2, 6).Value = new string('★', w.Stars) + new string('☆', 5 - w.Stars);
-            wsWatchlist.Cell(i + 2, 7).Value = w.RiskScore;
+            SetIntCell(wsWatchlist.Cell(i + 2, 7), w.RiskScore);
             wsWatchlist.Cell(i + 2, 8).Value = string.Join(" | ", w.Reasons.Select(r => r.Type));
         }
         Finalize(wsWatchlist);
