@@ -1,0 +1,18 @@
+name: Build and Publish
+on: [workflow_dispatch, push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x' # أو إصدار الـ .NET اللي شغال بيه مشروعك (مثلاً 8.0.x)
+    - name: Publish
+      run: dotnet publish -c Release -o ./publish
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: site-files
+        path: ./publish
