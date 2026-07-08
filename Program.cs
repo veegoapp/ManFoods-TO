@@ -39,26 +39,26 @@ builder.Services.AddRateLimiter(options =>
 
 builder.Services.AddDistributedMemoryCache();
 
-// 1. تثبيت إعدادات كوكيز الهوية (Authentication Cookies) لمنع سقوطها على السيرفر المشترك
+// 1. تثبيت إعدادات كوكيز الهوية بدون نقطة في الاسم وبسياسة مرنة تناسب الـ Proxy الخاص بالسيرفر المشترك
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // تتوافق تلقائياً مع طلبات السيرفر
     options.Cookie.IsEssential = true;
     options.Cookie.HttpOnly = true;
-    options.Cookie.Name = "wi-crew.identity";
+    options.Cookie.Name = "wicrewidentity"; // تم إزالة النقطة لتجنب رفض السيرفر لها
     options.LoginPath = "/login";
 });
 
-// 2. تثبيت إعدادات الـ Session لتتوافق تماماً مع البيئة الحية
+// 2. تثبيت إعدادات الـ Session لضمان استقرار جلسة المستخدم وعدم سقوطها
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromHours(1);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.Cookie.Name = "wi-crew.session";
+    options.Cookie.Name = "wicrewsession"; // تم إزالة النقطة لتجنب رفض السيرفر لها
     options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // إجبار الـ HTTPS
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // تتوافق تلقائياً مع طلبات السيرفر
 });
 
 var connectionString = BuildConnectionString();
