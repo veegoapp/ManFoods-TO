@@ -38,6 +38,19 @@ builder.Services.AddRateLimiter(options =>
 });
 
 builder.Services.AddDistributedMemoryCache();
+
+// 1. تثبيت إعدادات كوكيز الهوية (Authentication Cookies) لمنع سقوطها على السيرفر المشترك
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.IsEssential = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.Name = "wi-crew.identity";
+    options.LoginPath = "/login";
+});
+
+// 2. تثبيت إعدادات الـ Session لتتوافق تماماً مع البيئة الحية
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromHours(1);
@@ -45,7 +58,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
     options.Cookie.Name = "wi-crew.session";
     options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // إجبار الـ HTTPS
 });
 
 var connectionString = BuildConnectionString();
@@ -71,7 +84,7 @@ builder.Services.AddScoped<IGeminiService, GeminiService>();
 
 var app = builder.Build();
 
-// ── Reverse-proxy trust (Replit / any TLS-terminating proxy) ──
+// ── Reverse-proxy trust (دعم موازنات الأحمال والسيرفرات المشتركة) ──
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
@@ -103,7 +116,6 @@ app.Use(async (context, next) =>
     h["X-Frame-Options"]         = "SAMEORIGIN";
     h["Referrer-Policy"]         = "strict-origin-when-cross-origin";
     h["X-Permitted-Cross-Domain-Policies"] = "none";
-    // Baseline CSP: allow same-origin resources + trusted CDNs used by the app
     h["Content-Security-Policy"] =
         "default-src 'self'; " +
         "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
@@ -119,7 +131,10 @@ app.Use(async (context, next) =>
 app.UseStaticFiles();
 app.UseRouting();
 app.UseRateLimiter();
+
+// الترتيب الصحيح واللازم لتفعيل الجلسات والصلاحيات
 app.UseSession();
+app.UseAuthentication();
 app.UseAuthorization();
 
 // ── Areas ─────────────────────────────────────────────
