@@ -11,6 +11,8 @@
     var isRtl        = currentLang == "ar";
     var returnUrl    = HttpCtx.HttpContext?.Request.Path.Value ?? "/";
     var switchLang   = isRtl ? "en" : "ar";
+    var __area       = ViewContext.RouteData.Values["area"]?.ToString();
+    var __areaPrefix = string.Equals(__area, "Home", StringComparison.OrdinalIgnoreCase) ? "/home" : "/admin";
 }
 <!DOCTYPE html>
 <html lang="@currentLang" dir="@(isRtl ? "rtl" : "ltr")">
@@ -32,7 +34,7 @@
 <div class="admin-shell">
     <!-- ══ SIDEBAR ════════════════════════════════════════ -->
     <aside class="admin-sidebar" id="adminSidebar">
-        <a class="admin-sidebar-brand" href="/admin/dashboard/turnover" style="text-decoration:none">
+        <a class="admin-sidebar-brand" href="@__areaPrefix/dashboard/turnover" style="text-decoration:none">
             <div class="admin-sidebar-logo"><img src="/images/mclogo.png" alt="WI"/></div>
             <div>
                 <div class="admin-sidebar-brand-main">Workforce Intelligence</div>
@@ -41,25 +43,25 @@
         </a>
 
         <nav class="admin-sidebar-nav">
-            <a href="/admin/dashboard/workforce" class="admin-nav-link @(IsActive("Workforce") ? "active" : "")">
+            <a href="@__areaPrefix/dashboard/workforce" class="admin-nav-link @(IsActive("Workforce") ? "active" : "")">
                 <i class="bi bi-people-fill"></i><span>@L["Nav_Workforce"]</span>
             </a>
-            <a href="/admin/dashboard/turnover" class="admin-nav-link @(IsActive("Turnover") ? "active" : "")">
+            <a href="@__areaPrefix/dashboard/turnover" class="admin-nav-link @(IsActive("Turnover") ? "active" : "")">
                 <i class="bi bi-pie-chart-fill"></i><span>@L["Nav_Turnover"]</span>
             </a>
-            <a href="/admin/dashboard/ninetydayturnover" class="admin-nav-link @(IsActive("NinetyDayTurnover") ? "active" : "")">
+            <a href="@__areaPrefix/dashboard/ninetydayturnover" class="admin-nav-link @(IsActive("NinetyDayTurnover") ? "active" : "")">
                 <i class="bi bi-hourglass-split"></i><span>@L["Nav_NinetyDay"]</span>
             </a>
-            <a href="/admin/dashboard/comparisons" class="admin-nav-link @(IsActive("Comparisons") ? "active" : "")">
+            <a href="@__areaPrefix/dashboard/comparisons" class="admin-nav-link @(IsActive("Comparisons") ? "active" : "")">
                 <i class="bi bi-arrow-left-right"></i><span>@L["Nav_Comparisons"]</span>
             </a>
-            <a href="/admin/dashboard/retention" class="admin-nav-link @(IsActive("Retention") ? "active" : "")">
+            <a href="@__areaPrefix/dashboard/retention" class="admin-nav-link @(IsActive("Retention") ? "active" : "")">
                 <i class="bi bi-graph-up-arrow"></i><span>@L["Nav_Retention"]</span>
             </a>
-            <a href="/admin/dashboard/exitinterviews" class="admin-nav-link @(IsActive("ExitInterviews") ? "active" : "")">
+            <a href="@__areaPrefix/dashboard/exitinterviews" class="admin-nav-link @(IsActive("ExitInterviews") ? "active" : "")">
                 <i class="bi bi-chat-square-text-fill"></i><span>@L["Nav_ExitInterviews"]</span>
             </a>
-            <a href="/admin/dashboard/aiassistant" class="admin-nav-link @(IsActive("AiAssistant") ? "active" : "")">
+            <a href="@__areaPrefix/dashboard/aiassistant" class="admin-nav-link @(IsActive("AiAssistant") ? "active" : "")">
                 <i class="bi bi-stars"></i><span>@L["Nav_AiAssistant"]</span>
             </a>
             @if (userRole == "Admin")
@@ -68,13 +70,13 @@
                     <i class="bi bi-cpu-fill"></i><span>@L["Nav_AiUsage"]</span>
                 </a>
             }
-            <a href="/admin/dashboard/earlywarning" class="admin-nav-link @(IsActive("EarlyWarning") ? "active" : "")">
+            <a href="@__areaPrefix/dashboard/earlywarning" class="admin-nav-link @(IsActive("EarlyWarning") ? "active" : "")">
                 <i class="bi bi-exclamation-diamond-fill"></i><span>@L["Nav_EarlyWarning"]</span>
             </a>
-            <a href="/admin/dashboard/scorecard" class="admin-nav-link @(IsActive("Scorecard") ? "active" : "")">
+            <a href="@__areaPrefix/dashboard/scorecard" class="admin-nav-link @(IsActive("Scorecard") ? "active" : "")">
                 <i class="bi bi-award-fill"></i><span>@L["Nav_Scorecard"]</span>
             </a>
-            <a href="/admin/dashboard/stores" class="admin-nav-link @(IsActive("Stores") ? "active" : "")">
+            <a href="@__areaPrefix/dashboard/stores" class="admin-nav-link @(IsActive("Stores") ? "active" : "")">
                 <i class="bi bi-shop"></i><span>@L["Nav_Stores"]</span>
             </a>
             @if (userRole == "Admin")
@@ -83,7 +85,7 @@
                     <i class="bi bi-cloud-upload-fill"></i><span>@L["Nav_DataManagement"]</span>
                 </a>
             }
-            <a href="/admin/dashboard/reports" class="admin-nav-link @(IsActive("Reports") ? "active" : "")">
+            <a href="@__areaPrefix/dashboard/reports" class="admin-nav-link @(IsActive("Reports") ? "active" : "")">
                 <i class="bi bi-file-earmark-bar-graph-fill"></i><span>@L["Nav_Reports"]</span>
             </a>
             @if (userRole == "Admin")
