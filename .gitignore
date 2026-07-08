@@ -7,3 +7,4 @@ obj/
 *.bak
 *.tmp
 appsettings.Production.json
+App_Data/keys/

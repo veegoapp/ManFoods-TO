@@ -58,8 +58,8 @@ public class AiAssistantApiController : ControllerBase
         if (!allowed)
             return StatusCode(429, new { error = $"وصلت لأقصى عدد أسئلة مسموح بيه النهاردة ({limit}). حاول تاني بكرة.", used, limit });
 
-        const string role = "Admin";
-        string? assignedName = null;
+        var role = HttpContext.Session.GetRole();
+        var assignedName = HttpContext.Session.GetAssignedName();
 
         var kpis = await _dashboard.GetKpisAsync(request.Month, request.Year, request.Store, role, assignedName);
 
