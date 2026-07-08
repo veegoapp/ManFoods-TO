@@ -129,9 +129,6 @@
                     <span class="icon-dark">@L["Layout_DarkMode"]</span>
                     <span class="icon-light">@L["Layout_LightMode"]</span>
                 </button>
-                <a href="/home/account/changepassword" class="btn-change-password w-100 mb-1" style="text-decoration:none">
-                    <i class="bi bi-key-fill"></i>@L["Layout_ChangePassword"]
-                </a>
                 <form action="/language/set" method="post" class="w-100 mb-1">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="lang" value="@switchLang"/>

@@ -106,9 +106,6 @@
                 <i class="bi bi-moon-stars-fill icon-dark"></i>
                 <i class="bi bi-sun-fill icon-light"></i>
             </button>
-            <a href="@(userRole == "Admin" ? "/admin/account/changepassword" : "/home/account/changepassword")" class="admin-sidebar-iconbtn" title="@L["Layout_ChangePassword"]">
-                <i class="bi bi-key-fill"></i>
-            </a>
             <form asp-area="@(userRole == "Admin" ? "Admin" : "Home")" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="admin-sidebar-iconbtn" title="@L["Layout_SignOut"]">
