@@ -44,7 +44,7 @@ else
         <div class="row g-4 mb-4">
             @foreach (var rep in grp)
             {
-                <div class="@(rep.Id == "full" || rep.Id == "exit-interviews" ? "col-md-8 col-lg-6" : "col-md-6 col-lg-4")">
+                <div class="@(rep.Id == "exit-interviews" ? "col-md-8 col-lg-6" : "col-md-6 col-lg-4")">
                     <a class="rep-card" href="@(__areaPrefix)/dashboard/reports/@rep.Id">
                         <div class="card-dark h-100 d-flex flex-column">
                             <div class="d-flex gap-3 align-items-start">

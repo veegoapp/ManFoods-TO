@@ -28,13 +28,6 @@ public static class ReportCatalog
     {
         new ReportDefinition
         {
-            Id = "full", Section = "Full Package", Title = "Full Company Report",
-            Description = "Everything in one workbook — Summary, Store Comparison, Trend Matrix, 90-Day Turnover, Retention, Exit Interviews, Scorecard, and Early Warning.",
-            Icon = "bi-file-earmark-zip-fill", IconBg = "oklch(0.5 0.18 25 / .15)", IconColor = "oklch(0.68 0.18 25)",
-            UsesPeriod = true, UsesStore = true,
-        },
-        new ReportDefinition
-        {
             Id = "summary", Section = "Turnover & Workforce", Title = "Monthly Summary",
             Description = "Headcount, New Hires, Resignations, and Turnover Rate for the selected month — broken down by Job Title, Tenure, and Gender.",
             Icon = "bi-file-earmark-spreadsheet-fill", IconBg = "rgba(39,174,96,.12)", IconColor = "#27ae60",

@@ -486,19 +486,4 @@ public class ReportService : IReportService
         WriteTrendMatrixSheet(wb, "90-Day Trend Matrix", result);
         return wb;
     }
-
-    // ── Full Company Report — everything in one workbook ────
-    public async Task<XLWorkbook> BuildFullReportAsync(int month, int year, string role, string? assignedName, string? store = null)
-    {
-        var wb = new XLWorkbook();
-        await AddSummarySheetsAsync(wb, month, year, role, assignedName, store);
-        await AddStoreComparisonSheetAsync(wb, month, year, role, assignedName);
-        await AddTrendMatrixSheetAsync(wb, role, assignedName, sinceYear: year);
-        await AddNinetyDaySheetsAsync(wb, store);
-        await AddRetentionSheetsAsync(wb, store);
-        await AddExitInterviewSheetsAsync(wb, new ExitInterviewFilter { Store = store });
-        await AddScorecardSheetsAsync(wb);
-        await AddEarlyWarningSheetsAsync(wb, store);
-        return wb;
-    }
 }

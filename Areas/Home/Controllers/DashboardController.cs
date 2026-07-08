@@ -114,10 +114,6 @@ public class DashboardController : Controller
                 return await DownloadWorkbookAsync(
                     await _reports.BuildNinetyDayTrendMatrixReportAsync(om, oc, months, year > 0 ? year : null),
                     "90_Day_Trend_Matrix_Report.xlsx");
-            case "full":
-                return await DownloadWorkbookAsync(
-                    await _reports.BuildFullReportAsync(month, year, role, assignedName, store),
-                    $"Full_Company_Report_{year}_{month:D2}.xlsx");
             default:
                 return await DownloadWorkbookAsync(
                     await _reports.BuildSummaryReportAsync(month, year, role, assignedName, store),
