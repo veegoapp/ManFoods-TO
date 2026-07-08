@@ -44,6 +44,36 @@ public class NinetyDayTurnoverApiController : ControllerBase
         [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months) =>
         Ok(await _turnover.GetByStoreAsync(month, year, fromMonth, fromYear, om, oc, months));
 
+    [HttpGet("store-comparison")]
+    public async Task<IActionResult> StoreComparison([FromQuery] int month, [FromQuery] int year,
+        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months) =>
+        Ok(await _turnover.GetStoreComparisonAsync(month, year, fromMonth, fromYear, om, oc, months));
+
+    [HttpGet("oc-om-analysis")]
+    public async Task<IActionResult> OcOmAnalysis([FromQuery] int month, [FromQuery] int year,
+        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months) =>
+        Ok(await _turnover.GetOcOmAnalysisAsync(month, year, fromMonth, fromYear, om, oc, months));
+
+    [HttpGet("job-titles")]
+    public async Task<IActionResult> JobTitles([FromQuery] int month, [FromQuery] int year, [FromQuery] string? store,
+        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months) =>
+        Ok(await _turnover.GetEarlyLeaverJobTitlesAsync(month, year, store, fromMonth, fromYear, om, oc, months));
+
+    [HttpGet("payroll-groups")]
+    public async Task<IActionResult> PayrollGroups([FromQuery] int month, [FromQuery] int year, [FromQuery] string? store,
+        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months) =>
+        Ok(await _turnover.GetEarlyLeaverPayrollGroupsAsync(month, year, store, fromMonth, fromYear, om, oc, months));
+
+    [HttpGet("gender-breakdown")]
+    public async Task<IActionResult> GenderBreakdown([FromQuery] int month, [FromQuery] int year, [FromQuery] string? store,
+        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months) =>
+        Ok(await _turnover.GetEarlyLeaverGenderBreakdownAsync(month, year, store, fromMonth, fromYear, om, oc, months));
+
+    [HttpGet("smart-insights")]
+    public async Task<IActionResult> SmartInsights([FromQuery] int month, [FromQuery] int year, [FromQuery] string? store,
+        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months) =>
+        Ok(await _turnover.GetSmartInsightsAsync(month, year, store, fromMonth, fromYear, om, oc, months));
+
     [HttpGet("early-leavers")]
     public async Task<IActionResult> EarlyLeavers([FromQuery] int month, [FromQuery] int year, [FromQuery] string? store,
         [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? months) =>

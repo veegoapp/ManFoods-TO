@@ -31,3 +31,29 @@ public class EarlyLeaverRow
     public DateOnly ResignationDate { get; set; }
     public int TenureDays { get; set; }
 }
+
+public class NinetyDayStoreRow
+{
+    public string StoreName { get; set; } = "";
+    public string OperationConsultant { get; set; } = "";
+    public string OperationManager { get; set; } = "";
+    public int TotalHires { get; set; }
+    public int EarlyLeavers { get; set; }
+    public double Rate { get; set; }
+}
+
+public class NinetyDayOcOmRow
+{
+    public string Name { get; set; } = "";
+    public string Type { get; set; } = "";
+    public int StoreCount { get; set; }
+    public int TotalHires { get; set; }
+    public int EarlyLeavers { get; set; }
+    public double AvgRate { get; set; }
+}
+
+public class NinetyDayOcOmAnalysisResult
+{
+    public List<NinetyDayOcOmRow> OcRows { get; set; } = new();
+    public List<NinetyDayOcOmRow> OmRows { get; set; } = new();
+}

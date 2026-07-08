@@ -16,6 +16,8 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
         public string Name { get; set; } = "";
         public string Store { get; set; } = "";
         public string JobTitle { get; set; } = "";
+        public string PayrollGroup { get; set; } = "";
+        public string Gender { get; set; } = "";
         public DateOnly HireDate { get; set; }
         public DateOnly ResignationDate { get; set; }
         public int TenureDays { get; set; }
@@ -41,6 +43,8 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
             Name = r.Name,
             Store = r.Store,
             JobTitle = r.JobTitle,
+            PayrollGroup = r.PayrollGroup,
+            Gender = r.Gender,
             HireDate = r.HireDate!.Value,
             ResignationDate = r.ResignationDate!.Value,
             TenureDays = r.ResignationDate!.Value.DayNumber - r.HireDate!.Value.DayNumber,
@@ -191,6 +195,79 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
         return result.OrderByDescending(c => c.Value).ToList();
     }
 
+    public async Task<List<NinetyDayStoreRow>> GetStoreComparisonAsync(int month, int year,
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
+    {
+        var activeHires = await LoadActiveHiresAsync();
+        var resTenures = await LoadResignationTenuresAsync();
+        var periods = DashboardService.ResolvePeriods(month, year, fromMonth, fromYear, months);
+        var keys = periods.Select(p => p.Year * 100 + p.Month).ToHashSet();
+        var anchor = periods.OrderByDescending(p => p.Year * 100 + p.Month).First();
+        var omOcStores = await GetStoresForOmOcAsync(om, oc);
+
+        var stores = activeHires.Where(a => keys.Contains(a.Year * 100 + a.Month)).Select(a => a.Store)
+            .Concat(resTenures.Where(r => keys.Contains(r.HireDate.Year * 100 + r.HireDate.Month)).Select(r => r.Store))
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct();
+        if (omOcStores != null) stores = stores.Where(s => omOcStores.Contains(s));
+
+        var storeRefList = await _db.StoreReferences.ToListAsync();
+        var latestRefByStore = storeRefList.GroupBy(s => s.StoreName)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(s => s.Year).ThenByDescending(s => s.Month).First());
+
+        var rows = new List<NinetyDayStoreRow>();
+        foreach (var store in stores)
+        {
+            var kpi = ComputeKpi(activeHires, resTenures, keys, anchor.Month, anchor.Year, new List<string> { store }, null);
+            if (kpi.TotalHires == 0) continue;
+            latestRefByStore.TryGetValue(store, out var sr);
+            rows.Add(new NinetyDayStoreRow
+            {
+                StoreName           = store,
+                OperationConsultant = sr?.OperationConsultant ?? "",
+                OperationManager    = sr?.OperationManager ?? "",
+                TotalHires          = kpi.TotalHires,
+                EarlyLeavers        = kpi.EarlyLeavers,
+                Rate                = kpi.Rate,
+            });
+        }
+        return rows.OrderByDescending(r => r.Rate).ToList();
+    }
+
+    public async Task<NinetyDayOcOmAnalysisResult> GetOcOmAnalysisAsync(int month, int year,
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
+    {
+        var stores = await GetStoreComparisonAsync(month, year, fromMonth, fromYear, om, oc, months);
+
+        NinetyDayOcOmRow ToRow(IGrouping<string, NinetyDayStoreRow> g, string type) => new()
+        {
+            Name         = g.Key,
+            Type         = type,
+            StoreCount   = g.Count(),
+            TotalHires   = g.Sum(s => s.TotalHires),
+            EarlyLeavers = g.Sum(s => s.EarlyLeavers),
+            AvgRate      = g.Sum(s => s.TotalHires) > 0
+                ? Math.Round(g.Sum(s => s.EarlyLeavers) * 100.0 / g.Sum(s => s.TotalHires), 1)
+                : 0,
+        };
+
+        var ocRows = stores
+            .Where(s => !string.IsNullOrEmpty(s.OperationConsultant))
+            .GroupBy(s => s.OperationConsultant)
+            .Select(g => ToRow(g, "OC"))
+            .OrderByDescending(r => r.AvgRate)
+            .ToList();
+
+        var omRows = stores
+            .Where(s => !string.IsNullOrEmpty(s.OperationManager))
+            .GroupBy(s => s.OperationManager)
+            .Select(g => ToRow(g, "OM"))
+            .OrderByDescending(r => r.AvgRate)
+            .ToList();
+
+        return new NinetyDayOcOmAnalysisResult { OcRows = ocRows, OmRows = omRows };
+    }
+
     public async Task<List<EarlyLeaverRow>> GetEarlyLeaversAsync(int month, int year, string? store,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
     {
@@ -216,18 +293,63 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
             .ToList();
     }
 
-    public async Task<List<ChartDataItem>> GetEarlyLeaverReasonsAsync(int month, int year, string? store,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
+    // Early leavers (TenureDays <= 90) whose hire cohort and store fall within
+    // the resolved filter — shared by every "early leaver breakdown" chart.
+    private async Task<List<ResignationTenure>> EarlyLeaversAsync(int month, int year, string? store,
+        int? fromMonth, int? fromYear, string? om, string? oc, string? months)
     {
         var resTenures = await LoadResignationTenuresAsync();
         var keys = DashboardService.ResolvePeriods(month, year, fromMonth, fromYear, months)
             .Select(p => p.Year * 100 + p.Month).ToHashSet();
         var omOcStores = await GetStoresForOmOcAsync(om, oc);
         var stores = MultiValueFilter.Split(store);
-        var earlyLeaverIds = resTenures
+        return resTenures
             .Where(r => keys.Contains(r.HireDate.Year * 100 + r.HireDate.Month) && r.TenureDays <= 90
                      && (stores == null || stores.Contains(r.Store))
                      && (omOcStores == null || omOcStores.Contains(r.Store)))
+            .ToList();
+    }
+
+    public async Task<List<ChartDataItem>> GetEarlyLeaverJobTitlesAsync(int month, int year, string? store,
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
+    {
+        var leavers = await EarlyLeaversAsync(month, year, store, fromMonth, fromYear, om, oc, months);
+        return leavers
+            .Where(r => !string.IsNullOrWhiteSpace(r.JobTitle))
+            .GroupBy(r => r.JobTitle)
+            .Select(g => new ChartDataItem { Label = g.Key, Value = g.Count() })
+            .OrderByDescending(c => c.Value)
+            .ToList();
+    }
+
+    public async Task<List<ChartDataItem>> GetEarlyLeaverPayrollGroupsAsync(int month, int year, string? store,
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
+    {
+        var leavers = await EarlyLeaversAsync(month, year, store, fromMonth, fromYear, om, oc, months);
+        return leavers
+            .Where(r => !string.IsNullOrWhiteSpace(r.PayrollGroup))
+            .GroupBy(r => r.PayrollGroup)
+            .Select(g => new ChartDataItem { Label = g.Key, Value = g.Count() })
+            .OrderByDescending(c => c.Value)
+            .ToList();
+    }
+
+    public async Task<List<ChartDataItem>> GetEarlyLeaverGenderBreakdownAsync(int month, int year, string? store,
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
+    {
+        var leavers = await EarlyLeaversAsync(month, year, store, fromMonth, fromYear, om, oc, months);
+        return leavers
+            .Where(r => !string.IsNullOrWhiteSpace(r.Gender))
+            .GroupBy(r => r.Gender)
+            .Select(g => new ChartDataItem { Label = g.Key, Value = g.Count() })
+            .ToList();
+    }
+
+    public async Task<List<ChartDataItem>> GetEarlyLeaverReasonsAsync(int month, int year, string? store,
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
+    {
+        var leavers = await EarlyLeaversAsync(month, year, store, fromMonth, fromYear, om, oc, months);
+        var earlyLeaverIds = leavers
             .Select(r => r.EmployeeId)
             .Where(id => !string.IsNullOrWhiteSpace(id))
             .Distinct()
@@ -309,5 +431,64 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
         }).ToList();
 
         return new TrendMatrixResult { Periods = periodKeys, Rows = rows };
+    }
+
+    public async Task<List<SmartInsightItem>> GetSmartInsightsAsync(int month, int year, string? store,
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? months = null)
+    {
+        var insights = new List<SmartInsightItem>();
+
+        // 1. Recent vs. prior 90-day rate trend (up to 3 complete cohorts each
+        // side, full history — not limited to the page's cohort-month filter).
+        var trend = await GetTrendAsync(store, om, oc);
+        var complete = trend.Where(t => !t.IsProvisional).ToList();
+        if (complete.Count >= 2)
+        {
+            var recent = complete.TakeLast(Math.Min(3, complete.Count)).ToList();
+            var priorCount = Math.Min(3, complete.Count - recent.Count);
+            if (priorCount > 0)
+            {
+                var prior = complete.Skip(complete.Count - recent.Count - priorCount).Take(priorCount).ToList();
+                var recentAvg = recent.Average(t => t.Rate);
+                var priorAvg = prior.Average(t => t.Rate);
+                var diff = Math.Round(recentAvg - priorAvg, 1);
+                if (Math.Abs(diff) >= 1)
+                    insights.Add(new SmartInsightItem
+                    {
+                        Icon = diff < 0 ? "bi-arrow-down-circle-fill" : "bi-arrow-up-circle-fill",
+                        Color = diff < 0 ? "success" : "danger",
+                        Title = diff < 0 ? "90-Day Rate Improving" : "90-Day Rate Slipping",
+                        Description = $"{recentAvg:F1}% avg over the last {recent.Count} cohort(s) vs {priorAvg:F1}% before — {(diff > 0 ? "+" : "")}{diff}pt.",
+                    });
+            }
+        }
+
+        // 2. Best/worst store for the selected cohort months (only meaningful company-wide).
+        if (store == null)
+        {
+            var byStore = await GetStoreComparisonAsync(month, year, fromMonth, fromYear, om, oc, months);
+            if (byStore.Count > 1)
+            {
+                var best = byStore.OrderBy(s => s.Rate).First();
+                insights.Add(new SmartInsightItem
+                {
+                    Icon = "bi-trophy-fill",
+                    Color = "success",
+                    Title = $"Best 90-Day Rate: {best.StoreName}",
+                    Description = $"Only {best.Rate:F1}% of this store's hires left within 90 days.",
+                });
+                var worst = byStore.OrderByDescending(s => s.Rate).First();
+                if (worst.StoreName != best.StoreName && worst.Rate >= 50)
+                    insights.Add(new SmartInsightItem
+                    {
+                        Icon = "bi-exclamation-triangle-fill",
+                        Color = "danger",
+                        Title = $"Weakest 90-Day Rate: {worst.StoreName}",
+                        Description = $"{worst.Rate:F1}% of this store's hires left within 90 days.",
+                    });
+            }
+        }
+
+        return insights;
     }
 }
