@@ -24,7 +24,7 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
     private async Task<List<(string EmployeeId, string Store, int Month, int Year)>> LoadActiveHiresAsync()
     {
         var rows = await _db.ActiveEmployees
-            .Where(e => e.HireDate != null)
+            .Where(e => e.HireDate != null && e.HireDate.Value.Year >= 2026)
             .Select(e => new { e.EmployeeId, e.Store, e.HireDate })
             .ToListAsync();
         return rows.Select(r => (r.EmployeeId, r.Store, r.HireDate!.Value.Month, r.HireDate!.Value.Year)).ToList();
@@ -33,7 +33,7 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
     private async Task<List<ResignationTenure>> LoadResignationTenuresAsync()
     {
         var rows = await _db.Resignations
-            .Where(r => r.HireDate != null && r.ResignationDate != null)
+            .Where(r => r.HireDate != null && r.ResignationDate != null && r.HireDate.Value.Year >= 2026)
             .ToListAsync();
         return rows.Select(r => new ResignationTenure
         {
