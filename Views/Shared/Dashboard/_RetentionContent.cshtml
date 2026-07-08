@@ -1,0 +1,535 @@
+
+<style>
+.rt-select-wrap { position:relative; }
+.rt-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 34px 0 14px; min-width:110px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.rt-select:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.rt-select-wrap i { position:absolute; top:50%; right:12px; transform:translateY(-50%); font-size:11px; color:var(--text-3); pointer-events:none; }
+[dir="rtl"] .rt-select { padding:0 14px 0 34px; }
+[dir="rtl"] .rt-select-wrap i { right:auto; left:12px; }
+
+.rt-multiselect { position:relative; }
+.rt-multiselect-trigger {
+    display:flex; align-items:center; gap:10px; justify-content:space-between;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 12px 0 14px; min-width:190px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.rt-multiselect-trigger:hover { border-color:var(--card-border-h); }
+.rt-multiselect-trigger i { font-size:11px; color:var(--text-3); flex-shrink:0; }
+.rt-multiselect-chips { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rt-multiselect-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); min-width:230px; padding:8px; max-height:280px; overflow-y:auto;
+}
+.rt-multiselect-panel.open { display:block; }
+[dir="rtl"] .rt-multiselect-panel { left:auto; right:0; }
+.rt-multiselect-actions { display:flex; gap:6px; padding:2px 4px 8px; border-bottom:1px solid var(--card-border); margin-bottom:6px; }
+.rt-ms-action {
+    flex:1; background:var(--card-bg-2); border:1px solid var(--card-border); color:var(--red);
+    border-radius:6px; font-size:11.5px; font-weight:700; padding:6px 8px; cursor:pointer;
+}
+.rt-ms-action:hover { background:var(--red-light); }
+.rt-ms-option { display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:13px; color:var(--text-2); }
+.rt-ms-option:hover { background:var(--card-bg-2); }
+.rt-ms-option input { accent-color:var(--red); width:15px; height:15px; cursor:pointer; }
+
+.rt-combobox { position:relative; }
+.rt-combobox-input {
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:500;
+    height:42px; padding:0 14px; min-width:190px; width:100%;
+    box-shadow:var(--shadow-sm);
+}
+.rt-combobox-input:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.rt-combobox-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); max-height:260px; overflow-y:auto; padding:6px;
+}
+.rt-combobox-panel.open { display:block; }
+.rt-combo-option { padding:8px 10px; border-radius:6px; font-size:13px; color:var(--text-2); cursor:pointer; }
+.rt-combo-option:hover { background:var(--card-bg-2); }
+.rt-combo-option.active { color:var(--red); font-weight:700; background:var(--red-light); }
+
+.rt-tenure-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.rt-tenure-bar-track { flex:1; height:8px; border-radius:20px; background:var(--bg-2); overflow:hidden; display:flex; }
+.rt-tenure-bar-seg { height:100%; }
+
+/* Chart.js draws its tick/legend text on <canvas>, which otherwise inherits
+   the page's dir="rtl" and reorders numeric-leading labels. */
+.chart-body canvas { direction:ltr; }
+
+/* KPI/insight text is always English by design (unlocalized metric names) —
+   isolate it from RTL bidi reordering when the page is in Arabic. */
+#rtMilestoneCards .kpi-label, #rtMilestoneCards .kpi-value { direction:ltr; unicode-bidi:isolate; text-align:left; }
+#rtInsights { direction:ltr; unicode-bidi:isolate; text-align:left; }
+</style>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">@L["Page_Retention"]</h1>
+        <p class="page-subtitle">@L["Page_RetentionSub"]</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap align-items-end">
+        <div class="rt-select-wrap"><select id="rtYearSelect" class="rt-select"></select><i class="bi bi-chevron-down"></i></div>
+
+        <div class="rt-multiselect" id="rtMonthsMultiselect" data-label-select="@L["Common_SelectMonths"]" data-label-all="@L["Common_AllMonths"]">
+            <button type="button" class="rt-multiselect-trigger" id="rtMonthsTrigger">
+                <span class="rt-multiselect-chips" id="rtMonthsChips">@L["Common_AllMonths"]</span>
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="rt-multiselect-panel" id="rtMonthsPanel">
+                <div class="rt-multiselect-actions">
+                    <button type="button" class="rt-ms-action" id="rtMonthsSelectAll">@L["Common_SelectAll"]</button>
+                    <button type="button" class="rt-ms-action" id="rtMonthsClearAll">@L["Common_ClearAll"]</button>
+                </div>
+                <div id="rtMonthsOptions"></div>
+            </div>
+        </div>
+
+        <div class="rt-combobox" id="rtStoreCombo">
+            <input type="text" class="rt-combobox-input" id="rtStoreInput" placeholder="@L["Common_AllStores"]" autocomplete="off">
+            <div class="rt-combobox-panel" id="rtStorePanel"></div>
+        </div>
+        <div class="rt-combobox" id="rtOmCombo">
+            <input type="text" class="rt-combobox-input" id="rtOmInput" placeholder="@L["Common_AllOperationManagers"]" autocomplete="off">
+            <div class="rt-combobox-panel" id="rtOmPanel"></div>
+        </div>
+        <div class="rt-combobox" id="rtOcCombo">
+            <input type="text" class="rt-combobox-input" id="rtOcInput" placeholder="@L["Common_AllOperationConsultants"]" autocomplete="off">
+            <div class="rt-combobox-panel" id="rtOcPanel"></div>
+        </div>
+    </div>
+</div>
+
+<div id="rtEmptyState" class="card-dark text-center py-5" style="display:none">
+    <i class="bi bi-shield-check" style="font-size:3rem;color:oklch(0.5 0.18 25);display:block;margin-bottom:1rem"></i>
+    <h5 class="mb-2">No Retention Data Yet</h5>
+    <p class="text-muted-custom">Upload workforce and resignation data with hire dates to see retention analysis here.</p>
+</div>
+
+<div id="rtContent">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-lightbulb-fill" style="color:oklch(0.75 0.16 75)"></i>
+        <h5 class="mb-0 fw-bold">@L["Common_SmartInsights"]</h5>
+        <span class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px">@L["Common_AutoGenerated"]</span>
+    </div>
+    <div class="chart-card mb-4" id="rtInsightsCard">
+        <div id="rtInsights">
+            <div class="text-center py-3 text-muted">
+                <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
+            </div>
+        </div>
+    </div>
+
+    <div id="rtMilestoneCards" class="kpi-grid mb-4">
+        <div class="kpi-spinner text-center py-3 w-100">
+            <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 25)"></div>
+        </div>
+    </div>
+
+    <div class="chart-card mb-4">
+        <div class="chart-header">
+            <h6>@L["Chart_SurvivalCurve"]</h6>
+            <p>@L["Chart_SurvivalCurveSub"]</p>
+        </div>
+        <div class="chart-body"><canvas id="rtSurvivalChart" style="max-height:280px"></canvas></div>
+    </div>
+
+    <div class="chart-card mb-4">
+        <div class="chart-header">
+            <h6>@L["Chart_RetentionTrend"]</h6>
+            <p>@L["Chart_RetentionTrendSub"]</p>
+        </div>
+        <div class="chart-body"><canvas id="rtTrendChart" style="max-height:280px"></canvas></div>
+    </div>
+
+    <div class="chart-card mb-4">
+        <div class="chart-header"><h6>@L["Retention_Leaderboard"]</h6><p>@L["Retention_LeaderboardSub"]</p></div>
+        <div class="chart-body"><canvas id="rtLeaderboardChart"></canvas></div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="section-accent"></div>
+        <h5 class="mb-0 fw-bold">@L["Retention_TenureByStore"]</h5>
+    </div>
+    <div class="chart-card mb-4 p-0" style="overflow:hidden">
+        <div class="table-responsive" style="max-height:450px;overflow-y:auto">
+            <table class="table table-hover mb-0" style="font-size:12.5px">
+                <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                    <tr>
+                        <th class="px-3 py-2">@L["Common_StoreName"]</th>
+                        <th class="px-3 py-2 text-center">@L["Common_Headcount"]</th>
+                        <th class="px-3 py-2" style="min-width:260px">Tenure Mix</th>
+                    </tr>
+                </thead>
+                <tbody id="rtTenureTableBody">
+                    <tr><td colspan="3" class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>Chart.register(ChartDataLabels);</script>
+<script>
+/* ── Retention page — Year + discrete cohort-Months multi-select, same
+   filter components as Turnover/Comparisons/90-Day/Workforce. */
+let rtYear = null, rtMonths = [], rtYearMonthsMap = {};
+let rtStoreFilter = '', rtOmFilter = '', rtOcFilter = '';
+
+const RT_MILESTONE_ORDER = ['6 Months', '1 Year', '2 Years', '3 Years', '4 Years', '5 Years'];
+const RT_MILESTONE_COLORS = {
+    '6 Months': 'oklch(0.55 0.19 25)', '1 Year': 'oklch(0.65 0.15 190)', '2 Years': 'oklch(0.7 0.16 145)',
+    '3 Years': 'oklch(0.72 0.17 60)', '4 Years': 'oklch(0.62 0.2 15)', '5 Years': 'oklch(0.6 0.16 280)'
+};
+const RT_TENURE_BUCKET_COLORS = ['oklch(0.55 0.19 25)', 'oklch(0.65 0.15 190)', 'oklch(0.7 0.16 145)', 'oklch(0.72 0.17 60)', 'oklch(0.62 0.2 15)', 'oklch(0.6 0.16 280)', 'oklch(0.5 0.03 258)'];
+
+function rtMonthShortName(m) { return new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' }); }
+function rtMonthLongName(m, y) { return new Date(y, m - 1).toLocaleString('default', { month: 'long', year: 'numeric' }); }
+function rtAnchor() { return rtMonths.length ? Math.max(...rtMonths) : null; }
+
+function rtBuildQuery(extra) {
+    const q = new URLSearchParams(extra || {});
+    if (rtYear) q.set('toYear', rtYear);
+    if (rtMonths.length) {
+        q.set('months', rtMonths.join(','));
+        q.set('toMonth', rtAnchor());
+    }
+    if (rtStoreFilter) q.set('store', rtStoreFilter);
+    if (rtOmFilter)    q.set('om', rtOmFilter);
+    if (rtOcFilter)    q.set('oc', rtOcFilter);
+    return q;
+}
+
+async function rtFetch(path, extraQuery) {
+    const r = await fetch(`/api/retention/${path}?${rtBuildQuery(extraQuery).toString()}`);
+    return r.ok ? r.json() : null;
+}
+
+/* Generic searchable single-select combobox ---------------------------- */
+function rtCreateCombobox({ inputId, panelId, onSelect }) {
+    const input = document.getElementById(inputId);
+    const panel = document.getElementById(panelId);
+    const allLabel = input.placeholder;
+    let options = [];
+    let value = '';
+
+    function render(filterText) {
+        const ft = (filterText || '').toLowerCase();
+        const filtered = options.filter(o => o.toLowerCase().includes(ft));
+        let html = `<div class="rt-combo-option${value === '' ? ' active' : ''}" data-value="">${allLabel}</div>`;
+        html += filtered.map(o => `<div class="rt-combo-option${o === value ? ' active' : ''}" data-value="${o.replace(/"/g, '&quot;')}">${o}</div>`).join('');
+        panel.innerHTML = html;
+    }
+    function open() { panel.classList.add('open'); render(''); input.select(); }
+    function close() { panel.classList.remove('open'); input.value = value; }
+
+    panel.addEventListener('mousedown', (e) => {
+        const opt = e.target.closest('.rt-combo-option');
+        if (!opt) return;
+        e.preventDefault();
+        value = opt.dataset.value;
+        input.value = value;
+        panel.classList.remove('open');
+        onSelect(value);
+    });
+    input.addEventListener('focus', open);
+    input.addEventListener('input', () => render(input.value));
+    input.addEventListener('blur', () => setTimeout(close, 150));
+
+    return { setOptions(list) { options = list || []; }, setValue(v) { value = v || ''; input.value = value; } };
+}
+
+const rtStoreCombo = rtCreateCombobox({ inputId: 'rtStoreInput', panelId: 'rtStorePanel', onSelect: v => { rtStoreFilter = v; rtLoadAll(); } });
+const rtOmCombo    = rtCreateCombobox({ inputId: 'rtOmInput',    panelId: 'rtOmPanel',    onSelect: v => { rtOmFilter    = v; rtLoadAll(); } });
+const rtOcCombo    = rtCreateCombobox({ inputId: 'rtOcInput',    panelId: 'rtOcPanel',    onSelect: v => { rtOcFilter    = v; rtLoadAll(); } });
+
+/* Months multi-select ---------------------------------------------------- */
+function rtBuildMonthsOptions() {
+    const container = document.getElementById('rtMonthsOptions');
+    const available = (rtYearMonthsMap[rtYear] || []).slice().sort((a, b) => a - b);
+    container.innerHTML = available.map(m => `
+        <label class="rt-ms-option">
+            <input type="checkbox" value="${m}" ${rtMonths.includes(m) ? 'checked' : ''}>
+            <span>${rtMonthLongName(m, rtYear)}</span>
+        </label>`).join('');
+    container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const m = parseInt(cb.value);
+            if (cb.checked) { if (!rtMonths.includes(m)) rtMonths.push(m); }
+            else { rtMonths = rtMonths.filter(x => x !== m); }
+            rtMonths.sort((a, b) => a - b);
+            rtRenderMonthsChips();
+            rtOnMonthsChanged();
+        });
+    });
+}
+
+function rtRenderMonthsChips() {
+    const chipsEl = document.getElementById('rtMonthsChips');
+    const labels = document.getElementById('rtMonthsMultiselect').dataset;
+    const available = rtYearMonthsMap[rtYear] || [];
+    if (!rtMonths.length) { chipsEl.textContent = labels.labelSelect; return; }
+    if (rtMonths.length === available.length) { chipsEl.textContent = labels.labelAll; return; }
+    const names = rtMonths.map(rtMonthShortName);
+    chipsEl.textContent = names.length <= 2 ? names.join('، ') : `${names[0]}، ${names[1]} +${names.length - 2}`;
+}
+
+let rtMonthsDebounce;
+function rtOnMonthsChanged() {
+    clearTimeout(rtMonthsDebounce);
+    rtMonthsDebounce = setTimeout(() => { if (rtMonths.length) rtLoadAll(); }, 250);
+}
+
+document.getElementById('rtMonthsSelectAll').addEventListener('click', () => {
+    rtMonths = (rtYearMonthsMap[rtYear] || []).slice().sort((a, b) => a - b);
+    rtBuildMonthsOptions(); rtRenderMonthsChips(); rtOnMonthsChanged();
+});
+document.getElementById('rtMonthsClearAll').addEventListener('click', () => {
+    rtMonths = [];
+    rtBuildMonthsOptions(); rtRenderMonthsChips(); rtOnMonthsChanged();
+});
+document.getElementById('rtMonthsTrigger').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('rtMonthsPanel').classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+    if (!document.getElementById('rtMonthsMultiselect').contains(e.target))
+        document.getElementById('rtMonthsPanel').classList.remove('open');
+});
+
+document.getElementById('rtYearSelect').addEventListener('change', async function () {
+    rtYear = parseInt(this.value);
+    rtMonths = (rtYearMonthsMap[rtYear] || []).slice().sort((a, b) => a - b);
+    rtStoreFilter = ''; rtOmFilter = ''; rtOcFilter = '';
+    rtStoreCombo.setValue(''); rtOmCombo.setValue(''); rtOcCombo.setValue('');
+    rtBuildMonthsOptions(); rtRenderMonthsChips();
+    await rtLoadAll();
+});
+
+/* Initial filter load ------------------------------------------------------ */
+async function rtLoadFilters() {
+    const [stores, cohortPeriods, managers, consultants] = await Promise.all([
+        fetch('/api/retention/stores').then(r => r.ok ? r.json() : []),
+        fetch('/api/dashboard/available-periods').then(r => r.ok ? r.json() : []),
+        fetch('/api/retention/operation-managers').then(r => r.ok ? r.json() : []),
+        fetch('/api/retention/operation-consultants').then(r => r.ok ? r.json() : []),
+    ]);
+
+    const hasData = (stores || []).length > 0;
+    document.getElementById('rtEmptyState').style.display = hasData ? 'none' : '';
+    document.getElementById('rtContent').style.display = hasData ? '' : 'none';
+    if (!hasData) return false;
+
+    rtYearMonthsMap = {};
+    (cohortPeriods || []).forEach(p => { (rtYearMonthsMap[p.year] = rtYearMonthsMap[p.year] || []).push(p.month); });
+    const years = Object.keys(rtYearMonthsMap).map(Number).sort((a, b) => b - a);
+    const yearSel = document.getElementById('rtYearSelect');
+    yearSel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    rtYear = years[0];
+    yearSel.value = rtYear;
+    rtMonths = (rtYearMonthsMap[rtYear] || []).slice().sort((a, b) => a - b);
+    rtBuildMonthsOptions();
+    rtRenderMonthsChips();
+
+    rtStoreCombo.setOptions(stores || []);
+    rtOmCombo.setOptions(managers || []);
+    rtOcCombo.setOptions(consultants || []);
+    return true;
+}
+
+function rtRenderMilestones(items) {
+    const el = document.getElementById('rtMilestoneCards');
+    if (!items || !items.length) { el.innerHTML = ''; return; }
+    el.innerHTML = items.map(m => {
+        if (!m.totalHires) {
+            return `<div class="kpi-card"><div class="kpi-icon"><i class="bi bi-hourglass"></i></div><div class="kpi-value text-muted" style="font-size:16px">Not yet</div><div class="kpi-label">${m.label} Retention</div></div>`;
+        }
+        return `<div class="kpi-card">
+            <div class="kpi-icon"><i class="bi bi-calendar-check"></i></div>
+            <div class="kpi-value">${m.retentionRate.toFixed(1)}%</div>
+            <div class="kpi-label">${m.label} Retention</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px">${m.retained}/${m.totalHires} hires · through ${m.throughCohortLabel}</div>
+        </div>`;
+    }).join('');
+}
+
+async function rtLoadMilestones() {
+    rtRenderMilestones(await rtFetch('milestones'));
+}
+
+let rtSurvivalInstance;
+async function rtLoadSurvivalCurve() {
+    const data = await rtFetch('survival-curve') || [];
+    const ctx = document.getElementById('rtSurvivalChart');
+    if (!ctx) return;
+    if (rtSurvivalInstance) rtSurvivalInstance.destroy();
+    rtSurvivalInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => d.label),
+            datasets: [{
+                label: 'Retained',
+                data: data.map(d => d.retentionRate),
+                borderColor: 'oklch(0.55 0.19 25)',
+                backgroundColor: 'oklch(0.55 0.19 25 / .15)',
+                tension: 0.3, fill: true, pointRadius: 4, spanGaps: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { afterLabel: c => `Sample: ${data[c.dataIndex]?.sampleSize ?? 0} hires` } },
+                datalabels: { display: false }
+            },
+            scales: {
+                x: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } }, grid: { display: false } },
+                y: { min: 0, max: 100, ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 }, callback: v => v + '%' }, grid: { color: 'oklch(0.92 0.008 255)' } }
+            }
+        }
+    });
+}
+
+/* Trend chart — always full history (unaffected by the Months multi-select),
+   scoped from the selected Year onward, same rule as the Turnover page. */
+let rtTrendInstance;
+async function rtLoadTrend() {
+    const q = new URLSearchParams();
+    if (rtStoreFilter) q.set('store', rtStoreFilter);
+    if (rtOmFilter)    q.set('om', rtOmFilter);
+    if (rtOcFilter)    q.set('oc', rtOcFilter);
+    if (rtYear)        q.set('sinceYear', rtYear);
+    const r = await fetch(`/api/retention/trend?${q.toString()}`);
+    const data = r.ok ? await r.json() : [];
+    const ctx = document.getElementById('rtTrendChart');
+    if (!ctx) return;
+    if (rtTrendInstance) rtTrendInstance.destroy();
+    rtTrendInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => d.label),
+            datasets: RT_MILESTONE_ORDER.map(label => ({
+                label,
+                data: data.map(d => d.rates?.[label] ?? null),
+                borderColor: RT_MILESTONE_COLORS[label],
+                backgroundColor: 'transparent',
+                segment: { borderDash: c => data[c.p1DataIndex]?.provisional?.[label] ? [6, 4] : undefined },
+                tension: 0.3, fill: false, pointRadius: 3, spanGaps: true
+            }))
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } } }, datalabels: { display: false } },
+            scales: {
+                x: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } }, grid: { display: false } },
+                y: { min: 0, max: 100, ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 }, callback: v => v + '%' }, grid: { color: 'oklch(0.92 0.008 255)' } }
+            }
+        }
+    });
+}
+
+let rtLeaderboardInstance;
+async function rtLoadLeaderboard() {
+    const data = await rtFetch('store-leaderboard') || [];
+    const ctx = document.getElementById('rtLeaderboardChart');
+    if (!ctx) return;
+    if (rtLeaderboardInstance) rtLeaderboardInstance.destroy();
+    rtLeaderboardInstance = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: 'oklch(0.7 0.16 145)', borderRadius: 4, maxBarThickness: 26 }] },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: 'oklch(0.5 0.03 258)', font: { size: 11, weight: '600' }, formatter: v => v > 0 ? v.toFixed(1) + '%' : '' } },
+            scales: {
+                x: { min: 0, max: 100, grid: { color: 'oklch(0.92 0.008 255)' }, ticks: { color: 'oklch(0.5 0.03 258)', callback: v => v + '%' } },
+                y: { grid: { display: false }, ticks: { color: 'oklch(0.5 0.03 258)' } }
+            }
+        }
+    });
+}
+
+/* Team Experience by Store — replaces the old single company-wide doughnut
+   with a per-store breakdown table (or a single row when a store is picked). */
+function rtRenderTenureTable(rows) {
+    const tbody = document.getElementById('rtTenureTableBody');
+    if (!rows || !rows.length) { tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">No data for this period.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(r => {
+        const total = r.buckets.reduce((s, b) => s + b.value, 0) || 1;
+        const segs = r.buckets.filter(b => b.value > 0).map((b, i) => {
+            const pct = Math.round(b.value / total * 100);
+            return `<span class="rt-tenure-bar-seg" style="width:${pct}%;background:${RT_TENURE_BUCKET_COLORS[i % RT_TENURE_BUCKET_COLORS.length]}" title="${b.label}: ${b.value} (${pct}%)"></span>`;
+        }).join('');
+        const legend = r.buckets.filter(b => b.value > 0).map((b, i) =>
+            `<span style="color:var(--text-3);font-size:10.5px;margin-inline-end:8px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${RT_TENURE_BUCKET_COLORS[i % RT_TENURE_BUCKET_COLORS.length]};margin-inline-end:3px"></span>${b.label} (${b.value})</span>`
+        ).join('');
+        return `<tr>
+            <td class="px-3 py-2 fw-semibold">${r.storeName}</td>
+            <td class="px-3 py-2 text-center">${r.headcount}</td>
+            <td class="px-3 py-2">
+                <div class="rt-tenure-bar-row"><div class="rt-tenure-bar-track">${segs}</div></div>
+                <div>${legend}</div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function rtLoadTenureByStore() {
+    const q = new URLSearchParams();
+    if (rtStoreFilter) q.set('store', rtStoreFilter);
+    if (rtOmFilter)    q.set('om', rtOmFilter);
+    if (rtOcFilter)    q.set('oc', rtOcFilter);
+    const r = await fetch(`/api/retention/tenure-distribution-by-store?${q.toString()}`);
+    rtRenderTenureTable(r.ok ? await r.json() : []);
+}
+
+function rtRenderInsights(items) {
+    const el = document.getElementById('rtInsights');
+    if (!items || !items.length) { el.innerHTML = '<div class="text-muted" style="font-size:13px">No insights available yet — upload more periods of data to enable trend analysis.</div>'; return; }
+    const colorMap = {
+        danger:    { bg: 'oklch(0.6 0.22 22 / .08)', border: 'oklch(0.6 0.22 22)', text: 'oklch(0.6 0.22 22)' },
+        success:   { bg: 'oklch(0.62 0.15 155 / .1)', border: 'oklch(0.62 0.15 155)', text: 'oklch(0.62 0.15 155)' },
+        warning:   { bg: 'oklch(0.75 0.16 75 / .12)', border: 'oklch(0.75 0.16 75)', text: 'oklch(0.6 0.14 75)' },
+        secondary: { bg: 'var(--bg-2)', border: 'var(--text-3)', text: 'var(--text-2)' }
+    };
+    el.innerHTML = items.map(item => {
+        const c = colorMap[item.color] || colorMap.secondary;
+        return `<div style="background:${c.bg};border-left:3px solid ${c.border};border-radius:8px;padding:12px 14px;margin-bottom:10px">
+            <div class="d-flex align-items-start gap-2">
+                <i class="bi ${item.icon} mt-1 flex-shrink-0" style="color:${c.text};font-size:15px"></i>
+                <div>
+                    <div style="font-size:12.5px;font-weight:700;color:${c.text};margin-bottom:2px">${item.title}</div>
+                    <div style="font-size:12px;color:var(--text-2);line-height:1.5">${item.description}</div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function rtLoadInsights() {
+    rtRenderInsights(await rtFetch('insights'));
+}
+
+async function rtLoadAll() {
+    if (!rtYear || !rtMonths.length) return;
+    await Promise.all([rtLoadMilestones(), rtLoadSurvivalCurve(), rtLoadTrend(), rtLoadLeaderboard(), rtLoadTenureByStore(), rtLoadInsights()]);
+}
+
+(async function init() {
+    const hasData = await rtLoadFilters();
+    if (hasData) await rtLoadAll();
+})();
+</script>

@@ -1,0 +1,243 @@
+
+<style>
+.ai-select-wrap { position:relative; }
+.ai-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 34px 0 14px; min-width:150px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.ai-select:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.ai-select-wrap i { position:absolute; top:50%; right:12px; transform:translateY(-50%); font-size:11px; color:var(--text-3); pointer-events:none; }
+[dir="rtl"] .ai-select { padding:0 14px 0 34px; }
+[dir="rtl"] .ai-select-wrap i { right:auto; left:12px; }
+
+.ai-btn-outline {
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text-2);
+    border-radius:var(--radius-sm); font-size:13px; font-weight:600;
+    height:42px; padding:0 16px; display:inline-flex; align-items:center; gap:6px;
+    box-shadow:var(--shadow-sm); cursor:pointer; transition:background .15s, color .15s, border-color .15s;
+}
+.ai-btn-outline:hover { border-color:var(--red); color:var(--red); background:var(--red-light); }
+
+.ai-quick-btn {
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text-2);
+    border-radius:var(--radius-sm); font-size:13px; text-align:start; padding:10px 12px;
+    cursor:pointer; transition:background .15s, border-color .15s, color .15s;
+}
+.ai-quick-btn:hover { border-color:var(--red); color:var(--red); background:var(--red-light); }
+
+.ai-usage-badge { font-size:11px; direction:ltr; unicode-bidi:isolate; }
+</style>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">@L["Page_AiAssistant"]</h1>
+        <p class="page-subtitle">@L["Page_AiAssistantSub"]</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <div class="ai-select-wrap" data-label-select-period="@L["Common_SelectPeriod"]">
+            <select id="aiPeriodSelect" class="ai-select">
+                <option value="">@L["Common_SelectPeriod"]</option>
+            </select>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+        <div class="ai-select-wrap" data-label-all-stores="@L["Common_AllStores"]">
+            <select id="aiStoreSelect" class="ai-select">
+                <option value="">@L["Common_AllStores"]</option>
+            </select>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+        <button id="aiClearBtn" class="ai-btn-outline" title="@L["AI_NewChat"]">
+            <i class="bi bi-arrow-clockwise"></i>@L["AI_NewChat"]
+        </button>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="chart-card p-0 d-flex flex-column" style="height:600px;overflow:hidden">
+            <div id="aiMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"
+                 data-welcome="@L["AI_WelcomeMessage"]" data-no-answer="@L["AI_NoAnswer"]"
+                 data-connection-error="@L["AI_ConnectionError"]" data-limit-reached="@L["AI_LimitReached"]"></div>
+            <div style="border-top:1px solid var(--card-border);padding:12px;display:flex;gap:8px">
+                <textarea id="aiInput" rows="1" class="form-control form-control-dark" placeholder="@L["AI_InputPlaceholder"]" style="resize:none"></textarea>
+                <button id="aiSendBtn" class="btn btn-primary" style="white-space:nowrap"><i class="bi bi-send-fill"></i></button>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="chart-card mb-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <span style="font-size:12.5px;color:var(--text-2)">@L["AI_TodayQuestions"]</span>
+                <span id="aiUsageBadge" class="badge ai-usage-badge" style="background:var(--bg-2);color:var(--text-2)">—</span>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header"><h6>@L["AI_QuickPrompts"]</h6><p>@L["AI_QuickPromptsSub"]</p></div>
+            <div id="aiQuickPrompts" class="d-flex flex-column gap-2"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const _L = {
+    selectPeriod: document.querySelector('[data-label-select-period]').dataset.labelSelectPeriod,
+    allStores: document.querySelector('[data-label-all-stores]').dataset.labelAllStores
+};
+const AI_QUICK_PROMPTS = [
+    'مين أعلى فرع في الاستقالات الفترة دي؟',
+    'ليه الاستقالات زادت عن الفترة اللي فاتت؟',
+    'قارنلي بين الفروع من حيث التيرن أوفر',
+    'ليه الناس بتمشي في أول 90 يوم؟',
+    'إديني نصايح عملية أقلل بيها الاستقالات',
+    'إيه أكتر سبب لترك العمل من مقابلات الخروج؟',
+];
+
+const aiMessagesEl = document.getElementById('aiMessages');
+const aiInput      = document.getElementById('aiInput');
+const aiSendBtn    = document.getElementById('aiSendBtn');
+const AI_HISTORY_KEY = 'mf-ai-assistant-history';
+
+function aiScrollBottom() {
+    setTimeout(() => { aiMessagesEl.scrollTop = aiMessagesEl.scrollHeight; }, 30);
+}
+
+function aiBubbleHtml(text, who) {
+    const isUser = who === 'user';
+    return `<div style="align-self:${isUser ? 'flex-end' : 'flex-start'};max-width:80%;background:${isUser ? 'oklch(0.55 0.19 25)' : 'var(--bg-2)'};color:${isUser ? '#fff' : 'var(--text)'};padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.6;white-space:pre-wrap">${text}</div>`;
+}
+
+function aiAddBubble(text, who) {
+    const div = document.createElement('div');
+    div.innerHTML = aiBubbleHtml(text, who);
+    aiMessagesEl.appendChild(div.firstElementChild);
+    aiScrollBottom();
+}
+
+function aiAddLoadingBubble() {
+    const div = document.createElement('div');
+    div.className = 'ai-loading-bubble';
+    div.style.cssText = 'align-self:flex-start;background:var(--bg-2);padding:10px 14px;border-radius:14px';
+    div.innerHTML = '<div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 25)"></div>';
+    aiMessagesEl.appendChild(div);
+    aiScrollBottom();
+    return div;
+}
+
+function aiLoadHistory() {
+    let history = [];
+    try { history = JSON.parse(localStorage.getItem(AI_HISTORY_KEY) || '[]'); } catch { history = []; }
+    if (!history.length) {
+        aiAddBubble(aiMessagesEl.dataset.welcome, 'bot');
+        return;
+    }
+    history.forEach(m => aiAddBubble(m.text, m.who));
+}
+
+function aiSaveMessage(text, who) {
+    let history = [];
+    try { history = JSON.parse(localStorage.getItem(AI_HISTORY_KEY) || '[]'); } catch { history = []; }
+    history.push({ text, who });
+    localStorage.setItem(AI_HISTORY_KEY, JSON.stringify(history));
+}
+
+function aiCurrentFilters() {
+    const [month, year] = (document.getElementById('aiPeriodSelect').value || '').split('-').map(v => v ? parseInt(v) : null);
+    const store = document.getElementById('aiStoreSelect').value || null;
+    return { month, year, store };
+}
+
+function aiRenderUsage(used, limit) {
+    const badge = document.getElementById('aiUsageBadge');
+    if (!badge || used == null || limit == null) return;
+    badge.textContent = `${used}/${limit}`;
+    badge.style.color = used >= limit ? 'oklch(0.6 0.22 22)' : 'var(--text-2)';
+}
+
+async function aiLoadUsage() {
+    const res = await fetch('/api/ai-assistant/usage');
+    if (!res.ok) return;
+    const data = await res.json();
+    aiRenderUsage(data.used, data.limit);
+}
+
+async function aiSend(question) {
+    if (!question || aiSendBtn.disabled) return;
+    aiAddBubble(question, 'user');
+    aiSaveMessage(question, 'user');
+    aiInput.value = ''; aiInput.style.height = 'auto';
+    aiSendBtn.disabled = true;
+    const loading = aiAddLoadingBubble();
+    const { month, year, store } = aiCurrentFilters();
+    try {
+        const res = await fetch('/api/ai-assistant/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question, month, year, store })
+        });
+        const data = await res.json();
+        loading.remove();
+        if (res.status === 429) {
+            aiAddBubble(data.error || aiMessagesEl.dataset.limitReached, 'bot');
+            aiRenderUsage(data.used, data.limit);
+        } else {
+            const answer = data.answer || aiMessagesEl.dataset.noAnswer;
+            aiAddBubble(answer, 'bot');
+            aiSaveMessage(answer, 'bot');
+            aiRenderUsage(data.used, data.limit);
+        }
+    } catch {
+        loading.remove();
+        aiAddBubble(aiMessagesEl.dataset.connectionError, 'bot');
+    }
+    aiSendBtn.disabled = false;
+    aiInput.focus();
+}
+
+aiSendBtn.addEventListener('click', () => aiSend(aiInput.value.trim()));
+aiInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(aiInput.value.trim()); } });
+aiInput.addEventListener('input', () => { aiInput.style.height = 'auto'; aiInput.style.height = Math.min(aiInput.scrollHeight, 90) + 'px'; });
+
+document.getElementById('aiClearBtn').addEventListener('click', () => {
+    localStorage.removeItem(AI_HISTORY_KEY);
+    aiMessagesEl.innerHTML = '';
+    aiAddBubble(aiMessagesEl.dataset.welcome, 'bot');
+});
+
+const quickEl = document.getElementById('aiQuickPrompts');
+AI_QUICK_PROMPTS.forEach(q => {
+    const btn = document.createElement('button');
+    btn.className = 'ai-quick-btn';
+    btn.textContent = q;
+    btn.addEventListener('click', () => aiSend(q));
+    quickEl.appendChild(btn);
+});
+
+async function aiLoadFilters() {
+    const periods = await (await fetch('/api/dashboard/available-periods')).json();
+    const periodSel = document.getElementById('aiPeriodSelect');
+    periodSel.innerHTML = `<option value="">${_L.selectPeriod}</option>`;
+    periods.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = `${p.month}-${p.year}`;
+        opt.textContent = new Date(p.year, p.month - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+        periodSel.appendChild(opt);
+    });
+    if (periods.length) periodSel.value = `${periods[0].month}-${periods[0].year}`;
+
+    const stores = await (await fetch(`/api/dashboard/stores?month=${periods[0]?.month || ''}&year=${periods[0]?.year || ''}`)).json();
+    const storeSel = document.getElementById('aiStoreSelect');
+    storeSel.innerHTML = `<option value="">${_L.allStores}</option>`;
+    stores.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.storeName; opt.textContent = s.storeName;
+        storeSel.appendChild(opt);
+    });
+}
+
+aiLoadHistory();
+aiLoadFilters();
+aiLoadUsage();
+</script>

@@ -1,0 +1,478 @@
+
+<style>
+.ei-select-wrap { position:relative; }
+.ei-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 34px 0 14px; min-width:110px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.ei-select:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.ei-select-wrap i { position:absolute; top:50%; right:12px; transform:translateY(-50%); font-size:11px; color:var(--text-3); pointer-events:none; }
+[dir="rtl"] .ei-select { padding:0 14px 0 34px; }
+[dir="rtl"] .ei-select-wrap i { right:auto; left:12px; }
+
+.ei-multiselect { position:relative; }
+.ei-multiselect-trigger {
+    display:flex; align-items:center; gap:10px; justify-content:space-between;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 12px 0 14px; min-width:190px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.ei-multiselect-trigger:hover { border-color:var(--card-border-h); }
+.ei-multiselect-trigger i { font-size:11px; color:var(--text-3); flex-shrink:0; }
+.ei-multiselect-chips { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ei-multiselect-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); min-width:230px; padding:8px; max-height:280px; overflow-y:auto;
+}
+.ei-multiselect-panel.open { display:block; }
+[dir="rtl"] .ei-multiselect-panel { left:auto; right:0; }
+.ei-multiselect-actions { display:flex; gap:6px; padding:2px 4px 8px; border-bottom:1px solid var(--card-border); margin-bottom:6px; }
+.ei-ms-action {
+    flex:1; background:var(--card-bg-2); border:1px solid var(--card-border); color:var(--red);
+    border-radius:6px; font-size:11.5px; font-weight:700; padding:6px 8px; cursor:pointer;
+}
+.ei-ms-action:hover { background:var(--red-light); }
+.ei-ms-option { display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:13px; color:var(--text-2); }
+.ei-ms-option:hover { background:var(--card-bg-2); }
+.ei-ms-option input { accent-color:var(--red); width:15px; height:15px; cursor:pointer; }
+
+.ei-combobox { position:relative; }
+.ei-combobox-input {
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:500;
+    height:42px; padding:0 14px; min-width:170px; width:100%;
+    box-shadow:var(--shadow-sm);
+}
+.ei-combobox-input:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.ei-combobox-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); max-height:260px; overflow-y:auto; padding:6px;
+}
+.ei-combobox-panel.open { display:block; }
+.ei-combo-option { padding:8px 10px; border-radius:6px; font-size:13px; color:var(--text-2); cursor:pointer; }
+.ei-combo-option:hover { background:var(--card-bg-2); }
+.ei-combo-option.active { color:var(--red); font-weight:700; background:var(--red-light); }
+
+/* Chart.js draws its tick/legend text on <canvas>, which otherwise inherits
+   the page's dir="rtl" and reorders numeric-leading labels. */
+.chart-body canvas { direction:ltr; }
+
+/* Engagement Drivers stat text is always English by design (unlocalized
+   metric names) — isolate it from RTL bidi reordering when the page is in Arabic. */
+.ei-driver-stat { direction:ltr; unicode-bidi:isolate; }
+</style>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">@L["Page_ExitInterviews"]</h1>
+        <p class="page-subtitle">@L["Page_ExitInterviewsSub"]</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap align-items-end">
+        <div class="ei-select-wrap"><select id="eiYearSelect" class="ei-select"></select><i class="bi bi-chevron-down"></i></div>
+
+        <div class="ei-multiselect" id="eiMonthsMultiselect" data-label-select="@L["Common_SelectMonths"]" data-label-all="@L["Common_AllMonths"]">
+            <button type="button" class="ei-multiselect-trigger" id="eiMonthsTrigger">
+                <span class="ei-multiselect-chips" id="eiMonthsChips">@L["Common_AllMonths"]</span>
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="ei-multiselect-panel" id="eiMonthsPanel">
+                <div class="ei-multiselect-actions">
+                    <button type="button" class="ei-ms-action" id="eiMonthsSelectAll">@L["Common_SelectAll"]</button>
+                    <button type="button" class="ei-ms-action" id="eiMonthsClearAll">@L["Common_ClearAll"]</button>
+                </div>
+                <div id="eiMonthsOptions"></div>
+            </div>
+        </div>
+
+        <div class="ei-combobox" id="eiStoreCombo">
+            <input type="text" class="ei-combobox-input" id="eiStoreInput" placeholder="@L["Common_AllStores"]" autocomplete="off">
+            <div class="ei-combobox-panel" id="eiStorePanel"></div>
+        </div>
+        <div class="ei-combobox" id="eiLeaderCombo">
+            <input type="text" class="ei-combobox-input" id="eiLeaderInput" placeholder="@L["Common_AllStoreLeaders"]" autocomplete="off">
+            <div class="ei-combobox-panel" id="eiLeaderPanel"></div>
+        </div>
+        <div class="ei-combobox" id="eiOcCombo">
+            <input type="text" class="ei-combobox-input" id="eiOcInput" placeholder="@L["Common_AllOperationConsultants"]" autocomplete="off">
+            <div class="ei-combobox-panel" id="eiOcPanel"></div>
+        </div>
+        <div class="ei-combobox" id="eiOmCombo">
+            <input type="text" class="ei-combobox-input" id="eiOmInput" placeholder="@L["Common_AllOperationManagers"]" autocomplete="off">
+            <div class="ei-combobox-panel" id="eiOmPanel"></div>
+        </div>
+    </div>
+</div>
+
+<div id="eiEmptyState" class="card-dark text-center py-5" style="display:none">
+    <i class="bi bi-chat-square-text" style="font-size:3rem;color:oklch(0.5 0.18 25);display:block;margin-bottom:1rem"></i>
+    <h5 class="mb-2">No Exit Interview Data</h5>
+    <p class="text-muted-custom">Upload exit interview responses from the Data Management page to see analysis here.</p>
+</div>
+
+<div id="eiContent">
+    <div class="charts-grid mb-4">
+        <div class="chart-card chart-full">
+            <div class="chart-header"><h6>@L["Chart_ReasonsForLeaving"]</h6><p>@L["Chart_ReasonsForLeavingSub"]</p></div>
+            <div class="chart-body"><canvas id="eiReasonsChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header"><h6>@L["Chart_WouldTheyReturn"]</h6><p>@L["Chart_WouldTheyReturnSub"]</p></div>
+            <div class="chart-body"><canvas id="eiReturnChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header"><h6>@L["Chart_OverallExperience"]</h6><p>@L["Chart_OverallExperienceSub"]</p></div>
+            <div class="chart-body"><canvas id="eiExperienceChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header"><h6>@L["Chart_Training"]</h6><p>@L["Chart_TrainingSub"]</p></div>
+            <div class="chart-body"><canvas id="eiTrainingChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header"><h6>@L["Chart_FairTreatment"]</h6><p>@L["Chart_FairTreatmentSub"]</p></div>
+            <div class="chart-body"><canvas id="eiFairTreatmentChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="chart-card mb-4">
+        <div class="chart-header"><h6>@L["Chart_WorkloadConditions"]</h6><p>@L["Chart_WorkloadConditionsSub"]</p></div>
+        <div class="chart-body chart-body-sm"><canvas id="eiWorkloadChart"></canvas></div>
+    </div>
+
+    <div class="chart-card mb-4">
+        <div class="chart-header"><h6>@L["Chart_WorkPressureReason"]</h6><p>@L["Chart_WorkPressureReasonSub"]</p></div>
+        <div class="chart-body chart-body-sm"><canvas id="eiWorkPressureChart"></canvas></div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="section-accent"></div>
+        <h5 class="mb-0 fw-bold">@L["Chart_EngagementDrivers"]</h5>
+        <span class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px">@L["Chart_EngagementDriversSub"]</span>
+    </div>
+    <div class="chart-card mb-4" id="eiDriversCard">
+        <div id="eiDriversContainer">
+            <div class="text-center py-3 text-muted">
+                <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <div class="section-accent"></div>
+            <h5 class="mb-0 fw-bold">@L["Chart_Comments"]</h5>
+            <span id="eiCommentCountBadge" class="badge" style="background:var(--bg-2);color:var(--text-2);font-size:11px"></span>
+        </div>
+        <input type="text" id="eiCommentSearch" class="form-control form-control-sm" placeholder="@L["EI_SearchComments"]" style="width:220px;border-radius:20px">
+    </div>
+    <div class="chart-card mb-4 p-0" style="overflow:hidden" data-comments-count-label="@L["EI_CommentsCount"]" data-no-comments-label="@L["EI_NoCommentsForFilters"]">
+        <div class="table-responsive" style="max-height:480px;overflow-y:auto">
+            <table class="table table-hover mb-0" style="font-size:13px">
+                <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                    <tr>
+                        <th class="px-3 py-2">@L["Common_StoreName"]</th>
+                        <th class="px-3 py-2">@L["SC_StoreLeader"]</th>
+                        <th class="px-3 py-2">@L["EI_Question"]</th>
+                        <th class="px-3 py-2">@L["EI_Comment"]</th>
+                    </tr>
+                </thead>
+                <tbody id="eiCommentsBody">
+                    <tr><td colspan="4" class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>Chart.register(ChartDataLabels);</script>
+<script>
+/* ── Exit Interviews page — Year + discrete Months multi-select, same
+   filter components as Turnover/Retention/Scorecard/etc. Employee identity
+   is never fetched or rendered anywhere on this page — only aggregated
+   choice-question counts and anonymous free-text comments. */
+let eiYear = null, eiMonths = [], eiYearMonthsMap = {};
+let eiStoreFilter = '', eiLeaderFilter = '', eiOcFilter = '', eiOmFilter = '';
+
+const DRIVER_COLORS = ['oklch(0.55 0.19 25)', 'oklch(0.65 0.15 190)', 'oklch(0.7 0.16 145)', 'oklch(0.72 0.17 60)', 'oklch(0.62 0.2 15)'];
+
+function eiMonthShortName(m) { return new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' }); }
+function eiMonthLongName(m, y) { return new Date(y, m - 1).toLocaleString('default', { month: 'long', year: 'numeric' }); }
+
+function eiBuildQuery() {
+    const p = new URLSearchParams();
+    // year=0 is the "undated" sentinel — send it so the backend knows to skip
+    // date filtering; year=null means not yet initialised (don't send anything).
+    if (eiYear !== null && eiYear !== undefined) p.set('year', eiYear);
+    // Don't send months when the only "month" is the 0 sentinel.
+    if (eiMonths.length && !eiMonths.every(m => m === 0)) p.set('months', eiMonths.join(','));
+    if (eiStoreFilter)  p.set('store', eiStoreFilter);
+    if (eiLeaderFilter) p.set('storeLeader', eiLeaderFilter);
+    if (eiOcFilter)      p.set('oc', eiOcFilter);
+    if (eiOmFilter)      p.set('om', eiOmFilter);
+    return p.toString();
+}
+
+async function eiFetch(path) {
+    const r = await fetch(`/api/exit-interviews/${path}?${eiBuildQuery()}`);
+    return r.ok ? r.json() : [];
+}
+
+/* Generic searchable single-select combobox ------------------------------ */
+function eiCreateCombobox({ inputId, panelId, onSelect }) {
+    const input = document.getElementById(inputId);
+    const panel = document.getElementById(panelId);
+    const allLabel = input.placeholder;
+    let options = [];
+    let value = '';
+
+    function render(filterText) {
+        const ft = (filterText || '').toLowerCase();
+        const filtered = options.filter(o => o.toLowerCase().includes(ft));
+        let html = `<div class="ei-combo-option${value === '' ? ' active' : ''}" data-value="">${allLabel}</div>`;
+        html += filtered.map(o => `<div class="ei-combo-option${o === value ? ' active' : ''}" data-value="${o.replace(/"/g, '&quot;')}">${o}</div>`).join('');
+        panel.innerHTML = html;
+    }
+    function open() { panel.classList.add('open'); render(''); input.select(); }
+    function close() { panel.classList.remove('open'); input.value = value; }
+
+    panel.addEventListener('mousedown', (e) => {
+        const opt = e.target.closest('.ei-combo-option');
+        if (!opt) return;
+        e.preventDefault();
+        value = opt.dataset.value;
+        input.value = value;
+        panel.classList.remove('open');
+        onSelect(value);
+    });
+    input.addEventListener('focus', open);
+    input.addEventListener('input', () => render(input.value));
+    input.addEventListener('blur', () => setTimeout(close, 150));
+
+    return { setOptions(list) { options = list || []; }, setValue(v) { value = v || ''; input.value = value; } };
+}
+
+const eiStoreCombo  = eiCreateCombobox({ inputId: 'eiStoreInput',  panelId: 'eiStorePanel',  onSelect: v => { eiStoreFilter  = v; eiLoadAll(); } });
+const eiLeaderCombo = eiCreateCombobox({ inputId: 'eiLeaderInput', panelId: 'eiLeaderPanel', onSelect: v => { eiLeaderFilter = v; eiLoadAll(); } });
+const eiOcCombo     = eiCreateCombobox({ inputId: 'eiOcInput',     panelId: 'eiOcPanel',     onSelect: v => { eiOcFilter     = v; eiLoadAll(); } });
+const eiOmCombo     = eiCreateCombobox({ inputId: 'eiOmInput',     panelId: 'eiOmPanel',     onSelect: v => { eiOmFilter     = v; eiLoadAll(); } });
+
+/* Months multi-select ---------------------------------------------------- */
+function eiBuildMonthsOptions() {
+    const container = document.getElementById('eiMonthsOptions');
+    const available = (eiYearMonthsMap[eiYear] || []).slice().sort((a, b) => a - b);
+    container.innerHTML = available.map(m => `
+        <label class="ei-ms-option">
+            <input type="checkbox" value="${m}" ${eiMonths.includes(m) ? 'checked' : ''}>
+            <span>${eiMonthLongName(m, eiYear)}</span>
+        </label>`).join('');
+    container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const m = parseInt(cb.value);
+            if (cb.checked) { if (!eiMonths.includes(m)) eiMonths.push(m); }
+            else { eiMonths = eiMonths.filter(x => x !== m); }
+            eiMonths.sort((a, b) => a - b);
+            eiRenderMonthsChips();
+            eiOnMonthsChanged();
+        });
+    });
+}
+
+function eiRenderMonthsChips() {
+    const chipsEl = document.getElementById('eiMonthsChips');
+    const labels = document.getElementById('eiMonthsMultiselect').dataset;
+    const available = eiYearMonthsMap[eiYear] || [];
+    if (!eiMonths.length) { chipsEl.textContent = labels.labelSelect; return; }
+    if (eiMonths.length === available.length) { chipsEl.textContent = labels.labelAll; return; }
+    const names = eiMonths.map(eiMonthShortName);
+    chipsEl.textContent = names.length <= 2 ? names.join('، ') : `${names[0]}، ${names[1]} +${names.length - 2}`;
+}
+
+let eiMonthsDebounce;
+function eiOnMonthsChanged() {
+    clearTimeout(eiMonthsDebounce);
+    eiMonthsDebounce = setTimeout(() => { if (eiMonths.length) eiLoadAll(); }, 250);
+}
+
+document.getElementById('eiMonthsSelectAll').addEventListener('click', () => {
+    eiMonths = (eiYearMonthsMap[eiYear] || []).slice().sort((a, b) => a - b);
+    eiBuildMonthsOptions(); eiRenderMonthsChips(); eiOnMonthsChanged();
+});
+document.getElementById('eiMonthsClearAll').addEventListener('click', () => {
+    eiMonths = [];
+    eiBuildMonthsOptions(); eiRenderMonthsChips(); eiOnMonthsChanged();
+});
+document.getElementById('eiMonthsTrigger').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('eiMonthsPanel').classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+    if (!document.getElementById('eiMonthsMultiselect').contains(e.target))
+        document.getElementById('eiMonthsPanel').classList.remove('open');
+});
+
+document.getElementById('eiYearSelect').addEventListener('change', async function () {
+    eiYear = parseInt(this.value);
+    eiMonths = (eiYearMonthsMap[eiYear] || []).slice().sort((a, b) => a - b);
+    document.getElementById('eiMonthsMultiselect').style.display = eiYear === 0 ? 'none' : '';
+    eiBuildMonthsOptions(); eiRenderMonthsChips();
+    await eiLoadAll();
+});
+
+/* Initial filter load ------------------------------------------------------ */
+async function eiLoadFilters() {
+    const [opts, periods] = await Promise.all([
+        fetch('/api/exit-interviews/filters').then(r => r.ok ? r.json() : {}),
+        fetch('/api/exit-interviews/available-periods').then(r => r.ok ? r.json() : []),
+    ]);
+
+    const hasData = (periods || []).length > 0;
+    document.getElementById('eiEmptyState').style.display = hasData ? 'none' : '';
+    document.getElementById('eiContent').style.display = hasData ? '' : 'none';
+    if (!hasData) return false;
+
+    eiYearMonthsMap = {};
+    (periods || []).forEach(p => { (eiYearMonthsMap[p.year] = eiYearMonthsMap[p.year] || []).push(p.month); });
+    const years = Object.keys(eiYearMonthsMap).map(Number).sort((a, b) => b - a);
+    const yearSel = document.getElementById('eiYearSelect');
+    // year=0 is the "undated" sentinel — show a friendly label instead of "0".
+    yearSel.innerHTML = years.map(y => `<option value="${y}">${y === 0 ? 'All Data' : y}</option>`).join('');
+    eiYear = years[0];
+    yearSel.value = eiYear;
+    eiMonths = (eiYearMonthsMap[eiYear] || []).slice().sort((a, b) => a - b);
+    // When the sentinel period is active hide the months multi-select (there
+    // is no meaningful month breakdown for undated rows).
+    document.getElementById('eiMonthsMultiselect').style.display = eiYear === 0 ? 'none' : '';
+    eiBuildMonthsOptions();
+    eiRenderMonthsChips();
+
+    eiStoreCombo.setOptions(opts.stores || []);
+    eiLeaderCombo.setOptions(opts.storeLeaders || []);
+    eiOcCombo.setOptions(opts.operationConsultants || []);
+    eiOmCombo.setOptions(opts.operationManagers || []);
+    return true;
+}
+
+let eiReasonsChart, eiReturnChart, eiExperienceChart, eiTrainingChart, eiFairTreatmentChart, eiWorkloadChart, eiWorkPressureChart;
+function eiMkChart(ref, id, labels, values, horizontal) {
+    if (ref) ref.destroy();
+    const ctx = document.getElementById(id);
+    if (!ctx) return null;
+    if (horizontal) {
+        return new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: { labels, datasets: [{ data: values, backgroundColor: 'oklch(0.55 0.19 25)', borderRadius: 4, maxBarThickness: 26 }] },
+            options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: 'oklch(0.5 0.03 258)', font: { size: 11, weight: '600' }, formatter: v => v > 0 ? v : '' } }, scales: { x: { grid: { color: 'oklch(0.92 0.008 255)' }, ticks: { color: 'oklch(0.5 0.03 258)' } }, y: { grid: { display: false }, ticks: { color: 'oklch(0.5 0.03 258)' } } } }
+        });
+    }
+    return new Chart(ctx.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data: values, backgroundColor: DRIVER_COLORS, borderWidth: 2, borderColor: 'oklch(1 0 0)' }] },
+        options: { cutout: '60%', maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: 'oklch(0.5 0.03 258)', boxWidth: 10, boxHeight: 10, padding: 12, font: { size: 11 } } }, datalabels: { color: '#fff', font: { size: 11, weight: '700' }, textShadowBlur: 4, textShadowColor: 'rgba(0,0,0,0.4)', formatter: (v, ctx) => { const t = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); return t > 0 && v > 0 ? Math.round(v / t * 100) + '%' : ''; } } } }
+    });
+}
+
+async function eiLoadReasons() {
+    const data = await eiFetch('reasons');
+    eiReasonsChart = eiMkChart(eiReasonsChart, 'eiReasonsChart', data.map(d => d.label), data.map(d => d.value), true);
+}
+async function eiLoadReturn() {
+    const data = await eiFetch('would-return');
+    eiReturnChart = eiMkChart(eiReturnChart, 'eiReturnChart', data.map(d => d.label), data.map(d => d.value), false);
+}
+async function eiLoadExperience() {
+    const data = await eiFetch('overall-experience');
+    eiExperienceChart = eiMkChart(eiExperienceChart, 'eiExperienceChart', data.map(d => d.label), data.map(d => d.value), false);
+}
+async function eiLoadTraining() {
+    const data = await eiFetch('training');
+    eiTrainingChart = eiMkChart(eiTrainingChart, 'eiTrainingChart', data.map(d => d.label), data.map(d => d.value), false);
+}
+async function eiLoadFairTreatment() {
+    const data = await eiFetch('fair-treatment');
+    eiFairTreatmentChart = eiMkChart(eiFairTreatmentChart, 'eiFairTreatmentChart', data.map(d => d.label), data.map(d => d.value), false);
+}
+async function eiLoadWorkload() {
+    const data = await eiFetch('workload');
+    eiWorkloadChart = eiMkChart(eiWorkloadChart, 'eiWorkloadChart', data.map(d => d.label), data.map(d => d.value), true);
+}
+async function eiLoadWorkPressure() {
+    const data = await eiFetch('work-pressure-reason');
+    eiWorkPressureChart = eiMkChart(eiWorkPressureChart, 'eiWorkPressureChart', data.map(d => d.label), data.map(d => d.value), true);
+}
+
+function eiDriverTone(pct) {
+    if (pct >= 70) return 'oklch(0.62 0.15 155)';
+    if (pct >= 40) return 'oklch(0.75 0.16 75)';
+    return 'oklch(0.6 0.22 22)';
+}
+
+async function eiLoadDrivers() {
+    const data = await eiFetch('engagement-drivers');
+    const container = document.getElementById('eiDriversContainer');
+    if (!data.length) { container.innerHTML = '<div class="text-center py-3 text-muted">No data for the selected filters.</div>'; return; }
+    container.innerHTML = data.map(d => `
+        <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1" style="font-size:12.5px">
+                <span class="fw-semibold">${d.label}</span>
+                <span class="ei-driver-stat" style="color:var(--text-3)">${d.positivePercent}% positive · ${d.totalResponses} responses</span>
+            </div>
+            <div style="height:8px;border-radius:20px;background:var(--bg-2);overflow:hidden">
+                <div style="height:100%;border-radius:20px;background:${eiDriverTone(d.positivePercent)};width:${d.positivePercent}%"></div>
+            </div>
+        </div>`).join('');
+}
+
+let eiCommentsData = [];
+function eiRenderComments() {
+    const search = (document.getElementById('eiCommentSearch').value || '').toLowerCase();
+    const rows = eiCommentsData.filter(c =>
+        c.text.toLowerCase().includes(search) ||
+        (c.store || '').toLowerCase().includes(search) ||
+        (c.questionLabel || '').toLowerCase().includes(search)
+    );
+    const labels = document.querySelector('[data-comments-count-label]').dataset;
+    const badge = document.getElementById('eiCommentCountBadge');
+    if (badge) badge.textContent = `${rows.length} ${labels.commentsCountLabel}`;
+
+    const tbody = document.getElementById('eiCommentsBody');
+    if (!rows.length) { tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">${labels.noCommentsLabel}</td></tr>`; return; }
+    tbody.innerHTML = rows.map(c => `
+        <tr>
+            <td class="px-3 py-2 fw-semibold">${c.store || '<span class="text-muted">—</span>'}</td>
+            <td class="px-3 py-2" style="color:oklch(0.5 0.03 258)">${c.storeLeader || '<span class="text-muted">—</span>'}</td>
+            <td class="px-3 py-2" style="white-space:nowrap;color:oklch(0.5 0.03 258)">${c.questionLabel}</td>
+            <td class="px-3 py-2">${c.text}</td>
+        </tr>`).join('');
+}
+
+async function eiLoadComments() {
+    eiCommentsData = await eiFetch('comments');
+    eiRenderComments();
+}
+
+async function eiLoadAll() {
+    // Allow eiYear=0 (undated sentinel). Only bail if year is genuinely unset.
+    if (eiYear === null || eiYear === undefined) return;
+    if (eiYear > 0 && !eiMonths.length) return;
+    await Promise.all([
+        eiLoadReasons(), eiLoadReturn(), eiLoadExperience(), eiLoadTraining(), eiLoadFairTreatment(),
+        eiLoadWorkload(), eiLoadWorkPressure(), eiLoadDrivers(), eiLoadComments(),
+    ]);
+}
+
+document.getElementById('eiCommentSearch').addEventListener('input', eiRenderComments);
+
+(async function init() {
+    const hasData = await eiLoadFilters();
+    if (hasData) await eiLoadAll();
+})();
+</script>

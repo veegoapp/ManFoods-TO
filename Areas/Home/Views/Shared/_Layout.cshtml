@@ -11,6 +11,8 @@
     var isRtl        = currentLang == "ar";
     var returnUrl    = HttpCtx.HttpContext?.Request.Path.Value ?? "/";
     var switchLang   = isRtl ? "en" : "ar";
+    var currentPath  = HttpCtx.HttpContext?.Request.Path.Value ?? "";
+    bool IsActive(string seg) => currentPath.Contains(seg, StringComparison.OrdinalIgnoreCase);
 
     string RoleLabel(string r) => r == "User" ? "User" : r.Replace("_"," ");
 }
@@ -48,12 +50,72 @@
         </div>
 
         <!-- Navigation -->
-        <nav class="sidebar-nav" style="flex:1; padding: 8px 0;">
+        <nav class="sidebar-nav" style="flex:1; padding: 8px 0; overflow-y:auto;">
             <div class="nav-section-label">@L["Nav_MyWorkspace"]</div>
-            <a href="/home/dashboard" class="nav-item active">
+            <a href="/home/dashboard/workforce" class="nav-item @(IsActive("Workforce") ? "active" : "")">
                 <span class="nav-item-inner">
-                    <span class="nav-icon-wrap"><i class="bi bi-speedometer2"></i></span>
-                    <span class="nav-item-label">@L["Nav_Dashboard"]</span>
+                    <span class="nav-icon-wrap"><i class="bi bi-people-fill"></i></span>
+                    <span class="nav-item-label">@L["Nav_Workforce"]</span>
+                </span>
+            </a>
+            <a href="/home/dashboard/turnover" class="nav-item @(IsActive("Turnover") ? "active" : "")">
+                <span class="nav-item-inner">
+                    <span class="nav-icon-wrap"><i class="bi bi-pie-chart-fill"></i></span>
+                    <span class="nav-item-label">@L["Nav_Turnover"]</span>
+                </span>
+            </a>
+            <a href="/home/dashboard/ninetydayturnover" class="nav-item @(IsActive("NinetyDayTurnover") ? "active" : "")">
+                <span class="nav-item-inner">
+                    <span class="nav-icon-wrap"><i class="bi bi-hourglass-split"></i></span>
+                    <span class="nav-item-label">@L["Nav_NinetyDay"]</span>
+                </span>
+            </a>
+            <a href="/home/dashboard/comparisons" class="nav-item @(IsActive("Comparisons") ? "active" : "")">
+                <span class="nav-item-inner">
+                    <span class="nav-icon-wrap"><i class="bi bi-arrow-left-right"></i></span>
+                    <span class="nav-item-label">@L["Nav_Comparisons"]</span>
+                </span>
+            </a>
+            <a href="/home/dashboard/retention" class="nav-item @(IsActive("Retention") ? "active" : "")">
+                <span class="nav-item-inner">
+                    <span class="nav-icon-wrap"><i class="bi bi-graph-up-arrow"></i></span>
+                    <span class="nav-item-label">@L["Nav_Retention"]</span>
+                </span>
+            </a>
+            <a href="/home/dashboard/exitinterviews" class="nav-item @(IsActive("ExitInterviews") ? "active" : "")">
+                <span class="nav-item-inner">
+                    <span class="nav-icon-wrap"><i class="bi bi-chat-square-text-fill"></i></span>
+                    <span class="nav-item-label">@L["Nav_ExitInterviews"]</span>
+                </span>
+            </a>
+            <a href="/home/dashboard/aiassistant" class="nav-item @(IsActive("AiAssistant") ? "active" : "")">
+                <span class="nav-item-inner">
+                    <span class="nav-icon-wrap"><i class="bi bi-stars"></i></span>
+                    <span class="nav-item-label">@L["Nav_AiAssistant"]</span>
+                </span>
+            </a>
+            <a href="/home/dashboard/earlywarning" class="nav-item @(IsActive("EarlyWarning") ? "active" : "")">
+                <span class="nav-item-inner">
+                    <span class="nav-icon-wrap"><i class="bi bi-exclamation-diamond-fill"></i></span>
+                    <span class="nav-item-label">@L["Nav_EarlyWarning"]</span>
+                </span>
+            </a>
+            <a href="/home/dashboard/scorecard" class="nav-item @(IsActive("Scorecard") ? "active" : "")">
+                <span class="nav-item-inner">
+                    <span class="nav-icon-wrap"><i class="bi bi-award-fill"></i></span>
+                    <span class="nav-item-label">@L["Nav_Scorecard"]</span>
+                </span>
+            </a>
+            <a href="/home/dashboard/stores" class="nav-item @(IsActive("Stores") ? "active" : "")">
+                <span class="nav-item-inner">
+                    <span class="nav-icon-wrap"><i class="bi bi-shop"></i></span>
+                    <span class="nav-item-label">@L["Nav_Stores"]</span>
+                </span>
+            </a>
+            <a href="/home/dashboard/reports" class="nav-item @(IsActive("Reports") ? "active" : "")">
+                <span class="nav-item-inner">
+                    <span class="nav-icon-wrap"><i class="bi bi-file-earmark-bar-graph-fill"></i></span>
+                    <span class="nav-item-label">@L["Nav_Reports"]</span>
                 </span>
             </a>
         </nav>

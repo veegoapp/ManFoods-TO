@@ -1,0 +1,496 @@
+
+<style>
+.ntd-select-wrap { position:relative; }
+.ntd-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 34px 0 14px; min-width:110px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.ntd-select:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.ntd-select-wrap i { position:absolute; top:50%; right:12px; transform:translateY(-50%); font-size:11px; color:var(--text-3); pointer-events:none; }
+[dir="rtl"] .ntd-select { padding:0 14px 0 34px; }
+[dir="rtl"] .ntd-select-wrap i { right:auto; left:12px; }
+
+.ntd-multiselect { position:relative; }
+.ntd-multiselect-trigger {
+    display:flex; align-items:center; gap:10px; justify-content:space-between;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 12px 0 14px; min-width:190px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.ntd-multiselect-trigger:hover { border-color:var(--card-border-h); }
+.ntd-multiselect-trigger i { font-size:11px; color:var(--text-3); flex-shrink:0; }
+.ntd-multiselect-chips { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ntd-multiselect-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); min-width:230px; padding:8px; max-height:280px; overflow-y:auto;
+}
+.ntd-multiselect-panel.open { display:block; }
+[dir="rtl"] .ntd-multiselect-panel { left:auto; right:0; }
+.ntd-multiselect-actions { display:flex; gap:6px; padding:2px 4px 8px; border-bottom:1px solid var(--card-border); margin-bottom:6px; }
+.ntd-ms-action {
+    flex:1; background:var(--card-bg-2); border:1px solid var(--card-border); color:var(--red);
+    border-radius:6px; font-size:11.5px; font-weight:700; padding:6px 8px; cursor:pointer;
+}
+.ntd-ms-action:hover { background:var(--red-light); }
+.ntd-ms-option { display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:13px; color:var(--text-2); }
+.ntd-ms-option:hover { background:var(--card-bg-2); }
+.ntd-ms-option input { accent-color:var(--red); width:15px; height:15px; cursor:pointer; }
+
+.ntd-combobox { position:relative; }
+.ntd-combobox-input {
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:500;
+    height:42px; padding:0 14px; min-width:190px; width:100%;
+    box-shadow:var(--shadow-sm);
+}
+.ntd-combobox-input:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.ntd-combobox-panel {
+    display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg); max-height:260px; overflow-y:auto; padding:6px;
+}
+.ntd-combobox-panel.open { display:block; }
+.ntd-combo-option { padding:8px 10px; border-radius:6px; font-size:13px; color:var(--text-2); cursor:pointer; }
+.ntd-combo-option:hover { background:var(--card-bg-2); }
+.ntd-combo-option.active { color:var(--red); font-weight:700; background:var(--red-light); }
+
+/* KPI card text is always English by design (unlocalized metric names) —
+   isolate it from RTL bidi reordering when the page is in Arabic. */
+#ntdKpiCards .kpi-label, #ntdKpiCards .kpi-value { direction:ltr; unicode-bidi:isolate; text-align:left; }
+
+/* Chart.js draws its tick/legend text on <canvas>, which otherwise inherits
+   the page's dir="rtl" and reorders numeric-leading labels. */
+.chart-body canvas { direction:ltr; }
+</style>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">@L["Page_NinetyDay"]</h1>
+        <p class="page-subtitle">@L["Page_NinetyDaySub"]</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap align-items-end">
+        <div class="ntd-select-wrap"><select id="ntdYearSelect" class="ntd-select"></select><i class="bi bi-chevron-down"></i></div>
+
+        <div class="ntd-multiselect" id="ntdMonthsMultiselect" data-label-select="@L["Common_SelectMonths"]" data-label-all="@L["Common_AllMonths"]">
+            <button type="button" class="ntd-multiselect-trigger" id="ntdMonthsTrigger">
+                <span class="ntd-multiselect-chips" id="ntdMonthsChips">@L["Common_AllMonths"]</span>
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="ntd-multiselect-panel" id="ntdMonthsPanel">
+                <div class="ntd-multiselect-actions">
+                    <button type="button" class="ntd-ms-action" id="ntdMonthsSelectAll">@L["Common_SelectAll"]</button>
+                    <button type="button" class="ntd-ms-action" id="ntdMonthsClearAll">@L["Common_ClearAll"]</button>
+                </div>
+                <div id="ntdMonthsOptions"></div>
+            </div>
+        </div>
+
+        <div class="ntd-combobox" id="ntdStoreCombo">
+            <input type="text" class="ntd-combobox-input" id="ntdStoreInput" placeholder="@L["Common_AllStores"]" autocomplete="off">
+            <div class="ntd-combobox-panel" id="ntdStorePanel"></div>
+        </div>
+        <div class="ntd-combobox" id="ntdOmCombo">
+            <input type="text" class="ntd-combobox-input" id="ntdOmInput" placeholder="@L["Common_AllOperationManagers"]" autocomplete="off">
+            <div class="ntd-combobox-panel" id="ntdOmPanel"></div>
+        </div>
+        <div class="ntd-combobox" id="ntdOcCombo">
+            <input type="text" class="ntd-combobox-input" id="ntdOcInput" placeholder="@L["Common_AllOperationConsultants"]" autocomplete="off">
+            <div class="ntd-combobox-panel" id="ntdOcPanel"></div>
+        </div>
+    </div>
+</div>
+
+<div id="ntdEmptyState" class="card-dark text-center py-5" style="display:none">
+    <i class="bi bi-hourglass-split" style="font-size:3rem;color:oklch(0.5 0.18 25);display:block;margin-bottom:1rem"></i>
+    <h5 class="mb-2">No Cohort Data Yet</h5>
+    <p class="text-muted-custom">Upload workforce and resignation data with hire dates to see 90-day turnover here.</p>
+</div>
+
+<div id="ntdContent">
+    <div id="ntdProvisionalBanner" class="mb-3" style="display:none;background:oklch(0.75 0.16 75 / .12);border-left:3px solid oklch(0.75 0.16 75);border-radius:8px;padding:10px 14px;font-size:12.5px;color:oklch(0.5 0.14 75)">
+        <i class="bi bi-info-circle-fill me-1"></i>This cohort hasn't reached its 90-day mark yet — the rate is provisional and may still rise.
+    </div>
+
+    <div id="ntdKpiCards" class="kpi-grid mb-4">
+        <div class="kpi-spinner text-center py-3 w-100">
+            <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 25)"></div>
+        </div>
+    </div>
+
+    <div class="chart-card mb-4">
+        <div class="chart-header">
+            <h6>@L["Chart_NinetyDayByCohort"]</h6>
+            <p>@L["Chart_NinetyDayByCohortSub"]</p>
+        </div>
+        <div class="chart-body"><canvas id="ntdByCohortChart" style="max-height:240px"></canvas></div>
+    </div>
+
+    <div class="chart-card mb-4">
+        <div class="chart-header">
+            <h6>90-Day Turnover Trend</h6>
+            <p>Rate per hire-month cohort, all-time — dashed points are still provisional</p>
+        </div>
+        <div class="chart-body"><canvas id="ntdTrendChart" style="max-height:280px"></canvas></div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="chart-card h-100">
+                <div class="chart-header"><h6>By Store</h6><p>Early-leaver rate for the selected cohort months</p></div>
+                <div class="chart-body"><canvas id="ntdByStoreChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="chart-card h-100">
+                <div class="chart-header"><h6>Reasons for Early Leaving</h6><p>From exit interviews, matched to this cohort's early leavers</p></div>
+                <div class="chart-body"><canvas id="ntdReasonsChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="section-accent"></div>
+        <h5 class="mb-0 fw-bold">Early Leavers</h5>
+        <span id="ntdLeaversCountBadge" class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px"></span>
+    </div>
+    <div class="chart-card p-0" style="overflow:hidden">
+        <div class="table-responsive" style="max-height:480px;overflow-y:auto">
+            <table class="table table-hover mb-0" style="font-size:13px">
+                <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                    <tr>
+                        <th class="px-3 py-2">Name</th>
+                        <th class="px-3 py-2">Store</th>
+                        <th class="px-3 py-2">Job Title</th>
+                        <th class="px-3 py-2">Hire Date</th>
+                        <th class="px-3 py-2">Resignation Date</th>
+                        <th class="px-3 py-2">Tenure (days)</th>
+                    </tr>
+                </thead>
+                <tbody id="ntdLeaversBody">
+                    <tr><td colspan="6" class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>Chart.register(ChartDataLabels);</script>
+<script>
+/* ── 90-Day Turnover — Year + discrete cohort-Months multi-select, plus
+   searchable single-select combos for Store/OM/OC (same components as the
+   Turnover and Comparisons pages). Store/OM/OC lists on this page are
+   global (not period-scoped) since the underlying API already returns
+   them unscoped. */
+let ntdYear = null, ntdMonths = [], ntdYearMonthsMap = {};
+let ntdStoreFilter = '', ntdOmFilter = '', ntdOcFilter = '';
+
+function ntdMonthShortName(m) { return new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' }); }
+function ntdMonthLongName(m, y) { return new Date(y, m - 1).toLocaleString('default', { month: 'long', year: 'numeric' }); }
+function ntdAnchor() { return ntdMonths.length ? Math.max(...ntdMonths) : null; }
+
+function ntdBuildQuery(extra) {
+    const q = new URLSearchParams(extra || {});
+    if (ntdYear) q.set('year', ntdYear);
+    if (ntdMonths.length) { q.set('months', ntdMonths.join(',')); q.set('month', ntdAnchor()); }
+    if (ntdStoreFilter) q.set('store', ntdStoreFilter);
+    if (ntdOmFilter)    q.set('om', ntdOmFilter);
+    if (ntdOcFilter)    q.set('oc', ntdOcFilter);
+    return q;
+}
+
+async function ntdFetch(path, extraQuery) {
+    const r = await fetch(`/api/ninety-day-turnover/${path}?${ntdBuildQuery(extraQuery).toString()}`);
+    return r.ok ? r.json() : null;
+}
+
+/* Generic searchable single-select combobox ---------------------------- */
+function ntdCreateCombobox({ inputId, panelId, onSelect }) {
+    const input = document.getElementById(inputId);
+    const panel = document.getElementById(panelId);
+    const allLabel = input.placeholder;
+    let options = [];
+    let value = '';
+
+    function render(filterText) {
+        const ft = (filterText || '').toLowerCase();
+        const filtered = options.filter(o => o.toLowerCase().includes(ft));
+        let html = `<div class="ntd-combo-option${value === '' ? ' active' : ''}" data-value="">${allLabel}</div>`;
+        html += filtered.map(o => `<div class="ntd-combo-option${o === value ? ' active' : ''}" data-value="${o.replace(/"/g, '&quot;')}">${o}</div>`).join('');
+        panel.innerHTML = html;
+    }
+    function open() { panel.classList.add('open'); render(''); input.select(); }
+    function close() { panel.classList.remove('open'); input.value = value; }
+
+    panel.addEventListener('mousedown', (e) => {
+        const opt = e.target.closest('.ntd-combo-option');
+        if (!opt) return;
+        e.preventDefault();
+        value = opt.dataset.value;
+        input.value = value;
+        panel.classList.remove('open');
+        onSelect(value);
+    });
+    input.addEventListener('focus', open);
+    input.addEventListener('input', () => render(input.value));
+    input.addEventListener('blur', () => setTimeout(close, 150));
+
+    return { setOptions(list) { options = list || []; }, setValue(v) { value = v || ''; input.value = value; } };
+}
+
+const ntdStoreCombo = ntdCreateCombobox({ inputId: 'ntdStoreInput', panelId: 'ntdStorePanel', onSelect: v => { ntdStoreFilter = v; ntdLoadAll(); } });
+const ntdOmCombo    = ntdCreateCombobox({ inputId: 'ntdOmInput',    panelId: 'ntdOmPanel',    onSelect: v => { ntdOmFilter    = v; ntdLoadAll(); } });
+const ntdOcCombo    = ntdCreateCombobox({ inputId: 'ntdOcInput',    panelId: 'ntdOcPanel',    onSelect: v => { ntdOcFilter    = v; ntdLoadAll(); } });
+
+/* Months multi-select ---------------------------------------------------- */
+function ntdBuildMonthsOptions() {
+    const container = document.getElementById('ntdMonthsOptions');
+    const available = (ntdYearMonthsMap[ntdYear] || []).slice().sort((a, b) => a - b);
+    container.innerHTML = available.map(m => `
+        <label class="ntd-ms-option">
+            <input type="checkbox" value="${m}" ${ntdMonths.includes(m) ? 'checked' : ''}>
+            <span>${ntdMonthLongName(m, ntdYear)}</span>
+        </label>`).join('');
+    container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const m = parseInt(cb.value);
+            if (cb.checked) { if (!ntdMonths.includes(m)) ntdMonths.push(m); }
+            else { ntdMonths = ntdMonths.filter(x => x !== m); }
+            ntdMonths.sort((a, b) => a - b);
+            ntdRenderMonthsChips();
+            ntdOnMonthsChanged();
+        });
+    });
+}
+
+function ntdRenderMonthsChips() {
+    const chipsEl = document.getElementById('ntdMonthsChips');
+    const labels = document.getElementById('ntdMonthsMultiselect').dataset;
+    const available = ntdYearMonthsMap[ntdYear] || [];
+    if (!ntdMonths.length) { chipsEl.textContent = labels.labelSelect; return; }
+    if (ntdMonths.length === available.length) { chipsEl.textContent = labels.labelAll; return; }
+    const names = ntdMonths.map(ntdMonthShortName);
+    chipsEl.textContent = names.length <= 2 ? names.join('، ') : `${names[0]}، ${names[1]} +${names.length - 2}`;
+}
+
+let ntdMonthsDebounce;
+function ntdOnMonthsChanged() {
+    clearTimeout(ntdMonthsDebounce);
+    ntdMonthsDebounce = setTimeout(() => { if (ntdMonths.length) ntdLoadAll(); }, 250);
+}
+
+document.getElementById('ntdMonthsSelectAll').addEventListener('click', () => {
+    ntdMonths = (ntdYearMonthsMap[ntdYear] || []).slice().sort((a, b) => a - b);
+    ntdBuildMonthsOptions(); ntdRenderMonthsChips(); ntdOnMonthsChanged();
+});
+document.getElementById('ntdMonthsClearAll').addEventListener('click', () => {
+    ntdMonths = [];
+    ntdBuildMonthsOptions(); ntdRenderMonthsChips(); ntdOnMonthsChanged();
+});
+document.getElementById('ntdMonthsTrigger').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('ntdMonthsPanel').classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+    if (!document.getElementById('ntdMonthsMultiselect').contains(e.target))
+        document.getElementById('ntdMonthsPanel').classList.remove('open');
+});
+
+document.getElementById('ntdYearSelect').addEventListener('change', function () {
+    ntdYear = parseInt(this.value);
+    ntdMonths = (ntdYearMonthsMap[ntdYear] || []).slice().sort((a, b) => a - b);
+    ntdBuildMonthsOptions();
+    ntdRenderMonthsChips();
+    ntdLoadAll();
+});
+
+/* Initial filter load ------------------------------------------------------ */
+async function ntdLoadFilters() {
+    const [periods, stores, managers, consultants] = await Promise.all([
+        ntdFetch('cohort-periods'),
+        fetch('/api/ninety-day-turnover/stores').then(r => r.ok ? r.json() : []),
+        fetch('/api/ninety-day-turnover/operation-managers').then(r => r.ok ? r.json() : []),
+        fetch('/api/ninety-day-turnover/operation-consultants').then(r => r.ok ? r.json() : []),
+    ]);
+    const cohortPeriods = periods || [];
+
+    const hasData = cohortPeriods.length > 0;
+    document.getElementById('ntdEmptyState').style.display = hasData ? 'none' : '';
+    document.getElementById('ntdContent').style.display = hasData ? '' : 'none';
+    if (!hasData) return false;
+
+    ntdYearMonthsMap = {};
+    cohortPeriods.forEach(p => { (ntdYearMonthsMap[p.year] = ntdYearMonthsMap[p.year] || []).push(p.month); });
+    const years = Object.keys(ntdYearMonthsMap).map(Number).sort((a, b) => b - a);
+    const yearSel = document.getElementById('ntdYearSelect');
+    yearSel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    ntdYear = years[0];
+    yearSel.value = ntdYear;
+    ntdMonths = (ntdYearMonthsMap[ntdYear] || []).slice().sort((a, b) => a - b);
+    ntdBuildMonthsOptions();
+    ntdRenderMonthsChips();
+
+    ntdStoreCombo.setOptions(stores || []);
+    ntdOmCombo.setOptions(managers || []);
+    ntdOcCombo.setOptions(consultants || []);
+    return true;
+}
+
+function ntdRenderKpis(kpi) {
+    const el = document.getElementById('ntdKpiCards');
+    if (!kpi) { el.innerHTML = ''; return; }
+    el.innerHTML = `
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-people-fill"></i></div><div class="kpi-value">${kpi.totalHires}</div><div class="kpi-label">Hired This Cohort</div></div>
+        <div class="kpi-card"><div class="kpi-icon text-danger"><i class="bi bi-person-dash-fill"></i></div><div class="kpi-value text-danger">${kpi.earlyLeavers}</div><div class="kpi-label">Left Within 90 Days</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-graph-up"></i></div><div class="kpi-value">${kpi.rate.toFixed(1)}%${kpi.isProvisional ? ' <span class=\'badge\' style=\'font-size:10px;background:oklch(0.75 0.16 75 / .18);color:oklch(0.5 0.14 75)\'>provisional</span>' : ''}</div><div class="kpi-label">90-Day Turnover Rate</div></div>
+    `;
+    document.getElementById('ntdProvisionalBanner').style.display = kpi.isProvisional ? '' : 'none';
+}
+
+async function ntdLoadKpi() {
+    if (!ntdMonths.length) { ntdRenderKpis(null); return; }
+    const kpi = await ntdFetch('kpi');
+    ntdRenderKpis(kpi);
+}
+
+/* All-time trend — unaffected by the Months multi-select, same as the
+   Turnover page's Monthly Trend / Full Data Table. */
+let ntdTrendInstance;
+async function ntdLoadTrend() {
+    const q = new URLSearchParams();
+    if (ntdStoreFilter) q.set('store', ntdStoreFilter);
+    if (ntdOmFilter)    q.set('om', ntdOmFilter);
+    if (ntdOcFilter)    q.set('oc', ntdOcFilter);
+    const r = await fetch(`/api/ninety-day-turnover/trend?${q.toString()}`);
+    const data = r.ok ? await r.json() : [];
+    const ctx = document.getElementById('ntdTrendChart');
+    if (!ctx) return;
+    if (ntdTrendInstance) ntdTrendInstance.destroy();
+    ntdTrendInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => d.label),
+            datasets: [{
+                label: '90-Day Turnover Rate',
+                data: data.map(d => d.rate),
+                borderColor: 'oklch(0.5 0.18 25)',
+                backgroundColor: 'oklch(0.5 0.18 25 / .15)',
+                segment: { borderDash: ctx => data[ctx.p1DataIndex]?.isProvisional ? [6, 4] : undefined },
+                tension: 0.3, fill: true, pointRadius: 4, spanGaps: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false }, datalabels: { display: false } },
+            scales: {
+                x: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 } }, grid: { display: false } },
+                y: { ticks: { color: 'oklch(0.5 0.03 258)', font: { size: 11 }, callback: v => v + '%' }, grid: { color: 'oklch(0.92 0.008 255)' } }
+            }
+        }
+    });
+}
+
+/* New: 90-Day Rate by Cohort Month — one bar per selected month, computed
+   independently (early leavers ÷ hires for that single cohort month). */
+let ntdByCohortInstance;
+async function ntdLoadByCohort() {
+    const ctx = document.getElementById('ntdByCohortChart');
+    if (!ctx) return;
+    if (ntdByCohortInstance) ntdByCohortInstance.destroy();
+    if (!ntdMonths.length) return;
+    const sortedMonths = ntdMonths.slice().sort((a, b) => a - b);
+    const results = await Promise.all(sortedMonths.map(m => {
+        const q = new URLSearchParams({ year: ntdYear, months: m, month: m });
+        if (ntdStoreFilter) q.set('store', ntdStoreFilter);
+        if (ntdOmFilter)    q.set('om', ntdOmFilter);
+        if (ntdOcFilter)    q.set('oc', ntdOcFilter);
+        return fetch(`/api/ninety-day-turnover/kpi?${q.toString()}`).then(r => r.ok ? r.json() : null);
+    }));
+    ntdByCohortInstance = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: sortedMonths.map(ntdMonthShortName),
+            datasets: [{ data: results.map(r => r?.rate || 0), backgroundColor: 'oklch(0.5 0.18 25)', borderRadius: 6, maxBarThickness: 46 }]
+        },
+        options: {
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.parsed.y.toFixed(1)}%` } }, datalabels: { anchor: 'end', align: 'top', color: 'oklch(0.5 0.03 258)', font: { size: 11, weight: '600' }, formatter: v => v > 0 ? v.toFixed(1) + '%' : '' } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: 'oklch(0.5 0.03 258)' } },
+                y: { ticks: { color: 'oklch(0.5 0.03 258)', callback: v => v + '%' }, grid: { color: 'oklch(0.92 0.008 255)' } }
+            }
+        }
+    });
+}
+
+let ntdByStoreInstance;
+async function ntdLoadByStore() {
+    const ctx = document.getElementById('ntdByStoreChart');
+    if (!ctx) return;
+    if (ntdByStoreInstance) ntdByStoreInstance.destroy();
+    if (!ntdMonths.length) return;
+    const data = await ntdFetch('by-store') || [];
+    ntdByStoreInstance = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: 'oklch(0.55 0.19 25)', borderRadius: 4, maxBarThickness: 26 }] },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: 'oklch(0.5 0.03 258)', font: { size: 11, weight: '600' }, formatter: v => v > 0 ? v.toFixed(1) + '%' : '' } },
+            scales: {
+                x: { grid: { color: 'oklch(0.92 0.008 255)' }, ticks: { color: 'oklch(0.5 0.03 258)', callback: v => v + '%' } },
+                y: { grid: { display: false }, ticks: { color: 'oklch(0.5 0.03 258)' } }
+            }
+        }
+    });
+}
+
+const NTD_REASON_COLORS = ['oklch(0.55 0.19 25)', 'oklch(0.65 0.15 190)', 'oklch(0.7 0.16 145)', 'oklch(0.72 0.17 60)', 'oklch(0.62 0.2 15)'];
+let ntdReasonsInstance;
+async function ntdLoadReasons() {
+    const ctx = document.getElementById('ntdReasonsChart');
+    if (!ctx) return;
+    if (ntdReasonsInstance) ntdReasonsInstance.destroy();
+    if (!ntdMonths.length) return;
+    const data = await ntdFetch('reasons') || [];
+    if (!data.length) return;
+    ntdReasonsInstance = new Chart(ctx.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: NTD_REASON_COLORS, borderWidth: 2, borderColor: 'oklch(1 0 0)' }] },
+        options: { cutout: '60%', plugins: { legend: { position: 'bottom', labels: { color: 'oklch(0.5 0.03 258)', boxWidth: 10, boxHeight: 10, padding: 12, font: { size: 11 } } }, datalabels: { color: '#fff', font: { size: 11, weight: '700' }, textShadowBlur: 4, textShadowColor: 'rgba(0,0,0,0.4)', formatter: (v, ctx) => { const t = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); return t > 0 && v > 0 ? Math.round(v / t * 100) + '%' : ''; } } } }
+    });
+}
+
+async function ntdLoadLeavers() {
+    const tbody = document.getElementById('ntdLeaversBody');
+    const badge = document.getElementById('ntdLeaversCountBadge');
+    if (!ntdMonths.length) { tbody.innerHTML = ''; badge.textContent = ''; return; }
+    const rows = await ntdFetch('early-leavers') || [];
+    badge.textContent = rows.length + ' early leavers';
+    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No early leavers in this cohort.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(r => `
+        <tr>
+            <td class="px-3 py-2 fw-semibold">${r.name}</td>
+            <td class="px-3 py-2">${r.store}</td>
+            <td class="px-3 py-2" style="color:oklch(0.5 0.03 258)">${r.jobTitle}</td>
+            <td class="px-3 py-2" style="color:oklch(0.5 0.03 258)">${r.hireDate}</td>
+            <td class="px-3 py-2" style="color:oklch(0.5 0.03 258)">${r.resignationDate}</td>
+            <td class="px-3 py-2">${r.tenureDays}</td>
+        </tr>`).join('');
+}
+
+async function ntdLoadAll() {
+    await Promise.all([ntdLoadKpi(), ntdLoadByCohort(), ntdLoadByStore(), ntdLoadReasons(), ntdLoadLeavers()]);
+}
+
+(async function init() {
+    const hasData = await ntdLoadFilters();
+    if (hasData) await Promise.all([ntdLoadTrend(), ntdLoadAll()]);
+})();
+</script>
