@@ -80,6 +80,18 @@
     .tv-gender-canvas-wrap { flex:0 0 auto; width:100%; height:180px; }
 }
 .tv-gender-canvas-wrap canvas { direction:ltr; }
+
+/* Compact variant used when this card sits side-by-side with "Reasons for
+   Early Leaving" (col-6 at all breakpoints) — stay row-oriented and shrink
+   text/spacing instead of falling back to the stacked mobile layout, which
+   would otherwise make the narrower half-width card look too tall. */
+.tv-gender-body-compact { gap:8px; height:auto; min-height:150px; }
+.tv-gender-body-compact .tv-gender-canvas-wrap { flex:0 0 40%; height:130px; width:auto; }
+.tv-gender-body-compact .tv-gender-row { font-size:11px; gap:6px; }
+.tv-gender-body-compact .tv-gender-dot { width:8px; height:8px; }
+@@media (max-width: 767px) {
+    .tv-gender-body-compact { flex-direction:row; }
+}
 </style>
 
 <div class="page-header">
@@ -169,17 +181,17 @@
         <div class="chart-body"><canvas id="ntdByStoreChart"></canvas></div>
     </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-lg-6">
-            <div class="chart-card h-100">
+    <div class="row g-2 g-md-3 mb-4">
+        <div class="col-6">
+            <div class="chart-card h-100 p-2 p-md-3">
                 <div class="chart-header"><h6>Reasons for Early Leaving</h6><p>From exit interviews, matched to this cohort's early leavers</p></div>
                 <div class="chart-body"><canvas id="ntdReasonsChart"></canvas></div>
             </div>
         </div>
-        <div class="col-lg-6">
-            <div class="chart-card h-100">
+        <div class="col-6">
+            <div class="chart-card h-100 p-2 p-md-3">
                 <div class="chart-header"><h6>Gender Breakdown</h6><p>Gender of early leavers for the selected cohort months</p></div>
-                <div class="tv-gender-body">
+                <div class="tv-gender-body tv-gender-body-compact">
                     <div class="tv-gender-canvas-wrap"><canvas id="ntdGenderChart"></canvas></div>
                     <div class="tv-gender-list" id="ntdGenderStatsList"></div>
                 </div>
