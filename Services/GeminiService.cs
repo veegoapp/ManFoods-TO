@@ -3,30 +3,118 @@ using System.Text.Json;
 
 namespace MvcApp.Services;
 
+/// <summary>
+/// Implements IGeminiService using OpenRouter API (OpenAI-compatible).
+/// Set OPENROUTER_API_KEY in Replit Secrets.
+/// </summary>
 public class GeminiService : IGeminiService
 {
     private readonly IHttpClientFactory _httpFactory;
     private readonly ILogger<GeminiService> _logger;
 
+    private const string OpenRouterUrl  = "https://openrouter.ai/api/v1/chat/completions";
+    private const string DefaultModel   = "meta-llama/llama-3-8b-instruct:free";
+
     public GeminiService(IHttpClientFactory httpFactory, ILogger<GeminiService> logger)
     {
         _httpFactory = httpFactory;
-        _logger = logger;
+        _logger      = logger;
     }
 
     public async Task<GeminiAnswer> AskAsync(string userQuestion, GeminiContext ctx)
     {
-        var apiKey = Environment.GetEnvironmentVariable("Gemini_API_Key");
+        var apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
         if (string.IsNullOrEmpty(apiKey))
-            return new GeminiAnswer { Text = "AI غير مُفعّل. تأكد من إعداد Gemini_API_Key في الـ Secrets." };
+            return new GeminiAnswer { Text = "⚠️ AI غير مُفعّل. تأكد من إعداد OPENROUTER_API_KEY في الـ Secrets." };
 
+        var systemPrompt = BuildSystemPrompt(ctx, userQuestion);
+
+        var requestBody = new
+        {
+            model    = DefaultModel,
+            messages = new[]
+            {
+                new { role = "system", content = systemPrompt },
+                new { role = "user",   content = userQuestion }
+            },
+            max_tokens  = 1024,
+            temperature = 0.7
+        };
+
+        try
+        {
+            var client  = _httpFactory.CreateClient();
+            var json    = JsonSerializer.Serialize(requestBody);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, OpenRouterUrl) { Content = content };
+            request.Headers.Add("Authorization", $"Bearer {apiKey}");
+            request.Headers.Add("HTTP-Referer", "https://manfoodsto.replit.app");
+            request.Headers.Add("X-Title", "ManFoodsTO Workforce Intelligence");
+
+            var response     = await client.SendAsync(request);
+            var responseJson = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("OpenRouter API error {Status}: {Body}", response.StatusCode, responseJson);
+                var errorText = (int)response.StatusCode switch
+                {
+                    401 => "⚠️ الـ API Key غير صحيح أو منتهي الصلاحية. تأكد من OPENROUTER_API_KEY.",
+                    402 => "⚠️ رصيد OpenRouter غير كافٍ.",
+                    429 => "⚠️ تم تجاوز حد الطلبات. انتظر دقيقة وحاول مجدداً.",
+                    _   => $"⚠️ خطأ في الاتصال بالـ AI (كود {(int)response.StatusCode}). حاول مرة أخرى.",
+                };
+                return new GeminiAnswer { Text = errorText };
+            }
+
+            using var doc = JsonDocument.Parse(responseJson);
+
+            var promptTokens     = 0;
+            var completionTokens = 0;
+            if (doc.RootElement.TryGetProperty("usage", out var usage))
+            {
+                if (usage.TryGetProperty("prompt_tokens",     out var pt)) promptTokens     = pt.GetInt32();
+                if (usage.TryGetProperty("completion_tokens", out var ct)) completionTokens = ct.GetInt32();
+            }
+
+            if (!doc.RootElement.TryGetProperty("choices", out var choices) || choices.GetArrayLength() == 0)
+                return new GeminiAnswer { Text = "⚠️ لم يُرجع الـ AI أي إجابة. حاول إعادة صياغة السؤال.", PromptTokens = promptTokens, CompletionTokens = completionTokens };
+
+            var text = choices[0]
+                .GetProperty("message")
+                .GetProperty("content")
+                .GetString();
+
+            return new GeminiAnswer
+            {
+                Text             = text ?? "⚠️ لم يتم الحصول على إجابة.",
+                PromptTokens     = promptTokens,
+                CompletionTokens = completionTokens
+            };
+        }
+        catch (TaskCanceledException)
+        {
+            _logger.LogWarning("OpenRouter API timeout");
+            return new GeminiAnswer { Text = "⚠️ انتهت مهلة الاتصال بالـ AI. تأكد من اتصالك بالإنترنت وحاول مجدداً." };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "OpenRouter service exception");
+            return new GeminiAnswer { Text = "⚠️ حدث خطأ غير متوقع أثناء الاتصال بالـ AI. حاول مرة أخرى." };
+        }
+    }
+
+    // ─── Prompt Builder ────────────────────────────────────────────────────────
+
+    private static string BuildSystemPrompt(GeminiContext ctx, string userQuestion)
+    {
         var periodLabel = (ctx.Month.HasValue && ctx.Year.HasValue)
             ? $"{ctx.Month}/{ctx.Year}"
             : "غير محدد";
 
         var storeLabel = string.IsNullOrEmpty(ctx.Store) ? "جميع الفروع" : ctx.Store;
 
-        // Build per-store breakdown table
         var storeTable = new StringBuilder();
         if (ctx.StoreBreakdowns.Count > 0)
         {
@@ -38,7 +126,6 @@ public class GeminiService : IGeminiService
             storeTable.AppendLine();
         }
 
-        // Build job-title breakdown
         var jobTitleSection = new StringBuilder();
         if (ctx.TurnoverByJobTitle.Count > 0)
         {
@@ -48,7 +135,6 @@ public class GeminiService : IGeminiService
             jobTitleSection.AppendLine();
         }
 
-        // Build tenure breakdown
         var tenureSection = new StringBuilder();
         if (ctx.TurnoverByTenure.Count > 0)
         {
@@ -58,7 +144,6 @@ public class GeminiService : IGeminiService
             tenureSection.AppendLine();
         }
 
-        // Build gender breakdown
         var genderSection = new StringBuilder();
         if (ctx.GenderBreakdown.Count > 0)
         {
@@ -68,37 +153,34 @@ public class GeminiService : IGeminiService
             genderSection.AppendLine();
         }
 
-        // Build retention milestones (company-wide, all cohorts to date)
         var retentionSection = new StringBuilder();
         if (ctx.RetentionMilestones.Count > 0)
         {
-            retentionSection.AppendLine("=== نسبة الاحتفاظ بالموظفين حسب المدة منذ التعيين (كل الكوهورتات) ===");
+            retentionSection.AppendLine("=== نسبة الاحتفاظ بالموظفين حسب المدة منذ التعيين ===");
             foreach (var (label, rate) in ctx.RetentionMilestones)
                 retentionSection.AppendLine($"  • بعد {label}: {rate:F1}% لسه شغالين");
             retentionSection.AppendLine();
         }
 
-        // Build 90-day early-leaver trend by cohort month
         var ninetyDaySection = new StringBuilder();
         if (ctx.NinetyDayCohorts.Count > 0)
         {
             ninetyDaySection.AppendLine("=== نسبة ترك العمل خلال أول 90 يوم، لكل شهر تعيين ===");
             foreach (var (label, rate, provisional) in ctx.NinetyDayCohorts)
-                ninetyDaySection.AppendLine($"  • {label}: {rate:F1}%{(provisional ? " (لسه تحت المراجعة، ممكن تتغير)" : "")}");
+                ninetyDaySection.AppendLine($"  • {label}: {rate:F1}%{(provisional ? " (لسه تحت المراجعة)" : "")}");
             ninetyDaySection.AppendLine();
         }
 
-        // Build exit interview reasons (never includes names or IDs)
         var exitReasonsSection = new StringBuilder();
         if (ctx.ExitInterviewReasons.Count > 0)
         {
-            exitReasonsSection.AppendLine("=== أكتر أسباب ترك العمل ذكرًا في مقابلات الخروج ===");
+            exitReasonsSection.AppendLine("=== أكتر أسباب ترك العمل في مقابلات الخروج ===");
             foreach (var (reason, count) in ctx.ExitInterviewReasons)
                 exitReasonsSection.AppendLine($"  • {reason}: {count} حالة");
             exitReasonsSection.AppendLine();
         }
 
-        var systemPrompt = $"""
+        return $"""
             أنت مساعد HR ذكي متخصص في تحليل بيانات الموارد البشرية لمنصة Workforce Intelligence – Crew Level.
             مهمتك هي الإجابة على أسئلة المدراء بناءً على البيانات المتاحة فقط.
 
@@ -126,86 +208,7 @@ public class GeminiService : IGeminiService
             - يمكنك الإجابة بالعربية أو الإنجليزية حسب لغة السؤال.
             - قدّم توصيات عملية عند الطلب.
             - عند الإجابة عن "أعلى فرع turnover"، استخدم جدول الفروع مباشرة.
-            - بيانات الاحتفاظ وأول 90 يوم ومقابلات الخروج دي على مستوى الشركة كلها عبر كل الفترات، مش مقتصرة على الفترة/الفرع المختار فوق.
-
-            سؤال المستخدم: {userQuestion}
+            - بيانات الاحتفاظ وأول 90 يوم ومقابلات الخروج على مستوى الشركة كلها عبر كل الفترات.
             """;
-
-        var requestBody = new
-        {
-            contents = new[]
-            {
-                new
-                {
-                    parts = new[]
-                    {
-                        new { text = systemPrompt }
-                    }
-                }
-            },
-            generationConfig = new
-            {
-                temperature = 0.7,
-                maxOutputTokens = 1024
-            }
-        };
-
-        try
-        {
-            var client = _httpFactory.CreateClient();
-            const string url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent";
-            var json = JsonSerializer.Serialize(requestBody);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
-            request.Headers.Add("x-goog-api-key", apiKey); // keep key out of URL / logs
-
-            var response = await client.SendAsync(request);
-            var responseJson = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogWarning("Gemini API error {Status}: {Body}", response.StatusCode, responseJson);
-                var errorText = (int)response.StatusCode switch
-                {
-                    403 => "⚠️ الـ API Key مش عنده صلاحية على هذا الـ model. تأكد إن الـ Gemini_API_Key صحيح وفعّال من Google AI Studio.",
-                    429 => "⚠️ تم تجاوز حد الطلبات على الـ AI. انتظر دقيقة وحاول مجدداً.",
-                    400 => "⚠️ طلب غير صحيح. حاول إعادة صياغة السؤال.",
-                    _   => $"⚠️ خطأ في الاتصال بالـ AI (كود {(int)response.StatusCode}). حاول مرة أخرى.",
-                };
-                return new GeminiAnswer { Text = errorText };
-            }
-
-            using var doc = JsonDocument.Parse(responseJson);
-
-            var promptTokens = 0;
-            var completionTokens = 0;
-            if (doc.RootElement.TryGetProperty("usageMetadata", out var usage))
-            {
-                if (usage.TryGetProperty("promptTokenCount", out var pt)) promptTokens = pt.GetInt32();
-                if (usage.TryGetProperty("candidatesTokenCount", out var ct)) completionTokens = ct.GetInt32();
-            }
-
-            if (!doc.RootElement.TryGetProperty("candidates", out var candidates) || candidates.GetArrayLength() == 0)
-                return new GeminiAnswer { Text = "⚠️ لم يُرجع الـ AI أي إجابة. حاول إعادة صياغة السؤال.", PromptTokens = promptTokens, CompletionTokens = completionTokens };
-
-            var text = candidates[0]
-                .GetProperty("content")
-                .GetProperty("parts")[0]
-                .GetProperty("text")
-                .GetString();
-
-            return new GeminiAnswer { Text = text ?? "⚠️ لم يتم الحصول على إجابة.", PromptTokens = promptTokens, CompletionTokens = completionTokens };
-        }
-        catch (TaskCanceledException)
-        {
-            _logger.LogWarning("Gemini API timeout");
-            return new GeminiAnswer { Text = "⚠️ انتهت مهلة الاتصال بالـ AI. تأكد من اتصالك بالإنترنت وحاول مجدداً." };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Gemini service exception");
-            return new GeminiAnswer { Text = "⚠️ حدث خطأ غير متوقع أثناء الاتصال بالـ AI. حاول مرة أخرى." };
-        }
     }
 }
