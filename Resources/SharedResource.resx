@@ -443,6 +443,8 @@
   <data name="EW_TenureDays" xml:space="preserve"><value>Tenure (Days)</value></data>
   <data name="EW_RiskScore" xml:space="preserve"><value>Risk Score</value></data>
   <data name="EW_Reasons" xml:space="preserve"><value>Reasons</value></data>
+  <data name="EW_HighRiskTable" xml:space="preserve"><value>High Risk Employees</value></data>
+  <data name="EW_NoHighRiskData" xml:space="preserve"><value>No high-risk employees for this filter.</value></data>
   <data name="EW_InWatchList" xml:space="preserve"><value>In Watch List</value></data>
   <data name="EW_HighRisk" xml:space="preserve"><value>High Risk (2+)</value></data>
   <data name="EW_NewHireWindow" xml:space="preserve"><value>Still in first 90 days</value></data>

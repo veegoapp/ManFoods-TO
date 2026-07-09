@@ -81,14 +81,14 @@ public class EarlyWarningService : IEarlyWarningService
         return byEmployee.Values.ToList();
     }
 
-    private async Task<List<ActiveCandidate>> LoadActiveCandidatesAsync(string? months, int? year)
+    private async Task<(List<ActiveCandidate> Candidates, int Month, int Year)> LoadActiveCandidatesAsync(string? months, int? year)
     {
         var periods = await _db.ActiveEmployees
             .Where(e => e.HireDate != null)
             .Select(e => new { e.Month, e.Year })
             .Distinct()
             .ToListAsync();
-        if (periods.Count == 0) return [];
+        if (periods.Count == 0) return ([], 0, 0);
 
         (int Month, int Year) anchor;
         if (year.HasValue && !string.IsNullOrWhiteSpace(months))
@@ -113,7 +113,7 @@ public class EarlyWarningService : IEarlyWarningService
             .Select(e => new { e.EmployeeId, e.Name, e.Store, e.JobTitle, e.Gender, e.HireDate })
             .ToListAsync();
 
-        return rows
+        var candidates = rows
             .Where(r => !string.IsNullOrWhiteSpace(r.EmployeeId) && !resignedIds.Contains(r.EmployeeId))
             .Select(r => new ActiveCandidate
             {
@@ -126,6 +126,8 @@ public class EarlyWarningService : IEarlyWarningService
                 TenureDays = asOf.DayNumber - r.HireDate!.Value.DayNumber,
             })
             .ToList();
+
+        return (candidates, anchor.Month, anchor.Year);
     }
 
     // ── Statistical helpers ───────────────────────────────────────────────────
@@ -348,7 +350,7 @@ public class EarlyWarningService : IEarlyWarningService
     // ── Public API ────────────────────────────────────────────────────────────
     public async Task<List<string>> GetStoreListAsync()
     {
-        var candidates = await LoadActiveCandidatesAsync(null, null);
+        var (candidates, _, _) = await LoadActiveCandidatesAsync(null, null);
         return candidates.Select(c => c.Store)
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .Distinct()
@@ -361,7 +363,8 @@ public class EarlyWarningService : IEarlyWarningService
     {
         // ── Load raw data ─────────────────────────────────────────────────────
         var historical = await LoadHistoricalRecordsAsync();
-        var candidates = await LoadActiveCandidatesAsync(months, year);
+        var (candidatesRaw, anchorMonth, anchorYear) = await LoadActiveCandidatesAsync(months, year);
+        var candidates = candidatesRaw;
         if (MultiValueFilter.Split(store) is { } stores)
             candidates = candidates.Where(c => stores.Contains(c.Store)).ToList();
 
@@ -400,6 +403,23 @@ public class EarlyWarningService : IEarlyWarningService
         var allLeaderRates  = leaderRates.Values.Select(x => x.LeaderRate).ToList();
         var leaderMean      = allLeaderRates.Count > 0 ? allLeaderRates.Average() : companyRate;
         var leaderStd       = Math.Max(CalcStdDev(allLeaderRates), MinStdDev);
+
+        // ── Operation Consultant per store — latest assignment at or before the
+        //    anchor period, so it matches the same snapshot the candidates come
+        //    from (falls back to the latest known assignment if none is ≤ anchor).
+        var storeRefRows = await _db.StoreReferences
+            .Where(s => !string.IsNullOrEmpty(s.StoreName))
+            .Select(s => new { s.StoreName, s.OperationConsultant, s.Year, s.Month })
+            .ToListAsync();
+        var ocByStore = storeRefRows
+            .GroupBy(s => s.StoreName)
+            .ToDictionary(g => g.Key, g =>
+            {
+                var upToAnchor = g.Where(s => s.Year < anchorYear || (s.Year == anchorYear && s.Month <= anchorMonth)).ToList();
+                var chosen = (upToAnchor.Count > 0 ? upToAnchor : g.ToList())
+                    .OrderByDescending(s => s.Year).ThenByDescending(s => s.Month).First();
+                return chosen.OperationConsultant ?? "";
+            });
 
         // ── Score each active employee ────────────────────────────────────────
         var result = new List<EarlyWarningItem>();
@@ -507,6 +527,7 @@ public class EarlyWarningService : IEarlyWarningService
             {
                 Name      = c.Name,
                 Store     = c.Store,
+                OperationConsultant = ocByStore.TryGetValue(c.Store, out var ocVal) ? ocVal : "",
                 JobTitle  = c.JobTitle,
                 HireDate  = c.HireDate,
                 TenureDays = c.TenureDays,

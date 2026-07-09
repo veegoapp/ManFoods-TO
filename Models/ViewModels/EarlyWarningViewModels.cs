@@ -18,6 +18,7 @@ public class EarlyWarningItem
 {
     public string   Name       { get; set; } = "";
     public string   Store      { get; set; } = "";
+    public string   OperationConsultant { get; set; } = "";
     public string   JobTitle   { get; set; } = "";
     public DateOnly HireDate   { get; set; }
     public int      TenureDays { get; set; }

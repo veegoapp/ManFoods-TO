@@ -62,6 +62,16 @@
 /* Chart.js draws its tick/legend text on <canvas>, which otherwise inherits
    the page's dir="rtl" and reorders numeric-leading labels. */
 .chart-body canvas { direction:ltr; }
+
+.ew-sort-header { cursor:pointer; user-select:none; white-space:nowrap; }
+.ew-sort-header:hover { color:var(--red); }
+.ew-sort-icon { font-size:10px; margin-left:4px; opacity:0.35; }
+[dir="rtl"] .ew-sort-icon { margin-left:0; margin-right:4px; }
+.ew-sort-header.ew-sort-asc .ew-sort-icon,
+.ew-sort-header.ew-sort-desc .ew-sort-icon { opacity:1; color:var(--red); }
+.ew-sort-header.ew-sort-asc .ew-sort-icon::before { content:"\f235"; }   /* bi-caret-up-fill */
+.ew-sort-header.ew-sort-desc .ew-sort-icon::before { content:"\f229"; } /* bi-caret-down-fill */
+.ew-sort-header:not(.ew-sort-asc):not(.ew-sort-desc) .ew-sort-icon::before { content:"\f229"; }
 </style>
 
 <div class="page-header">
@@ -140,6 +150,37 @@
     <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
         <div class="d-flex align-items-center gap-2">
             <div class="section-accent"></div>
+            <h5 class="mb-0 fw-bold">@L["EW_HighRiskTable"]</h5>
+            <span id="ewHighRiskCountBadge" class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px"></span>
+        </div>
+    </div>
+    <div class="chart-card p-0 mb-4" style="overflow:hidden" data-employee-suffix="@L["EW_EmployeeCountSuffix"]" data-no-data="@L["EW_NoHighRiskData"]">
+        <div class="table-responsive" style="max-height:420px;overflow-y:auto">
+            <table class="table table-hover mb-0 ew-sortable-table" style="font-size:13px">
+                <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
+                    <tr>
+                        <th class="px-3 py-2 ew-sort-header" data-sort-key="name">@L["EW_HireName"]<i class="bi ew-sort-icon"></i></th>
+                        <th class="px-3 py-2 ew-sort-header" data-sort-key="store">@L["EW_Store"]<i class="bi ew-sort-icon"></i></th>
+                        <th class="px-3 py-2 ew-sort-header" data-sort-key="operationConsultant">@L["Common_OperationConsultant"]<i class="bi ew-sort-icon"></i></th>
+                        <th class="px-3 py-2 ew-sort-header" data-sort-key="jobTitle">@L["EW_JobTitle"]<i class="bi ew-sort-icon"></i></th>
+                        <th class="px-3 py-2 ew-sort-header" data-sort-key="hireDate">@L["EW_HireDate"]<i class="bi ew-sort-icon"></i></th>
+                        <th class="px-3 py-2 ew-sort-header" data-sort-key="tenureDays">@L["EW_TenureDays"]<i class="bi ew-sort-icon"></i></th>
+                        <th class="px-3 py-2 text-center ew-sort-header" data-sort-key="stars">@L["EW_RiskScore"]<i class="bi ew-sort-icon"></i></th>
+                        <th class="px-3 py-2">@L["EW_Reasons"]</th>
+                    </tr>
+                </thead>
+                <tbody id="ewHighRiskBody">
+                    <tr><td colspan="8" class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>@L["Common_Loading"]
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <div class="section-accent"></div>
             <h5 class="mb-0 fw-bold">@L["EW_WatchList"]</h5>
             <span id="ewCountBadge" class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px"></span>
         </div>
@@ -147,21 +188,22 @@
     </div>
     <div class="chart-card p-0" style="overflow:hidden" data-employee-suffix="@L["EW_EmployeeCountSuffix"]" data-no-data="@L["EW_NoWatchlistData"]">
         <div class="table-responsive" style="max-height:520px;overflow-y:auto">
-            <table class="table table-hover mb-0" style="font-size:13px">
+            <table class="table table-hover mb-0 ew-sortable-table" style="font-size:13px">
                 <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
                     <tr>
-                        <th class="px-3 py-2">@L["EW_HireName"]</th>
-                        <th class="px-3 py-2">@L["EW_Store"]</th>
-                        <th class="px-3 py-2">@L["EW_JobTitle"]</th>
-                        <th class="px-3 py-2">@L["EW_HireDate"]</th>
-                        <th class="px-3 py-2">@L["EW_TenureDays"]</th>
-                        <th class="px-3 py-2 text-center">@L["EW_RiskScore"]</th>
+                        <th class="px-3 py-2 ew-sort-header" data-sort-key="name">@L["EW_HireName"]<i class="bi ew-sort-icon"></i></th>
+                        <th class="px-3 py-2 ew-sort-header" data-sort-key="store">@L["EW_Store"]<i class="bi ew-sort-icon"></i></th>
+                        <th class="px-3 py-2 ew-sort-header" data-sort-key="operationConsultant">@L["Common_OperationConsultant"]<i class="bi ew-sort-icon"></i></th>
+                        <th class="px-3 py-2 ew-sort-header" data-sort-key="jobTitle">@L["EW_JobTitle"]<i class="bi ew-sort-icon"></i></th>
+                        <th class="px-3 py-2 ew-sort-header" data-sort-key="hireDate">@L["EW_HireDate"]<i class="bi ew-sort-icon"></i></th>
+                        <th class="px-3 py-2 ew-sort-header" data-sort-key="tenureDays">@L["EW_TenureDays"]<i class="bi ew-sort-icon"></i></th>
+                        <th class="px-3 py-2 text-center ew-sort-header" data-sort-key="stars">@L["EW_RiskScore"]<i class="bi ew-sort-icon"></i></th>
                         <th class="px-3 py-2">@L["EW_Reasons"]</th>
                     </tr>
                 </thead>
                 <tbody id="ewBody">
-                    <tr><td colspan="7" class="text-center py-4 text-muted">
-                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>Loading...
+                    <tr><td colspan="8" class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>@L["Common_Loading"]
                     </td></tr>
                 </tbody>
             </table>
@@ -372,30 +414,92 @@ function ewRiskBadge(stars) {
     return `<span style="color:${color};font-size:15px;letter-spacing:1px;line-height:1" title="${stars}/5">${filled}${empty}</span>`;
 }
 
-function ewRenderTable(rows) {
-    const tbody = document.getElementById('ewBody');
-    const labels = document.querySelector('[data-employee-suffix]').dataset;
-    const search = (document.getElementById('ewSearch').value || '').toLowerCase();
-    const filtered = rows.filter(r =>
-        r.name.toLowerCase().includes(search) ||
-        (r.store || '').toLowerCase().includes(search) ||
-        (r.jobTitle || '').toLowerCase().includes(search)
-    );
-
-    const badge = document.getElementById('ewCountBadge');
-    badge.textContent = `${filtered.length} ${labels.employeeSuffix}`;
-    if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">${labels.noData}</td></tr>`; return; }
-    tbody.innerHTML = filtered.map(r => `
+function ewRowHtml(r) {
+    return `
         <tr>
             <td class="px-3 py-2 fw-semibold">${r.name}</td>
             <td class="px-3 py-2">${r.store}</td>
+            <td class="px-3 py-2" style="color:var(--text-2)">${r.operationConsultant || ''}</td>
             <td class="px-3 py-2" style="color:var(--text-2)">${r.jobTitle}</td>
             <td class="px-3 py-2" style="color:var(--text-2)">${r.hireDate}</td>
             <td class="px-3 py-2">${r.tenureDays}</td>
             <td class="px-3 py-2 text-center">${ewRiskBadge(r.stars)}</td>
             <td class="px-3 py-2" style="font-size:12px;color:var(--text-2)">${r.reasons.map(x => `• ${ewReasonText(x)}`).join('<br>')}</td>
-        </tr>`).join('');
+        </tr>`;
 }
+
+/* Generic sortable-header wiring ------------------------------------------
+   Each table tracks its own sort key/direction so the two tables (High Risk
+   and Watch List) can be sorted independently. */
+const ewSortState = {}; // tableId -> { key, dir }
+
+function ewSortValue(row, key) {
+    const v = row[key];
+    if (key === 'hireDate') return new Date(v).getTime() || 0;
+    if (typeof v === 'number') return v;
+    return (v || '').toString().toLowerCase();
+}
+
+function ewApplySort(tableId, rows) {
+    const state = ewSortState[tableId];
+    if (!state || !state.key) return rows;
+    const sorted = rows.slice().sort((a, b) => {
+        const va = ewSortValue(a, state.key), vb = ewSortValue(b, state.key);
+        if (va < vb) return state.dir === 'asc' ? -1 : 1;
+        if (va > vb) return state.dir === 'asc' ? 1 : -1;
+        return 0;
+    });
+    return sorted;
+}
+
+function ewWireSortHeaders(tableId, renderFn) {
+    const table = document.querySelector(`#${tableId}`).closest('table');
+    table.querySelectorAll('.ew-sort-header').forEach(th => {
+        th.addEventListener('click', () => {
+            const key = th.dataset.sortKey;
+            const state = ewSortState[tableId] || { key: null, dir: 'asc' };
+            state.dir = (state.key === key && state.dir === 'asc') ? 'desc' : 'asc';
+            state.key = key;
+            ewSortState[tableId] = state;
+            table.querySelectorAll('.ew-sort-header').forEach(h => h.classList.remove('ew-sort-asc', 'ew-sort-desc'));
+            th.classList.add(state.dir === 'asc' ? 'ew-sort-asc' : 'ew-sort-desc');
+            renderFn();
+        });
+    });
+}
+
+function ewRenderTable(rows) {
+    const tbody = document.getElementById('ewBody');
+    const labels = document.querySelector('#ewBody').closest('.chart-card').dataset;
+    const search = (document.getElementById('ewSearch').value || '').toLowerCase();
+    const filtered = rows.filter(r =>
+        r.name.toLowerCase().includes(search) ||
+        (r.store || '').toLowerCase().includes(search) ||
+        (r.operationConsultant || '').toLowerCase().includes(search) ||
+        (r.jobTitle || '').toLowerCase().includes(search)
+    );
+    const sorted = ewApplySort('ewBody', filtered);
+
+    const badge = document.getElementById('ewCountBadge');
+    badge.textContent = `${sorted.length} ${labels.employeeSuffix}`;
+    if (!sorted.length) { tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">${labels.noData}</td></tr>`; return; }
+    tbody.innerHTML = sorted.map(ewRowHtml).join('');
+}
+
+function ewRenderHighRiskTable(rows) {
+    const tbody = document.getElementById('ewHighRiskBody');
+    const labels = document.querySelector('#ewHighRiskBody').closest('.chart-card').dataset;
+    const highRisk = rows.filter(r => r.stars >= 4);
+    const sorted = ewApplySort('ewHighRiskBody', highRisk);
+
+    const badge = document.getElementById('ewHighRiskCountBadge');
+    badge.textContent = `${sorted.length} ${labels.employeeSuffix}`;
+    if (!sorted.length) { tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">${labels.noData}</td></tr>`; return; }
+    tbody.innerHTML = sorted.map(ewRowHtml).join('');
+}
+
+ewWireSortHeaders('ewBody', () => ewRenderTable(ewWatchlistData));
+ewWireSortHeaders('ewHighRiskBody', () => ewRenderHighRiskTable(ewWatchlistData));
 
 /* Charts — derived client-side from the watchlist response ---------------- */
 let ewReasonChartInstance, ewStoreChartInstance;
@@ -468,6 +572,7 @@ function ewLoadStoreChart(rows) {
 
 async function ewLoadWatchlist() {
     ewWatchlistData = await ewFetch('watchlist') || [];
+    ewRenderHighRiskTable(ewWatchlistData);
     ewRenderTable(ewWatchlistData);
     ewLoadReasonChart(ewWatchlistData);
     ewLoadStoreChart(ewWatchlistData);

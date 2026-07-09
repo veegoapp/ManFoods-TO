@@ -443,6 +443,8 @@
   <data name="EW_TenureDays" xml:space="preserve"><value>مدة الخدمة (يوم)</value></data>
   <data name="EW_RiskScore" xml:space="preserve"><value>درجة الخطر</value></data>
   <data name="EW_Reasons" xml:space="preserve"><value>الأسباب</value></data>
+  <data name="EW_HighRiskTable" xml:space="preserve"><value>موظفون خطر عالٍ</value></data>
+  <data name="EW_NoHighRiskData" xml:space="preserve"><value>لا يوجد موظفون في خطر عالٍ لهذا الفلتر.</value></data>
   <data name="EW_InWatchList" xml:space="preserve"><value>في قائمة المتابعة</value></data>
   <data name="EW_HighRisk" xml:space="preserve"><value>خطر عالٍ (2+)</value></data>
   <data name="EW_NewHireWindow" xml:space="preserve"><value>لا يزال في أول 90 يوم</value></data>
