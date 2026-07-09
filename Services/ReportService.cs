@@ -103,9 +103,14 @@ public class ReportService : IReportService
         ws.Columns().AdjustToContents();
     }
 
-    /// <summary>ClosedXML 0.100+ requires explicit double cast — int has no
-    /// direct implicit conversion to XLCellValue.</summary>
-    private static void SetIntCell(IXLCell cell, int value) => cell.Value = (double)value;
+    /// <summary>ClosedXML 0.102+ requires explicit double cast (int has no
+    /// direct implicit conversion to XLCellValue) AND an explicit NumberFormat
+    /// to prevent Excel from rendering the cell as blank.</summary>
+    private static void SetIntCell(IXLCell cell, int value)
+    {
+        cell.Value = (double)value;
+        cell.Style.NumberFormat.Format = "0";
+    }
 
     private static void WriteLabelValueSheet(XLWorkbook wb, string sheetName, string labelHeader, string valueHeader, IEnumerable<ChartDataItem> items, bool asPercent = false)
     {
