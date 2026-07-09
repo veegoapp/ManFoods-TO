@@ -54,7 +54,7 @@ builder.Services.AddDataProtection()
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.IsEssential = true;
     options.Cookie.HttpOnly = true;
     options.Cookie.Name = "wicrewidentity";
@@ -68,7 +68,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
     options.Cookie.Name = "wicrewsession";
     options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
 var connectionString = BuildConnectionString();
@@ -95,7 +95,11 @@ builder.Services.AddScoped<IGeminiService, GeminiService>();
 var app = builder.Build();
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-    ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
+    ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor,
+    KnownNetworks = { new IPNetwork(System.Net.IPAddress.Parse("127.0.0.1"), 8),
+                      new IPNetwork(System.Net.IPAddress.Parse("10.0.0.0"), 8),
+                      new IPNetwork(System.Net.IPAddress.Parse("172.16.0.0"), 12),
+                      new IPNetwork(System.Net.IPAddress.Parse("100.64.0.0"), 10) }
 });
 
 if (!app.Environment.IsDevelopment())
@@ -195,6 +199,7 @@ app.MapControllerRoute(
 
 using (var scope = app.Services.CreateScope())
 {
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -202,8 +207,9 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning("DB setup skipped: {Message}", ex.Message);
+        logger.LogError(ex, "Database initialization failed");
+        if (!app.Environment.IsDevelopment())
+            throw; // Fail fast in production — a broken DB must not serve traffic
     }
 }
 
