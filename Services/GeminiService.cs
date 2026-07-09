@@ -43,17 +43,48 @@ public class GeminiService : IGeminiService
 
         try
         {
-            var client  = _httpFactory.CreateClient();
-            var json    = JsonSerializer.Serialize(requestBody);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var client = _httpFactory.CreateClient();
+            var json   = JsonSerializer.Serialize(requestBody);
 
-            using var request = new HttpRequestMessage(HttpMethod.Post, OpenRouterUrl) { Content = content };
-            request.Headers.Add("Authorization", $"Bearer {apiKey}");
-            request.Headers.Add("HTTP-Referer", "https://manfoodsto.replit.app");
-            request.Headers.Add("X-Title", "ManFoodsTO Workforce Intelligence");
+            const int maxAttempts = 3;
+            HttpResponseMessage response     = null!;
+            string              responseJson = "";
 
-            var response     = await client.SendAsync(request);
-            var responseJson = await response.Content.ReadAsStringAsync();
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                using var request = new HttpRequestMessage(HttpMethod.Post, OpenRouterUrl) { Content = content };
+                request.Headers.Add("Authorization", $"Bearer {apiKey}");
+                request.Headers.Add("HTTP-Referer", "https://manfoodsto.replit.app");
+                request.Headers.Add("X-Title", "ManFoodsTO Workforce Intelligence");
+
+                response     = await client.SendAsync(request);
+                responseJson = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode) break;
+
+                if ((int)response.StatusCode == 429 && attempt < maxAttempts)
+                {
+                    // Parse retry_after_seconds from OpenRouter metadata, fall back to 5s
+                    int waitSeconds = 5;
+                    try
+                    {
+                        using var errDoc = JsonDocument.Parse(responseJson);
+                        if (errDoc.RootElement
+                                  .GetProperty("error")
+                                  .GetProperty("metadata")
+                                  .TryGetProperty("retry_after_seconds", out var ras))
+                            waitSeconds = Math.Min((int)Math.Ceiling(ras.GetDouble()), 15);
+                    }
+                    catch { /* use default */ }
+
+                    _logger.LogWarning("OpenRouter 429 on attempt {A}/{M} — waiting {W}s", attempt, maxAttempts, waitSeconds);
+                    await Task.Delay(TimeSpan.FromSeconds(waitSeconds));
+                    continue;
+                }
+
+                break;
+            }
 
             if (!response.IsSuccessStatusCode)
             {
@@ -62,7 +93,7 @@ public class GeminiService : IGeminiService
                 {
                     401 => "⚠️ الـ API Key غير صحيح أو منتهي الصلاحية. تأكد من OPENROUTER_API_KEY.",
                     402 => "⚠️ رصيد OpenRouter غير كافٍ.",
-                    429 => "⚠️ تم تجاوز حد الطلبات. انتظر دقيقة وحاول مجدداً.",
+                    429 => "⚠️ الموديل مشغول حالياً (rate limit). حاول مرة أخرى بعد لحظة.",
                     _   => $"⚠️ خطأ في الاتصال بالـ AI (كود {(int)response.StatusCode}). حاول مرة أخرى.",
                 };
                 return new GeminiAnswer { Text = errorText };
