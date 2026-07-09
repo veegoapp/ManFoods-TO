@@ -805,7 +805,18 @@ async function tvLoadReasonsChart() {
     if (storeFilter) q.set('store', storeFilter);
     if (omFilter)    q.set('om', omFilter);
     if (ocFilter)    q.set('oc', ocFilter);
-    const data = await fetchJson(`/api/exit-interviews/reasons?${q.toString()}`) || [];
+    let data = await fetchJson(`/api/exit-interviews/reasons?${q.toString()}`) || [];
+    // Exit interview submissions may lack a parsed date (month/year = 0) when the
+    // Forms export didn't include a recognisable date column. In that case the
+    // period filter above matches nothing — fall back to the undated pool so the
+    // chart isn't silently empty just because the selected year has no dated rows.
+    if (!data.length) {
+        const qAll = new URLSearchParams();
+        if (storeFilter) qAll.set('store', storeFilter);
+        if (omFilter)    qAll.set('om', omFilter);
+        if (ocFilter)    qAll.set('oc', ocFilter);
+        data = await fetchJson(`/api/exit-interviews/reasons?${qAll.toString()}`) || [];
+    }
     if (!data.length) return;
     reasonsChartInstance = new Chart(ctx.getContext('2d'), {
         type: 'doughnut',
