@@ -13,7 +13,7 @@ public class GeminiService : IGeminiService
     private readonly ILogger<GeminiService> _logger;
 
     private const string OpenRouterUrl  = "https://openrouter.ai/api/v1/chat/completions";
-    private const string DefaultModel   = "qwen/qwen-2.5-coder-32b-instruct:free";
+    private const string DefaultModel   = "meta-llama/llama-3.3-70b-instruct:free";
 
     public GeminiService(IHttpClientFactory httpFactory, ILogger<GeminiService> logger)
     {
