@@ -28,14 +28,14 @@ if [ "$DB_OK" = false ]; then
   exit 1
 fi
 
-if [ -z "$Gemini_API_Key" ]; then
+if [ -z "$OPENROUTER_API_KEY" ]; then
   echo ""
-  echo "  ❌ ERROR: Gemini_API_Key not found."
+  echo "  ❌ ERROR: OPENROUTER_API_KEY not found."
   echo "     Add it in the Replit Secrets tab."
   echo "     Get a free key from: https://aistudio.google.com/app/apikey"
   exit 1
 else
-  echo "  ✅ Gemini_API_Key is set — AI features enabled."
+  echo "  ✅ OPENROUTER_API_KEY is set — AI features enabled."
 fi
 
 # ── [2/4] Restore NuGet packages ──────────────
