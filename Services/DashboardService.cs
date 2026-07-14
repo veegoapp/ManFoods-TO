@@ -443,7 +443,7 @@ public class DashboardService : IDashboardService
                 Icon        = "bi-exclamation-triangle-fill",
                 Color       = "danger",
                 Title       = $"Highest Turnover: {highest.StoreName}",
-                Description = $"{highest.TurnoverRate:F1}% turnover — {highest.Resignations} resignation(s) from {highest.Headcount} employees."
+                Description = $"{highest.TurnoverRate:F1}% turnover — {highest.Resignations} resignation(s) from {highest.Headcount} average employees."
             });
 
         // 2. Best performing store
