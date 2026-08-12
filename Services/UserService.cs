@@ -10,8 +10,13 @@ namespace MvcApp.Services;
 public class UserService : IUserService
 {
     private readonly AppDbContext _db;
+    private readonly ISessionValidationService _sessionValidation;
 
-    public UserService(AppDbContext db) => _db = db;
+    public UserService(AppDbContext db, ISessionValidationService sessionValidation)
+    {
+        _db = db;
+        _sessionValidation = sessionValidation;
+    }
 
     private static UserViewModel ToVm(User u) => new()
     {
@@ -52,6 +57,10 @@ public class UserService : IUserService
         if (!string.IsNullOrEmpty(vm.Password))
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(vm.Password);
         await _db.SaveChangesAsync();
+        // A Role change must take effect immediately, not after the up-to-30s
+        // session validation cache window — force the next request's check for
+        // this user to hit the database instead of a stale cached Role.
+        _sessionValidation.Invalidate(id);
         return ToVm(user);
     }
 
@@ -59,6 +68,9 @@ public class UserService : IUserService
     {
         var user = await _db.Users.FindAsync(id);
         if (user != null) { _db.Users.Remove(user); await _db.SaveChangesAsync(); }
+        // Same reasoning as UpdateAsync — a deleted user's active session must
+        // stop working on the very next request, not after the cache window.
+        _sessionValidation.Invalidate(id);
     }
 
     public async Task<bool> VerifyRecoveryKeyAsync(string key)

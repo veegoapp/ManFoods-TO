@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace MvcApp.Filters;
 
-public class RequireRoleAttribute : ActionFilterAttribute
+public class RequireRoleAttribute : SessionAuthFilterAttribute
 {
     private readonly string[] _roles;
 
@@ -12,18 +11,7 @@ public class RequireRoleAttribute : ActionFilterAttribute
         _roles = roles;
     }
 
-    public override void OnActionExecuting(ActionExecutingContext context)
-    {
-        var userId = context.HttpContext.Session.GetInt32("UserId");
-        if (userId == null)
-        {
-            context.Result = new RedirectToActionResult("Login", "Account", null);
-            return;
-        }
-        var role = context.HttpContext.Session.GetString("Role") ?? "";
-        if (!_roles.Contains(role))
-        {
-            context.Result = new ForbidResult();
-        }
-    }
+    protected override IActionResult OnUnauthenticated() => new RedirectToActionResult("Login", "Account", null);
+
+    protected override IActionResult? OnRoleCheck(string role) => _roles.Contains(role) ? null : new ForbidResult();
 }
