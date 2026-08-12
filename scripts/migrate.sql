@@ -102,6 +102,42 @@ ALTER TABLE store_reference ADD COLUMN IF NOT EXISTS operation_consultant_email 
 ALTER TABLE store_reference ADD COLUMN IF NOT EXISTS head_manager TEXT NOT NULL DEFAULT '';
 ALTER TABLE store_reference ADD COLUMN IF NOT EXISTS head_manager_email TEXT NOT NULL DEFAULT '';
 
+-- One row per (store_name, month, year) is a hard authorization invariant —
+-- StoreAccessService grants store access to anyone whose email matches ANY
+-- row for that store/period, so a duplicate row (e.g. a copy-paste mistake in
+-- an upload) could hand the same store to two different people. New uploads
+-- are rejected in-app before they can create one (UploadService), but this
+-- script re-runs on every deploy and must never delete/merge existing rows to
+-- "fix" a duplicate on someone's behalf — that is a business decision, not
+-- something a migration should guess. So: only create the unique index when
+-- the data is already clean; otherwise report the offending groups via
+-- NOTICE (visible in deploy logs) and leave the existing data untouched. This
+-- migration script has no way to know today whether the current production
+-- store_reference table already contains duplicates — this block is exactly
+-- how that gets discovered, safely, the next time it's run against the real
+-- database.
+DO $$
+DECLARE
+    dup_count INTEGER;
+    dup_list  TEXT;
+BEGIN
+    SELECT COUNT(*), STRING_AGG(store_name || ' (' || month || '/' || year || ')', ', ')
+      INTO dup_count, dup_list
+      FROM (
+          SELECT store_name, month, year
+          FROM store_reference
+          GROUP BY store_name, month, year
+          HAVING COUNT(*) > 1
+      ) d;
+
+    IF dup_count > 0 THEN
+        RAISE NOTICE 'store_reference has % duplicate (store_name, month, year) group(s): %. The ux_store_reference_store_month_year unique index was NOT created — resolve the duplicates, then re-run this script.', dup_count, dup_list;
+    ELSE
+        CREATE UNIQUE INDEX IF NOT EXISTS ux_store_reference_store_month_year
+            ON store_reference (store_name, month, year);
+    END IF;
+END $$;
+
 -- ── exit_interviews ────────────────────────────
 -- One row per Microsoft Forms exit-interview submission. No name / national
 -- ID is stored — employee_id is kept only to resolve store/leader/OC/OM at

@@ -150,6 +150,7 @@ public class DashboardController : Controller
             var (_, msg, _) = await _uploads.UploadPeriodDataAsync(vm.ActiveEmployeesFile, vm.ResignationsFile, vm.StoreReferenceFile, vm.Month, vm.Year, email);
             TempData["Success"] = msg;
         }
+        catch (DuplicateStoreReferenceException ex) { TempData["Error"] = ex.Message; }
         catch { TempData["Error"] = "Upload failed. Please check the file format and try again."; }
         return RedirectToAction("Uploads");
     }
@@ -169,6 +170,7 @@ public class DashboardController : Controller
             var (_, msg) = await _uploads.UpdateSingleFileAsync(vm.FileType, vm.Month, vm.Year, vm.File, email);
             TempData["Success"] = msg;
         }
+        catch (DuplicateStoreReferenceException ex) { TempData["Error"] = ex.Message; }
         catch { TempData["Error"] = "Upload failed. Please check the file format and try again."; }
         return RedirectToAction("Uploads");
     }

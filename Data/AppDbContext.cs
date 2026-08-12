@@ -32,5 +32,18 @@ public class AppDbContext : DbContext
             .IsUnique()
             .HasFilter("status = 'Active'")
             .HasDatabaseName("ux_store_action_plans_active_store");
+
+        // One store_reference row per (StoreName, Month, Year) — a duplicate
+        // would mean two different OC/OM/Head Manager emails claiming the same
+        // store for the same period, which StoreAccessService would then treat
+        // as "both are assigned." UploadService rejects any upload that would
+        // create one; this index is the database-level backstop. Same caveat
+        // as the StoreActionPlan index above: only takes effect for a fresh
+        // EnsureCreated() database — scripts/migrate.sql is the real schema
+        // change for the existing production database.
+        modelBuilder.Entity<StoreReference>()
+            .HasIndex(s => new { s.StoreName, s.Month, s.Year })
+            .IsUnique()
+            .HasDatabaseName("ux_store_reference_store_month_year");
     }
 }
