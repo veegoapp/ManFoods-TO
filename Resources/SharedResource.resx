@@ -1366,6 +1366,7 @@
   <data name="Msg_BulkUsersCreated" xml:space="preserve"><value>Created {0} pending user(s).</value></data>
   <data name="Msg_BulkUsersSkipped" xml:space="preserve"><value> Skipped {0} (already existed).</value></data>
   <data name="Msg_BulkUploadFailed" xml:space="preserve"><value>Upload failed. Please check the file format and try again.</value></data>
+  <data name="Msg_BulkUsersRoleMismatch" xml:space="preserve"><value>These accounts were created but their Role doesn't match their email in the latest Store Reference, so they have no store access yet — double-check the Role is correct: {0}</value></data>
   <data name="Msg_NoPendingOtps" xml:space="preserve"><value>No pending users need a default password right now.</value></data>
   <data name="Msg_IncorrectPassword" xml:space="preserve"><value>Incorrect password.</value></data>
   <data name="Msg_SuperAdminOnly" xml:space="preserve"><value>Only the Super Admin can manage the Master Recovery Key.</value></data>

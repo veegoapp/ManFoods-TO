@@ -51,8 +51,12 @@ public interface IUserService
     /// <summary>Rows whose Role would resolve to Admin are silently skipped
     /// (counted in `skipped`, never created) unless `actorEmail` is the Super
     /// Admin — same rule as manual creation, applied per-row so a manipulated
-    /// upload file can't create Admin accounts either.</summary>
-    Task<(int created, int skipped)> UploadBulkUsersAsync(IFormFile file, string actorEmail);
+    /// upload file can't create Admin accounts either. `roleMismatches` lists
+    /// "email (Role)" for every created, store-restricted-role user whose
+    /// email doesn't appear under that role's column in the latest uploaded
+    /// Store Reference — a likely wrong Role on that row — as a warning only;
+    /// those accounts are still created.</summary>
+    Task<(int created, int skipped, IReadOnlyList<string> roleMismatches)> UploadBulkUsersAsync(IFormFile file, string actorEmail);
     Task<bool> VerifyRecoveryKeyAsync(string key);
     Task<bool> ResetAdminPasswordAsync(string email, string newPassword);
     /// <summary>Regenerates the shared admin recovery key after verifying the

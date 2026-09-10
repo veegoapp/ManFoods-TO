@@ -1372,6 +1372,7 @@
   <data name="Msg_BulkUsersCreated" xml:space="preserve"><value>تم إنشاء {0} مستخدم قيد التفعيل.</value></data>
   <data name="Msg_BulkUsersSkipped" xml:space="preserve"><value> تم تخطي {0} (موجود مسبقًا).</value></data>
   <data name="Msg_BulkUploadFailed" xml:space="preserve"><value>فشل الرفع. يرجى التحقق من تنسيق الملف والمحاولة مرة أخرى.</value></data>
+  <data name="Msg_BulkUsersRoleMismatch" xml:space="preserve"><value>تم إنشاء هذه الحسابات، لكن الدور (Role) لا يطابق بريدها في آخر Store Reference مرفوع، لذا ليس لديها وصول لأي متجر حتى الآن — يرجى التأكد من صحة الدور: {0}</value></data>
   <data name="Msg_NoPendingOtps" xml:space="preserve"><value>لا يوجد مستخدمون قيد التفعيل بحاجة إلى باسورد افتراضي حاليًا.</value></data>
   <data name="Msg_IncorrectPassword" xml:space="preserve"><value>كلمة المرور غير صحيحة.</value></data>
   <data name="Msg_SuperAdminOnly" xml:space="preserve"><value>فقط المسؤول الأعلى (Super Admin) يمكنه إدارة مفتاح الاسترداد الرئيسي.</value></data>

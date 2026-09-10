@@ -237,7 +237,7 @@ public class UserService : IUserService
 
     public IReadOnlyList<string> ValidRoles => UserManagementPolicy.ValidRoles;
 
-    public async Task<(int created, int skipped)> UploadBulkUsersAsync(IFormFile file, string actorEmail)
+    public async Task<(int created, int skipped, IReadOnlyList<string> roleMismatches)> UploadBulkUsersAsync(IFormFile file, string actorEmail)
     {
         const long maxBytes = 10 * 1024 * 1024;
         if (file.Length > maxBytes) throw new InvalidOperationException("File size exceeds the 10 MB limit.");
@@ -302,6 +302,20 @@ public class UserService : IUserService
             await _db.SaveChangesAsync();
         }
 
-        return (toAdd.Count, skipped);
+        // Warn (don't block) when a created user's Role doesn't match any
+        // store's email column for that role in the latest Store Reference —
+        // the most common bulk-upload mistake is a Role that doesn't match
+        // the person's real assignment, which silently grants them zero
+        // store access rather than failing loudly.
+        var roleMismatches = new List<string>();
+        foreach (var u in toAdd)
+        {
+            if (!_storeAccess.IsRestrictedRole(u.Role)) continue;
+            var stores = await _storeAccess.GetAccessibleStoreNamesAsync(u.Role, u.Email);
+            if (stores == null || stores.Count == 0)
+                roleMismatches.Add($"{u.Email} ({u.Role})");
+        }
+
+        return (toAdd.Count, skipped, roleMismatches);
     }
 }
