@@ -610,8 +610,9 @@ public class DashboardController : Controller
         if (!ModelState.IsValid || vm.File == null) { TempData["Error"] = _L["Msg_SelectFile"].Value; return RedirectToAction("Users"); }
         try
         {
-            var (created, skipped, roleMismatches) = await _users.UploadBulkUsersAsync(vm.File, HttpContext.Session.GetEmail());
-            TempData["Success"] = string.Format(_L["Msg_BulkUsersCreated"].Value, created) + (skipped > 0 ? string.Format(_L["Msg_BulkUsersSkipped"].Value, skipped) : "");
+            var (created, skippedEmails, roleMismatches) = await _users.UploadBulkUsersAsync(vm.File, HttpContext.Session.GetEmail());
+            TempData["Success"] = string.Format(_L["Msg_BulkUsersCreated"].Value, created) +
+                (skippedEmails.Count > 0 ? string.Format(_L["Msg_BulkUsersSkipped"].Value, skippedEmails.Count, string.Join(", ", skippedEmails)) : "");
             if (roleMismatches.Count > 0)
                 TempData["Warning"] = string.Format(_L["Msg_BulkUsersRoleMismatch"].Value, string.Join(", ", roleMismatches));
         }

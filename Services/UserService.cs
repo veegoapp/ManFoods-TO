@@ -237,7 +237,7 @@ public class UserService : IUserService
 
     public IReadOnlyList<string> ValidRoles => UserManagementPolicy.ValidRoles;
 
-    public async Task<(int created, int skipped, IReadOnlyList<string> roleMismatches)> UploadBulkUsersAsync(IFormFile file, string actorEmail)
+    public async Task<(int created, IReadOnlyList<string> skippedEmails, IReadOnlyList<string> roleMismatches)> UploadBulkUsersAsync(IFormFile file, string actorEmail)
     {
         const long maxBytes = 10 * 1024 * 1024;
         if (file.Length > maxBytes) throw new InvalidOperationException("File size exceeds the 10 MB limit.");
@@ -256,7 +256,7 @@ public class UserService : IUserService
         var toAdd = new List<User>();
         var seenInFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var forbiddenAdminRows = new List<int>();
-        int skipped = 0;
+        var skippedEmails = new List<string>();
 
         foreach (var row in ws.RowsUsed().Skip(1))
         {
@@ -269,7 +269,7 @@ public class UserService : IUserService
             // Skip accounts that already exist (by email) so re-uploading a
             // file never overwrites an activated user, and skip in-file
             // duplicates too.
-            if (existingEmails.Contains(email) || !seenInFile.Add(email)) { skipped++; continue; }
+            if (existingEmails.Contains(email) || !seenInFile.Add(email)) { skippedEmails.Add(email); continue; }
 
             // A blank Role cell defaults to "User" (unchanged). A non-blank
             // Role that doesn't match a known value is kept as-is (not
@@ -316,6 +316,6 @@ public class UserService : IUserService
                 roleMismatches.Add($"{u.Email} ({u.Role})");
         }
 
-        return (toAdd.Count, skipped, roleMismatches);
+        return (toAdd.Count, skippedEmails, roleMismatches);
     }
 }

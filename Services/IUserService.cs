@@ -48,15 +48,19 @@ public interface IUserService
     /// Admin itself attempts to delete its own account, or (false,
     /// "last-admin") for the last remaining Admin account.</summary>
     Task<(bool success, string? error)> DeleteAsync(int id, string actorEmail);
-    /// <summary>Rows whose Role would resolve to Admin are silently skipped
-    /// (counted in `skipped`, never created) unless `actorEmail` is the Super
-    /// Admin — same rule as manual creation, applied per-row so a manipulated
-    /// upload file can't create Admin accounts either. `roleMismatches` lists
+    /// <summary>Rows whose email already belongs to an existing account, or
+    /// repeats an earlier row in the same file, are skipped without touching
+    /// that existing account — their emails are returned in `skippedEmails`.
+    /// Rows whose Role would resolve to Admin are rejected separately (the
+    /// whole upload throws BulkUploadRoleForbiddenException) unless
+    /// `actorEmail` is the Super Admin — same rule as manual creation,
+    /// applied per-row so a manipulated upload file can't create Admin
+    /// accounts either. `roleMismatches` lists
     /// "email (Role)" for every created, store-restricted-role user whose
     /// email doesn't appear under that role's column in the latest uploaded
     /// Store Reference — a likely wrong Role on that row — as a warning only;
     /// those accounts are still created.</summary>
-    Task<(int created, int skipped, IReadOnlyList<string> roleMismatches)> UploadBulkUsersAsync(IFormFile file, string actorEmail);
+    Task<(int created, IReadOnlyList<string> skippedEmails, IReadOnlyList<string> roleMismatches)> UploadBulkUsersAsync(IFormFile file, string actorEmail);
     Task<bool> VerifyRecoveryKeyAsync(string key);
     Task<bool> ResetAdminPasswordAsync(string email, string newPassword);
     /// <summary>Regenerates the shared admin recovery key after verifying the
