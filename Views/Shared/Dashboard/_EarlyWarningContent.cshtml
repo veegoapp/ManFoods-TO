@@ -121,6 +121,7 @@
         FilterNote = L["Guide_EarlyWarning_FilterNote"],
         Sections = new List<PageGuideSection>
         {
+            new() { Icon = "bi-star-fill", Title = L["Guide_EarlyWarning_StarsCalc_Title"], Body = L["Guide_EarlyWarning_StarsCalc_Body"], IsHtml = true },
             new() { Icon = "bi-flag", Title = L["Chart_EwReasonBreakdown"], Body = L["Guide_EarlyWarning_Chart_Reason"] },
             new() { Icon = "bi-shop", Title = L["Chart_EwStoreBreakdown"], Body = L["Guide_EarlyWarning_Chart_Store"] },
             new() { Icon = "bi-exclamation-diamond", Title = L["Chart_EwHighRiskByStore"], Body = L["Guide_EarlyWarning_Chart_HighRiskByStore"] },
@@ -612,11 +613,15 @@ function ewRenderTable(rows) {
     const tbody = document.getElementById('ewBody');
     const labels = document.querySelector('#ewBody').closest('.chart-card').dataset;
     const search = (document.getElementById('ewSearch').value || '').toLowerCase();
+    // Excludes High Risk (4-5★) — those are shown only in the High Risk table
+    // above, so nobody is listed twice across the two tables.
     const filtered = rows.filter(r =>
-        r.name.toLowerCase().includes(search) ||
-        (r.store || '').toLowerCase().includes(search) ||
-        (r.operationConsultant || '').toLowerCase().includes(search) ||
-        (r.jobTitle || '').toLowerCase().includes(search)
+        r.stars < 4 && (
+            r.name.toLowerCase().includes(search) ||
+            (r.store || '').toLowerCase().includes(search) ||
+            (r.operationConsultant || '').toLowerCase().includes(search) ||
+            (r.jobTitle || '').toLowerCase().includes(search)
+        )
     );
     const sorted = ewApplySort('ewBody', filtered);
 
