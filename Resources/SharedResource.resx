@@ -1160,7 +1160,7 @@
   <data name="CMP_TitleNoChange" xml:space="preserve"><value>{0}: No Change</value></data>
   <data name="CMP_TitleImproved" xml:space="preserve"><value>{0} Improved</value></data>
   <data name="CMP_TitleWorsened" xml:space="preserve"><value>{0} Worsened</value></data>
-  <data name="CMP_InsightDesc" xml:space="preserve"><value>&lt;b&gt;{0}&lt;/b&gt;: {1}% vs &lt;b&gt;{2}&lt;/b&gt;: {3}% — {4}.</value></data>
+  <data name="CMP_InsightDesc" xml:space="preserve"><value>{0}: {1}% vs {2}: {3}% — {4}.</value></data>
   <data name="CMP_Unchanged" xml:space="preserve"><value>essentially unchanged</value></data>
   <data name="CMP_Better" xml:space="preserve"><value>↓ {0}pt better</value></data>
   <data name="CMP_Worse" xml:space="preserve"><value>↑ {0}pt worse</value></data>
