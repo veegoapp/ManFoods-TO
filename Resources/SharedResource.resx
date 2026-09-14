@@ -1445,8 +1445,8 @@
   <data name="APG_Signal_NoDominantDriver_Desc" xml:space="preserve"><value>Not an independent signal. Added only alongside High Overall Turnover when none of the more specific signals above also fired — an honest note that no single root cause stands out yet.</value></data>
 
   <data name="APG_S4_Title" xml:space="preserve"><value>Persistence Rule</value></data>
-  <data name="APG_S4_Body" xml:space="preserve"><value>For normal, non-critical issues, a signal is only treated as persistent once it has fired in at least 2 of the store's last 3 evaluation periods that actually have uploaded data. A period with no upload is not counted as a healthy or clean period — it is simply excluded, so a store can't look artificially stable just because a period was skipped.</value></data>
-  <data name="APG_S4_Critical" xml:space="preserve"><value>Critical-severity issues bypass this normal persistence requirement — they are acted on immediately rather than waiting to reappear across periods, given the urgency they represent.</value></data>
+  <data name="APG_S4_Body" xml:space="preserve"><value>A signal is marked persistent in the plan's Signal History once it has fired in at least 2 of the store's last 3 evaluation periods that actually have uploaded data. A period with no upload is not counted as a healthy or clean period — it is simply excluded, so a store can't look artificially stable just because a period was skipped.</value></data>
+  <data name="APG_S4_Critical" xml:space="preserve"><value>This persistent flag is informational only. It never delays anything: a plan opens and a signal is recorded the very first time it fires, at every severity level including Critical — there is no waiting period before action is taken.</value></data>
 
   <data name="APG_S5_Title" xml:space="preserve"><value>Severity</value></data>
   <data name="APG_Severity_MediumDesc" xml:space="preserve"><value>One distinct signal detected on the plan.</value></data>
@@ -1485,7 +1485,7 @@
   <data name="APG_S10_Title" xml:space="preserve"><value>Closure &amp; Outcomes</value></data>
   <data name="APG_S10_Auto" xml:space="preserve"><value>Automatic Resolution — a plan resolves on its own once its store shows zero active signals for 2 consecutive evaluated periods.</value></data>
   <data name="APG_S10_Manual" xml:space="preserve"><value>Manual Closure — an Admin can close a plan before that point, recording who closed it and a written reason. This should only be used when the issue was genuinely addressed outside the normal detection cycle.</value></data>
-  <data name="APG_S10_OutcomesIntro" xml:space="preserve"><value>In practice, the recorded closing reason documents one of these outcomes:</value></data>
+  <data name="APG_S10_OutcomesIntro" xml:space="preserve"><value>The closing reason is a free-text note you write yourself — the system doesn't enforce a fixed list, but these phrasings cover the outcomes that come up most often:</value></data>
   <data name="APG_Outcome_Resolved" xml:space="preserve"><value>Resolved — the issue was fully addressed; metrics returned to a healthy range.</value></data>
   <data name="APG_Outcome_PartiallyImproved" xml:space="preserve"><value>Partially Improved — meaningful progress was made, but the issue was not fully resolved.</value></data>
   <data name="APG_Outcome_NotImproved" xml:space="preserve"><value>Not Improved — little or no change since the plan opened.</value></data>

@@ -1451,8 +1451,8 @@
   <data name="APG_Signal_NoDominantDriver_Desc" xml:space="preserve"><value>ليست إشارة مستقلة. تُضاف فقط بجانب ارتفاع معدل الدوران الإجمالي عندما لا تُفعَّل أي من الإشارات الأكثر تحديدًا أعلاه — ملاحظة صريحة بأنه لا يوجد سبب جذري واحد واضح بعد.</value></data>
 
   <data name="APG_S4_Title" xml:space="preserve"><value>قاعدة الاستمرارية</value></data>
-  <data name="APG_S4_Body" xml:space="preserve"><value>بالنسبة للمشكلات العادية غير الحرجة، تُعتبر الإشارة مستمرة فقط بعد ظهورها في فترتين على الأقل من آخر 3 فترات تقييم لديها بيانات مرفوعة فعليًا. الفترة التي لا يوجد فيها رفع بيانات لا تُحتسب كفترة سليمة أو نظيفة — بل تُستبعد ببساطة، حتى لا يبدو الفرع مستقرًا بشكل مصطنع لمجرد تخطي فترة ما.</value></data>
-  <data name="APG_S4_Critical" xml:space="preserve"><value>المشكلات ذات الشدة الحرجة تتجاوز شرط الاستمرارية العادي هذا — ويُتخذ إجراء فوري بشأنها بدل انتظار تكرارها عبر الفترات، نظرًا لما تمثله من إلحاح.</value></data>
+  <data name="APG_S4_Body" xml:space="preserve"><value>تُعلَّم الإشارة كـ«مستمرة» في سجل إشارات الخطة بعد ظهورها في فترتين على الأقل من آخر 3 فترات تقييم لديها بيانات مرفوعة فعليًا. الفترة التي لا يوجد فيها رفع بيانات لا تُحتسب كفترة سليمة أو نظيفة — بل تُستبعد ببساطة، حتى لا يبدو الفرع مستقرًا بشكل مصطنع لمجرد تخطي فترة ما.</value></data>
+  <data name="APG_S4_Critical" xml:space="preserve"><value>علامة «الاستمرارية» دي معلوماتية بس. مفيش أي تأجيل بيحصل بسببها: الخطة بتتفتح والإشارة بتتسجل من أول مرة تظهر فيها، على كل مستويات الشدة بما فيها الحرجة — من غير أي فترة انتظار قبل اتخاذ إجراء.</value></data>
 
   <data name="APG_S5_Title" xml:space="preserve"><value>الشدة</value></data>
   <data name="APG_Severity_MediumDesc" xml:space="preserve"><value>إشارة واحدة مميزة مكتشفة على الخطة.</value></data>
@@ -1491,7 +1491,7 @@
   <data name="APG_S10_Title" xml:space="preserve"><value>الإغلاق والنتائج</value></data>
   <data name="APG_S10_Auto" xml:space="preserve"><value>الحل التلقائي — تُحل الخطة تلقائيًا بمجرد ألا تُظهر أي إشارات نشطة لفترتي تقييم متتاليتين.</value></data>
   <data name="APG_S10_Manual" xml:space="preserve"><value>الإغلاق اليدوي — يمكن للمسؤول إغلاق الخطة قبل ذلك، مع تسجيل من قام بالإغلاق وسبب مكتوب. يجب استخدام ذلك فقط عندما تكون المشكلة قد عولجت فعليًا خارج دورة الاكتشاف العادية.</value></data>
-  <data name="APG_S10_OutcomesIntro" xml:space="preserve"><value>عمليًا، يوثّق سبب الإغلاق المسجَّل إحدى هذه النتائج:</value></data>
+  <data name="APG_S10_OutcomesIntro" xml:space="preserve"><value>سبب الإغلاق نص حر بتكتبه بنفسك — النظام مش بيفرض قائمة ثابتة، لكن دي صياغات شائعة بتغطي أكتر النتائج اللي بتحصل:</value></data>
   <data name="APG_Outcome_Resolved" xml:space="preserve"><value>تم الحل — عولجت المشكلة بالكامل؛ وعادت المؤشرات إلى نطاق سليم.</value></data>
   <data name="APG_Outcome_PartiallyImproved" xml:space="preserve"><value>تحسّن جزئي — تحقق تقدّم ملموس، لكن المشكلة لم تُحل بالكامل.</value></data>
   <data name="APG_Outcome_NotImproved" xml:space="preserve"><value>لم يتحسّن — لم يطرأ تغيير يُذكر منذ فتح الخطة.</value></data>
