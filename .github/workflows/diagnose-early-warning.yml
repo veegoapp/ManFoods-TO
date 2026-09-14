@@ -1,0 +1,16 @@
+name: Diagnose Early Warning Risk Score Distribution
+on:
+  workflow_dispatch: {}
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+    - name: Report Early Warning RiskScore/star distribution
+      env:
+        SQLSERVER_CONNECTION_STRING: ${{ secrets.SQLSERVER_CONNECTION_STRING }}
+      run: dotnet run --project MvcApp.csproj -- --diagnose-early-warning-scores

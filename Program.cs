@@ -319,6 +319,63 @@ if (args.Contains("--diagnose-snapshots"))
     return;
 }
 
+// One-off, read-only CLI diagnostic: `dotnet run -- --diagnose-early-warning-scores`
+// runs the exact same scoring pass as EarlyWarningService.GetWatchlistAsync
+// (Admin role = no store restriction, no store/months/year/job filters, so it
+// uses the latest Active Employees snapshot as its anchor period, same as the
+// Early Warning page's default view) and reports the distribution of the
+// underlying RiskScore (not just the 1-5 star bucket it gets mapped into) —
+// used to check whether the >=7 RiskScore threshold for "High Risk" (4-5
+// stars) is realistic given how rarely employees actually stack multiple
+// significant risk factors at once. Read-only, no writes, exits without
+// starting the web server.
+if (args.Contains("--diagnose-early-warning-scores"))
+{
+    using var ewDiagScope = app.Services.CreateScope();
+    var earlyWarning = ewDiagScope.ServiceProvider.GetRequiredService<IEarlyWarningService>();
+
+    var watchlist = await earlyWarning.GetWatchlistAsync(
+        store: null, role: "Admin", assignedName: null, months: null, year: null,
+        om: null, oc: null, soc: null, od: null);
+
+    Console.WriteLine($"EW_TOTAL_WATCHLIST={watchlist.Count}");
+
+    var byScore = watchlist.GroupBy(r => r.RiskScore).OrderBy(g => g.Key);
+    foreach (var g in byScore)
+        Console.WriteLine($"EW_SCORE={g.Key} count={g.Count()}");
+
+    var byStars = watchlist.GroupBy(r => r.Stars).OrderBy(g => g.Key);
+    foreach (var g in byStars)
+        Console.WriteLine($"EW_STARS={g.Key} count={g.Count()}");
+
+    if (watchlist.Count > 0)
+    {
+        var scores = watchlist.Select(r => r.RiskScore).OrderBy(s => s).ToList();
+        double Percentile(double p)
+        {
+            var idx = (int)Math.Ceiling(p / 100.0 * scores.Count) - 1;
+            return scores[Math.Clamp(idx, 0, scores.Count - 1)];
+        }
+        Console.WriteLine($"EW_MIN_SCORE={scores.First()}");
+        Console.WriteLine($"EW_MAX_SCORE={scores.Last()}");
+        Console.WriteLine($"EW_MEAN_SCORE={scores.Average():F2}");
+        Console.WriteLine($"EW_P50={Percentile(50)}");
+        Console.WriteLine($"EW_P75={Percentile(75)}");
+        Console.WriteLine($"EW_P90={Percentile(90)}");
+        Console.WriteLine($"EW_P95={Percentile(95)}");
+        Console.WriteLine($"EW_P99={Percentile(99)}");
+    }
+
+    var reasonCounts = watchlist
+        .SelectMany(r => r.Reasons)
+        .GroupBy(x => x.Type)
+        .OrderByDescending(g => g.Count());
+    foreach (var g in reasonCounts)
+        Console.WriteLine($"EW_REASON_TYPE={g.Key} count={g.Count()}");
+
+    return;
+}
+
 app.Run();
 
 
