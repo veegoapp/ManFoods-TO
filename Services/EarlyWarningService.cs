@@ -460,13 +460,21 @@ public class EarlyWarningService : IEarlyWarningService
         return result;
     }
 
-    /// <summary>Maps a raw cumulative score to a 1-5 star display value.</summary>
+    /// <summary>
+    /// Maps a raw cumulative score to a 1-5 star display value. Boundaries are
+    /// calibrated against the actual RiskScore distribution (see
+    /// --diagnose-early-warning-scores) rather than the theoretical max: across
+    /// the live Watchlist, RiskScore tops out at 7 and P95 is 4, so "High Risk"
+    /// (Stars >= 4, used by the Early Warning page's High Risk table/charts/
+    /// summary) is scoped to score >= 5 — the top ~5% of the Watchlist — instead
+    /// of the old score >= 7 cutoff, which only 2 of 2661 employees ever reached.
+    /// </summary>
     private static int ScoreToStars(int score) => score switch
     {
-        <= 2  => 1,
-        <= 4  => 2,
-        <= 6  => 3,
-        <= 9  => 4,
+        <= 1  => 1,
+        <= 3  => 2,
+        <= 4  => 3,
+        <= 6  => 4,
         _     => 5,
     };
 
