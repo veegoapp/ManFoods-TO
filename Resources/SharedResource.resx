@@ -361,8 +361,32 @@
   <data name="Guide_EarlyWarning_Chart_StarDist" xml:space="preserve"><value>How many watch-listed employees fall into each star rating (1 through 5), so you can see the overall risk distribution.</value></data>
   <data name="Guide_EarlyWarning_Chart_Trend" xml:space="preserve"><value>How the size of the watch list has trended over time.</value></data>
   <data name="Guide_EarlyWarning_Chart_HighRiskTable" xml:space="preserve"><value>Employees at 4-5 stars — the most urgent list — with their store, role, hire date, tenure so far, star score and the specific reasons that flagged them.</value></data>
-  <data name="Guide_EarlyWarning_Chart_WatchList" xml:space="preserve"><value>The full watch list (everyone above the risk threshold, not just 4-5 stars), sortable and searchable, with the same detail columns as the High-Risk table.</value></data>
+  <data name="Guide_EarlyWarning_Chart_WatchList" xml:space="preserve"><value>Everyone above the risk threshold who isn't already 4-5 stars (those are in the High Risk table above instead, so no one is listed twice), sortable and searchable, with the same detail columns as the High-Risk table.</value></data>
   <data name="Guide_EarlyWarning_FilterNote" xml:space="preserve"><value>Choosing a Store filters every chart and both tables to just that store. The Year/Months filter changes which snapshot in time the risk scores are calculated for — since risk is about currently-active employees, this is normally left on the latest period.</value></data>
+  <data name="Guide_EarlyWarning_StarsCalc_Title" xml:space="preserve"><value>How the Star Rating Is Calculated</value></data>
+  <data name="Guide_EarlyWarning_StarsCalc_Body" xml:space="preserve"><value><![CDATA[<p style="font-size:12.5px;color:var(--text-2);margin-bottom:10px">Every flagged employee starts at 0 points and gains points for each risk factor below that applies to them. The total (their risk score) is then mapped to a 1-5 star rating — 4-5 stars is what the High Risk table/charts use.</p>
+<table class="table table-sm" style="font-size:12px;margin-bottom:16px">
+  <thead><tr><th>Risk Score</th><th>Stars</th><th>Level</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>&#9733;</td><td>Low</td></tr>
+    <tr><td>2 – 3</td><td>&#9733;&#9733;</td><td>Low-Medium</td></tr>
+    <tr><td>4</td><td>&#9733;&#9733;&#9733;</td><td>Medium</td></tr>
+    <tr><td>5 – 6</td><td>&#9733;&#9733;&#9733;&#9733;</td><td>High Risk</td></tr>
+    <tr><td>7+</td><td>&#9733;&#9733;&#9733;&#9733;&#9733;</td><td>High Risk</td></tr>
+  </tbody>
+</table>
+<table class="table table-sm" style="font-size:12px">
+  <thead><tr><th>Factor</th><th>Points</th><th>When it applies</th></tr></thead>
+  <tbody>
+    <tr><td>New Hire Window</td><td>1 – 3</td><td>Tenure falls within the role's new-hire window (higher the closer to the end of it)</td></tr>
+    <tr><td>Store History</td><td>1 – 3</td><td>The store's 90-day early-leave rate is well above the company average</td></tr>
+    <tr><td>Role History</td><td>1 – 3</td><td>The job title's 90-day early-leave rate is well above the company average</td></tr>
+    <tr><td>Peak Resignation Window</td><td>1 – 2</td><td>Tenure is approaching or inside the store's/role's historical peak resignation window</td></tr>
+    <tr><td>Gender History</td><td>1</td><td>The employee's gender group has a 90-day early-leave rate well above average</td></tr>
+    <tr><td>Exit Interview Score</td><td>1 – 2</td><td>The store's exit interviews show above-average negative sentiment</td></tr>
+    <tr><td>Store Leader History</td><td>1</td><td>The store leader's historical early-leave rate, across every store they've led, is well above average</td></tr>
+  </tbody>
+</table>]]></value></data>
   <data name="Guide_Scorecard_Overview" xml:space="preserve"><value>This page scores every Store Leader (and rolls that up by OC/OM) on four metrics: Turnover Rate, Early Leaver (90-Day) Rate, 180-Day Retention Rate and Exit Sentiment — so leadership performance can be ranked and tracked over time, not just store performance.</value></data>
   <data name="Guide_Scorecard_Chart_LeaderTrend" xml:space="preserve"><value>Pick one Store Leader to see their turnover rate trend over time across every store they've led — including a marker where they were transferred between stores, so a rate change can be told apart from a store change.</value></data>
   <data name="Guide_Scorecard_Chart_Ranking" xml:space="preserve"><value>Every Store Leader (or, switching the tab above, every OC/OM) ranked by Turnover Rate, Early Leaver Rate, 180-Day Retention Rate and Exit Sentiment side by side. Sorted worst Turnover Rate first by default — click any column to re-sort.</value></data>

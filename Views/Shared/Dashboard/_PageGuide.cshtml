@@ -44,7 +44,16 @@
                         </h2>
                         <div id="@itemId" class="accordion-collapse collapse @(i == 0 ? "show" : "")"
                              data-bs-parent="#@(offcanvasId)-accordion">
-                            <div class="accordion-body">@s.Body</div>
+                            <div class="accordion-body">
+                                @if (s.IsHtml)
+                                {
+                                    @Html.Raw(s.Body)
+                                }
+                                else
+                                {
+                                    @s.Body
+                                }
+                            </div>
                         </div>
                     </div>
                 }
