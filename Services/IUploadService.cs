@@ -17,6 +17,12 @@ public interface IUploadService
 
     Task<(bool success, string message, int rows)> UploadExitInterviewsAsync(IFormFile file, string uploadedBy);
 
+    /// <summary>Uploads forward workforce projections (planned/required headcount
+    /// per store per period) for the Store Health engine's Workforce Outlook
+    /// pillar. Independent of the three period files; replaces any existing rows
+    /// for each uploaded store/month/year.</summary>
+    Task<(bool success, string message, int rows)> UploadWorkforceProjectionsAsync(IFormFile file, string uploadedBy);
+
     /// <summary>
     /// Upload history grouped so the three period-tied files show as one row.
     /// Deleting any file in a period group (via <see cref="DeleteLogAsync"/>)

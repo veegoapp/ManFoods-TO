@@ -174,6 +174,59 @@ public class ExitInterviewService : IExitInterviewService
     public async Task<List<ChartDataItem>> GetWorkPressureReasonAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
         GroupCount(await FilteredAsync(filter, role, assignedName, e => e.WorkPressureReasonText ?? ""));
 
+    /// <summary>Per-store negativity for every engagement driver, keyed stably
+    /// (HealthKeys.Driver*). "Negative" uses the same Sentiment() mapping as the
+    /// rest of this service (answer classified as -1). Only stores with at least
+    /// one exit response appear.</summary>
+    public async Task<Dictionary<string, List<HealthDriverDto>>> GetStoreEngagementProfilesAsync(string role, string? assignedName)
+    {
+        var rows = await (await ApplyFilterAsync(_db.ExitInterviews.AsNoTracking(), new ExitInterviewFilter(), role, assignedName))
+            .Select(e => new StoreDriverRow
+            {
+                Store = e.Store,
+                FairTreatment = e.FairTreatment, ComplaintsHandling = e.ComplaintsHandling,
+                BenefitsMatch = e.BenefitsMatch, WorkloadCondition = e.WorkloadCondition,
+                Communication = e.Communication, EncourageOpinions = e.EncourageOpinions,
+                Teamwork = e.Teamwork, TaskFit = e.TaskFit, Training = e.Training,
+                UsePersonalAbilities = e.UsePersonalAbilities,
+            })
+            .ToListAsync();
+
+        var drivers = new (string Key, Func<StoreDriverRow, string> Selector)[]
+        {
+            (HealthKeys.DriverFairTreatment,       e => e.FairTreatment),
+            (HealthKeys.DriverComplaintsHandling,  e => e.ComplaintsHandling),
+            (HealthKeys.DriverBenefitsMatch,       e => e.BenefitsMatch),
+            (HealthKeys.DriverWorkload,            e => e.WorkloadCondition),
+            (HealthKeys.DriverCommunication,       e => e.Communication),
+            (HealthKeys.DriverEncourageOpinions,   e => e.EncourageOpinions),
+            (HealthKeys.DriverTeamwork,            e => e.Teamwork),
+            (HealthKeys.DriverTaskFit,             e => e.TaskFit),
+            (HealthKeys.DriverTraining,            e => e.Training),
+            (HealthKeys.DriverUsePersonalAbilities, e => e.UsePersonalAbilities),
+        };
+
+        var result = new Dictionary<string, List<HealthDriverDto>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var storeGroup in rows.Where(r => !string.IsNullOrWhiteSpace(r.Store)).GroupBy(r => r.Store))
+        {
+            var list = new List<HealthDriverDto>();
+            foreach (var (key, selector) in drivers)
+            {
+                var answers = storeGroup.Select(r => selector(r)).Where(a => !string.IsNullOrWhiteSpace(a)).ToList();
+                if (answers.Count == 0) continue;
+                var negatives = answers.Count(a => Sentiment(a) < 0);
+                list.Add(new HealthDriverDto
+                {
+                    Key = key,
+                    NegativePercent = Math.Round(negatives * 100.0 / answers.Count, 1),
+                    Responses = answers.Count,
+                });
+            }
+            if (list.Count > 0) result[storeGroup.Key] = list;
+        }
+        return result;
+    }
+
     private class EngagementDriverRow
     {
         public string FairTreatment { get; set; } = "";
@@ -185,6 +238,21 @@ public class ExitInterviewService : IExitInterviewService
         public string TaskFit { get; set; } = "";
         public string Training { get; set; } = "";
         public string Feedback { get; set; } = "";
+        public string UsePersonalAbilities { get; set; } = "";
+    }
+
+    private class StoreDriverRow
+    {
+        public string Store { get; set; } = "";
+        public string FairTreatment { get; set; } = "";
+        public string ComplaintsHandling { get; set; } = "";
+        public string BenefitsMatch { get; set; } = "";
+        public string WorkloadCondition { get; set; } = "";
+        public string Communication { get; set; } = "";
+        public string EncourageOpinions { get; set; } = "";
+        public string Teamwork { get; set; } = "";
+        public string TaskFit { get; set; } = "";
+        public string Training { get; set; } = "";
         public string UsePersonalAbilities { get; set; } = "";
     }
 

@@ -41,4 +41,13 @@ public interface IExitInterviewService
     /// <summary>For each of the top reasons for leaving, what share of the people
     /// who gave that reason said they'd return to work here again.</summary>
     Task<List<ExitReasonReturnItem>> GetReasonVsWouldReturnAsync(ExitInterviewFilter filter, string role, string? assignedName);
+
+    /// <summary>Per-store engagement-driver negativity, keyed by stable driver
+    /// identifiers (HealthKeys.Driver*) rather than localized labels, for the
+    /// Store Health engine's Engagement pillar. Each store maps to one
+    /// HealthDriverDto per dimension carrying its negative-response % and count;
+    /// baseline/points are computed by the caller. Reuses the same access
+    /// scoping and sentiment mapping as the rest of this service, so figures
+    /// match the Exit Interview page exactly.</summary>
+    Task<Dictionary<string, List<HealthDriverDto>>> GetStoreEngagementProfilesAsync(string role, string? assignedName);
 }

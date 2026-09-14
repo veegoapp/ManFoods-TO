@@ -277,6 +277,23 @@ public class DashboardController : Controller
         }
     }
 
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
+    public async Task<IActionResult> UploadWorkforceProjections(MvcApp.Models.ViewModels.WorkforceProjectionUploadViewModel vm)
+    {
+        if (!ModelState.IsValid || vm.File == null) return RedirectToUploads(error: _L["Msg_SelectFile"].Value);
+        try
+        {
+            var email = HttpContext.Session.GetEmail();
+            var (_, msg, _) = await _uploads.UploadWorkforceProjectionsAsync(vm.File, email);
+            return RedirectToUploads(success: msg);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Workforce projection upload failed");
+            return RedirectToUploads(error: string.Format(_L["Msg_WorkforceUploadFailed"].Value, ex.Message));
+        }
+    }
+
     [HttpGet("admin/dashboard/download-template")]
     [RequireAdminAuth]
     public IActionResult DownloadTemplate([FromQuery] string type)
@@ -460,6 +477,26 @@ public class DashboardController : Controller
             roleValidation.ErrorTitle = "Invalid Role";
             roleValidation.ErrorMessage = "Please choose a Role from the dropdown list.";
 
+            ws.Columns().AdjustToContents();
+        }
+        else if (type == "workforce_projections")
+        {
+            fileName = "Template_Workforce_Projections.xlsx";
+            var ws = wb.AddWorksheet("Workforce Projections");
+            var headers = new[] { "Store", "Month", "Year", "Projected Headcount", "Planned Hires" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = ws.Cell(1, i + 1);
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#C8102E");
+                cell.Style.Font.FontColor = XLColor.White;
+                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            }
+            ws.Cell(2, 1).Value = "Store 1"; ws.Cell(2, 2).Value = 1; ws.Cell(2, 3).Value = 2026;
+            ws.Cell(2, 4).Value = 42; ws.Cell(2, 5).Value = 6;
+            ws.Cell(3, 1).Value = "Store 2"; ws.Cell(3, 2).Value = 1; ws.Cell(3, 3).Value = 2026;
+            ws.Cell(3, 4).Value = 30; ws.Cell(3, 5).Value = 2;
             ws.Columns().AdjustToContents();
         }
         else

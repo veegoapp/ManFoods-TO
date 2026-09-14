@@ -134,6 +134,8 @@ public class NoOpExitInterviewService : IExitInterviewService
         Task.FromResult(new List<ExitReasonTrendPoint>());
     public Task<List<ExitReasonReturnItem>> GetReasonVsWouldReturnAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
         Task.FromResult(new List<ExitReasonReturnItem>());
+    public Task<Dictionary<string, List<HealthDriverDto>>> GetStoreEngagementProfilesAsync(string role, string? assignedName) =>
+        Task.FromResult(new Dictionary<string, List<HealthDriverDto>>());
 }
 
 public class NoOpStoreService : IStoreService

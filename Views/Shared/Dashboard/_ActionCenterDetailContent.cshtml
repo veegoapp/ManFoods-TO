@@ -1,6 +1,84 @@
 @{
     var __area = ViewContext.RouteData.Values["area"]?.ToString();
     var __areaPrefix = string.Equals(__area, "Home", StringComparison.OrdinalIgnoreCase) ? "/home" : "/admin";
+
+    // Localized label maps for the Store Health section, handed to JS as one
+    // JSON object (System.Text.Json escapes non-ASCII to \uXXXX, which JS
+    // decodes correctly inside <script>).
+    var acdLabels = new Dictionary<string, object>
+    {
+        ["sev"] = new Dictionary<string, string>
+        {
+            ["Critical"] = L["ACH_Sev_Critical"].Value, ["High"] = L["ACH_Sev_High"].Value,
+            ["Medium"] = L["ACH_Sev_Medium"].Value, ["Low"] = L["ACH_Sev_Low"].Value, ["Healthy"] = L["ACH_Sev_Healthy"].Value,
+        },
+        ["pillar"] = new Dictionary<string, string>
+        {
+            ["turnover"] = L["ACH_Pillar_turnover"].Value, ["early_attrition"] = L["ACH_Pillar_early_attrition"].Value,
+            ["retention"] = L["ACH_Pillar_retention"].Value, ["engagement"] = L["ACH_Pillar_engagement"].Value,
+            ["leadership"] = L["ACH_Pillar_leadership"].Value, ["workforce"] = L["ACH_Pillar_workforce"].Value,
+        },
+        ["pillarDesc"] = new Dictionary<string, string>
+        {
+            ["turnover"] = L["ACH_PillarDesc_turnover"].Value, ["early_attrition"] = L["ACH_PillarDesc_early_attrition"].Value,
+            ["retention"] = L["ACH_PillarDesc_retention"].Value, ["engagement"] = L["ACH_PillarDesc_engagement"].Value,
+            ["leadership"] = L["ACH_PillarDesc_leadership"].Value, ["workforce"] = L["ACH_PillarDesc_workforce"].Value,
+        },
+        ["driver"] = new Dictionary<string, string>
+        {
+            ["fair_treatment"] = L["ACH_Driver_fair_treatment"].Value, ["complaints_handling"] = L["ACH_Driver_complaints_handling"].Value,
+            ["benefits_match"] = L["ACH_Driver_benefits_match"].Value, ["workload"] = L["ACH_Driver_workload"].Value,
+            ["communication"] = L["ACH_Driver_communication"].Value, ["encourage_opinions"] = L["ACH_Driver_encourage_opinions"].Value,
+            ["teamwork"] = L["ACH_Driver_teamwork"].Value, ["task_fit"] = L["ACH_Driver_task_fit"].Value,
+            ["training"] = L["ACH_Driver_training"].Value, ["use_personal_abilities"] = L["ACH_Driver_use_personal_abilities"].Value,
+        },
+        ["action"] = new Dictionary<string, string>
+        {
+            ["Action_Turnover_StayInterviews"] = L["Action_Turnover_StayInterviews"].Value,
+            ["Action_Turnover_Workload"] = L["Action_Turnover_Workload"].Value,
+            ["Action_Early_Onboarding"] = L["Action_Early_Onboarding"].Value,
+            ["Action_Early_Buddy"] = L["Action_Early_Buddy"].Value,
+            ["Action_Retention_Growth"] = L["Action_Retention_Growth"].Value,
+            ["Action_Engagement_Fairness"] = L["Action_Engagement_Fairness"].Value,
+            ["Action_Engagement_Complaints"] = L["Action_Engagement_Complaints"].Value,
+            ["Action_Engagement_Benefits"] = L["Action_Engagement_Benefits"].Value,
+            ["Action_Engagement_Workload"] = L["Action_Engagement_Workload"].Value,
+            ["Action_Engagement_Communication"] = L["Action_Engagement_Communication"].Value,
+            ["Action_Engagement_Voice"] = L["Action_Engagement_Voice"].Value,
+            ["Action_Engagement_Teamwork"] = L["Action_Engagement_Teamwork"].Value,
+            ["Action_Engagement_TaskFit"] = L["Action_Engagement_TaskFit"].Value,
+            ["Action_Engagement_Training"] = L["Action_Engagement_Training"].Value,
+            ["Action_Engagement_Growth"] = L["Action_Engagement_Growth"].Value,
+            ["Action_Engagement_Generic"] = L["Action_Engagement_Generic"].Value,
+            ["Action_Leadership_Stability"] = L["Action_Leadership_Stability"].Value,
+            ["Action_Workforce_Staffing"] = L["Action_Workforce_Staffing"].Value,
+            ["Action_Workforce_AtRisk"] = L["Action_Workforce_AtRisk"].Value,
+        },
+        ["ui"] = new Dictionary<string, string>
+        {
+            ["healthTitle"] = L["ACH_HealthTitle"].Value,
+            ["healthSub"] = L["ACH_HealthSub"].Value,
+            ["pillarTitle"] = L["ACH_PillarBreakdownTitle"].Value,
+            ["planTitle"] = L["ACH_WeightedPlanTitle"].Value,
+            ["planSub"] = L["ACH_WeightedPlanSub"].Value,
+            ["outlookTitle"] = L["ACH_OutlookTitle"].Value,
+            ["current"] = L["ACH_OutlookCurrent"].Value,
+            ["projected"] = L["ACH_OutlookProjected"].Value,
+            ["plannedHires"] = L["ACH_OutlookPlannedHires"].Value,
+            ["gap"] = L["ACH_OutlookGap"].Value,
+            ["shortfall"] = L["ACH_OutlookShortfall"].Value,
+            ["surplus"] = L["ACH_OutlookSurplus"].Value,
+            ["balanced"] = L["ACH_OutlookBalanced"].Value,
+            ["projectionPending"] = L["ACH_ProjectionPending"].Value,
+            ["vs"] = L["ACH_Vs"].Value,
+            ["weight"] = L["ACH_Weight"].Value,
+            ["noActions"] = L["ACH_NoActions"].Value,
+            ["priorityHigh"] = L["ACH_PriorityHigh"].Value,
+            ["priorityMedium"] = L["ACH_PriorityMedium"].Value,
+            ["priorityLow"] = L["ACH_PriorityLow"].Value,
+            ["noDataPillar"] = L["ACH_PillarNoData"].Value,
+        },
+    };
 }
 <style>
 .acd-back-btn { display:inline-flex; align-items:center; gap:6px; font-size:13.5px; font-weight:600; color:var(--text-2); text-decoration:none; margin-bottom:14px; }
@@ -34,6 +112,29 @@
 .acd-monthly-turnover-table td:nth-child(5) { width:29%; }
 .chart-body canvas { direction:ltr; }
 .acd-check { width:18px; height:18px; cursor:pointer; accent-color:oklch(0.5 0.15 155); margin-top:2px; flex-shrink:0; }
+
+/* ── Store Health section ─────────────────────────────────────────────── */
+.ach-hero { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.ach-hero-ring { width:88px; height:88px; flex-shrink:0; }
+.ach-hero-score { font-size:30px; font-weight:800; line-height:1; }
+.ach-hero-unit { font-size:12px; color:var(--text-3); }
+.ach-pillar-row { display:grid; grid-template-columns:minmax(150px,1.3fr) 2fr auto; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--card-border); }
+.ach-pillar-row:last-child { border-bottom:none; }
+.ach-pillar-name { font-weight:700; font-size:13px; }
+.ach-pillar-desc { font-size:11px; color:var(--text-3); margin-top:1px; }
+.ach-pillar-bar { height:8px; border-radius:20px; background:var(--card-bg-2); overflow:hidden; }
+.ach-pillar-fill { height:100%; border-radius:20px; }
+.ach-pillar-ev { font-size:11px; color:var(--text-2); margin-top:4px; font-variant-numeric:tabular-nums; }
+.ach-chips { display:flex; gap:3px; margin-top:5px; }
+.ach-chip { width:20px; height:6px; border-radius:2px; background:var(--card-bg-2); }
+.ach-driver-tag { display:inline-block; font-size:10.5px; padding:2px 8px; border-radius:20px; background:oklch(0.6 0.22 22 / .1); color:var(--text-2); margin:3px 4px 0 0; }
+.ach-act { display:flex; align-items:flex-start; gap:10px; padding:11px 13px; background:var(--card-bg-2); border-radius:8px; border-left:3px solid var(--red); }
+.ach-act.done { opacity:0.65; border-left-color:oklch(0.62 0.15 155); }
+.ach-act-pri { font-size:9.5px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; padding:2px 7px; border-radius:5px; white-space:nowrap; }
+.ach-act-weight { font-size:11px; color:var(--text-3); font-variant-numeric:tabular-nums; }
+.ach-out-grid { display:flex; gap:22px; flex-wrap:wrap; align-items:flex-end; }
+.ach-out-num { font-size:24px; font-weight:800; line-height:1; }
+.ach-out-lbl { font-size:11px; color:var(--text-3); margin-top:3px; }
 </style>
 
 <a class="acd-back-btn" href="@(__areaPrefix)/dashboard/actioncenter">
@@ -171,6 +272,131 @@
 <script>
 const acdContentEl = document.getElementById('acdContent');
 const ACD_D = acdContentEl.dataset;
+const AC_L = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(acdLabels));
+const AC_PILLARS = ['turnover','early_attrition','retention','engagement','leadership','workforce'];
+
+function achLabel(map, key) { return (AC_L[map] && AC_L[map][key]) || key; }
+function achSevColor(sev) {
+    switch (sev) {
+        case 'Critical': return { c: ChartColors.SEMANTIC.BAD, bg:'oklch(0.6 0.22 22 / .12)' };
+        case 'High':     return { c:'oklch(0.62 0.19 45)', bg:'oklch(0.7 0.19 45 / .14)' };
+        case 'Medium':   return { c:'oklch(0.6 0.14 75)', bg:'oklch(0.75 0.16 75 / .14)' };
+        case 'Low':      return { c:'oklch(0.58 0.09 90)', bg:'oklch(0.8 0.09 90 / .18)' };
+        default:         return { c:'oklch(0.5 0.15 155)', bg:'oklch(0.62 0.15 155 / .12)' };
+    }
+}
+function achStatusColor(status) { return achSevColor(status === 'healthy' || status === 'no_data' ? 'Healthy' : status).c; }
+function achRing(score, color, cls) {
+    const r = 15, c = 2 * Math.PI * r, off = c * (1 - Math.max(0, Math.min(100, score)) / 100);
+    return `<svg class="${cls}" viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="${r}" fill="none" stroke="var(--card-bg-2)" stroke-width="5"/>
+        <circle cx="20" cy="20" r="${r}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round"
+                stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 20 20)"/></svg>`;
+}
+
+/// Store Health analytical section — score hero, weighted pillar breakdown
+/// (with evidence + engagement drivers), ranked weighted action plan, and the
+/// forward workforce outlook. Fed by /action-center/health/detail; rendered
+/// above the existing plan-lifecycle sections without altering them.
+function acdHealthHtml(detail) {
+    if (!detail || !detail.health) return '';
+    const u = AC_L.ui, h = detail.health;
+    const sev = achSevColor(h.severity);
+
+    // Hero
+    let html = `<div class="card-dark mb-4">
+        <h6 class="fw-bold mb-1">${sapEscape(u.healthTitle)}</h6>
+        <p class="text-muted-custom mb-3" style="font-size:12px">${sapEscape(u.healthSub)}</p>
+        <div class="ach-hero">
+            <div style="position:relative;display:inline-grid;place-items:center">
+                ${achRing(h.healthScore, sev.c, 'ach-hero-ring')}
+                <div style="position:absolute;text-align:center"><div class="ach-hero-score" style="color:${sev.c}">${h.healthScore}</div><div class="ach-hero-unit">/100</div></div>
+            </div>
+            <div>
+                <span class="acd-badge" style="background:${sev.bg};color:${sev.c};font-size:12px">${sapEscape(achLabel('sev', h.severity))}</span>
+                <div style="margin-top:8px;font-size:12.5px;color:var(--text-2)">${sapEscape(u.healthSub)}</div>
+            </div>
+        </div>`;
+
+    // Pillar breakdown
+    const byKey = {}; (h.pillars || []).forEach(p => byKey[p.key] = p);
+    html += `<div class="mt-4"><div class="acd-meta-label mb-2" style="font-weight:700;text-transform:uppercase;letter-spacing:.5px">${sapEscape(u.pillarTitle)}</div>`;
+    html += AC_PILLARS.map(k => {
+        const p = byKey[k];
+        const name = achLabel('pillar', k), desc = achLabel('pillarDesc', k);
+        if (!p || !p.hasData) {
+            return `<div class="ach-pillar-row">
+                <div><div class="ach-pillar-name">${sapEscape(name)}</div><div class="ach-pillar-desc">${sapEscape(desc)}</div></div>
+                <div style="font-size:12px;color:var(--text-3)">${sapEscape(u.noDataPillar)}</div><div></div></div>`;
+        }
+        const col = achStatusColor(p.status);
+        const chips = [1,2,3].map(i => `<span class="ach-chip" style="${p.points >= i ? 'background:' + col : ''}"></span>`).join('');
+        let ev = '';
+        if (p.evidence && (p.evidence.value !== undefined)) ev = `${p.evidence.value}% ${sapEscape(u.vs)} ${p.evidence.baseline}%`;
+        else if (p.evidence && p.evidence.leaders !== undefined) ev = `${p.evidence.leaders} / ${p.evidence.months}m`;
+        else if (p.evidence && p.evidence.gap !== undefined) ev = `${p.evidence.gap} (${p.evidence.gapPct}%)`;
+        else if (p.evidence && p.evidence.atRisk !== undefined) ev = `${p.evidence.atRisk}`;
+        const drivers = (p.drivers && p.drivers.length)
+            ? `<div>${p.drivers.slice(0,4).map(dr => `<span class="ach-driver-tag">${sapEscape(achLabel('driver', dr.key))} · ${dr.negativePercent}%</span>`).join('')}</div>` : '';
+        return `<div class="ach-pillar-row">
+            <div><div class="ach-pillar-name">${sapEscape(name)}</div><div class="ach-pillar-desc">${sapEscape(desc)}</div><div class="ach-chips">${chips}</div></div>
+            <div><div class="ach-pillar-bar"><div class="ach-pillar-fill" style="width:${Math.round(p.subScore)}%;background:${col}"></div></div>
+                ${ev ? `<div class="ach-pillar-ev">${sapEscape(ev)}</div>` : ''}${drivers}</div>
+            <div style="text-align:right;font-weight:800;color:${col};font-size:15px">${Math.round(p.subScore)}</div>
+        </div>`;
+    }).join('');
+    html += `</div></div>`;
+
+    // Weighted action plan
+    const acts = detail.actions || [];
+    const priLabel = { high: u.priorityHigh, medium: u.priorityMedium, low: u.priorityLow };
+    html += `<div class="card-dark mb-4">
+        <h6 class="fw-bold mb-1">${sapEscape(u.planTitle)}</h6>
+        <p class="text-muted-custom mb-3" style="font-size:12px">${sapEscape(u.planSub)}</p>`;
+    if (!acts.length) {
+        html += `<p class="text-muted-custom mb-0">${sapEscape(u.noActions)}</p>`;
+    } else {
+        html += `<div class="d-flex flex-column gap-2">` + acts.map(a => {
+            const pc = achSevColor(a.priority === 'high' ? 'Critical' : a.priority === 'medium' ? 'Medium' : 'Low');
+            const label = a.actionKey ? achLabel('action', a.actionKey) : (a.text || '');
+            const toggle = a.recommendationId
+                ? `<input type="checkbox" class="acd-check" ${a.isCompleted ? 'checked' : ''} onchange="acdToggleRec(${a.recommendationId}, this.checked)">`
+                : `<i class="bi bi-dot" style="font-size:20px;color:${pc.c};margin:-4px -4px 0 -4px"></i>`;
+            return `<div class="ach-act${a.isCompleted ? ' done' : ''}">
+                ${toggle}
+                <div style="flex:1">
+                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                        <span class="ach-act-pri" style="background:${pc.bg};color:${pc.c}">${sapEscape(priLabel[a.priority] || a.priority)}</span>
+                        <span style="font-size:11px;color:var(--text-3)">${sapEscape(achLabel('pillar', a.pillarKey))}</span>
+                        ${a.evidence ? `<span class="ach-act-weight">· ${sapEscape(a.evidence)}</span>` : ''}
+                    </div>
+                    <div style="font-size:13.5px${a.isCompleted ? ';text-decoration:line-through;color:var(--text-3)' : ''}">${sapEscape(label)}</div>
+                </div>
+                <div class="ach-act-weight" title="${sapEscape(u.weight)}">${Math.round(a.weight)}</div>
+            </div>`;
+        }).join('') + `</div>`;
+    }
+    html += `</div>`;
+
+    // Workforce outlook
+    const o = detail.outlook;
+    html += `<div class="card-dark mb-4"><h6 class="fw-bold mb-3">${sapEscape(u.outlookTitle)}</h6>`;
+    if (!o || !o.hasData) {
+        html += `<p class="text-muted-custom mb-0"><i class="bi bi-info-circle me-1"></i>${sapEscape(u.projectionPending)}</p>`;
+    } else {
+        const gapColor = o.gap > 0 ? ChartColors.SEMANTIC.BAD : o.gap < 0 ? 'oklch(0.6 0.14 75)' : 'oklch(0.5 0.15 155)';
+        const gapWord = o.gap > 0 ? u.shortfall : o.gap < 0 ? u.surplus : u.balanced;
+        html += `<div class="ach-out-grid">
+            <div><div class="ach-out-num">${o.currentHeadcount}</div><div class="ach-out-lbl">${sapEscape(u.current)}</div></div>
+            <div style="color:var(--text-3);font-size:20px;padding-bottom:6px">→</div>
+            <div><div class="ach-out-num">${o.projectedHeadcount}</div><div class="ach-out-lbl">${sapEscape(u.projected)} · ${sapEscape(o.label)}</div></div>
+            <div><div class="ach-out-num" style="color:${gapColor}">${o.gap > 0 ? '+' : ''}${o.gap}</div><div class="ach-out-lbl">${sapEscape(u.gap)} — ${sapEscape(gapWord)}${o.gap !== 0 ? ` (${Math.abs(o.gapPercent)}%)` : ''}</div></div>
+            ${o.plannedHires ? `<div><div class="ach-out-num" style="color:oklch(0.5 0.15 155)">${o.plannedHires}</div><div class="ach-out-lbl">${sapEscape(u.plannedHires)}</div></div>` : ''}
+        </div>`;
+    }
+    html += `</div>`;
+    return html;
+}
 
 function sapAntiForgeryToken() {
     const el = document.querySelector('input[name="__RequestVerificationToken"]');
@@ -397,7 +623,7 @@ function acdSignalHistoryHtml(history) {
     </div>`;
 }
 
-function acdRender(data, signalHistory, monthlyTurnoverHistory) {
+function acdRender(data, signalHistory, monthlyTurnoverHistory, health) {
     const d = ACD_D;
 
     document.getElementById('acdStoreName').textContent = data.storeName;
@@ -428,11 +654,18 @@ function acdRender(data, signalHistory, monthlyTurnoverHistory) {
     }
 
     if (data.status === 'None') {
-        acdContentEl.innerHTML = `<div class="card-dark empty-state"><i class="bi bi-clipboard-check"></i><p>${sapEscape(d.noIssues)}</p></div>`;
+        // No active/historical plan — still surface the live health analysis so
+        // an at-risk store that hasn't yet tripped plan detection is not blank.
+        const healthSection = acdHealthHtml(health);
+        acdContentEl.innerHTML = (healthSection || '') +
+            `<div class="card-dark empty-state"><i class="bi bi-clipboard-check"></i><p>${sapEscape(d.noIssues)}</p></div>`;
         return;
     }
 
     let html = '';
+
+    // ── Store Health analysis (score, weighted pillars, action plan, outlook) ──
+    html += acdHealthHtml(health);
 
     // ── KPI cards: baseline vs. latest snapshot ──
     const snaps = data.metricSnapshots || [];
@@ -617,8 +850,9 @@ async function acdLoad() {
     const monthlyTurnoverHistory = data.status !== 'None'
         ? await sapFetchJson('/api/store-action-plan/action-center/monthly-turnover?store=' + encodeURIComponent(store))
         : null;
+    const health = await sapFetchJson('/api/store-action-plan/action-center/health/detail?store=' + encodeURIComponent(store));
 
-    acdRender(data, signalHistory, monthlyTurnoverHistory);
+    acdRender(data, signalHistory, monthlyTurnoverHistory, health);
 }
 
 async function acdToggleRec(id, isCompleted) {

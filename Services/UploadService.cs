@@ -614,6 +614,65 @@ public class UploadService : IUploadService
         return (true, message, parsed.Count);
     }
 
+    public async Task<(bool, string, int)> UploadWorkforceProjectionsAsync(IFormFile file, string uploadedBy)
+    {
+        await ValidateFileAsync(file);
+        var fileBytes = await ReadBytesAsync(file);
+        using var ms = new MemoryStream(fileBytes);
+        using var wb = new XLWorkbook(ms);
+        var ws = wb.Worksheet(1);
+
+        var parsed = new List<WorkforceProjection>();
+        int skipped = 0;
+        foreach (var row in ws.RowsUsed().Skip(1))
+        {
+            var store = Col(row, ws, "Store", "Store Name", "المطعم", "الفرع").Trim();
+            var monthStr = Col(row, ws, "Month", "الشهر");
+            var yearStr = Col(row, ws, "Year", "السنة");
+            var projStr = Col(row, ws, "Projected Headcount", "Projected", "Projected Need", "العدد المتوقع", "الاحتياج المتوقع");
+            var hiresStr = Col(row, ws, "Planned Hires", "التعيينات المخططة");
+
+            if (string.IsNullOrWhiteSpace(store) ||
+                !int.TryParse(monthStr, out var month) || month < 1 || month > 12 ||
+                !int.TryParse(yearStr, out var year) || year < 2000 ||
+                !int.TryParse(projStr, out var proj) || proj < 0)
+            {
+                skipped++;
+                continue;
+            }
+            int.TryParse(hiresStr, out var hires);
+            parsed.Add(new WorkforceProjection
+            {
+                StoreName = store, Month = month, Year = year,
+                ProjectedHeadcount = proj, PlannedHires = Math.Max(0, hires),
+            });
+        }
+
+        // One row per store/period wins (last occurrence) — a duplicated row in
+        // the sheet must not violate the unique (store, year, month) index.
+        parsed = parsed
+            .GroupBy(p => (p.StoreName.ToLowerInvariant(), p.Month, p.Year))
+            .Select(g => g.Last())
+            .ToList();
+
+        // Replace-by-(store, month, year): existing rows for each uploaded key
+        // are dropped first so a re-upload corrects rather than duplicates.
+        foreach (var g in parsed.Select(p => new { p.StoreName, p.Month, p.Year }).Distinct())
+        {
+            var s = g.StoreName; var m = g.Month; var y = g.Year;
+            await _db.WorkforceProjections.Where(w => w.StoreName == s && w.Month == m && w.Year == y).ExecuteDeleteAsync();
+        }
+        if (parsed.Count > 0) await _db.WorkforceProjections.AddRangeAsync(parsed);
+
+        var now = DateTime.UtcNow;
+        _db.UploadLogs.Add(new UploadLog { FileType = "workforce_projections", FileName = file.FileName, Month = now.Month, Year = now.Year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
+        await _db.SaveChangesAsync();
+
+        var message = string.Format(_L["Msg_WorkforceProjectionProcessed"].Value, parsed.Count);
+        if (skipped > 0) message += " " + string.Format(_L["Msg_WorkforceProjectionSkipped"].Value, skipped);
+        return (true, message, parsed.Count);
+    }
+
     public async Task<(List<UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize, string sort = "date", string dir = "desc")
     {
         var logs = await _db.UploadLogs.OrderByDescending(l => l.UploadDate)
@@ -641,6 +700,18 @@ public class UploadService : IUploadService
             items.Add(new UploadHistoryItem
             {
                 Kind = "exit_interviews",
+                UploadDate = l.UploadDate,
+                UploadedBy = l.UploadedBy,
+                PrimaryLogId = l.Id,
+                Files = new List<UploadFileRef> { new() { LogId = l.Id, FileType = l.FileType, FileName = l.FileName, HasFile = l.HasFile } },
+            });
+        }
+
+        foreach (var l in logs.Where(l => l.FileType == "workforce_projections"))
+        {
+            items.Add(new UploadHistoryItem
+            {
+                Kind = "workforce_projections",
                 UploadDate = l.UploadDate,
                 UploadedBy = l.UploadedBy,
                 PrimaryLogId = l.Id,

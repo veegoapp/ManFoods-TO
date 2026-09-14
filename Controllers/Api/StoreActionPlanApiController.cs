@@ -15,12 +15,14 @@ namespace MvcApp.Controllers.Api;
 public class StoreActionPlanApiController : ControllerBase
 {
     private readonly IStoreActionPlanService _actionPlans;
+    private readonly IStoreHealthService _health;
     private readonly IDashboardService _dashboard;
     private readonly IStringLocalizer<SharedResource> _L;
 
-    public StoreActionPlanApiController(IStoreActionPlanService actionPlans, IDashboardService dashboard, IStringLocalizer<SharedResource> localizer)
+    public StoreActionPlanApiController(IStoreActionPlanService actionPlans, IStoreHealthService health, IDashboardService dashboard, IStringLocalizer<SharedResource> localizer)
     {
         _actionPlans = actionPlans;
+        _health = health;
         _dashboard = dashboard;
         _L = localizer;
     }
@@ -121,6 +123,35 @@ public class StoreActionPlanApiController : ControllerBase
         var role = HttpContext.Session.GetRole();
         var email = HttpContext.Session.GetEmail();
         return Ok(await _actionPlans.GetActionCenterStoresAsync(role, email));
+    }
+
+    // ── Store Health engine (the rebuilt Action Center) ──────────────────────
+
+    [HttpGet("action-center/health/summary")]
+    public async Task<IActionResult> GetHealthSummary()
+    {
+        var role = HttpContext.Session.GetRole();
+        var email = HttpContext.Session.GetEmail();
+        return Ok(await _health.GetSummaryAsync(role, email));
+    }
+
+    [HttpGet("action-center/health/stores")]
+    public async Task<IActionResult> GetHealthStores()
+    {
+        var role = HttpContext.Session.GetRole();
+        var email = HttpContext.Session.GetEmail();
+        return Ok(await _health.GetStoreHealthRowsAsync(role, email));
+    }
+
+    [HttpGet("action-center/health/detail")]
+    public async Task<IActionResult> GetHealthDetail([FromQuery] string store)
+    {
+        if (string.IsNullOrWhiteSpace(store)) return BadRequest(_L["Api_StoreRequired"].Value);
+        var role = HttpContext.Session.GetRole();
+        var email = HttpContext.Session.GetEmail();
+        var result = await _health.GetDetailAsync(store, role, email);
+        if (result == null) return NotFound();
+        return Ok(result);
     }
 
     [HttpGet("action-center/detail")]

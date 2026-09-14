@@ -1653,4 +1653,123 @@
   <data name="SP_NoPriorityIssues" xml:space="preserve"><value>لم يتم اكتشاف أولوية متابعة في البيانات المختارة</value></data>
   <data name="Common_Employees" xml:space="preserve"><value>موظف</value></data>
   <data name="Common_Percent" xml:space="preserve"><value>%</value></data>
+  <!-- ── Action Center · Store Health (rebuilt) ────────────────────────── -->
+  <data name="ACH_Subtitle" xml:space="preserve"><value>صحة كل فرع محسوبة عبر ستة محاور مرجّحة، ومرتبة حسب الأثر — مع الدليل وراء كل مؤشر.</value></data>
+  <data name="ACH_KpiAvgHealth" xml:space="preserve"><value>متوسط درجة الصحة</value></data>
+  <data name="ACH_KpiAvgHealthDesc" xml:space="preserve"><value>صحة الفروع على مستوى الشركة (100 = سليم)</value></data>
+  <data name="ACH_KpiCritical" xml:space="preserve"><value>فروع حرجة</value></data>
+  <data name="ACH_KpiCriticalDesc" xml:space="preserve"><value>أعلى مخاطرة مرجّحة — ابدأ بها</value></data>
+  <data name="ACH_KpiHigh" xml:space="preserve"><value>مخاطرة عالية</value></data>
+  <data name="ACH_KpiHighDesc" xml:space="preserve"><value>أعلى بوضوح من متوسط الشركة</value></data>
+  <data name="ACH_KpiActivePlans" xml:space="preserve"><value>خطط نشطة</value></data>
+  <data name="ACH_KpiActivePlansDesc" xml:space="preserve"><value>فروع لديها خطة إجراء مفتوحة</value></data>
+  <data name="ACH_KpiStalled" xml:space="preserve"><value>خطط متعثرة</value></data>
+  <data name="ACH_KpiStalledDesc" xml:space="preserve"><value>مفتوحة 45+ يومًا دون إنجاز أي مهمة</value></data>
+  <data name="ACH_KpiResolved" xml:space="preserve"><value>تم حلها هذا الشهر</value></data>
+  <data name="ACH_KpiResolvedDesc" xml:space="preserve"><value>خطط أُغلقت خلال الشهر الحالي</value></data>
+  <data name="ACH_ChartPillarImpact" xml:space="preserve"><value>محرّكات المخاطرة (أثر المحاور)</value></data>
+  <data name="ACH_ChartPillarImpactSub" xml:space="preserve"><value>متوسط المساهمة المرجّحة لكل محور في مخاطرة الشركة</value></data>
+  <data name="ACH_ChartEngagement" xml:space="preserve"><value>تحليل السبب الجذري (محاور مقابلات الخروج)</value></data>
+  <data name="ACH_ChartEngagementSub" xml:space="preserve"><value>نسبة الردود السلبية على مستوى الشركة لكل محور من مقابلات الخروج</value></data>
+  <data name="ACH_ChartTrend" xml:space="preserve"><value>الخطط المفتوحة مقابل المُغلقة (آخر 6 أشهر)</value></data>
+  <data name="ACH_ChartTrendSub" xml:space="preserve"><value>عدد الخطط المفتوحة مقابل المُغلقة كل شهر</value></data>
+  <data name="ACH_TableTitle" xml:space="preserve"><value>بطاقة صحة الفروع</value></data>
+  <data name="ACH_ColStore" xml:space="preserve"><value>الفرع</value></data>
+  <data name="ACH_ColHealth" xml:space="preserve"><value>درجة الصحة</value></data>
+  <data name="ACH_ColSeverity" xml:space="preserve"><value>الفئة</value></data>
+  <data name="ACH_ColDriver" xml:space="preserve"><value>المحرّك الأبرز</value></data>
+  <data name="ACH_ColPillars" xml:space="preserve"><value>المحاور</value></data>
+  <data name="ACH_ColPriority" xml:space="preserve"><value>الأولوية</value></data>
+  <data name="ACH_ColHeadcount" xml:space="preserve"><value>عدد الموظفين</value></data>
+  <data name="ACH_ColStatus" xml:space="preserve"><value>الخطة</value></data>
+  <data name="ACH_ColResponsible" xml:space="preserve"><value>المسؤول</value></data>
+  <data name="ACH_ColProgress" xml:space="preserve"><value>التقدّم</value></data>
+  <data name="ACH_NoMatchingStores" xml:space="preserve"><value>لا توجد فروع مطابقة لبحثك.</value></data>
+  <data name="ACH_NoData" xml:space="preserve"><value>لا توجد بيانات</value></data>
+  <data name="ACH_Vs" xml:space="preserve"><value>مقابل</value></data>
+  <data name="ACH_StoresSuffix" xml:space="preserve"><value>فرع</value></data>
+  <data name="ACH_ProjectionPending" xml:space="preserve"><value>لم يتم رفع توقّعات القوى العاملة بعد — سيتم تفعيل مؤشر فجوة التوظيف بمجرد توفير بيانات التوقّع.</value></data>
+  <data name="ACH_Sev_Critical" xml:space="preserve"><value>حرجة</value></data>
+  <data name="ACH_Sev_High" xml:space="preserve"><value>عالية</value></data>
+  <data name="ACH_Sev_Medium" xml:space="preserve"><value>متوسطة</value></data>
+  <data name="ACH_Sev_Low" xml:space="preserve"><value>منخفضة</value></data>
+  <data name="ACH_Sev_Healthy" xml:space="preserve"><value>سليمة</value></data>
+  <data name="ACH_Pillar_turnover" xml:space="preserve"><value>معدل الدوران الكلي</value></data>
+  <data name="ACH_Pillar_early_attrition" xml:space="preserve"><value>الترك المبكر (90 يومًا)</value></data>
+  <data name="ACH_Pillar_retention" xml:space="preserve"><value>الاحتفاظ عند 6 أشهر</value></data>
+  <data name="ACH_Pillar_engagement" xml:space="preserve"><value>الاندماج الوظيفي</value></data>
+  <data name="ACH_Pillar_leadership" xml:space="preserve"><value>استقرار القيادة</value></data>
+  <data name="ACH_Pillar_workforce" xml:space="preserve"><value>توقّعات القوى العاملة</value></data>
+  <data name="ACH_PillarDesc_turnover" xml:space="preserve"><value>معدل الدوران الشهري مقابل متوسط الشركة</value></data>
+  <data name="ACH_PillarDesc_early_attrition" xml:space="preserve"><value>معدل الترك خلال 90 يومًا مقابل متوسط الشركة</value></data>
+  <data name="ACH_PillarDesc_retention" xml:space="preserve"><value>نسبة الفريق الذي تجاوز 6 أشهر مقابل المتوسط</value></data>
+  <data name="ACH_PillarDesc_engagement" xml:space="preserve"><value>محاور مقابلات الخروج مقابل خط أساس الشركة</value></data>
+  <data name="ACH_PillarDesc_leadership" xml:space="preserve"><value>تغيّرات قائد الفرع خلال الفترة الأخيرة</value></data>
+  <data name="ACH_PillarDesc_workforce" xml:space="preserve"><value>الموظفون المعرّضون للخطر وفجوة التوظيف المتوقّعة</value></data>
+  <data name="ACH_Driver_fair_treatment" xml:space="preserve"><value>العدالة في المعاملة</value></data>
+  <data name="ACH_Driver_complaints_handling" xml:space="preserve"><value>التعامل مع الشكاوى</value></data>
+  <data name="ACH_Driver_benefits_match" xml:space="preserve"><value>ملاءمة المزايا</value></data>
+  <data name="ACH_Driver_workload" xml:space="preserve"><value>ضغط العمل / الظروف</value></data>
+  <data name="ACH_Driver_communication" xml:space="preserve"><value>التواصل</value></data>
+  <data name="ACH_Driver_encourage_opinions" xml:space="preserve"><value>إبداء الرأي</value></data>
+  <data name="ACH_Driver_teamwork" xml:space="preserve"><value>روح الفريق</value></data>
+  <data name="ACH_Driver_task_fit" xml:space="preserve"><value>ملاءمة الدور</value></data>
+  <data name="ACH_Driver_training" xml:space="preserve"><value>التدريب</value></data>
+  <data name="ACH_Driver_use_personal_abilities" xml:space="preserve"><value>التطوّر والقدرات</value></data>
+  <data name="ACH_Insight_AllClearTitle" xml:space="preserve"><value>كل الفروع سليمة</value></data>
+  <data name="ACH_Insight_AllClearDesc" xml:space="preserve"><value>لا يوجد فرع حاليًا أعلى من خط أساس المخاطرة للشركة.</value></data>
+  <data name="ACH_Insight_CriticalTitle" xml:space="preserve"><value>فروع حرجة تحتاج انتباهًا</value></data>
+  <data name="ACH_Insight_CriticalDesc" xml:space="preserve"><value>فروع في حالة صحية حرجة — أعطها الأولوية أولًا.</value></data>
+  <data name="ACH_Insight_TopStoreTitle" xml:space="preserve"><value>الفرع الأعلى أولوية</value></data>
+  <data name="ACH_Insight_TopStoreDesc" xml:space="preserve"><value>درجة الصحة {0}، مدفوعة أساسًا بـ {1}.</value></data>
+  <data name="ACH_Insight_DriverTitle" xml:space="preserve"><value>أبرز محرّك للخروج</value></data>
+  <data name="ACH_Insight_DriverDesc" xml:space="preserve"><value>{0}% من ردود الخروج على هذا المحور كانت سلبية على مستوى الشركة.</value></data>
+  <data name="ACH_Insight_StalledTitle" xml:space="preserve"><value>خطط متعثرة</value></data>
+  <data name="ACH_Insight_StalledDesc" xml:space="preserve"><value>خطط لم يُنجَز فيها أي مهمة منذ 45+ يومًا.</value></data>
+  <data name="ACH_Insight_ProjectionTitle" xml:space="preserve"><value>فعّل توقّعات القوى العاملة</value></data>
+  <data name="ACH_Insight_ProjectionDesc" xml:space="preserve"><value>ارفع توقّعات القوى العاملة لتفعيل محور فجوة التوظيف الاستباقي.</value></data>
+  <data name="ACH_HealthTitle" xml:space="preserve"><value>مؤشّر صحة الفرع</value></data>
+  <data name="ACH_HealthSub" xml:space="preserve"><value>مركّب مرجّح من ستة محاور، كل منها محسوب مقابل توزيع الشركة.</value></data>
+  <data name="ACH_PillarBreakdownTitle" xml:space="preserve"><value>تفصيل المحاور</value></data>
+  <data name="ACH_WeightedPlanTitle" xml:space="preserve"><value>خطة إجراء مرجّحة</value></data>
+  <data name="ACH_WeightedPlanSub" xml:space="preserve"><value>إجراءات مرتّبة حسب وزن الأثر، كل منها مربوط بالمحور والدليل الذي أطلقه.</value></data>
+  <data name="ACH_OutlookTitle" xml:space="preserve"><value>توقّعات القوى العاملة</value></data>
+  <data name="ACH_OutlookCurrent" xml:space="preserve"><value>العدد الحالي</value></data>
+  <data name="ACH_OutlookProjected" xml:space="preserve"><value>الاحتياج المتوقّع</value></data>
+  <data name="ACH_OutlookPlannedHires" xml:space="preserve"><value>التعيينات المخطّطة</value></data>
+  <data name="ACH_OutlookGap" xml:space="preserve"><value>الفجوة</value></data>
+  <data name="ACH_OutlookShortfall" xml:space="preserve"><value>عجز</value></data>
+  <data name="ACH_OutlookSurplus" xml:space="preserve"><value>فائض</value></data>
+  <data name="ACH_OutlookBalanced" xml:space="preserve"><value>متوازن</value></data>
+  <data name="ACH_Weight" xml:space="preserve"><value>وزن الأثر</value></data>
+  <data name="ACH_NoActions" xml:space="preserve"><value>لا توجد إجراءات — هذا الفرع ضمن النطاق السليم.</value></data>
+  <data name="ACH_PriorityHigh" xml:space="preserve"><value>عالية</value></data>
+  <data name="ACH_PriorityMedium" xml:space="preserve"><value>متوسطة</value></data>
+  <data name="ACH_PriorityLow" xml:space="preserve"><value>منخفضة</value></data>
+  <data name="ACH_PillarNoData" xml:space="preserve"><value>لا توجد بيانات</value></data>
+  <data name="Action_Turnover_StayInterviews" xml:space="preserve"><value>أجرِ مقابلات استبقاء مع أعضاء الفريق الحاليين لاكتشاف المشكلات قبل الاستقالة.</value></data>
+  <data name="Action_Turnover_Workload" xml:space="preserve"><value>راجع عدالة الجدولة وتوزيع عبء العمل مقارنةً بحجم الفرع.</value></data>
+  <data name="Action_Early_Onboarding" xml:space="preserve"><value>عزّز عملية الإعداد في أول 90 يومًا: خطة منظّمة، ومتابعات، وتغذية راجعة مبكرة.</value></data>
+  <data name="Action_Early_Buddy" xml:space="preserve"><value>عيّن مرشدًا/زميلًا لكل موظف جديد وراجع تدريب قائد الفرع على الدمج.</value></data>
+  <data name="Action_Retention_Growth" xml:space="preserve"><value>وفّر مسارًا واضحًا للنمو واستقرارًا في الجدولة لفئة 3–6 أشهر قبل تركهم.</value></data>
+  <data name="Action_Engagement_Fairness" xml:space="preserve"><value>عالج عدالة المعاملة: راجع قرارات الإدارة الأخيرة والاتساق عبر الفريق.</value></data>
+  <data name="Action_Engagement_Complaints" xml:space="preserve"><value>أصلح آلية التعامل مع الشكاوى — أنشئ مسار تصعيد واضحًا وسريع الاستجابة.</value></data>
+  <data name="Action_Engagement_Benefits" xml:space="preserve"><value>راجع مدى ملاءمة المزايا لمتطلبات الوظيفة ووضّحها بجلاء.</value></data>
+  <data name="Action_Engagement_Workload" xml:space="preserve"><value>قلّل نقاط ضغط العمل: أعد توزيع الورديات والتوظيف في أوقات الذروة.</value></data>
+  <data name="Action_Engagement_Communication" xml:space="preserve"><value>حسّن وتيرة وشفافية التواصل بين الفرع والإدارة.</value></data>
+  <data name="Action_Engagement_Voice" xml:space="preserve"><value>أنشئ قنوات لطرح الأفكار والآراء وتصرّف بناءً عليها بشكل ملموس.</value></data>
+  <data name="Action_Engagement_Teamwork" xml:space="preserve"><value>أعد بناء روح الفريق — اجتماعات قصيرة، وأهداف مشتركة، وحل النزاعات.</value></data>
+  <data name="Action_Engagement_TaskFit" xml:space="preserve"><value>أعد مواءمة توزيع الأدوار بحيث يُوضع الأفراد في مهام تناسب نقاط قوتهم.</value></data>
+  <data name="Action_Engagement_Training" xml:space="preserve"><value>سُدّ فجوة التدريب: تأكد أن كل فرد يحصل على التدريب اللازم لأداء عمله.</value></data>
+  <data name="Action_Engagement_Growth" xml:space="preserve"><value>امنح الموظفين مجالًا لاستخدام قدراتهم الشخصية وتطويرها في العمل.</value></data>
+  <data name="Action_Engagement_Generic" xml:space="preserve"><value>راجع تغذية مقابلات الخروج للفرع واستهدف أضعف محاور الاندماج.</value></data>
+  <data name="Action_Leadership_Stability" xml:space="preserve"><value>ثبّت قيادة الفرع: اضمن الاستمرارية والتوجيه وإشراف مدير الإدارة خلال التغييرات.</value></data>
+  <data name="Action_Workforce_Staffing" xml:space="preserve"><value>سُدّ فجوة التوظيف المتوقّعة: سرّع التعيين والإعداد قبل حدوث العجز.</value></data>
+  <data name="Action_Workforce_AtRisk" xml:space="preserve"><value>تواصل استباقيًا مع الموظفين المصنّفين كمخاطرة عالية في قائمة الإنذار المبكر.</value></data>
+  <data name="Msg_WorkforceProjectionProcessed" xml:space="preserve"><value>تمت معالجة {0} صفًا من توقّعات القوى العاملة.</value></data>
+  <data name="Msg_WorkforceProjectionSkipped" xml:space="preserve"><value>تم تخطّي {0} صف (فرع أو فترة أو عدد متوقّع مفقود).</value></data>
+  <data name="Msg_WorkforceUploadFailed" xml:space="preserve"><value>فشل رفع توقّعات القوى العاملة: {0}</value></data>
+  <data name="Upload_WorkforceTitle" xml:space="preserve"><value>توقّعات القوى العاملة</value></data>
+  <data name="Upload_WorkforceDesc" xml:space="preserve"><value>العدد المخطّط/المطلوب لكل فرع لكل فترة — يشغّل توقّعات القوى العاملة في مركز الإجراءات. مستقلّ عن ملفات الفترة الشهرية.</value></data>
+  <data name="Upload_WorkforceKind" xml:space="preserve"><value>توقّعات القوى العاملة</value></data>
 </root>

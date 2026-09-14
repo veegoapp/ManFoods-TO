@@ -1647,4 +1647,123 @@
   <data name="SP_NoPriorityIssues" xml:space="preserve"><value>No priority issue was detected in the selected data</value></data>
   <data name="Common_Employees" xml:space="preserve"><value>employees</value></data>
   <data name="Common_Percent" xml:space="preserve"><value>%</value></data>
+  <!-- ── Action Center · Store Health (rebuilt) ────────────────────────── -->
+  <data name="ACH_Subtitle" xml:space="preserve"><value>Store health scored across six weighted pillars, ranked by impact — with the evidence behind every flag.</value></data>
+  <data name="ACH_KpiAvgHealth" xml:space="preserve"><value>Average Health Score</value></data>
+  <data name="ACH_KpiAvgHealthDesc" xml:space="preserve"><value>Company-wide store health (100 = healthy)</value></data>
+  <data name="ACH_KpiCritical" xml:space="preserve"><value>Critical Stores</value></data>
+  <data name="ACH_KpiCriticalDesc" xml:space="preserve"><value>Highest weighted risk — act first</value></data>
+  <data name="ACH_KpiHigh" xml:space="preserve"><value>High Risk</value></data>
+  <data name="ACH_KpiHighDesc" xml:space="preserve"><value>Well above the company baseline</value></data>
+  <data name="ACH_KpiActivePlans" xml:space="preserve"><value>Active Plans</value></data>
+  <data name="ACH_KpiActivePlansDesc" xml:space="preserve"><value>Stores with an open action plan</value></data>
+  <data name="ACH_KpiStalled" xml:space="preserve"><value>Stalled Plans</value></data>
+  <data name="ACH_KpiStalledDesc" xml:space="preserve"><value>Open 45+ days with no task completed</value></data>
+  <data name="ACH_KpiResolved" xml:space="preserve"><value>Resolved This Month</value></data>
+  <data name="ACH_KpiResolvedDesc" xml:space="preserve"><value>Plans closed in the current month</value></data>
+  <data name="ACH_ChartPillarImpact" xml:space="preserve"><value>Risk Drivers (Pillar Impact)</value></data>
+  <data name="ACH_ChartPillarImpactSub" xml:space="preserve"><value>Average weighted contribution of each pillar to company-wide risk</value></data>
+  <data name="ACH_ChartEngagement" xml:space="preserve"><value>Root-Cause Breakdown (Exit Drivers)</value></data>
+  <data name="ACH_ChartEngagementSub" xml:space="preserve"><value>Company-wide negative response rate per exit-interview dimension</value></data>
+  <data name="ACH_ChartTrend" xml:space="preserve"><value>Plans Opened vs. Resolved (Last 6 Months)</value></data>
+  <data name="ACH_ChartTrendSub" xml:space="preserve"><value>How many action plans were opened vs. resolved each month</value></data>
+  <data name="ACH_TableTitle" xml:space="preserve"><value>Store Health Scorecard</value></data>
+  <data name="ACH_ColStore" xml:space="preserve"><value>Store</value></data>
+  <data name="ACH_ColHealth" xml:space="preserve"><value>Health Score</value></data>
+  <data name="ACH_ColSeverity" xml:space="preserve"><value>Tier</value></data>
+  <data name="ACH_ColDriver" xml:space="preserve"><value>Top Driver</value></data>
+  <data name="ACH_ColPillars" xml:space="preserve"><value>Pillars</value></data>
+  <data name="ACH_ColPriority" xml:space="preserve"><value>Priority</value></data>
+  <data name="ACH_ColHeadcount" xml:space="preserve"><value>Headcount</value></data>
+  <data name="ACH_ColStatus" xml:space="preserve"><value>Plan</value></data>
+  <data name="ACH_ColResponsible" xml:space="preserve"><value>Responsible</value></data>
+  <data name="ACH_ColProgress" xml:space="preserve"><value>Progress</value></data>
+  <data name="ACH_NoMatchingStores" xml:space="preserve"><value>No stores match your search.</value></data>
+  <data name="ACH_NoData" xml:space="preserve"><value>No data</value></data>
+  <data name="ACH_Vs" xml:space="preserve"><value>vs</value></data>
+  <data name="ACH_StoresSuffix" xml:space="preserve"><value>stores</value></data>
+  <data name="ACH_ProjectionPending" xml:space="preserve"><value>Workforce projection not uploaded yet — the staffing-gap outlook will activate once projection data is provided.</value></data>
+  <data name="ACH_Sev_Critical" xml:space="preserve"><value>Critical</value></data>
+  <data name="ACH_Sev_High" xml:space="preserve"><value>High</value></data>
+  <data name="ACH_Sev_Medium" xml:space="preserve"><value>Medium</value></data>
+  <data name="ACH_Sev_Low" xml:space="preserve"><value>Low</value></data>
+  <data name="ACH_Sev_Healthy" xml:space="preserve"><value>Healthy</value></data>
+  <data name="ACH_Pillar_turnover" xml:space="preserve"><value>Overall Turnover</value></data>
+  <data name="ACH_Pillar_early_attrition" xml:space="preserve"><value>Early Attrition (90-Day)</value></data>
+  <data name="ACH_Pillar_retention" xml:space="preserve"><value>6-Month Retention</value></data>
+  <data name="ACH_Pillar_engagement" xml:space="preserve"><value>Engagement</value></data>
+  <data name="ACH_Pillar_leadership" xml:space="preserve"><value>Leadership Stability</value></data>
+  <data name="ACH_Pillar_workforce" xml:space="preserve"><value>Workforce Outlook</value></data>
+  <data name="ACH_PillarDesc_turnover" xml:space="preserve"><value>Monthly turnover rate vs. company average</value></data>
+  <data name="ACH_PillarDesc_early_attrition" xml:space="preserve"><value>90-day early-leaver rate vs. company average</value></data>
+  <data name="ACH_PillarDesc_retention" xml:space="preserve"><value>Share of team past 6 months' tenure vs. average</value></data>
+  <data name="ACH_PillarDesc_engagement" xml:space="preserve"><value>Exit-interview drivers vs. company baseline</value></data>
+  <data name="ACH_PillarDesc_leadership" xml:space="preserve"><value>Store-leader changes over the trailing window</value></data>
+  <data name="ACH_PillarDesc_workforce" xml:space="preserve"><value>At-risk employees and projected staffing gap</value></data>
+  <data name="ACH_Driver_fair_treatment" xml:space="preserve"><value>Fair Treatment</value></data>
+  <data name="ACH_Driver_complaints_handling" xml:space="preserve"><value>Complaints Handling</value></data>
+  <data name="ACH_Driver_benefits_match" xml:space="preserve"><value>Benefits Fit</value></data>
+  <data name="ACH_Driver_workload" xml:space="preserve"><value>Workload / Conditions</value></data>
+  <data name="ACH_Driver_communication" xml:space="preserve"><value>Communication</value></data>
+  <data name="ACH_Driver_encourage_opinions" xml:space="preserve"><value>Voice &amp; Opinions</value></data>
+  <data name="ACH_Driver_teamwork" xml:space="preserve"><value>Teamwork</value></data>
+  <data name="ACH_Driver_task_fit" xml:space="preserve"><value>Role Fit</value></data>
+  <data name="ACH_Driver_training" xml:space="preserve"><value>Training</value></data>
+  <data name="ACH_Driver_use_personal_abilities" xml:space="preserve"><value>Growth &amp; Abilities</value></data>
+  <data name="ACH_Insight_AllClearTitle" xml:space="preserve"><value>All stores healthy</value></data>
+  <data name="ACH_Insight_AllClearDesc" xml:space="preserve"><value>No store is currently above the company risk baseline.</value></data>
+  <data name="ACH_Insight_CriticalTitle" xml:space="preserve"><value>Critical stores need attention</value></data>
+  <data name="ACH_Insight_CriticalDesc" xml:space="preserve"><value>stores are at critical health — prioritize these first.</value></data>
+  <data name="ACH_Insight_TopStoreTitle" xml:space="preserve"><value>Highest-priority store</value></data>
+  <data name="ACH_Insight_TopStoreDesc" xml:space="preserve"><value>health score {0}, driven mainly by {1}.</value></data>
+  <data name="ACH_Insight_DriverTitle" xml:space="preserve"><value>Leading exit driver</value></data>
+  <data name="ACH_Insight_DriverDesc" xml:space="preserve"><value>{0}% of exit responses on this dimension were negative company-wide.</value></data>
+  <data name="ACH_Insight_StalledTitle" xml:space="preserve"><value>Stalled plans</value></data>
+  <data name="ACH_Insight_StalledDesc" xml:space="preserve"><value>plans have seen no task completed in 45+ days.</value></data>
+  <data name="ACH_Insight_ProjectionTitle" xml:space="preserve"><value>Enable the workforce outlook</value></data>
+  <data name="ACH_Insight_ProjectionDesc" xml:space="preserve"><value>Upload workforce projections to activate the forward staffing-gap pillar.</value></data>
+  <data name="ACH_HealthTitle" xml:space="preserve"><value>Store Health Index</value></data>
+  <data name="ACH_HealthSub" xml:space="preserve"><value>A weighted composite of six pillars, each scored against the company distribution.</value></data>
+  <data name="ACH_PillarBreakdownTitle" xml:space="preserve"><value>Pillar Breakdown</value></data>
+  <data name="ACH_WeightedPlanTitle" xml:space="preserve"><value>Weighted Action Plan</value></data>
+  <data name="ACH_WeightedPlanSub" xml:space="preserve"><value>Actions ranked by impact weight, each tied to the pillar and evidence that triggered it.</value></data>
+  <data name="ACH_OutlookTitle" xml:space="preserve"><value>Workforce Outlook</value></data>
+  <data name="ACH_OutlookCurrent" xml:space="preserve"><value>Current Headcount</value></data>
+  <data name="ACH_OutlookProjected" xml:space="preserve"><value>Projected Need</value></data>
+  <data name="ACH_OutlookPlannedHires" xml:space="preserve"><value>Planned Hires</value></data>
+  <data name="ACH_OutlookGap" xml:space="preserve"><value>Gap</value></data>
+  <data name="ACH_OutlookShortfall" xml:space="preserve"><value>shortfall</value></data>
+  <data name="ACH_OutlookSurplus" xml:space="preserve"><value>surplus</value></data>
+  <data name="ACH_OutlookBalanced" xml:space="preserve"><value>balanced</value></data>
+  <data name="ACH_Weight" xml:space="preserve"><value>Impact weight</value></data>
+  <data name="ACH_NoActions" xml:space="preserve"><value>No action items — this store is within healthy range.</value></data>
+  <data name="ACH_PriorityHigh" xml:space="preserve"><value>High</value></data>
+  <data name="ACH_PriorityMedium" xml:space="preserve"><value>Medium</value></data>
+  <data name="ACH_PriorityLow" xml:space="preserve"><value>Low</value></data>
+  <data name="ACH_PillarNoData" xml:space="preserve"><value>No data</value></data>
+  <data name="Action_Turnover_StayInterviews" xml:space="preserve"><value>Run stay-interviews with current team members to catch issues before they resign.</value></data>
+  <data name="Action_Turnover_Workload" xml:space="preserve"><value>Review scheduling fairness and workload distribution relative to store volume.</value></data>
+  <data name="Action_Early_Onboarding" xml:space="preserve"><value>Strengthen the first-90-days onboarding: structured plan, check-ins, and early feedback.</value></data>
+  <data name="Action_Early_Buddy" xml:space="preserve"><value>Assign a mentor/buddy to every new hire and review Store Leader coaching on integration.</value></data>
+  <data name="Action_Retention_Growth" xml:space="preserve"><value>Create clear growth and scheduling stability for the 3–6 month tenure band before they churn.</value></data>
+  <data name="Action_Engagement_Fairness" xml:space="preserve"><value>Address fairness of treatment: review recent management decisions and consistency across the team.</value></data>
+  <data name="Action_Engagement_Complaints" xml:space="preserve"><value>Fix how complaints and grievances are handled — establish a clear, responsive escalation path.</value></data>
+  <data name="Action_Engagement_Benefits" xml:space="preserve"><value>Review whether benefits match the demands of the role and communicate them clearly.</value></data>
+  <data name="Action_Engagement_Workload" xml:space="preserve"><value>Reduce work-pressure hotspots: rebalance shifts and staffing at peak load.</value></data>
+  <data name="Action_Engagement_Communication" xml:space="preserve"><value>Improve store-to-management communication cadence and transparency.</value></data>
+  <data name="Action_Engagement_Voice" xml:space="preserve"><value>Create channels for employees to raise ideas and opinions, and act on them visibly.</value></data>
+  <data name="Action_Engagement_Teamwork" xml:space="preserve"><value>Rebuild team cohesion — team huddles, shared goals, and conflict resolution.</value></data>
+  <data name="Action_Engagement_TaskFit" xml:space="preserve"><value>Re-align role assignments so people are placed on tasks that fit their strengths.</value></data>
+  <data name="Action_Engagement_Training" xml:space="preserve"><value>Close the training gap: ensure every crew member gets the training needed to perform.</value></data>
+  <data name="Action_Engagement_Growth" xml:space="preserve"><value>Give employees room to use and grow their personal abilities on the job.</value></data>
+  <data name="Action_Engagement_Generic" xml:space="preserve"><value>Review the store's exit-interview feedback and target the weakest engagement dimensions.</value></data>
+  <data name="Action_Leadership_Stability" xml:space="preserve"><value>Stabilize store leadership: ensure continuity, coaching, and Head Manager oversight through transitions.</value></data>
+  <data name="Action_Workforce_Staffing" xml:space="preserve"><value>Close the projected staffing gap: accelerate hiring and onboarding ahead of the shortfall.</value></data>
+  <data name="Action_Workforce_AtRisk" xml:space="preserve"><value>Proactively check in with employees flagged high-risk on the early-warning watchlist.</value></data>
+  <data name="Msg_WorkforceProjectionProcessed" xml:space="preserve"><value>Processed {0} workforce projection rows.</value></data>
+  <data name="Msg_WorkforceProjectionSkipped" xml:space="preserve"><value>{0} row(s) were skipped (missing store, period, or projected headcount).</value></data>
+  <data name="Msg_WorkforceUploadFailed" xml:space="preserve"><value>Workforce projection upload failed: {0}</value></data>
+  <data name="Upload_WorkforceTitle" xml:space="preserve"><value>Workforce Projections</value></data>
+  <data name="Upload_WorkforceDesc" xml:space="preserve"><value>Planned/required headcount per store per period — powers the Action Center's Workforce Outlook. Independent of the monthly period files.</value></data>
+  <data name="Upload_WorkforceKind" xml:space="preserve"><value>Workforce Projections</value></data>
 </root>

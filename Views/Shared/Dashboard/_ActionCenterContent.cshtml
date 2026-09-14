@@ -1,58 +1,122 @@
 @{
     var __area = ViewContext.RouteData.Values["area"]?.ToString();
     var __areaPrefix = string.Equals(__area, "Home", StringComparison.OrdinalIgnoreCase) ? "/home" : "/admin";
+
+    // Localized label maps handed to JS as one JSON object. System.Text.Json
+    // escapes non-ASCII to \uXXXX, which JavaScript decodes correctly inside a
+    // <script> block — avoiding the HTML numeric-entity problem that a bare
+    // @@L[...] inside a JS string literal would hit for Arabic text.
+    var acLabels = new Dictionary<string, object>
+    {
+        ["sev"] = new Dictionary<string, string>
+        {
+            ["Critical"] = L["ACH_Sev_Critical"].Value,
+            ["High"] = L["ACH_Sev_High"].Value,
+            ["Medium"] = L["ACH_Sev_Medium"].Value,
+            ["Low"] = L["ACH_Sev_Low"].Value,
+            ["Healthy"] = L["ACH_Sev_Healthy"].Value,
+        },
+        ["pillar"] = new Dictionary<string, string>
+        {
+            ["turnover"] = L["ACH_Pillar_turnover"].Value,
+            ["early_attrition"] = L["ACH_Pillar_early_attrition"].Value,
+            ["retention"] = L["ACH_Pillar_retention"].Value,
+            ["engagement"] = L["ACH_Pillar_engagement"].Value,
+            ["leadership"] = L["ACH_Pillar_leadership"].Value,
+            ["workforce"] = L["ACH_Pillar_workforce"].Value,
+        },
+        ["driver"] = new Dictionary<string, string>
+        {
+            ["fair_treatment"] = L["ACH_Driver_fair_treatment"].Value,
+            ["complaints_handling"] = L["ACH_Driver_complaints_handling"].Value,
+            ["benefits_match"] = L["ACH_Driver_benefits_match"].Value,
+            ["workload"] = L["ACH_Driver_workload"].Value,
+            ["communication"] = L["ACH_Driver_communication"].Value,
+            ["encourage_opinions"] = L["ACH_Driver_encourage_opinions"].Value,
+            ["teamwork"] = L["ACH_Driver_teamwork"].Value,
+            ["task_fit"] = L["ACH_Driver_task_fit"].Value,
+            ["training"] = L["ACH_Driver_training"].Value,
+            ["use_personal_abilities"] = L["ACH_Driver_use_personal_abilities"].Value,
+        },
+        ["ui"] = new Dictionary<string, string>
+        {
+            ["noData"] = L["ACH_NoMatchingStores"].Value,
+            ["vs"] = L["ACH_Vs"].Value,
+            ["storesSuffix"] = L["ACH_StoresSuffix"].Value,
+            ["projectionPending"] = L["ACH_ProjectionPending"].Value,
+            ["noData2"] = L["ACH_NoData"].Value,
+            ["statusActive"] = L["SAP_StatusActive"].Value,
+            ["statusResolved"] = L["SAP_StatusResolved"].Value,
+            ["statusNone"] = L["SAP_StatusNone"].Value,
+            ["healthLabel"] = L["ACH_ColHealth"].Value,
+        },
+        ["insight"] = new Dictionary<string, string>
+        {
+            ["allClearTitle"] = L["ACH_Insight_AllClearTitle"].Value,
+            ["allClearDesc"] = L["ACH_Insight_AllClearDesc"].Value,
+            ["criticalTitle"] = L["ACH_Insight_CriticalTitle"].Value,
+            ["criticalDesc"] = L["ACH_Insight_CriticalDesc"].Value,
+            ["topStoreTitle"] = L["ACH_Insight_TopStoreTitle"].Value,
+            ["topStoreDesc"] = L["ACH_Insight_TopStoreDesc"].Value,
+            ["driverTitle"] = L["ACH_Insight_DriverTitle"].Value,
+            ["driverDesc"] = L["ACH_Insight_DriverDesc"].Value,
+            ["stalledTitle"] = L["ACH_Insight_StalledTitle"].Value,
+            ["stalledDesc"] = L["ACH_Insight_StalledDesc"].Value,
+            ["projectionTitle"] = L["ACH_Insight_ProjectionTitle"].Value,
+            ["projectionDesc"] = L["ACH_Insight_ProjectionDesc"].Value,
+        },
+    };
 }
 <style>
-.ac-sort-header { cursor:pointer; user-select:none; white-space:nowrap; }
-.ac-sort-header:hover { color:var(--red); }
-.ac-sort-icon { font-size:10px; margin-left:4px; opacity:0.35; }
-[dir="rtl"] .ac-sort-icon { margin-left:0; margin-right:4px; }
-.ac-sort-header.ac-sort-asc .ac-sort-icon,
-.ac-sort-header.ac-sort-desc .ac-sort-icon { opacity:1; color:var(--red); }
-.ac-sort-header.ac-sort-asc .ac-sort-icon::before { content:"\f235"; }
-.ac-sort-header.ac-sort-desc .ac-sort-icon::before { content:"\f229"; }
-.ac-sort-header:not(.ac-sort-asc):not(.ac-sort-desc) .ac-sort-icon::before { content:"\f229"; }
+.ach-sort-header { cursor:pointer; user-select:none; white-space:nowrap; }
+.ach-sort-header:hover { color:var(--red); }
+.ach-sort-icon { font-size:10px; margin-left:4px; opacity:0.35; }
+[dir="rtl"] .ach-sort-icon { margin-left:0; margin-right:4px; }
+.ach-sort-header.ach-asc .ach-sort-icon, .ach-sort-header.ach-desc .ach-sort-icon { opacity:1; color:var(--red); }
+.ach-sort-header.ach-asc .ach-sort-icon::before { content:"\f235"; }
+.ach-sort-header.ach-desc .ach-sort-icon::before { content:"\f229"; }
+.ach-sort-header:not(.ach-asc):not(.ach-desc) .ach-sort-icon::before { content:"\f229"; }
 .chart-body canvas { direction:ltr; }
-.ac-badge { padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:700; white-space:nowrap; display:inline-block; }
-.ac-progress-track { background:var(--card-bg-2); border-radius:20px; height:6px; width:80px; overflow:hidden; }
-.ac-progress-fill { height:100%; border-radius:20px; background:oklch(0.62 0.15 155); }
-.ac-store-link { text-decoration:none; color:inherit; font-weight:700; }
-.ac-store-link:hover { color:var(--red); }
+
+/* Health score chip — a compact gauge that reads at a glance. */
+.ach-score { display:inline-flex; align-items:center; gap:9px; }
+.ach-score-ring { width:40px; height:40px; flex-shrink:0; }
+.ach-score-num { font-weight:800; font-size:15px; line-height:1; }
+.ach-score-sub { font-size:10px; color:var(--text-3); }
+
+/* The distinctive per-store pillar strip: six segments, one per pillar,
+   coloured by that pillar's own severity — the multi-dimensional breakdown
+   visible without opening the store. */
+.ach-strip { display:flex; gap:3px; }
+.ach-seg { width:16px; height:8px; border-radius:2px; background:var(--card-bg-2); }
+.ach-seg[title] { cursor:default; }
+
+.ach-badge { padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:700; white-space:nowrap; display:inline-block; }
+.ach-store-link { text-decoration:none; color:inherit; font-weight:700; }
+.ach-store-link:hover { color:var(--red); }
+.ach-progress-track { background:var(--card-bg-2); border-radius:20px; height:6px; width:70px; overflow:hidden; }
+.ach-progress-fill { height:100%; border-radius:20px; background:oklch(0.62 0.15 155); }
+.ach-pri { font-variant-numeric:tabular-nums; font-weight:700; }
+.ach-legend { display:flex; flex-wrap:wrap; gap:10px 16px; font-size:11.5px; color:var(--text-2); }
+.ach-legend span { display:inline-flex; align-items:center; gap:6px; }
+.ach-legend i { width:10px; height:10px; border-radius:3px; display:inline-block; }
 </style>
 
 <div class="page-header">
     <div>
         <h1 class="page-title">@L["Page_ActionCenter"]</h1>
-        <p class="page-subtitle">@L["Page_ActionCenterSub"]</p>
+        <p class="page-subtitle">@L["ACH_Subtitle"]</p>
     </div>
     <div class="d-flex gap-2 flex-wrap align-items-center">
-        <input type="text" id="acSearch" class="form-control form-control-dark form-control-sm"
+        <input type="text" id="achSearch" class="form-control form-control-dark form-control-sm"
                placeholder="&#xF52A; @L["Common_SearchStore"]" style="width:220px;border-radius:20px">
-        <button type="button" class="reset-filters-btn" onclick="acResetFilters()">
+        <button type="button" class="reset-filters-btn" onclick="achReset()">
             <i class="bi bi-arrow-counterclockwise"></i>@L["Common_ResetFilters"]
         </button>
     </div>
 </div>
 
-@{
-    var actionCenterGuide = new PageGuideViewModel
-    {
-        PageKey = "actioncenter",
-        Overview = L["Guide_ActionCenter_Overview"],
-        FilterNote = L["Guide_ActionCenter_FilterNote"],
-        Sections = new List<PageGuideSection>
-        {
-            new() { Icon = "bi-flag", Title = L["AC_ChartTopReasons"], Body = L["Guide_ActionCenter_Chart_Reasons"] },
-            new() { Icon = "bi-geo-alt", Title = L["AC_ChartByRegion"], Body = L["Guide_ActionCenter_Chart_Region"] },
-            new() { Icon = "bi-graph-up-arrow", Title = L["AC_ChartTrend"], Body = L["Guide_ActionCenter_Chart_Trend"] },
-            new() { Icon = "bi-table", Title = L["AC_StoresTable"], Body = L["Guide_ActionCenter_Chart_StoresTable"] },
-            new() { Icon = "bi-clipboard-check", Title = L["Guide_ActionCenter_CriteriaTitle"], Body = L["Guide_ActionCenter_Chart_Criteria"] },
-        }
-    };
-}
-@await Html.PartialAsync("~/Views/Shared/Dashboard/_PageGuide.cshtml", actionCenterGuide)
-
-<div id="acSummaryCards" class="kpi-grid mb-4">
+<div id="achKpis" class="kpi-grid mb-4">
     <div class="kpi-spinner text-center py-3 w-100">
         <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 25)"></div>
     </div>
@@ -63,89 +127,59 @@
     <h5 class="mb-0 fw-bold">@L["Common_SmartInsights"]</h5>
     <span class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px">@L["Common_AutoGenerated"]</span>
 </div>
-<div class="chart-card mb-4" id="acInsightsCard"
-     data-no-insights="@L["AC_NoInsights"]"
-     data-all-clear-title="@L["AC_InsightAllClearTitle"]"
-     data-all-clear-desc="@L["AC_InsightAllClearDesc"]"
-     data-critical-title="@L["AC_InsightCriticalTitle"]"
-     data-critical-desc="@L["AC_InsightCriticalDesc"]"
-     data-stalled-title="@L["AC_InsightStalledTitle"]"
-     data-stalled-desc="@L["AC_InsightStalledDesc"]"
-     data-top-reason-title="@L["AC_InsightTopReasonTitle"]"
-     data-top-reason-desc="@L["AC_InsightTopReasonDesc"]"
-     data-top-region-title="@L["AC_InsightTopRegionTitle"]"
-     data-top-region-desc="@L["AC_InsightTopRegionDesc"]"
-     data-chronic-title="@L["AC_InsightChronicTitle"]"
-     data-chronic-desc="@L["AC_InsightChronicDesc"]">
-    <div id="acInsights">
-        <div class="text-center py-3 text-muted">
-            <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>@L["Common_Loading"]
-        </div>
-    </div>
-</div>
+<div class="chart-card mb-4"><div id="achInsights">
+    <div class="text-center py-3 text-muted"><div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>@L["Common_Loading"]</div>
+</div></div>
 
 <div class="charts-grid mb-4">
     <div class="chart-card">
-        <div class="chart-header"><h6>@L["AC_ChartTopReasons"]</h6><p>@L["AC_ChartTopReasonsSub"]</p></div>
-        <div class="chart-body"><canvas id="acReasonsChart"></canvas></div>
+        <div class="chart-header"><h6>@L["ACH_ChartPillarImpact"]</h6><p>@L["ACH_ChartPillarImpactSub"]</p></div>
+        <div class="chart-body"><canvas id="achPillarChart"></canvas></div>
     </div>
     <div class="chart-card">
-        <div class="chart-header"><h6>@L["AC_ChartByRegion"]</h6><p>@L["AC_ChartByRegionSub"]</p></div>
-        <div class="chart-body"><canvas id="acRegionChart"></canvas></div>
-    </div>
-</div>
-
-<div class="charts-grid mb-4">
-    <div class="chart-card" style="grid-column:1 / -1">
-        <div class="chart-header"><h6>@L["AC_ChartTrend"]</h6><p>@L["AC_ChartTrendSub"]</p></div>
-        <div class="chart-body"><canvas id="acTrendChart"></canvas></div>
+        <div class="chart-header"><h6>@L["ACH_ChartEngagement"]</h6><p>@L["ACH_ChartEngagementSub"]</p></div>
+        <div class="chart-body"><canvas id="achDriverChart"></canvas></div>
     </div>
 </div>
 
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
         <div class="section-accent"></div>
-        <h5 class="mb-0 fw-bold">@L["AC_StoresTable"]</h5>
-        <span id="acCountBadge" class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px"></span>
+        <h5 class="mb-0 fw-bold">@L["ACH_TableTitle"]</h5>
+        <span id="achCountBadge" class="badge ms-1" style="background:var(--bg-2);color:var(--text-2);font-size:11px"></span>
     </div>
+    <div class="ach-legend" id="achLegend"></div>
 </div>
-<div class="chart-card p-0" style="overflow:hidden"
-     data-no-data="@L["AC_NoMatchingStores"]"
-     data-severity-critical="@L["AC_SeverityCritical"]"
-     data-severity-high="@L["AC_SeverityHigh"]"
-     data-severity-medium="@L["AC_SeverityMedium"]"
-     data-severity-low="@L["AC_SeverityLow"]"
-     data-severity-none="@L["AC_SeverityNone"]"
-     data-status-active="@L["SAP_StatusActive"]"
-     data-status-resolved="@L["SAP_StatusResolved"]"
-     data-status-none="@L["SAP_StatusNone"]"
-     data-trend-improving="@L["AC_TrendImproving"]"
-     data-trend-worsening="@L["AC_TrendWorsening"]"
-     data-trend-flat="@L["AC_TrendFlat"]"
-     data-trend-new="@L["AC_TrendNew"]"
-     data-chronic="@L["AC_Chronic"]"
-     data-stalled="@L["AC_Stalled"]">
-    <div class="table-responsive" style="max-height:560px;overflow-y:auto">
-        <table class="table table-hover mb-0 ac-sortable-table" style="font-size:13px">
+<div class="chart-card p-0" style="overflow:hidden">
+    <div class="table-responsive" style="max-height:620px;overflow-y:auto">
+        <table class="table table-hover mb-0" style="font-size:13px">
             <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
                 <tr>
-                    <th class="px-3 py-2 ac-sort-header" data-sort-key="storeName">@L["AC_Store"]<i class="bi ac-sort-icon"></i></th>
-                    <th class="px-3 py-2 ac-sort-header" data-sort-key="severityRank">@L["AC_Severity"]<i class="bi ac-sort-icon"></i></th>
-                    <th class="px-3 py-2 ac-sort-header" data-sort-key="planStatus">@L["AC_Status"]<i class="bi ac-sort-icon"></i></th>
-                    <th class="px-3 py-2 ac-sort-header" data-sort-key="ageDays">@L["AC_Age"]<i class="bi ac-sort-icon"></i></th>
-                    <th class="px-3 py-2 ac-sort-header" data-sort-key="trendRank">@L["AC_Trend"]<i class="bi ac-sort-icon"></i></th>
-                    <th class="px-3 py-2">@L["AC_Progress"]</th>
-                    <th class="px-3 py-2 ac-sort-header" data-sort-key="responsibleName">@L["SAP_Responsible"]<i class="bi ac-sort-icon"></i></th>
-                    <th class="px-3 py-2 ac-sort-header" data-sort-key="assignedToName">@L["AC_AssignedTo"]<i class="bi ac-sort-icon"></i></th>
-                    <th class="px-3 py-2">@L["AC_Flags"]</th>
+                    <th class="px-3 py-2 ach-sort-header" data-sort-key="storeName">@L["ACH_ColStore"]<i class="bi ach-sort-icon"></i></th>
+                    <th class="px-3 py-2 ach-sort-header" data-sort-key="healthScore">@L["ACH_ColHealth"]<i class="bi ach-sort-icon"></i></th>
+                    <th class="px-3 py-2 ach-sort-header" data-sort-key="severityRank">@L["ACH_ColSeverity"]<i class="bi ach-sort-icon"></i></th>
+                    <th class="px-3 py-2">@L["ACH_ColDriver"]</th>
+                    <th class="px-3 py-2">@L["ACH_ColPillars"]</th>
+                    <th class="px-3 py-2 ach-sort-header" data-sort-key="priorityScore">@L["ACH_ColPriority"]<i class="bi ach-sort-icon"></i></th>
+                    <th class="px-3 py-2 ach-sort-header" data-sort-key="headcount">@L["ACH_ColHeadcount"]<i class="bi ach-sort-icon"></i></th>
+                    <th class="px-3 py-2">@L["ACH_ColStatus"]</th>
+                    <th class="px-3 py-2">@L["ACH_ColResponsible"]</th>
+                    <th class="px-3 py-2">@L["ACH_ColProgress"]</th>
                 </tr>
             </thead>
-            <tbody id="acBody">
-                <tr><td colspan="9" class="text-center py-4 text-muted">
+            <tbody id="achBody">
+                <tr><td colspan="10" class="text-center py-4 text-muted">
                     <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>@L["Common_Loading"]
                 </td></tr>
             </tbody>
         </table>
+    </div>
+</div>
+
+<div class="charts-grid mb-4 mt-4">
+    <div class="chart-card" style="grid-column:1 / -1">
+        <div class="chart-header"><h6>@L["ACH_ChartTrend"]</h6><p>@L["ACH_ChartTrendSub"]</p></div>
+        <div class="chart-body"><canvas id="achTrendChart"></canvas></div>
     </div>
 </div>
 
@@ -155,266 +189,229 @@
 <script src="~/js/chart-colors.js" asp-append-version="true"></script>
 <script src="~/js/store-action-plan.js" asp-append-version="true"></script>
 <script>
-/* Action Center — company-wide dashboard over the same store_action_plans
-   data the legacy Store Action Plan page uses, plus severity/trend/progress
-   computed server-side. No period filter: reflects current plan state. */
-const __AREA_PREFIX = '@__areaPrefix';
-let acStoreData = [];
-let acSort = { key: 'severityRank', dir: 'desc' };
+const AC_L = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(acLabels));
+const AC_AREA = '@__areaPrefix';
+const AC_PILLARS = ['turnover','early_attrition','retention','engagement','leadership','workforce'];
+const AC_SEV_RANK = { Critical:4, High:3, Medium:2, Low:1, Healthy:0 };
 
-const acTableEl = document.querySelector('.ac-sortable-table');
-const acTableWrap = acTableEl.closest('.chart-card');
-const AC_D = acTableWrap.dataset;
+// Severity → colour. One scale used everywhere (score ring, tier badge, pillar
+// segments) so the page reads as one system.
+function achSevColor(sev) {
+    switch (sev) {
+        case 'Critical': return { c: ChartColors.SEMANTIC.BAD, bg: 'oklch(0.6 0.22 22 / .12)' };
+        case 'High':     return { c: 'oklch(0.62 0.19 45)', bg: 'oklch(0.7 0.19 45 / .14)' };
+        case 'Medium':   return { c: 'oklch(0.6 0.14 75)', bg: 'oklch(0.75 0.16 75 / .14)' };
+        case 'Low':      return { c: 'oklch(0.58 0.09 90)', bg: 'oklch(0.8 0.09 90 / .18)' };
+        default:         return { c: 'oklch(0.5 0.15 155)', bg: 'oklch(0.62 0.15 155 / .12)' };
+    }
+}
+function achPillarSegColor(status) {
+    return achSevColor(status === 'healthy' || status === 'no_data' ? 'Healthy' : status).c;
+}
+function achLabel(map, key) { return (AC_L[map] && AC_L[map][key]) || key; }
 
-const AC_SEVERITY_META = {
-    Critical: { label: AC_D.severityCritical, bg: 'oklch(0.6 0.22 22 / .12)', color: ChartColors.SEMANTIC.BAD },
-    High:     { label: AC_D.severityHigh,     bg: 'oklch(0.7 0.19 45 / .14)', color: 'oklch(0.6 0.19 45)' },
-    Medium:   { label: AC_D.severityMedium,   bg: 'oklch(0.75 0.16 75 / .14)', color: 'oklch(0.6 0.14 75)' },
-    Low:      { label: AC_D.severityLow,      bg: 'var(--card-bg-2)', color: 'var(--text-2)' },
-    None:     { label: AC_D.severityNone,     bg: 'oklch(0.62 0.15 155 / .12)', color: 'oklch(0.5 0.15 155)' },
-};
-const AC_STATUS_META = {
-    Active:   { label: AC_D.statusActive, color: 'oklch(0.6 0.14 75)', bg: 'oklch(0.75 0.16 75 / .12)' },
-    Resolved: { label: AC_D.statusResolved, color: 'oklch(0.5 0.15 155)', bg: 'oklch(0.62 0.15 155 / .12)' },
-    None:     { label: AC_D.statusNone, color: 'var(--text-3)', bg: 'var(--card-bg-2)' },
-};
-const AC_TREND_META = {
-    Improving: { label: AC_D.trendImproving, icon: 'bi-arrow-down-right', color: 'oklch(0.5 0.15 155)' },
-    Worsening: { label: AC_D.trendWorsening, icon: 'bi-arrow-up-right', color: ChartColors.SEMANTIC.BAD },
-    Flat:      { label: AC_D.trendFlat, icon: 'bi-dash-lg', color: 'var(--text-3)' },
-    New:       { label: AC_D.trendNew, icon: 'bi-asterisk', color: 'var(--text-3)' },
-};
-const AC_SEVERITY_RANK = { Critical: 4, High: 3, Medium: 2, Low: 1, None: 0 };
-const AC_TREND_RANK = { Worsening: 3, Flat: 2, New: 1, Improving: 0 };
-
-function acFmtDate(d) {
-    if (!d) return '—';
-    const dt = new Date(d);
-    if (isNaN(dt.getTime())) return '—';
-    return dt.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+/* ── Score ring (mini donut gauge) ─────────────────────────────────────── */
+function achRing(score, color) {
+    const r = 15, c = 2 * Math.PI * r, off = c * (1 - Math.max(0, Math.min(100, score)) / 100);
+    return `<svg class="ach-score-ring" viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="${r}" fill="none" stroke="var(--card-bg-2)" stroke-width="5"/>
+        <circle cx="20" cy="20" r="${r}" fill="none" stroke="${color}" stroke-width="5"
+                stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+                transform="rotate(-90 20 20)"/>
+    </svg>`;
 }
 
-async function acLoadSummary() {
-    const s = await sapFetchJson('/api/store-action-plan/action-center/summary');
+let achData = [];
+let achSort = { key: 'priorityScore', dir: 'desc' };
+
+async function achLoadSummary() {
+    const s = await sapFetchJson('/api/store-action-plan/action-center/health/summary');
     if (!s) return;
-
-    document.getElementById('acSummaryCards').innerHTML = `
-        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-clipboard-pulse"></i></div><div class="kpi-value">${s.totalActive}</div><div class="kpi-label">@L["AC_KpiActive"]</div><div class="kpi-desc">@L["AC_KpiActiveDesc"]</div></div>
-        <div class="kpi-card"><div class="kpi-icon text-danger"><i class="bi bi-exclamation-octagon-fill"></i></div><div class="kpi-value text-danger">${s.criticalCount}</div><div class="kpi-label">@L["AC_KpiCritical"]</div><div class="kpi-desc">@L["AC_KpiCriticalDesc"]</div></div>
-        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-hourglass-bottom"></i></div><div class="kpi-value">${s.stalledCount}</div><div class="kpi-label">@L["AC_KpiStalled"]</div><div class="kpi-desc">@L["AC_KpiStalledDesc"]</div></div>
-        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-arrow-repeat"></i></div><div class="kpi-value">${s.chronicCount}</div><div class="kpi-label">@L["AC_KpiChronic"]</div><div class="kpi-desc">@L["AC_KpiChronicDesc"]</div></div>
-        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-check2-circle"></i></div><div class="kpi-value">${s.resolvedThisMonth}</div><div class="kpi-label">@L["AC_KpiResolvedMonth"]</div><div class="kpi-desc">@L["AC_KpiResolvedMonthDesc"]</div></div>
-        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-speedometer2"></i></div><div class="kpi-value">${s.avgDaysToResolution !== null && s.avgDaysToResolution !== undefined ? s.avgDaysToResolution.toFixed(1) : '—'}</div><div class="kpi-label">@L["AC_KpiAvgDays"]</div><div class="kpi-desc">@L["AC_KpiAvgDaysDesc"]</div></div>
-    `;
-
-    acRenderInsights(s);
-    acRenderReasonsChart(s.topReasons || []);
-    acRenderRegionChart(s.byRegion || []);
-    acRenderTrendChart(s.monthlyTrend || []);
+    achRenderKpis(s);
+    achRenderInsights(s);
+    achRenderPillarChart(s.pillarImpact || []);
+    achRenderDriverChart(s.engagementBreakdown || []);
+    achRenderTrend(s.monthlyTrend || []);
+    achRenderLegend();
 }
 
-function acRenderInsights(s) {
-    const el = document.getElementById('acInsights');
-    // Labels come from data-* attributes on #acInsightsCard (set server-side
-    // via @@L[...]), not inlined directly as JS string literals here — Razor's
-    // default HtmlEncoder numeric-escapes non-Latin characters (e.g. Arabic),
-    // and <script> content is never HTML-entity-decoded by the browser, so an
-    // Arabic @@L[...] embedded straight into a JS string literal renders as
-    // literal "&#x627;..." text once escaped again by sapEscape(). Attribute
-    // values don't have this problem — the browser's HTML parser decodes them
-    // normally before JS ever reads them via .dataset.
-    const insL = document.getElementById('acInsightsCard').dataset;
+function achRenderKpis(s) {
+    const avg = s.avgHealthScore ?? 0;
+    const avgColor = achSevColor(avg >= 88 ? 'Healthy' : avg >= 75 ? 'Low' : avg >= 58 ? 'Medium' : avg >= 40 ? 'High' : 'Critical').c;
+    document.getElementById('achKpis').innerHTML = `
+        <div class="kpi-card">
+            <div class="d-flex align-items-center gap-2">${achRing(avg, avgColor)}<div><div class="kpi-value" style="color:${avgColor}">${avg}</div></div></div>
+            <div class="kpi-label">@L["ACH_KpiAvgHealth"]</div><div class="kpi-desc">@L["ACH_KpiAvgHealthDesc"]</div>
+        </div>
+        <div class="kpi-card"><div class="kpi-icon text-danger"><i class="bi bi-exclamation-octagon-fill"></i></div><div class="kpi-value text-danger">${s.criticalCount}</div><div class="kpi-label">@L["ACH_KpiCritical"]</div><div class="kpi-desc">@L["ACH_KpiCriticalDesc"]</div></div>
+        <div class="kpi-card"><div class="kpi-icon" style="color:oklch(0.62 0.19 45)"><i class="bi bi-exclamation-triangle-fill"></i></div><div class="kpi-value" style="color:oklch(0.62 0.19 45)">${s.highCount}</div><div class="kpi-label">@L["ACH_KpiHigh"]</div><div class="kpi-desc">@L["ACH_KpiHighDesc"]</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-clipboard-pulse"></i></div><div class="kpi-value">${s.activePlans}</div><div class="kpi-label">@L["ACH_KpiActivePlans"]</div><div class="kpi-desc">@L["ACH_KpiActivePlansDesc"]</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-hourglass-bottom"></i></div><div class="kpi-value">${s.stalledCount}</div><div class="kpi-label">@L["ACH_KpiStalled"]</div><div class="kpi-desc">@L["ACH_KpiStalledDesc"]</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-check2-circle"></i></div><div class="kpi-value">${s.resolvedThisMonth}</div><div class="kpi-label">@L["ACH_KpiResolved"]</div><div class="kpi-desc">@L["ACH_KpiResolvedDesc"]</div></div>
+    `;
+}
+
+function achRenderInsights(s) {
+    const el = document.getElementById('achInsights');
+    const I = AC_L.insight;
     const colorMap = {
-        danger:    { bg: 'oklch(0.6 0.22 22 / .08)', border: ChartColors.SEMANTIC.BAD, text: ChartColors.SEMANTIC.BAD },
-        warning:   { bg: 'oklch(0.75 0.16 75 / .12)', border: ChartColors.SEMANTIC.WARNING, text: 'oklch(0.6 0.14 75)' },
-        success:   { bg: 'oklch(0.62 0.15 155 / .1)', border: 'oklch(0.5 0.15 155)', text: 'oklch(0.5 0.15 155)' },
-        secondary: { bg: 'var(--bg-2)', border: 'var(--text-3)', text: 'var(--text-2)' },
+        danger: { bg:'oklch(0.6 0.22 22 / .08)', b:ChartColors.SEMANTIC.BAD, t:ChartColors.SEMANTIC.BAD },
+        warning:{ bg:'oklch(0.75 0.16 75 / .12)', b:ChartColors.SEMANTIC.WARNING, t:'oklch(0.6 0.14 75)' },
+        info:   { bg:'var(--bg-2)', b:'var(--text-3)', t:'var(--text-2)' },
+        success:{ bg:'oklch(0.62 0.15 155 / .1)', b:'oklch(0.5 0.15 155)', t:'oklch(0.5 0.15 155)' },
     };
     const items = [];
-
-    if (s.totalActive === 0) {
-        items.push({ icon: 'bi-check-circle-fill', color: 'success', title: insL.allClearTitle, description: insL.allClearDesc });
+    if ((s.storesEvaluated || 0) === 0 || (s.criticalCount + s.highCount + s.mediumCount) === 0) {
+        items.push({ icon:'bi-check-circle-fill', color:'success', title:I.allClearTitle, desc:I.allClearDesc });
     } else {
-        if (s.criticalCount > 0) {
-            items.push({ icon: 'bi-exclamation-octagon-fill', color: 'danger', title: insL.criticalTitle,
-                description: `${s.criticalCount} ${insL.criticalDesc}` });
-        }
-        if (s.stalledCount > 0) {
-            items.push({ icon: 'bi-hourglass-bottom', color: 'warning', title: insL.stalledTitle,
-                description: `${s.stalledCount} ${insL.stalledDesc}` });
-        }
-        const topReason = (s.topReasons || [])[0];
-        if (topReason) {
-            items.push({ icon: 'bi-graph-up-arrow', color: 'secondary', title: insL.topReasonTitle,
-                description: `"${topReason.label}" ${insL.topReasonDesc.replace('{0}', topReason.value)}` });
-        }
-        const topRegion = (s.byRegion || [])[0];
-        if (topRegion) {
-            items.push({ icon: 'bi-diagram-3-fill', color: 'secondary', title: insL.topRegionTitle,
-                description: `${topRegion.label} ${insL.topRegionDesc.replace('{0}', topRegion.value)}` });
-        }
-        if (s.chronicCount > 0) {
-            items.push({ icon: 'bi-arrow-repeat', color: 'warning', title: insL.chronicTitle,
-                description: `${s.chronicCount} ${insL.chronicDesc}` });
-        }
+        if (s.criticalCount > 0) items.push({ icon:'bi-exclamation-octagon-fill', color:'danger', title:I.criticalTitle, desc:`${s.criticalCount} ${I.criticalDesc}` });
+        const top = (s.topPriority || [])[0];
+        if (top) items.push({ icon:'bi-graph-up-arrow', color:'warning', title:I.topStoreTitle,
+            desc:`${top.storeName} — ${I.topStoreDesc.replace('{0}', top.healthScore).replace('{1}', achLabel('pillar', top.topPillarKey || ''))}` });
+        const drv = (s.engagementBreakdown || [])[0];
+        if (drv && drv.negativePercent > 0) items.push({ icon:'bi-chat-left-dots-fill', color:'info', title:I.driverTitle,
+            desc:`${achLabel('driver', drv.key)} — ${I.driverDesc.replace('{0}', drv.negativePercent)}` });
+        if (s.stalledCount > 0) items.push({ icon:'bi-hourglass-bottom', color:'warning', title:I.stalledTitle, desc:`${s.stalledCount} ${I.stalledDesc}` });
+        if (!s.hasProjectionData) items.push({ icon:'bi-graph-up', color:'info', title:I.projectionTitle, desc:I.projectionDesc });
     }
-
-    if (!items.length) { el.innerHTML = `<div class="text-muted" style="font-size:13px">${sapEscape(insL.noInsights)}</div>`; return; }
-
-    el.innerHTML = '<div class="row g-3">' + items.map(item => {
-        const c = colorMap[item.color] || colorMap.secondary;
-        return `<div class="col-md-6">
-            <div style="background:${c.bg};border-left:3px solid ${c.border};border-radius:8px;padding:12px 14px;height:100%">
-                <div class="d-flex align-items-start gap-2">
-                    <i class="bi ${item.icon} mt-1 flex-shrink-0" style="color:${c.text};font-size:15px"></i>
-                    <div>
-                        <div style="font-size:12.5px;font-weight:700;color:${c.text};margin-bottom:2px">${sapEscape(item.title)}</div>
-                        <div style="font-size:12px;color:var(--text-2);line-height:1.5">${sapEscape(item.description)}</div>
-                    </div>
-                </div>
-            </div>
-        </div>`;
+    el.innerHTML = '<div class="row g-3">' + items.map(it => {
+        const c = colorMap[it.color] || colorMap.info;
+        return `<div class="col-md-6"><div style="background:${c.bg};border-left:3px solid ${c.b};border-radius:8px;padding:12px 14px;height:100%">
+            <div class="d-flex align-items-start gap-2"><i class="bi ${it.icon} mt-1 flex-shrink-0" style="color:${c.t};font-size:15px"></i>
+            <div><div style="font-size:12.5px;font-weight:700;color:${c.t};margin-bottom:2px">${sapEscape(it.title)}</div>
+            <div style="font-size:12px;color:var(--text-2);line-height:1.5">${sapEscape(it.desc)}</div></div></div></div></div>`;
     }).join('') + '</div>';
 }
 
-let acReasonsChartInst = null, acRegionChartInst = null, acTrendChartInst = null;
+let achPillarInst, achDriverInst, achTrendInst;
 
-function acRenderReasonsChart(items) {
-    const ctx = document.getElementById('acReasonsChart');
-    if (acReasonsChartInst) acReasonsChartInst.destroy();
-    acReasonsChartInst = new Chart(ctx, {
+function achRenderPillarChart(items) {
+    const ctx = document.getElementById('achPillarChart'); if (!ctx) return;
+    if (achPillarInst) achPillarInst.destroy();
+    const labels = items.map(i => achLabel('pillar', i.key));
+    achPillarInst = new Chart(ctx, {
         type: 'bar',
-        data: { labels: items.map(i => i.label), datasets: [{ data: items.map(i => i.value), backgroundColor: ChartColors.colorsByLabel(items.map(i => i.label), null), borderRadius: 4, maxBarThickness: 34 }] },
-        options: {
-            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 11, weight: 'bold' }, formatter: v => v > 0 ? v : '' }
-            },
-            scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
-        }
+        data: { labels, datasets: [{ data: items.map(i => i.avgWeightedScore), backgroundColor: ChartColors.colorsByLabel(labels, null), borderRadius:4, maxBarThickness:32 }] },
+        options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{display:false}, datalabels:{ anchor:'end', align:'end', color:'var(--text-2)', font:{size:11,weight:'bold'}, formatter:v=>v>0?v:'' } },
+            scales:{ x:{ beginAtZero:true, max:100, ticks:{ callback:v=>v } } } }
     });
 }
 
-function acRenderRegionChart(items) {
-    const ctx = document.getElementById('acRegionChart');
-    if (acRegionChartInst) acRegionChartInst.destroy();
-    acRegionChartInst = new Chart(ctx, {
+function achRenderDriverChart(items) {
+    const ctx = document.getElementById('achDriverChart'); if (!ctx) return;
+    if (achDriverInst) achDriverInst.destroy();
+    const top = items.slice(0, 8);
+    const labels = top.map(i => achLabel('driver', i.key));
+    achDriverInst = new Chart(ctx, {
         type: 'bar',
-        data: { labels: items.map(i => i.label), datasets: [{ data: items.map(i => i.value), backgroundColor: ChartColors.SEMANTIC.BAD, borderRadius: 4, maxBarThickness: 34 }] },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 11, weight: 'bold' }, formatter: v => v > 0 ? v : '' }
-            },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-        }
+        data: { labels, datasets: [{ data: top.map(i => i.negativePercent), backgroundColor: ChartColors.SEMANTIC.BAD, borderRadius:4, maxBarThickness:30 }] },
+        options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{display:false}, datalabels:{ anchor:'end', align:'end', color:'var(--text-2)', font:{size:11,weight:'bold'}, formatter:v=>v>0?v+'%':'' } },
+            scales:{ x:{ beginAtZero:true, ticks:{ callback:v=>v+'%' } } } }
     });
 }
 
-function acRenderTrendChart(points) {
-    const ctx = document.getElementById('acTrendChart');
-    if (acTrendChartInst) acTrendChartInst.destroy();
-    acTrendChartInst = new Chart(ctx, {
+function achRenderTrend(points) {
+    const ctx = document.getElementById('achTrendChart'); if (!ctx) return;
+    if (achTrendInst) achTrendInst.destroy();
+    achTrendInst = new Chart(ctx, {
         type: 'line',
-        data: {
-            labels: points.map(p => p.label),
-            datasets: [
-                { label: '@L["AC_TrendOpened"]', data: points.map(p => p.opened), borderColor: ChartColors.SEMANTIC.BAD, backgroundColor: 'transparent', tension: 0.3, pointRadius: 3 },
-                { label: '@L["AC_TrendResolved"]', data: points.map(p => p.resolved), borderColor: 'oklch(0.5 0.15 155)', backgroundColor: 'transparent', tension: 0.3, pointRadius: 3 },
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: true, position: 'bottom' }, datalabels: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-        }
+        data: { labels: points.map(p => p.label), datasets: [
+            { label: '@L["AC_TrendOpened"]', data: points.map(p => p.opened), borderColor: ChartColors.SEMANTIC.BAD, backgroundColor:'transparent', tension:0.3, pointRadius:3 },
+            { label: '@L["AC_TrendResolved"]', data: points.map(p => p.resolved), borderColor:'oklch(0.5 0.15 155)', backgroundColor:'transparent', tension:0.3, pointRadius:3 },
+        ] },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:true,position:'bottom'}, datalabels:{display:false} }, scales:{ y:{ beginAtZero:true, ticks:{precision:0} } } }
     });
 }
 
-function acStatusMeta(status) { return AC_STATUS_META[status] || AC_STATUS_META.None; }
-function acSeverityMeta(sev) { return AC_SEVERITY_META[sev] || AC_SEVERITY_META.None; }
-function acTrendMeta(t) { return AC_TREND_META[t] || AC_TREND_META.New; }
+function achRenderLegend() {
+    document.getElementById('achLegend').innerHTML = ['Critical','High','Medium','Low','Healthy'].map(sev => {
+        const m = achSevColor(sev);
+        return `<span><i style="background:${m.c}"></i>${sapEscape(achLabel('sev', sev))}</span>`;
+    }).join('');
+}
 
-function acRenderTable() {
-    const search = (document.getElementById('acSearch').value || '').toLowerCase();
-    let rows = acStoreData.filter(r =>
+/* ── Table ─────────────────────────────────────────────────────────────── */
+function achRowHtml(r) {
+    const sev = achSevColor(r.severity);
+    const scoreCell = `<div class="ach-score">${achRing(r.healthScore, sev.c)}
+        <div><div class="ach-score-num" style="color:${sev.c}">${r.healthScore}</div><div class="ach-score-sub">/100</div></div></div>`;
+
+    const byKey = {}; (r.pillars || []).forEach(p => byKey[p.key] = p);
+    const strip = AC_PILLARS.map(k => {
+        const p = byKey[k];
+        if (!p || !p.hasData) return `<span class="ach-seg" title="${sapEscape(achLabel('pillar', k))}: —"></span>`;
+        const col = achPillarSegColor(p.status);
+        return `<span class="ach-seg" title="${sapEscape(achLabel('pillar', k))}: ${Math.round(p.subScore)}" style="background:${col}"></span>`;
+    }).join('');
+
+    const driver = r.topPillarKey ? achLabel('pillar', r.topPillarKey) : '—';
+    const st = r.planStatus === 'Active' ? { t: AC_L.ui.statusActive, c:'oklch(0.6 0.14 75)', bg:'oklch(0.75 0.16 75 / .12)' }
+             : r.planStatus === 'Resolved' ? { t: AC_L.ui.statusResolved, c:'oklch(0.5 0.15 155)', bg:'oklch(0.62 0.15 155 / .12)' }
+             : { t: AC_L.ui.statusNone, c:'var(--text-3)', bg:'var(--card-bg-2)' };
+    const pct = r.tasksTotal > 0 ? Math.round(r.tasksCompleted / r.tasksTotal * 100) : 0;
+    const link = `${AC_AREA}/dashboard/actioncenterdetail?store=${encodeURIComponent(r.storeName)}`;
+
+    return `<tr>
+        <td class="px-3 py-2"><a class="ach-store-link" href="${link}">${sapEscape(r.storeName)}</a></td>
+        <td class="px-3 py-2">${scoreCell}</td>
+        <td class="px-3 py-2"><span class="ach-badge" style="background:${sev.bg};color:${sev.c}">${sapEscape(achLabel('sev', r.severity))}</span></td>
+        <td class="px-3 py-2" style="color:var(--text-2)">${sapEscape(driver)}</td>
+        <td class="px-3 py-2"><div class="ach-strip">${strip}</div></td>
+        <td class="px-3 py-2 ach-pri" style="color:${sev.c}">${Math.round(r.priorityScore)}</td>
+        <td class="px-3 py-2" style="color:var(--text-2)">${r.headcount || '—'}</td>
+        <td class="px-3 py-2"><span class="ach-badge" style="background:${st.bg};color:${st.c}">${sapEscape(st.t)}</span></td>
+        <td class="px-3 py-2" style="color:var(--text-2)">${r.responsibleName ? sapEscape(r.responsibleName) : '—'}</td>
+        <td class="px-3 py-2">${r.tasksTotal > 0 ? `<div class="d-flex align-items-center gap-2"><div class="ach-progress-track"><div class="ach-progress-fill" style="width:${pct}%"></div></div><span style="font-size:11px;color:var(--text-3)">${r.tasksCompleted}/${r.tasksTotal}</span></div>` : '—'}</td>
+    </tr>`;
+}
+
+function achRenderTable() {
+    const search = (document.getElementById('achSearch').value || '').toLowerCase();
+    let rows = achData.filter(r =>
         (r.storeName || '').toLowerCase().includes(search) ||
-        (r.responsibleName || '').toLowerCase().includes(search) ||
-        (r.assignedToName || '').toLowerCase().includes(search)
-    );
+        (r.responsibleName || '').toLowerCase().includes(search)
+    ).map(r => ({ ...r, severityRank: AC_SEV_RANK[r.severity] ?? 0 }));
 
-    rows = rows.map(r => ({ ...r, severityRank: AC_SEVERITY_RANK[r.severity] ?? 0, trendRank: AC_TREND_RANK[r.trend] ?? 0 }));
-
-    const { key, dir } = acSort;
+    const { key, dir } = achSort;
     rows.sort((a, b) => {
         let av = a[key], bv = b[key];
         if (typeof av === 'string') av = av.toLowerCase();
         if (typeof bv === 'string') bv = bv.toLowerCase();
-        if (av === undefined || av === null || av === '') av = dir === 'asc' ? '￿' : '';
-        if (bv === undefined || bv === null || bv === '') bv = dir === 'asc' ? '￿' : '';
+        if (av == null) av = dir === 'asc' ? Infinity : -Infinity;
+        if (bv == null) bv = dir === 'asc' ? Infinity : -Infinity;
         if (av < bv) return dir === 'asc' ? -1 : 1;
         if (av > bv) return dir === 'asc' ? 1 : -1;
         return 0;
     });
 
-    document.getElementById('acCountBadge').textContent = rows.length;
-
-    const body = document.getElementById('acBody');
-    if (!rows.length) {
-        body.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-muted">${sapEscape(AC_D.noData)}</td></tr>`;
-        return;
-    }
-
-    body.innerHTML = rows.map(r => {
-        const sev = acSeverityMeta(r.severity);
-        const status = acStatusMeta(r.planStatus);
-        const trend = acTrendMeta(r.trend);
-        const pct = r.tasksTotal > 0 ? Math.round(r.tasksCompleted / r.tasksTotal * 100) : 0;
-        const flags = [
-            r.isChronic ? `<span class="ac-badge" style="background:oklch(0.75 0.16 75 / .14);color:oklch(0.6 0.14 75)">${sapEscape(AC_D.chronic)}</span>` : '',
-            r.isStalled ? `<span class="ac-badge" style="background:oklch(0.6 0.22 22 / .12);color:${ChartColors.SEMANTIC.BAD}">${sapEscape(AC_D.stalled)}</span>` : '',
-        ].filter(Boolean).join(' ');
-        const link = r.planId ? `${__AREA_PREFIX}/dashboard/actioncenterdetail?store=${encodeURIComponent(r.storeName)}` : null;
-        const storeCell = link
-            ? `<a class="ac-store-link" href="${link}">${sapEscape(r.storeName)}</a>`
-            : `<span class="fw-semibold">${sapEscape(r.storeName)}</span>`;
-
-        return `<tr>
-            <td class="px-3 py-2">${storeCell}</td>
-            <td class="px-3 py-2"><span class="ac-badge" style="background:${sev.bg};color:${sev.color}">${sapEscape(sev.label)}</span></td>
-            <td class="px-3 py-2"><span class="ac-badge" style="background:${status.bg};color:${status.color}">${sapEscape(status.label)}</span></td>
-            <td class="px-3 py-2">${r.planId ? (r.ageDays + 'd') : '—'}</td>
-            <td class="px-3 py-2"><i class="bi ${trend.icon}" style="color:${trend.color}"></i> <span style="color:${trend.color};font-size:12px">${sapEscape(trend.label)}</span></td>
-            <td class="px-3 py-2">${r.tasksTotal > 0 ? `<div class="d-flex align-items-center gap-2"><div class="ac-progress-track"><div class="ac-progress-fill" style="width:${pct}%"></div></div><span style="font-size:11px;color:var(--text-3)">${r.tasksCompleted}/${r.tasksTotal}</span></div>` : '—'}</td>
-            <td class="px-3 py-2">${r.responsibleName ? sapEscape(r.responsibleName) : '—'}</td>
-            <td class="px-3 py-2">${r.assignedToName ? sapEscape(r.assignedToName) : '—'}</td>
-            <td class="px-3 py-2">${flags || '—'}</td>
-        </tr>`;
-    }).join('');
+    document.getElementById('achCountBadge').textContent = `${rows.length} ${AC_L.ui.storesSuffix}`;
+    const body = document.getElementById('achBody');
+    body.innerHTML = rows.length
+        ? rows.map(achRowHtml).join('')
+        : `<tr><td colspan="10" class="text-center py-4 text-muted">${sapEscape(AC_L.ui.noData)}</td></tr>`;
 }
 
-document.querySelectorAll('.ac-sort-header').forEach(th => {
+document.querySelectorAll('.ach-sort-header').forEach(th => {
     th.addEventListener('click', () => {
         const key = th.dataset.sortKey;
-        if (acSort.key === key) acSort.dir = acSort.dir === 'asc' ? 'desc' : 'asc';
-        else { acSort.key = key; acSort.dir = key === 'severityRank' || key === 'ageDays' || key === 'trendRank' ? 'desc' : 'asc'; }
-        document.querySelectorAll('.ac-sort-header').forEach(h => h.classList.remove('ac-sort-asc', 'ac-sort-desc'));
-        th.classList.add(acSort.dir === 'asc' ? 'ac-sort-asc' : 'ac-sort-desc');
-        acRenderTable();
+        if (achSort.key === key) achSort.dir = achSort.dir === 'asc' ? 'desc' : 'asc';
+        else { achSort.key = key; achSort.dir = (key === 'storeName') ? 'asc' : 'desc'; }
+        document.querySelectorAll('.ach-sort-header').forEach(h => h.classList.remove('ach-asc', 'ach-desc'));
+        th.classList.add(achSort.dir === 'asc' ? 'ach-asc' : 'ach-desc');
+        achRenderTable();
     });
 });
 
-async function acLoadStores() {
-    const data = await sapFetchJson('/api/store-action-plan/action-center/stores');
-    acStoreData = data || [];
-    acRenderTable();
+async function achLoadStores() {
+    achData = await sapFetchJson('/api/store-action-plan/action-center/health/stores') || [];
+    achRenderTable();
 }
 
-document.getElementById('acSearch').addEventListener('input', acRenderTable);
-function acResetFilters() { document.getElementById('acSearch').value = ''; acRenderTable(); }
+document.getElementById('achSearch').addEventListener('input', achRenderTable);
+function achReset() { document.getElementById('achSearch').value = ''; achRenderTable(); }
 
-acLoadSummary();
-acLoadStores();
+achLoadSummary();
+achLoadStores();
 </script>
