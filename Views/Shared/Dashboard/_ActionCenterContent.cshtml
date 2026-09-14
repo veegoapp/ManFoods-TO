@@ -116,6 +116,24 @@
     </div>
 </div>
 
+@{
+    var actionCenterGuide = new PageGuideViewModel
+    {
+        PageKey = "actioncenter",
+        Overview = L["Guide_ACH_Overview"],
+        FilterNote = L["Guide_ACH_FilterNote"],
+        Sections = new List<PageGuideSection>
+        {
+            new() { Icon = "bi-heart-pulse", Title = L["ACH_HealthTitle"], Body = L["Guide_ACH_Section_Health"] },
+            new() { Icon = "bi-bar-chart-steps", Title = L["ACH_ChartPillarImpact"], Body = L["Guide_ACH_Section_Pillars"] },
+            new() { Icon = "bi-chat-left-dots", Title = L["ACH_ChartEngagement"], Body = L["Guide_ACH_Section_RootCause"] },
+            new() { Icon = "bi-table", Title = L["ACH_TableTitle"], Body = L["Guide_ACH_Section_Scorecard"] },
+            new() { Icon = "bi-calculator", Title = L["Guide_ACH_HowTitle"], Body = L["Guide_ACH_HowBody"] },
+        }
+    };
+}
+@await Html.PartialAsync("~/Views/Shared/Dashboard/_PageGuide.cshtml", actionCenterGuide)
+
 <div id="achKpis" class="kpi-grid mb-4">
     <div class="kpi-spinner text-center py-3 w-100">
         <div class="spinner-border spinner-border-sm" style="color:oklch(0.5 0.18 25)"></div>

@@ -152,10 +152,13 @@
     var actionCenterDetailGuide = new PageGuideViewModel
     {
         PageKey = "actioncenterdetail",
-        Overview = L["Guide_ActionCenterDetail_Overview"],
+        Overview = L["Guide_ACH_Detail_Overview"],
         FilterNote = L["Guide_ActionCenterDetail_FilterNote"],
         Sections = new List<PageGuideSection>
         {
+            new() { Icon = "bi-heart-pulse", Title = L["ACH_HealthTitle"], Body = L["Guide_ACH_Detail_Health"] },
+            new() { Icon = "bi-list-check", Title = L["ACH_WeightedPlanTitle"], Body = L["Guide_ACH_Detail_Plan"] },
+            new() { Icon = "bi-graph-up-arrow", Title = L["ACH_OutlookTitle"], Body = L["Guide_ACH_Detail_Outlook"] },
             new() { Icon = "bi-speedometer2", Title = L["AC_ProgressTitle"], Body = L["Guide_ActionCenterDetail_Chart_Kpis"] },
             new() { Icon = "bi-graph-up-arrow", Title = L["AC_MetricTrendTitle"], Body = L["Guide_ActionCenterDetail_Chart_Trend"] },
             new() { Icon = "bi-graph-down-arrow", Title = L["AC_MonthlyTurnoverTitle"], Body = L["Guide_ActionCenterDetail_Chart_MonthlyTurnover"] },
