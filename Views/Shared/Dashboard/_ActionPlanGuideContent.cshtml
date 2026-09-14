@@ -31,6 +31,22 @@
 .apg-outcome-badge {
     display: inline-block; font-weight: 700; color: var(--red);
 }
+
+/* This page reuses .page-guide-accordion (shared with the narrow 420px
+   side-panel guide drawer), whose text/icon sizes are tuned for that
+   cramped space. On this full-width standalone page they read too small,
+   so bump them up here without touching the shared drawer styling. */
+#apgAccordion.accordion-button,
+#apgAccordion .accordion-button {
+    font-size: 16px;
+    padding-block: 18px;
+}
+#apgAccordion .accordion-button i.bi {
+    font-size: 20px;
+}
+#apgAccordion .accordion-body {
+    font-size: 14.5px;
+}
 </style>
 
 <div class="page-header">
