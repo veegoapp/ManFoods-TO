@@ -10,6 +10,7 @@ namespace MvcApp.Controllers.Api;
 [Route("api/retention")]
 [EnableRateLimiting("api")]
 [RequireAuth]
+[AccessArea(AccessAreas.Retention)]
 public class RetentionApiController : ControllerBase
 {
     private readonly IRetentionService _retention;

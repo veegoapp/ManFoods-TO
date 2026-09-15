@@ -10,6 +10,7 @@ namespace MvcApp.Controllers.Api;
 [Route("api/scorecard")]
 [EnableRateLimiting("api")]
 [RequireAuth]
+[AccessArea(AccessAreas.Scorecard)]
 public class ScorecardApiController : ControllerBase
 {
     private readonly IScorecardService _scorecard;

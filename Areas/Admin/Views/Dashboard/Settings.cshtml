@@ -49,6 +49,7 @@
     <button type="button" class="set-tab-btn" id="setTabBtnRec" onclick="setShowTab('rec')">@L["Set_Tab_Recommendations"]</button>
     <button type="button" class="set-tab-btn" id="setTabBtnAprole" onclick="setShowTab('aprole')">@L["Set_Tab_ActionPlanRole"]</button>
     <button type="button" class="set-tab-btn" id="setTabBtnSeverity" onclick="setShowTab('severity')">@L["Set_Tab_Severity"]</button>
+    <button type="button" class="set-tab-btn" id="setTabBtnAccess" onclick="setShowTab('access')">@L["Set_Tab_Access"]</button>
 </div>
 
 @Html.AntiForgeryToken()
@@ -160,6 +161,38 @@
     <div class="chart-card set-card">
         <div class="chart-header"><h6>@L["Set_SeverityHistoryTitle"]</h6></div>
         <div style="padding:0 20px 20px" id="setSevHistory"></div>
+    </div>
+</div>
+<div id="setTabAccess" hidden
+     data-restricted="@L["Set_Access_Restricted"]"
+     data-open="@L["Set_Access_Open"]"
+     data-area-analytics="@L["Set_Access_Area_analytics"]"
+     data-area-retention="@L["Set_Access_Area_retention"]"
+     data-area-ninety_day="@L["Set_Access_Area_ninety_day"]"
+     data-area-ninety_day_leavers="@L["Set_Access_Area_ninety_day_leavers"]"
+     data-area-exit_interviews="@L["Set_Access_Area_exit_interviews"]"
+     data-area-exit_comments="@L["Set_Access_Area_exit_comments"]"
+     data-area-early_warning="@L["Set_Access_Area_early_warning"]"
+     data-area-scorecard="@L["Set_Access_Area_scorecard"]"
+     data-area-action_center="@L["Set_Access_Area_action_center"]"
+     data-area-reports="@L["Set_Access_Area_reports"]"
+     data-desc-analytics="@L["Set_Access_Desc_analytics"]"
+     data-desc-retention="@L["Set_Access_Desc_retention"]"
+     data-desc-ninety_day="@L["Set_Access_Desc_ninety_day"]"
+     data-desc-ninety_day_leavers="@L["Set_Access_Desc_ninety_day_leavers"]"
+     data-desc-exit_interviews="@L["Set_Access_Desc_exit_interviews"]"
+     data-desc-exit_comments="@L["Set_Access_Desc_exit_comments"]"
+     data-desc-early_warning="@L["Set_Access_Desc_early_warning"]"
+     data-desc-scorecard="@L["Set_Access_Desc_scorecard"]"
+     data-desc-action_center="@L["Set_Access_Desc_action_center"]"
+     data-desc-reports="@L["Set_Access_Desc_reports"]">
+    <p class="text-muted-custom mb-4">@L["Set_Access_Sub"]</p>
+    <div class="chart-card set-card">
+        <div style="padding:12px 20px 20px" id="setAccessRows"></div>
+        <div style="padding:0 20px 20px" class="d-flex align-items-center gap-3">
+            <button type="button" class="btn btn-danger-custom" id="setAccessSaveBtn" onclick="setAccessSave()">@L["Common_Save"]</button>
+            <span class="set-save-status" id="setAccessStatus"></span>
+        </div>
     </div>
 </div>
 
@@ -329,13 +362,83 @@ function setShowTab(tab) {
     document.getElementById('setTabRec').hidden = tab !== 'rec';
     document.getElementById('setTabAprole').hidden = tab !== 'aprole';
     document.getElementById('setTabSeverity').hidden = tab !== 'severity';
+    document.getElementById('setTabAccess').hidden = tab !== 'access';
     document.getElementById('setTabBtnColors').classList.toggle('active', tab === 'colors');
     document.getElementById('setTabBtnRec').classList.toggle('active', tab === 'rec');
     document.getElementById('setTabBtnAprole').classList.toggle('active', tab === 'aprole');
     document.getElementById('setTabBtnSeverity').classList.toggle('active', tab === 'severity');
+    document.getElementById('setTabBtnAccess').classList.toggle('active', tab === 'access');
     if (tab === 'rec' && !setRecLoaded) setRecInit();
     if (tab === 'aprole' && !setAproleLoaded) setAproleInit();
     if (tab === 'severity' && !setSevLoaded) setSeverityInit();
+    if (tab === 'access' && !setAccessLoaded) setAccessInit();
+}
+
+// ── Access matrix tab ─────────────────────────────────────────────
+let setAccessLoaded = false;
+const SET_ACCESS_AREAS = ['analytics','retention','ninety_day','ninety_day_leavers','exit_interviews','exit_comments','early_warning','scorecard','action_center','reports'];
+
+function setAccessEsc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+async function setAccessInit() {
+    setAccessLoaded = true;
+    const el = document.getElementById('setTabAccess');
+    const A = { restricted: el.getAttribute('data-restricted'), open: el.getAttribute('data-open') };
+    let map = {};
+    try {
+        const r = await fetch('/api/settings/access-policy');
+        if (r.ok) map = await r.json();
+    } catch { /* fall through to defaults */ }
+
+    const rows = SET_ACCESS_AREAS.map(area => {
+        const restricted = map[area] !== false; // default restricted
+        const label = el.getAttribute('data-area-' + area) || area;
+        const desc = el.getAttribute('data-desc-' + area) || '';
+        const isSub = area === 'ninety_day_leavers' || area === 'exit_comments';
+        return `<div class="set-rule-row" style="align-items:flex-start;${isSub ? 'padding-left:26px' : ''}">
+            <label class="set-access-toggle" style="min-width:0;flex:1;cursor:pointer;display:flex;gap:12px;align-items:flex-start">
+                <input type="checkbox" data-area="${area}" ${restricted ? 'checked' : ''} style="width:18px;height:18px;margin-top:2px;accent-color:var(--red);flex-shrink:0">
+                <span>
+                    <span style="font-weight:700;font-size:13.5px">${isSub ? '↳ ' : ''}${setAccessEsc(label)}</span>
+                    <span style="display:block;font-size:12px;color:var(--text-3);margin-top:2px">${setAccessEsc(desc)}</span>
+                </span>
+            </label>
+            <span data-state="${area}" style="font-size:11px;font-weight:700;white-space:nowrap;color:${restricted ? 'oklch(0.6 0.14 75)' : 'oklch(0.5 0.15 155)'}">${restricted ? setAccessEsc(A.restricted) : setAccessEsc(A.open)}</span>
+        </div>`;
+    }).join('');
+    document.getElementById('setAccessRows').innerHTML = rows;
+
+    document.querySelectorAll('#setAccessRows input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const area = cb.dataset.area;
+            const stateEl = document.querySelector(`#setAccessRows [data-state="${area}"]`);
+            stateEl.textContent = cb.checked ? A.restricted : A.open;
+            stateEl.style.color = cb.checked ? 'oklch(0.6 0.14 75)' : 'oklch(0.5 0.15 155)';
+        });
+    });
+}
+
+async function setAccessSave() {
+    const setL = document.getElementById('setL').dataset;
+    const btn = document.getElementById('setAccessSaveBtn');
+    const status = document.getElementById('setAccessStatus');
+    const settings = {};
+    document.querySelectorAll('#setAccessRows input[type=checkbox]').forEach(cb => { settings[cb.dataset.area] = cb.checked; });
+
+    btn.disabled = true;
+    status.textContent = setL.saving || '';
+    try {
+        const r = await fetch('/api/settings/access-policy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value },
+            body: JSON.stringify({ settings })
+        });
+        status.textContent = r.ok ? setL.saved : setL.saveFailed;
+    } catch {
+        status.textContent = setL.saveFailed;
+    } finally {
+        btn.disabled = false;
+    }
 }
 
 // ── Severity bands tab ────────────────────────────────────────────

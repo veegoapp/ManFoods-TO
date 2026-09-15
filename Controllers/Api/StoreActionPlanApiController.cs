@@ -12,6 +12,7 @@ namespace MvcApp.Controllers.Api;
 [Route("api/store-action-plan")]
 [EnableRateLimiting("api")]
 [RequireAuth]
+[AccessArea(AccessAreas.ActionCenter)]
 public class StoreActionPlanApiController : ControllerBase
 {
     private readonly IStoreActionPlanService _actionPlans;

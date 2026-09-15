@@ -1780,4 +1780,30 @@
   <data name="Guide_ACH_Detail_Plan" xml:space="preserve"><value>The Weighted Action Plan — concrete actions ordered by impact weight, each tied to the pillar and evidence that triggered it. Where a store has an open plan, matching actions are checkable and stay in sync with its recommendations.</value></data>
   <data name="Guide_ACH_Detail_Outlook" xml:space="preserve"><value>Workforce Outlook — current headcount versus the projected/required headcount for the store, the resulting staffing gap, and any planned hires. Shows a pending state until workforce projection data is uploaded.</value></data>
   <data name="Guide_ACH_PlanCriteria" xml:space="preserve"><value>The Health Score above rates every store continuously; a formal Action Plan is a separate record that opens automatically the first time any one of these detection signals fires for a store that has no plan open, using that period's uploaded data: (1) High Overall Turnover — headcount of 5 or more and overall turnover at or above 15%; (2) Early Turnover (90 Days) — 3 or more hires in a non-provisional period and an early-leaver rate at or above 30%; (3) Low 6-Month Retention — 3 or more hires and 6-month retention below 70%; (4) Leadership Instability — 2 or more different Store Leaders in the trailing 6 months; (5) Low Exit Sentiment — 2 or more exit interviews with positive sentiment below 50%; (6) Reason Concentration — 2 or more exit-interview reason responses where one reason is 50% or more of them; (7) Early-Warning Watchlist — 2 or more currently active employees flagged high-risk. A new signal firing while a plan is already open folds into that same plan — a store only ever has one Active plan at a time. When a plan opens it gets a Target Resolution Date automatically (90 days out, or 30 days if it is Critical), which an Admin can move manually, and it resolves on its own once the store shows zero signals for 2 consecutive evaluated periods. Note: the severity tier shown on this page is now the weighted Health tier, not a raw signal count; these signals determine only whether an Action Plan record exists and drive the Plan/Responsible/Progress columns.</value></data>
+  <!-- ── Settings · Access matrix ──────────────────────────────────────── -->
+  <data name="Set_Tab_Access" xml:space="preserve"><value>Access</value></data>
+  <data name="Set_Access_Sub" xml:space="preserve"><value>Control what restricted roles (Operation Consultant, Operation Manager, Head Manager, etc.) can see per area. Checked = restricted to their own stores; unchecked = open to all stores (view only — Action Plan writing always stays limited to their own stores). Everything defaults to restricted.</value></data>
+  <data name="Set_Access_Restricted" xml:space="preserve"><value>Own stores</value></data>
+  <data name="Set_Access_Open" xml:space="preserve"><value>All stores</value></data>
+  <data name="Api_NoAccessSettings" xml:space="preserve"><value>No access settings were provided.</value></data>
+  <data name="Set_Access_Area_analytics" xml:space="preserve"><value>Workforce, Turnover &amp; Comparisons</value></data>
+  <data name="Set_Access_Area_retention" xml:space="preserve"><value>Retention</value></data>
+  <data name="Set_Access_Area_ninety_day" xml:space="preserve"><value>90-Day Turnover</value></data>
+  <data name="Set_Access_Area_ninety_day_leavers" xml:space="preserve"><value>90-Day Early-Leavers list</value></data>
+  <data name="Set_Access_Area_exit_interviews" xml:space="preserve"><value>Exit Interviews</value></data>
+  <data name="Set_Access_Area_exit_comments" xml:space="preserve"><value>Exit Interview Comments</value></data>
+  <data name="Set_Access_Area_early_warning" xml:space="preserve"><value>Early Warning</value></data>
+  <data name="Set_Access_Area_scorecard" xml:space="preserve"><value>Scorecard</value></data>
+  <data name="Set_Access_Area_action_center" xml:space="preserve"><value>Action Center</value></data>
+  <data name="Set_Access_Area_reports" xml:space="preserve"><value>Reports</value></data>
+  <data name="Set_Access_Desc_analytics" xml:space="preserve"><value>The Workforce, Turnover and Comparisons pages (shared analytics backend).</value></data>
+  <data name="Set_Access_Desc_retention" xml:space="preserve"><value>The Retention page.</value></data>
+  <data name="Set_Access_Desc_ninety_day" xml:space="preserve"><value>The 90-Day Turnover page (rates and charts).</value></data>
+  <data name="Set_Access_Desc_ninety_day_leavers" xml:space="preserve"><value>Only the named early-leaver list within the 90-Day page.</value></data>
+  <data name="Set_Access_Desc_exit_interviews" xml:space="preserve"><value>Exit-interview charts, sentiment and drivers (aggregate).</value></data>
+  <data name="Set_Access_Desc_exit_comments" xml:space="preserve"><value>Only the free-text comments table within the Exit Interviews page.</value></data>
+  <data name="Set_Access_Desc_early_warning" xml:space="preserve"><value>The Early Warning watchlist page.</value></data>
+  <data name="Set_Access_Desc_scorecard" xml:space="preserve"><value>The Scorecard page.</value></data>
+  <data name="Set_Access_Desc_action_center" xml:space="preserve"><value>The Action Center. Opening it widens the view only — adding notes and ticking recommendations always stays limited to a user's own stores.</value></data>
+  <data name="Set_Access_Desc_reports" xml:space="preserve"><value>The Reports page and its Excel exports.</value></data>
 </root>

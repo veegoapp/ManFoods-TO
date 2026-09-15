@@ -9,8 +9,18 @@ namespace MvcApp.Services;
 public class StoreAccessService : IStoreAccessService
 {
     private readonly AppDbContext _db;
+    // Optional so the service can still be constructed as `new StoreAccessService(db)`
+    // in tests — when absent, every area is treated as restricted (the original
+    // behaviour). In the app both are injected.
+    private readonly IAccessPolicyService? _policy;
+    private readonly IAccessAreaContext? _areaContext;
 
-    public StoreAccessService(AppDbContext db) => _db = db;
+    public StoreAccessService(AppDbContext db, IAccessPolicyService? policy = null, IAccessAreaContext? areaContext = null)
+    {
+        _db = db;
+        _policy = policy;
+        _areaContext = areaContext;
+    }
 
     // The one place that knows which StoreReference email column each
     // restricted role is matched against. Adding a future role (once its
@@ -52,10 +62,43 @@ public class StoreAccessService : IStoreAccessService
     public string GetNameForRole(StoreReference store, string role) =>
         RoleNameColumns.TryGetValue(role, out var column) ? column.Compile()(store) : "";
 
+    /// <summary>Area-aware read access. Admin/User are always unrestricted. For a
+    /// restricted role, whether the view is widened to all stores depends on the
+    /// current endpoint's access area (set by the AccessArea filter) and the
+    /// admin's per-area configuration: an explicitly opened area returns null
+    /// (full access), the shared dropdown endpoints widen when any area is open,
+    /// and everything else (including untagged endpoints) stays own-stores.</summary>
     public async Task<List<string>?> GetAccessibleStoreNamesAsync(string role, string? email)
     {
         if (UnrestrictedRoles.Contains(role)) return null;
 
+        if (await IsAreaOpenForRoleAsync()) return null; // widened to full access
+
+        return await ComputeOwnStoreNamesAsync(role, email);
+    }
+
+    /// <summary>Store names a restricted role owns via the email match — never
+    /// widened by the access-area configuration. Used for write permissions
+    /// (Action Plan notes/recommendations) so opening a page's view never grants
+    /// write access to stores the user doesn't manage. Null = unrestricted.</summary>
+    public async Task<List<string>?> GetOwnStoreNamesAsync(string role, string? email)
+    {
+        if (UnrestrictedRoles.Contains(role)) return null;
+        return await ComputeOwnStoreNamesAsync(role, email);
+    }
+
+    private async Task<bool> IsAreaOpenForRoleAsync()
+    {
+        if (_policy == null) return false; // no config wired (e.g. tests) → restricted
+        var area = _areaContext?.Area;
+
+        if (string.IsNullOrEmpty(area)) return false;          // untagged endpoint → safe: own-stores
+        if (area == AccessAreas.Shared) return await _policy.AnyOpenAsync(); // dropdowns widen if anything is open
+        return !await _policy.IsRestrictedAsync(area);          // explicit area → open iff configured open
+    }
+
+    private async Task<List<string>> ComputeOwnStoreNamesAsync(string role, string? email)
+    {
         // A role that isn't Admin/User but also isn't one of the known
         // store-restricted roles (e.g. an invalid/misspelled Bulk Upload
         // role) has no email column to match against, so it gets zero
@@ -94,6 +137,18 @@ public class StoreAccessService : IStoreAccessService
 
         var accessible = await GetAccessibleStoreNamesAsync(role, email);
         return accessible != null && accessible.Any(s => string.Equals(s, storeName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>Write-permission check: whether the role/email may MANAGE (write to)
+    /// the given store. Unlike <see cref="CanAccessStoreAsync"/> this ignores the
+    /// access-area widening — a restricted role can only ever write to stores it
+    /// actually owns, so opening a page's view never escalates write access.</summary>
+    public async Task<bool> CanManageStoreAsync(string role, string? email, string storeName)
+    {
+        if (!IsRestrictedRole(role)) return true;
+
+        var own = await GetOwnStoreNamesAsync(role, email);
+        return own != null && own.Any(s => string.Equals(s, storeName, StringComparison.OrdinalIgnoreCase));
     }
 
     public async Task<ResponsibleParty?> GetResponsiblePartyAsync(string storeName)

@@ -10,6 +10,7 @@ namespace MvcApp.Controllers.Api;
 [Route("api/dashboard")]
 [EnableRateLimiting("api")]
 [RequireAuth]
+[AccessArea(AccessAreas.Analytics)] // Workforce + Turnover + Comparisons share this backend
 public class DashboardApiController : ControllerBase
 {
     private readonly IDashboardService _dashboard;
@@ -68,12 +69,14 @@ public class DashboardApiController : ControllerBase
     }
 
     [HttpGet("available-periods")]
+    [AccessArea(AccessAreas.Shared)]
     public async Task<IActionResult> AvailablePeriods()
     {
         return Ok(await _dashboard.GetAvailablePeriodsAsync());
     }
 
     [HttpGet("stores")]
+    [AccessArea(AccessAreas.Shared)]
     public async Task<IActionResult> Stores([FromQuery] int? month, [FromQuery] int? year)
     {
         var role = HttpContext.Session.GetRole();
@@ -83,6 +86,7 @@ public class DashboardApiController : ControllerBase
     }
 
     [HttpGet("operation-managers")]
+    [AccessArea(AccessAreas.Shared)]
     public async Task<IActionResult> OperationManagers([FromQuery] int? month, [FromQuery] int? year)
     {
         var role = HttpContext.Session.GetRole();
@@ -91,6 +95,7 @@ public class DashboardApiController : ControllerBase
     }
 
     [HttpGet("operation-consultants")]
+    [AccessArea(AccessAreas.Shared)]
     public async Task<IActionResult> OperationConsultants([FromQuery] int? month, [FromQuery] int? year)
     {
         var role = HttpContext.Session.GetRole();
@@ -199,6 +204,7 @@ public class DashboardApiController : ControllerBase
     }
 
     [HttpGet("senior-operation-consultants")]
+    [AccessArea(AccessAreas.Shared)]
     public async Task<IActionResult> SeniorOperationConsultants([FromQuery] int? month, [FromQuery] int? year)
     {
         var role = HttpContext.Session.GetRole();
@@ -207,6 +213,7 @@ public class DashboardApiController : ControllerBase
     }
 
     [HttpGet("operation-directors")]
+    [AccessArea(AccessAreas.Shared)]
     public async Task<IActionResult> OperationDirectors([FromQuery] int? month, [FromQuery] int? year)
     {
         var role = HttpContext.Session.GetRole();
@@ -215,6 +222,7 @@ public class DashboardApiController : ControllerBase
     }
 
     [HttpGet("job-titles")]
+    [AccessArea(AccessAreas.Shared)]
     public async Task<IActionResult> JobTitles([FromQuery] int? month, [FromQuery] int? year)
     {
         var role = HttpContext.Session.GetRole();

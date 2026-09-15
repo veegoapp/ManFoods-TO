@@ -10,6 +10,7 @@ namespace MvcApp.Controllers.Api;
 [Route("api/ninety-day-turnover")]
 [EnableRateLimiting("api")]
 [RequireAuth]
+[AccessArea(AccessAreas.NinetyDay)]
 public class NinetyDayTurnoverApiController : ControllerBase
 {
     private readonly INinetyDayTurnoverService _turnover;
@@ -120,6 +121,7 @@ public class NinetyDayTurnoverApiController : ControllerBase
     }
 
     [HttpGet("early-leavers")]
+    [AccessArea(AccessAreas.NinetyDayLeavers)]
     public async Task<IActionResult> EarlyLeavers([FromQuery] int month, [FromQuery] int year, [FromQuery] string? store,
         [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? soc, [FromQuery] string? od, [FromQuery] string? months)
     {

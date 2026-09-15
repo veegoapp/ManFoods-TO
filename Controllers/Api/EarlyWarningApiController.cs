@@ -10,6 +10,7 @@ namespace MvcApp.Controllers.Api;
 [Route("api/early-warning")]
 [EnableRateLimiting("api")]
 [RequireAuth]
+[AccessArea(AccessAreas.EarlyWarning)]
 public class EarlyWarningApiController : ControllerBase
 {
     private readonly IEarlyWarningService _earlyWarning;

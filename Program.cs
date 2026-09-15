@@ -15,7 +15,13 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 builder.WebHost.ConfigureKestrel(o => o.AddServerHeader = false);
 
 builder.Services.AddLocalization(opts => opts.ResourcesPath = "");
-builder.Services.AddControllersWithViews()
+builder.Services.AddControllersWithViews(options =>
+    {
+        // Copies each endpoint's [AccessArea] into the scoped IAccessAreaContext
+        // so StoreAccessService can widen a restricted role's view per the admin's
+        // per-area configuration.
+        options.Filters.Add<MvcApp.Filters.AccessAreaFilter>();
+    })
     .AddViewLocalization()
     // DataAnnotations ErrorMessage strings on the view models are resx keys,
     // resolved against the same SharedResource pair the views use.
@@ -119,6 +125,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISessionValidationService, SessionValidationService>();
 builder.Services.AddScoped<IStoreService, StoreService>();
 builder.Services.AddScoped<IStoreAccessService, StoreAccessService>();
+builder.Services.AddScoped<IAccessAreaContext, AccessAreaContext>();
+builder.Services.AddScoped<IAccessPolicyService, AccessPolicyService>();
 builder.Services.AddScoped<IExitInterviewService, ExitInterviewService>();
 builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<INinetyDayTurnoverService, NinetyDayTurnoverService>();

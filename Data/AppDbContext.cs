@@ -26,6 +26,7 @@ public class AppDbContext : DbContext
     public DbSet<SignalOccurrence> SignalOccurrences { get; set; }
     public DbSet<LoginHistory> LoginHistories { get; set; }
     public DbSet<WorkforceProjection> WorkforceProjections { get; set; }
+    public DbSet<PageAccessConfig> PageAccessConfigs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,6 +69,10 @@ public class AppDbContext : DbContext
             .HasIndex(w => new { w.StoreName, w.Year, w.Month })
             .IsUnique()
             .HasDatabaseName("ux_workforce_projections_store_period");
+
+        // Per-area access configuration — one row per area, keyed by the area
+        // string (same fresh-DB caveat as above).
+        modelBuilder.Entity<PageAccessConfig>().HasKey(p => p.AreaKey);
 
         // SQL Server's DATETIME2 (unlike Npgsql's TIMESTAMPTZ) has no concept of
         // DateTimeKind — every DateTime read back from it comes back as Kind=

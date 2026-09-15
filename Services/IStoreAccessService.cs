@@ -30,10 +30,20 @@ public interface IStoreAccessService
     /// <summary>The display-name value on a StoreReference row for the given restricted role (e.g. for the Action Plan Role settings page).</summary>
     string GetNameForRole(StoreReference store, string role);
 
+    /// <summary>Store names the role/email owns via the email match, never widened
+    /// by the per-area access configuration — the basis for write permissions.
+    /// Null = unrestricted (Admin/User).</summary>
+    Task<List<string>?> GetOwnStoreNamesAsync(string role, string? email);
+
     /// <summary>True if the given role/email can see the given store — unrestricted
     /// roles (Admin/User) always true; restricted roles checked against the same
     /// latest-period access list as <see cref="GetAccessibleStoreNamesAsync"/>.</summary>
     Task<bool> CanAccessStoreAsync(string role, string? email, string storeName);
+
+    /// <summary>Write-permission check — whether the role/email may manage (write to)
+    /// the store. Ignores the access-area widening, so opening a page's view never
+    /// grants write access to stores the user doesn't own.</summary>
+    Task<bool> CanManageStoreAsync(string role, string? email, string storeName);
 
     /// <summary>Resolves who is currently responsible for a store: the Head Manager
     /// if one is assigned on the latest StoreReference data, otherwise the Operation

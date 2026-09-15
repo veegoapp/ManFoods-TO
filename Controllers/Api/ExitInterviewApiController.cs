@@ -11,6 +11,7 @@ namespace MvcApp.Controllers.Api;
 [Route("api/exit-interviews")]
 [EnableRateLimiting("api")]
 [RequireAuth]
+[AccessArea(AccessAreas.ExitInterviews)]
 public class ExitInterviewApiController : ControllerBase
 {
     private readonly IExitInterviewService _exitInterviews;
@@ -146,6 +147,7 @@ public class ExitInterviewApiController : ControllerBase
     }
 
     [HttpGet("comments")]
+    [AccessArea(AccessAreas.ExitComments)]
     public async Task<IActionResult> Comments([FromQuery] string? store, [FromQuery] string? storeLeader, [FromQuery] string? oc, [FromQuery] string? om,
         [FromQuery] int? year, [FromQuery] string? months)
     {

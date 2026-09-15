@@ -567,6 +567,22 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_workforce_projections_
     CREATE UNIQUE INDEX ux_workforce_projections_store_period
         ON dbo.workforce_projections (store_name, year, month);
 
+-- ── page_access_config ────────────────────────────────────────────────────
+-- Admin-configurable per-area access. One row per access area (see
+-- Services/AccessAreas). is_restricted = 1 means restricted roles (OC/OM/Head
+-- Manager/…) see only their own stores in that area; 0 means they see
+-- everything there. A missing row defaults to restricted, so behaviour is
+-- unchanged until an Admin opens an area on the Settings page.
+IF OBJECT_ID('dbo.page_access_config', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.page_access_config (
+        area_key NVARCHAR(100) NOT NULL PRIMARY KEY,
+        is_restricted BIT NOT NULL DEFAULT 1,
+        updated_by_name NVARCHAR(MAX) NULL,
+        updated_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+    );
+END
+
 -- ── seed users ────────────────────────────────
 -- admin@mcd.com / 123123654  →  Admin portal
 -- user@mcd.com  / 123123654  →  Home portal

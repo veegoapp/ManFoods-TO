@@ -159,7 +159,10 @@ public class StoreActionPlanService : IStoreActionPlanService
 
         var effectiveRole = await _actionPlanRoles.GetEffectiveRoleAsync(storeName);
         if (effectiveRole == null || role != effectiveRole) return (false, "Not permitted to add notes.", null);
-        if (!await _storeAccess.CanAccessStoreAsync(role, email, storeName)) return (false, "Not permitted to add notes.", null);
+        // Write permission ignores the access-area widening — even if the Action
+        // Center view is opened company-wide, a restricted role may only add notes
+        // to stores it actually owns.
+        if (!await _storeAccess.CanManageStoreAsync(role, email, storeName)) return (false, "Not permitted to add notes.", null);
 
         var plan = await _db.StoreActionPlans
             .Where(p => p.StoreName == storeName)
@@ -1135,7 +1138,8 @@ public class StoreActionPlanService : IStoreActionPlanService
         {
             var effectiveRole = await _actionPlanRoles.GetEffectiveRoleAsync(plan.StoreName);
             if (effectiveRole == null || role != effectiveRole) return false;
-            if (!await _storeAccess.CanAccessStoreAsync(role, email, plan.StoreName)) return false;
+            // Own-store write check — never widened by the Action Center area toggle.
+            if (!await _storeAccess.CanManageStoreAsync(role, email, plan.StoreName)) return false;
         }
 
         rec.IsCompleted = isCompleted;

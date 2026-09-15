@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using MvcApp.Extensions;
 using MvcApp.Filters;
 using MvcApp.Models.ViewModels;
 using MvcApp.Services;
@@ -16,14 +17,17 @@ public class SettingsApiController : ControllerBase
 {
     private readonly IColorRulesService _colorRules;
     private readonly IRecommendationTemplateService _recTemplates;
+    private readonly IAccessPolicyService _accessPolicy;
     private readonly IStringLocalizer<SharedResource> _L;
     public SettingsApiController(
         IColorRulesService colorRules,
         IRecommendationTemplateService recTemplates,
+        IAccessPolicyService accessPolicy,
         IStringLocalizer<SharedResource> localizer)
     {
         _colorRules = colorRules;
         _recTemplates = recTemplates;
+        _accessPolicy = accessPolicy;
         _L = localizer;
     }
 
@@ -72,5 +76,26 @@ public class SettingsApiController : ControllerBase
         {
             return BadRequest(ex.Message);
         }
+    }
+
+    // ── Per-area access matrix ───────────────────────────────────────────────
+
+    [HttpGet("access-policy"), RequireRole("Admin")]
+    public async Task<IActionResult> GetAccessPolicy() => Ok(await _accessPolicy.GetAllAsync());
+
+    public class SaveAccessPolicyRequest
+    {
+        /// <summary>area key → is-restricted (true = restricted to own stores).</summary>
+        public Dictionary<string, bool> Settings { get; set; } = new();
+    }
+
+    [HttpPost("access-policy"), ValidateAntiForgeryToken, RequireRole("Admin")]
+    public async Task<IActionResult> SaveAccessPolicy([FromBody] SaveAccessPolicyRequest request)
+    {
+        if (request?.Settings == null || request.Settings.Count == 0)
+            return BadRequest(_L["Api_NoAccessSettings"].Value);
+        var adminName = HttpContext.Session.GetAssignedName() ?? HttpContext.Session.GetEmail();
+        await _accessPolicy.SaveAsync(request.Settings, adminName);
+        return Ok();
     }
 }

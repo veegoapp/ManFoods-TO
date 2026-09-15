@@ -1786,4 +1786,30 @@
   <data name="Guide_ACH_Detail_Plan" xml:space="preserve"><value>خطة الإجراء المرجّحة — إجراءات ملموسة مرتبة حسب وزن الأثر، كل منها مربوط بالمحور والدليل الذي أطلقه. حيث توجد خطة مفتوحة، تكون الإجراءات المطابقة قابلة للتحديد وتبقى متزامنة مع توصياتها.</value></data>
   <data name="Guide_ACH_Detail_Outlook" xml:space="preserve"><value>توقّعات القوى العاملة — العدد الحالي مقابل العدد المتوقّع/المطلوب للفرع، وفجوة التوظيف الناتجة، وأي تعيينات مخطّطة. يعرض حالة انتظار حتى تُرفع بيانات توقّعات القوى العاملة.</value></data>
   <data name="Guide_ACH_PlanCriteria" xml:space="preserve"><value>درجة الصحة بالأعلى تقيّم كل فرع باستمرار؛ أما خطة الإجراء الرسمية فهي سجل منفصل يُفتح تلقائيًا أول مرة تُطلَق فيها أي من إشارات الكشف التالية لفرع ليس لديه خطة مفتوحة، باستخدام بيانات تلك الفترة: (1) دوران كلي مرتفع — عدد موظفين 5 فأكثر ومعدل دوران 15% فأكثر؛ (2) ترك مبكر (90 يومًا) — 3 تعيينات فأكثر في فترة غير مؤقتة ومعدل ترك مبكر 30% فأكثر؛ (3) انخفاض الاحتفاظ عند 6 أشهر — 3 تعيينات فأكثر واحتفاظ أقل من 70%؛ (4) عدم استقرار القيادة — قائدا فرع مختلفان فأكثر خلال آخر 6 أشهر؛ (5) انخفاض رضا الخروج — مقابلتا خروج فأكثر برضا إيجابي أقل من 50%؛ (6) تركّز الأسباب — ردّا سبب فأكثر يمثّل فيهما سبب واحد 50% فأكثر؛ (7) قائمة الإنذار المبكر — موظفان نشطان فأكثر مصنّفان كمخاطرة عالية. أي إشارة جديدة تُطلَق أثناء وجود خطة مفتوحة تُدمج في نفس الخطة — لكل فرع خطة نشطة واحدة فقط في أي وقت. عند فتح الخطة تحصل على تاريخ استهداف تلقائيًا (90 يومًا، أو 30 يومًا إن كانت حرجة)، يمكن للمسؤول تعديله يدويًا، وتُغلق تلقائيًا بمجرد خلوّ الفرع من الإشارات لفترتين متتاليتين مُقيَّمتين. ملاحظة: فئة الخطورة المعروضة في هذه الصفحة أصبحت الآن فئة الصحة المرجّحة، وليست عدد الإشارات؛ هذه الإشارات تحدد فقط ما إذا كان هناك سجل خطة إجراء وتشغّل أعمدة الخطة/المسؤول/التقدّم.</value></data>
+  <!-- ── Settings · Access matrix ──────────────────────────────────────── -->
+  <data name="Set_Tab_Access" xml:space="preserve"><value>الصلاحيات</value></data>
+  <data name="Set_Access_Sub" xml:space="preserve"><value>تحكّم في ما تراه الأدوار المقيّدة (Operation Consultant، Operation Manager، Head Manager، إلخ) لكل منطقة. متشيّك = مقيّد بمطاعمه؛ غير متشيّك = مفتوح لكل المطاعم (عرض فقط — الكتابة في خطة الإجراء تظل محصورة في مطاعمه دايمًا). الافتراضي: الكل مقيّد.</value></data>
+  <data name="Set_Access_Restricted" xml:space="preserve"><value>مطاعمه</value></data>
+  <data name="Set_Access_Open" xml:space="preserve"><value>كل المطاعم</value></data>
+  <data name="Api_NoAccessSettings" xml:space="preserve"><value>لم يتم توفير أي إعدادات صلاحيات.</value></data>
+  <data name="Set_Access_Area_analytics" xml:space="preserve"><value>القوى العاملة والدوران والمقارنات</value></data>
+  <data name="Set_Access_Area_retention" xml:space="preserve"><value>الاحتفاظ</value></data>
+  <data name="Set_Access_Area_ninety_day" xml:space="preserve"><value>دوران 90 يومًا</value></data>
+  <data name="Set_Access_Area_ninety_day_leavers" xml:space="preserve"><value>قائمة تاركي الـ 90 يومًا</value></data>
+  <data name="Set_Access_Area_exit_interviews" xml:space="preserve"><value>مقابلات الخروج</value></data>
+  <data name="Set_Access_Area_exit_comments" xml:space="preserve"><value>كومنتات مقابلات الخروج</value></data>
+  <data name="Set_Access_Area_early_warning" xml:space="preserve"><value>الإنذار المبكر</value></data>
+  <data name="Set_Access_Area_scorecard" xml:space="preserve"><value>بطاقة الأداء</value></data>
+  <data name="Set_Access_Area_action_center" xml:space="preserve"><value>مركز الإجراءات</value></data>
+  <data name="Set_Access_Area_reports" xml:space="preserve"><value>التقارير</value></data>
+  <data name="Set_Access_Desc_analytics" xml:space="preserve"><value>صفحات القوى العاملة والدوران والمقارنات (تشترك في نفس الباك-إند).</value></data>
+  <data name="Set_Access_Desc_retention" xml:space="preserve"><value>صفحة الاحتفاظ.</value></data>
+  <data name="Set_Access_Desc_ninety_day" xml:space="preserve"><value>صفحة دوران 90 يومًا (المعدلات والرسوم).</value></data>
+  <data name="Set_Access_Desc_ninety_day_leavers" xml:space="preserve"><value>قائمة تاركي الـ 90 يومًا بالأسماء داخل الصفحة فقط.</value></data>
+  <data name="Set_Access_Desc_exit_interviews" xml:space="preserve"><value>رسوم مقابلات الخروج والرضا والمحاور (مجمّعة).</value></data>
+  <data name="Set_Access_Desc_exit_comments" xml:space="preserve"><value>جدول الكومنتات الحرة داخل صفحة مقابلات الخروج فقط.</value></data>
+  <data name="Set_Access_Desc_early_warning" xml:space="preserve"><value>صفحة قائمة الإنذار المبكر.</value></data>
+  <data name="Set_Access_Desc_scorecard" xml:space="preserve"><value>صفحة بطاقة الأداء.</value></data>
+  <data name="Set_Access_Desc_action_center" xml:space="preserve"><value>مركز الإجراءات. فتحه يوسّع العرض فقط — إضافة الملاحظات وتحديد التوصيات تظل محصورة في مطاعم المستخدم دايمًا.</value></data>
+  <data name="Set_Access_Desc_reports" xml:space="preserve"><value>صفحة التقارير وملفات الإكسل المصدّرة منها.</value></data>
 </root>
