@@ -31,6 +31,24 @@
 .apg-outcome-badge {
     display: inline-block; font-weight: 700; color: var(--red);
 }
+.apg-pillar-list { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 0; }
+.apg-pillar-row {
+    display: flex; align-items: baseline; gap: 10px;
+    background: var(--bg-2); border-radius: var(--radius-sm); padding: 10px 14px;
+}
+.apg-pillar-weight {
+    flex: none; min-width: 48px; text-align: center; font-weight: 800; font-size: 13px;
+    color: var(--red); background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 20px; padding: 2px 8px;
+}
+.apg-tier-list { margin: 4px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.apg-tier-row { display: flex; align-items: baseline; gap: 10px; line-height: 1.6; }
+.apg-tier-dot { flex: none; width: 11px; height: 11px; border-radius: 50%; margin-top: 5px; }
+.apg-note-box {
+    background: var(--bg-2); border-inline-start: 3px solid var(--red);
+    border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px;
+    line-height: 1.6; color: var(--text-2); margin-top: 10px;
+}
 
 /* This page reuses .page-guide-accordion (shared with the narrow 420px
    side-panel guide drawer), whose text/icon sizes are tuned for that
@@ -72,6 +90,103 @@
             <div class="accordion-body">
                 <p>@L["APG_S1_Purpose"]</p>
                 <p class="mb-0">@L["APG_S1_Trigger"]</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apg-layers">
+                <i class="bi bi-layers me-2" style="color:var(--red)"></i>@L["APG_Layers_Title"]
+            </button>
+        </h2>
+        <div id="apg-layers" class="accordion-collapse collapse" data-bs-parent="#apgAccordion">
+            <div class="accordion-body">
+                <p>@L["APG_Layers_Body1"]</p>
+                <p class="mb-0">@L["APG_Layers_Body2"]</p>
+                <div class="apg-note-box">@L["APG_Layers_Note"]</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apg-pillars">
+                <i class="bi bi-columns-gap me-2" style="color:var(--red)"></i>@L["APG_Pillars_Title"]
+            </button>
+        </h2>
+        <div id="apg-pillars" class="accordion-collapse collapse" data-bs-parent="#apgAccordion">
+            <div class="accordion-body">
+                <p>@L["APG_Pillars_Intro"]</p>
+                <div class="apg-pillar-list">
+                    <div class="apg-pillar-row"><span class="apg-pillar-weight">24%</span><span><span class="apg-signal-name">@L["ACH_Pillar_turnover"]</span> — @L["APG_Pillar_Turnover_Long"]</span></div>
+                    <div class="apg-pillar-row"><span class="apg-pillar-weight">20%</span><span><span class="apg-signal-name">@L["ACH_Pillar_early_attrition"]</span> — @L["APG_Pillar_EarlyAttrition_Long"]</span></div>
+                    <div class="apg-pillar-row"><span class="apg-pillar-weight">18%</span><span><span class="apg-signal-name">@L["ACH_Pillar_engagement"]</span> — @L["APG_Pillar_Engagement_Long"]</span></div>
+                    <div class="apg-pillar-row"><span class="apg-pillar-weight">16%</span><span><span class="apg-signal-name">@L["ACH_Pillar_retention"]</span> — @L["APG_Pillar_Retention_Long"]</span></div>
+                    <div class="apg-pillar-row"><span class="apg-pillar-weight">12%</span><span><span class="apg-signal-name">@L["ACH_Pillar_workforce"]</span> — @L["APG_Pillar_Workforce_Long"]</span></div>
+                    <div class="apg-pillar-row"><span class="apg-pillar-weight">10%</span><span><span class="apg-signal-name">@L["ACH_Pillar_leadership"]</span> — @L["APG_Pillar_Leadership_Long"]</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apg-calc">
+                <i class="bi bi-calculator me-2" style="color:var(--red)"></i>@L["APG_HealthCalc_Title"]
+            </button>
+        </h2>
+        <div id="apg-calc" class="accordion-collapse collapse" data-bs-parent="#apgAccordion">
+            <div class="accordion-body">
+                <p class="mb-0">@L["Guide_ACH_HowBody"]</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apg-tiers">
+                <i class="bi bi-speedometer2 me-2" style="color:var(--red)"></i>@L["APG_Tiers_Title"]
+            </button>
+        </h2>
+        <div id="apg-tiers" class="accordion-collapse collapse" data-bs-parent="#apgAccordion">
+            <div class="accordion-body">
+                <p>@L["APG_Tiers_Body"]</p>
+                <ul class="apg-tier-list">
+                    <li class="apg-tier-row"><span class="apg-tier-dot" style="background:oklch(0.6 0.22 22)"></span><span><span class="apg-signal-name">@L["ACH_Sev_Critical"]</span> — @L["APG_Tier_Critical_Desc"]</span></li>
+                    <li class="apg-tier-row"><span class="apg-tier-dot" style="background:oklch(0.62 0.19 45)"></span><span><span class="apg-signal-name">@L["ACH_Sev_High"]</span> — @L["APG_Tier_High_Desc"]</span></li>
+                    <li class="apg-tier-row"><span class="apg-tier-dot" style="background:oklch(0.6 0.14 75)"></span><span><span class="apg-signal-name">@L["ACH_Sev_Medium"]</span> — @L["APG_Tier_Medium_Desc"]</span></li>
+                    <li class="apg-tier-row"><span class="apg-tier-dot" style="background:oklch(0.58 0.09 90)"></span><span><span class="apg-signal-name">@L["ACH_Sev_Low"]</span> — @L["APG_Tier_Low_Desc"]</span></li>
+                    <li class="apg-tier-row"><span class="apg-tier-dot" style="background:oklch(0.5 0.15 155)"></span><span><span class="apg-signal-name">@L["ACH_Sev_Healthy"]</span> — @L["APG_Tier_Healthy_Desc"]</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apg-engagement">
+                <i class="bi bi-chat-left-dots me-2" style="color:var(--red)"></i>@L["APG_Engagement_Title"]
+            </button>
+        </h2>
+        <div id="apg-engagement" class="accordion-collapse collapse" data-bs-parent="#apgAccordion">
+            <div class="accordion-body">
+                <p>@L["APG_Engagement_Body1"]</p>
+                <p class="mb-0">@L["APG_Engagement_Body2"]</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apg-outlook">
+                <i class="bi bi-graph-up-arrow me-2" style="color:var(--red)"></i>@L["APG_Outlook_Title"]
+            </button>
+        </h2>
+        <div id="apg-outlook" class="accordion-collapse collapse" data-bs-parent="#apgAccordion">
+            <div class="accordion-body">
+                <p>@L["APG_Outlook_Body1"]</p>
+                <p class="mb-0">@L["APG_Outlook_Body2"]</p>
             </div>
         </div>
     </div>
@@ -156,7 +271,8 @@
                     <li><span class="apg-signal-name">@L["AC_SeverityHigh"]</span> — @L["APG_Severity_HighDesc"]</li>
                     <li><span class="apg-signal-name">@L["AC_SeverityCritical"]</span> — @L["APG_Severity_CriticalDesc"]</li>
                 </ul>
-                <p class="mb-0 mt-2">@L["APG_Severity_ConfigNote"]</p>
+                <p class="mb-0">@L["APG_Severity_ConfigNote"]</p>
+                <div class="apg-note-box">@L["APG_Severity_VsHealth"]</div>
             </div>
         </div>
     </div>
@@ -180,6 +296,21 @@
 
     <div class="accordion-item">
         <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apg-weighted">
+                <i class="bi bi-list-check me-2" style="color:var(--red)"></i>@L["APG_WeightedPlan_Title"]
+            </button>
+        </h2>
+        <div id="apg-weighted" class="accordion-collapse collapse" data-bs-parent="#apgAccordion">
+            <div class="accordion-body">
+                <p>@L["APG_WeightedPlan_Body1"]</p>
+                <p>@L["APG_WeightedPlan_Body2"]</p>
+                <p class="mb-0">@L["APG_WeightedPlan_Priority"]</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apg-s7">
                 <i class="bi bi-folder2-open me-2" style="color:var(--red)"></i>@L["APG_S7_Title"]
             </button>
@@ -187,6 +318,9 @@
         <div id="apg-s7" class="accordion-collapse collapse" data-bs-parent="#apgAccordion">
             <div class="accordion-body">
                 <ul class="apg-list">
+                    <li>@L["APG_Inside_Health"]</li>
+                    <li>@L["APG_Inside_WeightedPlan"]</li>
+                    <li>@L["APG_Inside_Outlook"]</li>
                     <li>@L["APG_Inside_Kpi"]</li>
                     <li>@L["APG_Inside_Monthly"]</li>
                     <li>@L["APG_Inside_Signals"]</li>
@@ -288,6 +422,7 @@
                     <div class="apg-example-step"><span class="apg-stage-num">6</span><span>@L["APG_Example_Step6"]</span></div>
                     <div class="apg-example-step"><span class="apg-stage-num">7</span><span>@L["APG_Example_Step7"]</span></div>
                     <div class="apg-example-step"><span class="apg-stage-num">8</span><span>@L["APG_Example_Step8"]</span></div>
+                    <div class="apg-example-step"><span class="apg-stage-num">9</span><span>@L["APG_Example_Step9"]</span></div>
                 </div>
             </div>
         </div>
