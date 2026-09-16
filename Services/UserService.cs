@@ -140,6 +140,7 @@ public class UserService : IUserService
         if (email != user.Email && await _db.Users.AnyAsync(u => u.Id != id && u.Email == email))
             return (null, "duplicate-email");
 
+        var roleChanged = user.Role != role;
         user.Email = email;
         user.Phone = vm.Phone;
         user.AssignedName = vm.AssignedName?.Trim() ?? "";
@@ -147,10 +148,12 @@ public class UserService : IUserService
         if (!string.IsNullOrEmpty(vm.Password))
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(vm.Password);
         await _db.SaveChangesAsync();
-        // A role change (or the account being edited at all) must not keep
-        // working off a stale cached session-validation result — see
-        // SessionValidationService.
-        _sessionValidation.Invalidate(id);
+        // IsValidAsync only ever rejects a session over a Role mismatch (see
+        // SessionValidationService), so only a role change can actually flip
+        // that check — invalidating on every edit (email, phone, name,
+        // password) just forced an extra DB round trip on the edited
+        // account's next request for no behavioral difference.
+        if (roleChanged) _sessionValidation.Invalidate(id);
         return (ToVm(user), null);
     }
 
