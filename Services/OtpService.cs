@@ -12,14 +12,16 @@ public class OtpService : IOtpService
     private readonly AppDbContext _db;
     private readonly IStringLocalizer<SharedResource> _L;
     private readonly ILogger<OtpService> _logger;
+    private readonly IAuthService _auth;
     private static readonly TimeSpan Expiry = TimeSpan.FromHours(24);
     private const int MaxFailedAttempts = 5;
 
-    public OtpService(AppDbContext db, IStringLocalizer<SharedResource> localizer, ILogger<OtpService> logger)
+    public OtpService(AppDbContext db, IStringLocalizer<SharedResource> localizer, ILogger<OtpService> logger, IAuthService auth)
     {
         _db = db;
         _L = localizer;
         _logger = logger;
+        _auth = auth;
     }
 
     private static string GenerateCode() => Random.Shared.Next(0, 1_000_000).ToString("D6");
@@ -204,6 +206,7 @@ public class OtpService : IOtpService
         user.MustChangePassword = false;
         otp.IsUsed = true;
         await _db.SaveChangesAsync();
+        _auth.ClearLockout(user.Email);
 
         _logger.LogInformation("Admin '{Email}' (user id {UserId}) reset their password via a Super-Admin-issued OTP.", user.Email, user.Id);
 

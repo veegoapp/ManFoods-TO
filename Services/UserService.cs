@@ -27,12 +27,14 @@ public class UserService : IUserService
     private readonly AppDbContext _db;
     private readonly IStoreAccessService _storeAccess;
     private readonly ISessionValidationService _sessionValidation;
+    private readonly IAuthService _auth;
 
-    public UserService(AppDbContext db, IStoreAccessService storeAccess, ISessionValidationService sessionValidation)
+    public UserService(AppDbContext db, IStoreAccessService storeAccess, ISessionValidationService sessionValidation, IAuthService auth)
     {
         _db = db;
         _storeAccess = storeAccess;
         _sessionValidation = sessionValidation;
+        _auth = auth;
     }
 
     private static UserViewModel ToVm(User u) => new()
@@ -196,6 +198,7 @@ public class UserService : IUserService
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         user.MustChangePassword = false;
         await _db.SaveChangesAsync();
+        _auth.ClearLockout(user.Email);
         return true;
     }
 

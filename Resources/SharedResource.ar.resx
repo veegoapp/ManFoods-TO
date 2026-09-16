@@ -1373,6 +1373,7 @@
 
   <!-- Controller flash / auth messages -->
   <data name="Msg_InvalidCredentials" xml:space="preserve"><value>البريد الإلكتروني أو كلمة المرور غير صحيحة</value></data>
+  <data name="Msg_AccountLockedOut" xml:space="preserve"><value>محاولات فاشلة كثيرة. برجاء الانتظار 15 دقيقة والمحاولة مرة أخرى.</value></data>
   <data name="Msg_AdminOnly" xml:space="preserve"><value>تم رفض الوصول. مطلوب بيانات اعتماد مسؤول.</value></data>
   <data name="Msg_AdminUseAdminPortal" xml:space="preserve"><value>يجب على حسابات المسؤولين استخدام بوابة المسؤول.</value></data>
   <data name="Msg_InvalidRecoveryKey" xml:space="preserve"><value>مفتاح الاسترداد غير صحيح.</value></data>

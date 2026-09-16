@@ -31,22 +31,23 @@ public class AuthService : IAuthService
         _httpContext = httpContext;
     }
 
-    public async Task<(User? User, string? FailReason)> ValidateAsync(string email, string password, string portal)
+    public async Task<(User? User, string? FailReason, bool IsLockedOut)> ValidateAsync(string email, string password, string portal)
     {
         var failKey = FailKey(email);
         if (_cache.TryGetValue(failKey, out int failCount) && failCount >= MaxFailedAttempts)
         {
             _logger.LogWarning("Login blocked: too many recent failed attempts for '{Email}'.", email.ToLower());
-            // Same generic reason shape as every other failure below — the
-            // caller already discards this and always shows one generic
-            // "invalid credentials" message, so a locked account is not
-            // distinguishable from a wrong password (no extra enumeration
-            // signal from the lockout itself). Not logged to login_history
-            // either — there's no cheap way to resolve the account here
-            // without undoing the whole point of checking the lockout before
-            // touching the database, and every attempt that built up to this
-            // lockout was already logged individually below.
-            return (null, "Account temporarily locked after repeated failed attempts.");
+            // IsLockedOut is safe to surface distinctly to the caller: the
+            // lockout counter is keyed on the raw email string before the DB
+            // is even queried, so it fires identically for a made-up address
+            // hammered 5 times as for a real one — no account-existence
+            // signal leaks from telling the user "try again later" instead of
+            // "wrong password". Not logged to login_history either — there's
+            // no cheap way to resolve the account here without undoing the
+            // whole point of checking the lockout before touching the
+            // database, and every attempt that built up to this lockout was
+            // already logged individually below.
+            return (null, "Account temporarily locked after repeated failed attempts.", true);
         }
 
         void RecordFailure() => _cache.Set(failKey, failCount + 1, LockoutWindow);
@@ -62,7 +63,7 @@ public class AuthService : IAuthService
             // Not logged to login_history — there's no account to attach the
             // row to, and logging it under some placeholder would let this
             // page be used to probe which emails are registered.
-            return (null, reason);
+            return (null, reason, false);
         }
         // Bulk-created accounts start with no password set (pending activation
         // via the OTP flow) — reject the login attempt instead of letting
@@ -73,7 +74,7 @@ public class AuthService : IAuthService
             _logger.LogWarning("Login failed: {Reason}", reason);
             RecordFailure();
             await LogAttemptAsync(user, portal, success: false, "no-password-set");
-            return (null, reason);
+            return (null, reason, false);
         }
 
         if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
@@ -82,13 +83,15 @@ public class AuthService : IAuthService
             _logger.LogWarning("Login failed: {Reason}", reason);
             RecordFailure();
             await LogAttemptAsync(user, portal, success: false, "wrong-password");
-            return (null, reason);
+            return (null, reason, false);
         }
 
         _cache.Remove(failKey);
         await LogAttemptAsync(user, portal, success: true, null);
-        return (user, null);
+        return (user, null, false);
     }
+
+    public void ClearLockout(string email) => _cache.Remove(FailKey(email));
 
     // Records the attempt once it's resolved against a known account — shared
     // by both the Home and Admin AccountControllers' Login actions, since they
@@ -126,6 +129,7 @@ public class AuthService : IAuthService
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         user.MustChangePassword = false;
         await _db.SaveChangesAsync();
+        ClearLockout(user.Email);
         return true;
     }
 
@@ -136,6 +140,7 @@ public class AuthService : IAuthService
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         user.MustChangePassword = false;
         await _db.SaveChangesAsync();
+        ClearLockout(user.Email);
         return true;
     }
 }
