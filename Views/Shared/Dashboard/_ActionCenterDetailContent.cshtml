@@ -118,8 +118,9 @@
 .ach-hero-ring { width:88px; height:88px; flex-shrink:0; }
 .ach-hero-score { font-size:30px; font-weight:800; line-height:1; }
 .ach-hero-unit { font-size:12px; color:var(--text-3); }
-.ach-pillar-row { display:grid; grid-template-columns:minmax(150px,1.3fr) 2fr auto; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--card-border); }
+.ach-pillar-row { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) auto; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--card-border); }
 .ach-pillar-row:last-child { border-bottom:none; }
+.ach-pillar-row > div { min-width:0; }
 .ach-pillar-name { font-weight:700; font-size:13px; }
 .ach-pillar-desc { font-size:11px; color:var(--text-3); margin-top:1px; }
 .ach-pillar-bar { height:8px; border-radius:20px; background:var(--card-bg-2); overflow:hidden; }
@@ -127,6 +128,10 @@
 .ach-pillar-ev { font-size:11px; color:var(--text-2); margin-top:4px; font-variant-numeric:tabular-nums; }
 .ach-chips { display:flex; gap:3px; margin-top:5px; }
 .ach-chip { width:20px; height:6px; border-radius:2px; background:var(--card-bg-2); }
+@@media (max-width:576px) {
+    .ach-pillar-row { grid-template-columns:1fr auto; row-gap:8px; }
+    .ach-pillar-row > div:nth-child(2) { grid-column:1 / -1; }
+}
 .ach-driver-tag { display:inline-block; font-size:10.5px; padding:2px 8px; border-radius:20px; background:oklch(0.6 0.22 22 / .1); color:var(--text-2); margin:3px 4px 0 0; }
 .ach-act { display:flex; align-items:flex-start; gap:10px; padding:11px 13px; background:var(--card-bg-2); border-radius:8px; border-left:3px solid var(--red); }
 .ach-act.done { opacity:0.65; border-left-color:oklch(0.62 0.15 155); }
