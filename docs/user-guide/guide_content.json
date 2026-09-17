@@ -1,0 +1,542 @@
+[
+  {
+    "file": "_ActionCenterContent.cshtml",
+    "pagekey": "actioncenter",
+    "title": "Action Center",
+    "overview": "This page scores every store you can access on a Store Health Index — a single 0-100 score (100 = healthy) built from six weighted pillars: Overall Turnover, Early Attrition (90-day), 6-Month Retention, Engagement, Leadership Stability, and Workforce Outlook. Each pillar is scored by how far the store deviates from the company-wide average for that metric — a relative measure that self-calibrates as the data changes, not a fixed threshold — then combined by weight into the health score, a severity tier (Critical → Healthy), and a priority that also factors in how many employees are affected. Stores are ranked worst-priority first. The plan-lifecycle columns (Plan status, Responsible, Progress) reflect the existing Action Plan for a store when one is open.",
+    "filternote": "Use the search box to filter the scorecard by store or responsible name. Health, tier and priority are computed automatically from each store's data against the company baseline — there's no manual filter for them here.",
+    "sections": [
+      {
+        "title": "Store Health Index",
+        "body": "Each store's overall Health Score (0-100) and severity tier, and the six-segment strip showing which pillars are driving the risk — hover a segment for its pillar and sub-score."
+      },
+      {
+        "title": "Risk Drivers (Pillar Impact)",
+        "body": "Risk Drivers — the average weighted contribution of each pillar to company-wide risk, so you can see which dimension (turnover, engagement, leadership…) is pulling health down across the network."
+      },
+      {
+        "title": "Root-Cause Breakdown (Exit Drivers)",
+        "body": "Root-Cause Breakdown — the company-wide negative-response rate for each exit-interview dimension (fairness, workload, communication, training…). This is what replaces a vague \"culture\" label with the specific driver leaving employees actually flagged."
+      },
+      {
+        "title": "Store Health Scorecard",
+        "body": "The store scorecard: health score, tier, top driving pillar, the pillar strip, impact-weighted priority, headcount, plan status, responsible party, and task progress. Click a column header to sort; open a store for its full breakdown."
+      },
+      {
+        "title": "How the Health Score Is Computed",
+        "body": "For each pillar, the store's metric is compared against the distribution of all stores: the further above (or, for retention, below) the company average it sits — measured in standard deviations — the higher that pillar's 0-100 severity sub-score. Pillar weights are: Overall Turnover 24%, Early Attrition 20%, Engagement 18%, 6-Month Retention 16%, Workforce Outlook 12%, Leadership Stability 10%. The weighted sub-scores are combined into a risk score (weights are re-normalised over only the pillars that have data, so a store missing exit interviews or a projection is judged fairly on what it does have); health score is 100 minus that. Severity tiers: Critical, High, Medium, Low, Healthy. Priority multiplies risk by store size so a large struggling store outranks a tiny one at the same risk. The Engagement pillar reads the real exit-interview dimensions and surfaces the specific weak drivers. The Workforce Outlook pillar compares projected/required headcount to current headcount once projection data is uploaded; until then it stays inactive rather than penalising the store. The existing Action Plan engine (detection, target dates, auto-resolve, notes) is unchanged and still drives the Plan columns."
+      },
+      {
+        "title": "How an Action Plan Is Created",
+        "body": "The Health Score above rates every store continuously; a formal Action Plan is a separate record that opens automatically the first time any one of these detection signals fires for a store that has no plan open, using that period's uploaded data: (1) High Overall Turnover — headcount of 5 or more and overall turnover at or above 15%; (2) Early Turnover (90 Days) — 3 or more hires in a non-provisional period and an early-leaver rate at or above 30%; (3) Low 6-Month Retention — 3 or more hires and 6-month retention below 70%; (4) Leadership Instability — 2 or more different Store Leaders in the trailing 6 months; (5) Low Exit Sentiment — 2 or more exit interviews with positive sentiment below 50%; (6) Reason Concentration — 2 or more exit-interview reason responses where one reason is 50% or more of them; (7) Early-Warning Watchlist — 2 or more currently active employees flagged high-risk. A new signal firing while a plan is already open folds into that same plan — a store only ever has one Active plan at a time. When a plan opens it gets a Target Resolution Date automatically (90 days out, or 30 days if it is Critical), which an Admin can move manually, and it resolves on its own once the store shows zero signals for 2 consecutive evaluated periods. Note: the severity tier shown on this page is now the weighted Health tier, not a raw signal count; these signals determine only whether an Action Plan record exists and drive the Plan/Responsible/Progress columns."
+      }
+    ]
+  },
+  {
+    "file": "_WorkforceContent.cshtml",
+    "pagekey": "workforce",
+    "title": "Workforce",
+    "overview": "This page is a snapshot of who currently works for you — active headcount broken down by job title, tenure, payroll group, gender and store — plus a trend of total headcount over time. Unlike the Turnover page, most charts here count active employees, not resignations.",
+    "filternote": "Choosing a Store, Operation Manager, Operation Consultant, Senior Operation Consultant or Operation Director filters every chart and table on this page to just that selection. The From/To period filter narrows the KPI cards and the composition/store/OC-OM breakdowns — but the \"Headcount Trend\" chart always shows the complete history from the selected year onward, since it's built to show change over time.",
+    "sections": [
+      {
+        "title": "Headcount by Job Title",
+        "body": "Current headcount grouped by job title for the selected period."
+      },
+      {
+        "title": "Team Experience Mix",
+        "body": "Current headcount grouped by how long each employee has worked here, so you can see whether your workforce skews new or experienced."
+      },
+      {
+        "title": "Headcount by Payroll Group",
+        "body": "Current headcount grouped by payroll group."
+      },
+      {
+        "title": "Gender Mix",
+        "body": "Gender split of the current headcount, shown as a doughnut with counts and percentages on the side."
+      },
+      {
+        "title": "Headcount Over Time",
+        "body": "Total headcount over time, from the selected year onward — always shows the full history from that year, regardless of the To period you pick, so you can see hiring/attrition trends."
+      },
+      {
+        "title": "Headcount by Store",
+        "body": "Every store's headcount for the selected period, with a mini gender mix and payroll group mix per store."
+      },
+      {
+        "title": "By Operation Consultant & Manager",
+        "body": "Operation Consultants, Directors, Managers and Senior Consultants with their total headcount and turnover rate (weighted across all their stores) for the selected period."
+      }
+    ]
+  },
+  {
+    "file": "_TurnoverContent.cshtml",
+    "pagekey": "turnover",
+    "title": "Turnover Analysis",
+    "overview": "This page tracks how many employees resigned and how that compares to headcount, broken down by month, job title, tenure, payroll group, gender and store. The KPI cards and \"Smart Insights\" at the top summarize the selected period; everything below drills into it.",
+    "filternote": "Choosing a Store, Operation Manager, Operation Consultant, Senior Operation Consultant or Operation Director filters every chart and table on this page to just that selection. The From/To period filter narrows the KPI cards, job title/tenure/payroll/gender/reasons charts and the store table — but the \"Turnover Rate by Month\", \"Monthly Trend\" chart and the full data matrix always show the complete history from the selected year onward, since they're built to show trends over time.",
+    "sections": [
+      {
+        "title": "Turnover Rate by Month",
+        "body": "Turnover rate for every calendar month on record. Each bar = (resignations that month ÷ average headcount that month) × 100. This chart always shows full history and ignores the From/To period filter, so you can see long-term seasonality."
+      },
+      {
+        "title": "Turnover by Job Title",
+        "body": "Resignations in the selected period grouped by job title, so you can see which roles are losing the most people."
+      },
+      {
+        "title": "Turnover by Tenure",
+        "body": "Resignations grouped by how long the employee had worked (e.g. under 3 months, 3-6 months...). Useful for spotting whether people are leaving early or after a longer stay."
+      },
+      {
+        "title": "Turnover by Payroll Group",
+        "body": "Resignations grouped by payroll group for the selected period."
+      },
+      {
+        "title": "Gender Breakdown",
+        "body": "Gender split of the resignations in the selected period, shown as a doughnut with counts and percentages on the side."
+      },
+      {
+        "title": "Reasons for Leaving",
+        "body": "Every resignation in the selected period grouped by the reason the employee gave for leaving."
+      },
+      {
+        "title": "Monthly Turnover Trend",
+        "body": "Month-by-month turnover trend starting from the selected year onward — this always shows the full history from that year to the latest upload, regardless of the To period you pick."
+      },
+      {
+        "title": "Store Comparison",
+        "body": "Every store in the selected period with its headcount, new hires, resignations and turnover rate (resignations ÷ average headcount × 100). Click a column header to sort."
+      },
+      {
+        "title": "By Operation Consultant & Manager",
+        "body": "Operation Consultants, Directors, Managers and Senior Consultants ranked by their weighted average turnover rate — the sum of resignations across all their stores divided by the sum of average headcount across those stores, not a simple average of each store's rate."
+      },
+      {
+        "title": "Full Data Table",
+        "body": "A full matrix of every store against every period from the selected year to the latest upload — always shows the full year range, not just the From/To filter."
+      }
+    ]
+  },
+  {
+    "file": "_NinetyDayTurnoverContent.cshtml",
+    "pagekey": "ninetyday",
+    "title": "90-Day Turnover",
+    "overview": "This page tracks \"early leavers\" — employees hired in a given month (a cohort) who resigned within their first 90 days. The 90-Day Rate = early leavers ÷ total new hires in that cohort, ×100. A cohort hired less than 90 days ago is marked \"Provisional\" since its final rate can still change as more of its employees pass or miss the 90-day mark.",
+    "filternote": "Choosing a Store, Operation Manager, Operation Consultant, Senior Operation Consultant or Operation Director filters every chart and table to just that selection. The month multi-select picks which hiring cohort(s) to look at — everything on this page (except the trend chart, which always shows full history) is scoped to the cohort(s) you select.",
+    "sections": [
+      {
+        "title": "90-Day Rate by Cohort Month",
+        "body": "The 90-Day Rate for each monthly hiring cohort (people hired that month), so you can compare how \"sticky\" different hiring months have been."
+      },
+      {
+        "title": "90-Day Turnover Trend",
+        "body": "The 90-Day Rate trend across cohorts over time, from the selected year onward — always shows full history regardless of the month filter."
+      },
+      {
+        "title": "By Store",
+        "body": "90-Day Rate for each store in the selected cohort(s)."
+      },
+      {
+        "title": "Reasons for Early Leaving",
+        "body": "The reasons given by employees who resigned within their first 90 days."
+      },
+      {
+        "title": "Gender Breakdown",
+        "body": "Gender split of the early leavers in the selected cohort(s)."
+      },
+      {
+        "title": "By Job Title",
+        "body": "Early leavers grouped by job title."
+      },
+      {
+        "title": "By Payroll Group",
+        "body": "Early leavers grouped by payroll group."
+      },
+      {
+        "title": "Store Comparison",
+        "body": "Every store with its total hires, early leavers and 90-Day Rate for the selected cohort(s). Click a column header to sort."
+      },
+      {
+        "title": "By Operation Consultant & Manager",
+        "body": "Operation Consultants, Directors and Managers ranked by their average 90-Day Rate across all their stores."
+      },
+      {
+        "title": "Full Data Table",
+        "body": "Every store's 90-Day Rate for each period, one row per store and one column per month, so you can spot which stores' rates are consistently high or improving/worsening over time. Searchable and sortable by any column."
+      },
+      {
+        "title": "Early Leavers",
+        "body": "The individual employees who resigned within their first 90 days in the selected cohort(s) — name, store, job title, hire and resignation dates, and how many days they lasted. Click a column header to sort."
+      }
+    ]
+  },
+  {
+    "file": "_RetentionContent.cshtml",
+    "pagekey": "retention",
+    "title": "Retention",
+    "overview": "This page tracks how long employees stay, the opposite lens from Turnover. It's built around the 6-month retention milestone: for hires old enough to have reached (or resigned before) that milestone, are they still on the team? Employees hired too recently to have reached 180 days yet are excluded from milestone-based figures until they're eligible.",
+    "filternote": "Choosing a Store, Operation Manager, Operation Consultant, Senior Operation Consultant or Operation Director filters every chart and table to just that selection. The Year/Months filter picks which hire cohort(s) to analyze — retention is always measured from each employee's own hire date, not from the filtered period itself.",
+    "sections": [
+      {
+        "title": "Tenure Milestones",
+        "body": "Each card shows the share of today's active headcount that has reached a tenure milestone (6 months, 1 year, 2 years, etc.) — a snapshot of team experience, not a survival/eligibility rate."
+      },
+      {
+        "title": "Team Experience by Store",
+        "body": "Every store's headcount and a tenure-band mix (how many employees fall in each tenure range), so you can see whether a store's team is mostly new or mostly experienced."
+      },
+      {
+        "title": "Team Tenure Curve",
+        "body": "The survival curve shows, for each tenure milestone (e.g. 30, 60, 90, 180 days), what percentage of hires eligible for that milestone are still employed — a classic HR \"survival analysis\" view of where people tend to drop off."
+      },
+      {
+        "title": "Best 5 Stores for Retention",
+        "body": "The stores with the best 6-month retention rate."
+      },
+      {
+        "title": "Worst 5 Stores for Retention",
+        "body": "The stores with the worst 6-month retention rate — worth a closer look."
+      },
+      {
+        "title": "Retention by Job Title",
+        "body": "Share of each job title's current team that has been on the job 6+ months."
+      },
+      {
+        "title": "Retention by Gender",
+        "body": "Share of the current team with 6+ months on the job, split by gender."
+      },
+      {
+        "title": "Best 5 Stores by Average Tenure",
+        "body": "The stores with the highest and lowest average tenure of their current team, in months."
+      },
+      {
+        "title": "Best 5 Operation Consultants by Average Tenure",
+        "body": "The Operation Consultants with the highest and lowest average tenure across their stores' current teams."
+      },
+      {
+        "title": "How Soon People Leave",
+        "body": "Of everyone who ever resigned (all-time, not limited to the selected period), how long they had been on the job before leaving — shows whether people tend to leave early or after settling in."
+      },
+      {
+        "title": "Monthly Hiring Volume",
+        "body": "New hires per month, all-time — context for reading the retention charts above alongside how much hiring was actually happening."
+      },
+      {
+        "title": "By Operation Consultant & Manager — Average Tenure",
+        "body": "Operation Consultants, Directors and Managers ranked by the average tenure of employees across all their stores."
+      }
+    ]
+  },
+  {
+    "file": "_EarlyWarningContent.cshtml",
+    "pagekey": "earlywarning",
+    "title": "Early Warning",
+    "overview": "This page flags currently-active employees who statistically resemble people who resigned in the past — before they actually leave. Each employee gets a 1-5 star risk score built from several weighted signals (how new they are, their store's/role's/store leader's resignation history, seasonal \"peak\" hiring windows, gender-based history, and exit-interview sentiment where available). Higher stars = higher predicted risk; employees above a threshold land on the High-Risk table and the fuller Watch List.",
+    "filternote": "Choosing a Store filters every chart and both tables to just that store. The Year/Months filter changes which snapshot in time the risk scores are calculated for — since risk is about currently-active employees, this is normally left on the latest period.",
+    "sections": [
+      {
+        "title": "How the Star Rating Is Calculated",
+        "body": "<p style=\"font-size:12.5px;color:var(--text-2);margin-bottom:10px\">Every flagged employee starts at 0 points and gains points for each risk factor below that applies to them. The total (their risk score) is then mapped to a 1-5 star rating — 4-5 stars is what the High Risk table/charts use.</p>\n<table class=\"table table-sm\" style=\"font-size:12px;margin-bottom:16px\">\n  <thead><tr><th>Risk Score</th><th>Stars</th><th>Level</th></tr></thead>\n  <tbody>\n    <tr><td>1</td><td>&#9733;</td><td>Low</td></tr>\n    <tr><td>2 – 3</td><td>&#9733;&#9733;</td><td>Low-Medium</td></tr>\n    <tr><td>4</td><td>&#9733;&#9733;&#9733;</td><td>Medium</td></tr>\n    <tr><td>5 – 6</td><td>&#9733;&#9733;&#9733;&#9733;</td><td>High Risk</td></tr>\n    <tr><td>7+</td><td>&#9733;&#9733;&#9733;&#9733;&#9733;</td><td>High Risk</td></tr>\n  </tbody>\n</table>\n<table class=\"table table-sm\" style=\"font-size:12px\">\n  <thead><tr><th>Factor</th><th>Points</th><th>When it applies</th></tr></thead>\n  <tbody>\n    <tr><td>New Hire Window</td><td>1 – 3</td><td>Tenure falls within the role's new-hire window (higher the closer to the end of it)</td></tr>\n    <tr><td>Store History</td><td>1 – 3</td><td>The store's 90-day early-leave rate is well above the company average</td></tr>\n    <tr><td>Role History</td><td>1 – 3</td><td>The job title's 90-day early-leave rate is well above the company average</td></tr>\n    <tr><td>Peak Resignation Window</td><td>1 – 2</td><td>Tenure is approaching or inside the store's/role's historical peak resignation window</td></tr>\n    <tr><td>Gender History</td><td>1</td><td>The employee's gender group has a 90-day early-leave rate well above average</td></tr>\n    <tr><td>Exit Interview Score</td><td>1 – 2</td><td>The store's exit interviews show above-average negative sentiment</td></tr>\n    <tr><td>Store Leader History</td><td>1</td><td>The store leader's historical early-leave rate, across every store they've led, is well above average</td></tr>\n  </tbody>\n</table>"
+      },
+      {
+        "title": "Risk Reasons Breakdown",
+        "body": "Which risk signal (reason) is driving flags most often across the watch list right now."
+      },
+      {
+        "title": "Watchlist by Store",
+        "body": "Watch-listed employees grouped by store, so you can see which stores carry the most flight-risk headcount right now."
+      },
+      {
+        "title": "Top 5 Stores — High Risk",
+        "body": "Only the highest-risk (4-5 star) employees, grouped by store."
+      },
+      {
+        "title": "Watchlist by Job Title",
+        "body": "Watch-listed employees grouped by job title."
+      },
+      {
+        "title": "Risk Score Distribution",
+        "body": "How many watch-listed employees fall into each star rating (1 through 5), so you can see the overall risk distribution."
+      },
+      {
+        "title": "Watchlist Trend Over Time",
+        "body": "How the size of the watch list has trended over time."
+      },
+      {
+        "title": "High Risk Employees",
+        "body": "Employees at 4-5 stars — the most urgent list — with their store, role, hire date, tenure so far, star score and the specific reasons that flagged them."
+      },
+      {
+        "title": "Watch List",
+        "body": "Everyone above the risk threshold who isn't already 4-5 stars (those are in the High Risk table above instead, so no one is listed twice), sortable and searchable, with the same detail columns as the High-Risk table."
+      }
+    ]
+  },
+  {
+    "file": "_ExitInterviewsContent.cshtml",
+    "pagekey": "exitinterviews",
+    "title": "Exit Interviews",
+    "overview": "This page summarizes what departing employees actually said in their exit interviews — reasons for leaving, whether they'd return, ratings on training/fairness/workload, and free-text comments — for resignations in the selected period.",
+    "filternote": "Choosing a Store, Store Leader, Operation Consultant or Operation Manager filters every chart, table and comment on this page to just that selection. The Year/Months filter scopes everything to resignations that happened in that period.",
+    "sections": [
+      {
+        "title": "Reasons for Leaving",
+        "body": "The reasons employees gave for resigning, ranked by how often each was cited."
+      },
+      {
+        "title": "Would They Return?",
+        "body": "Whether departing employees said they'd consider returning to work here in the future."
+      },
+      {
+        "title": "Overall Experience",
+        "body": "How departing employees rated their overall experience working here."
+      },
+      {
+        "title": "Received Adequate Training?",
+        "body": "How departing employees rated the training they received."
+      },
+      {
+        "title": "Fair Treatment",
+        "body": "How departing employees rated whether they were treated fairly."
+      },
+      {
+        "title": "Workload Conditions",
+        "body": "How departing employees rated their workload and working conditions."
+      },
+      {
+        "title": "Reason for Workload Pressure",
+        "body": "Among employees who cited work pressure as a reason for leaving, a breakdown of what specifically they pointed to."
+      },
+      {
+        "title": "Exit Interviews by Job Title",
+        "body": "Exit interview responses grouped by the departing employee's job title."
+      },
+      {
+        "title": "Reasons for Leaving Over Time",
+        "body": "How the top resignation reasons have trended month over month."
+      },
+      {
+        "title": "Engagement Drivers",
+        "body": "Engagement drivers (training, fairness, workload, etc.) ranked by how strongly each correlates with a departing employee's overall experience rating — the ones with the biggest impact on satisfaction."
+      },
+      {
+        "title": "Reason for Leaving vs. Would Return",
+        "body": "Cross-tabulates each resignation reason against whether that employee said they'd return, so you can see which reasons tend to be \"final\" versus more circumstantial."
+      },
+      {
+        "title": "Comments",
+        "body": "The free-text comments departing employees left in their exit interview, searchable and filterable by question."
+      },
+      {
+        "title": "What They Would Change",
+        "body": "What departing employees said they'd change about the job or store, sorted by store and date — a separate free-text field from the general Comments table above."
+      }
+    ]
+  },
+  {
+    "file": "_ComparisonsContent.cshtml",
+    "pagekey": "comparisons",
+    "title": "Turnover Comparisons",
+    "overview": "This page compares two periods side by side, Period A vs Period B — each with its own independent year/months/store/OM/OC filters. Every KPI, chart and table below shows both periods together plus the change between them, so you can see whether things improved or worsened.",
+    "filternote": "Period A and Period B each have their own year, months, store, Operation Manager, Operation Consultant, Senior Operation Consultant and Operation Director filters — they don't have to match. \"Copy to last year\" fills Period B with the same filters as Period A but one year earlier, as a shortcut for year-over-year comparisons.",
+    "sections": [
+      {
+        "title": "Smart Insights",
+        "body": "Headcount, New Hires, Resignations, Turnover Rate, Early Leavers and 90-Day Rate for Period A and Period B side by side, each with the percentage-point change between them and whether that change is an improvement or not."
+      },
+      {
+        "title": "Turnover Rate by Store — A vs B",
+        "body": "Turnover Rate per store for Period A vs Period B, as paired bars so you can spot which stores got better or worse."
+      },
+      {
+        "title": "90-Day Rate by Store — A vs B",
+        "body": "90-Day Rate per store for Period A vs Period B, as paired bars."
+      },
+      {
+        "title": "Workforce by Store — A vs B",
+        "body": "Active headcount per store for Period A vs Period B, as paired bars — or total headcount for both periods when a single store is selected."
+      },
+      {
+        "title": "Resignations Count by Store — A vs B",
+        "body": "Resignation count per store for Period A vs Period B, as paired bars — or the total for both periods when a single store is selected."
+      },
+      {
+        "title": "Retention Milestones — A vs B",
+        "body": "Retention rate at the 6-month, 1-year and later milestones for Period A vs Period B, for hire cohorts old enough to be eligible at each milestone."
+      },
+      {
+        "title": "Reasons for Leaving — A vs B",
+        "body": "The most common reasons recorded in exit interviews, Period A vs Period B, so you can see whether the same reasons dominate or the mix shifted."
+      },
+      {
+        "title": "Exit Interview Sentiment — A vs B",
+        "body": "Positive exit-interview sentiment and how many interviews were submitted, Period A vs Period B."
+      },
+      {
+        "title": "Per-Store Breakdown — A vs B",
+        "body": "Every store with its Turnover Rate and 90-Day Rate in both periods, plus the change between them. Click a column header to sort."
+      }
+    ]
+  },
+  {
+    "file": "_ScorecardContent.cshtml",
+    "pagekey": "scorecard",
+    "title": "Scorecard",
+    "overview": "This page scores every Store Leader (and rolls that up by OC/OM) on four metrics: Turnover Rate, Early Leaver (90-Day) Rate, 180-Day Retention Rate and Exit Sentiment — so leadership performance can be ranked and tracked over time, not just store performance.",
+    "filternote": "Choosing an Operation Manager, Operation Consultant, Senior Operation Consultant or Operation Director filters the ranking and rollup to just their reporting line. The Year/Months filter sets which period's data feeds every metric on this page.",
+    "sections": [
+      {
+        "title": "Turnover Trend",
+        "body": "Pick one Store Leader to see their turnover rate trend over time across every store they've led — including a marker where they were transferred between stores, so a rate change can be told apart from a store change."
+      },
+      {
+        "title": "Ranking",
+        "body": "Every Store Leader (or, switching the tab above, every OC/OM) ranked by Turnover Rate, Early Leaver Rate, 180-Day Retention Rate and Exit Sentiment side by side. Sorted worst Turnover Rate first by default — click any column to re-sort."
+      },
+      {
+        "title": "Rollup by OC / OM",
+        "body": "For each OC and each OM: how many Store Leaders they oversee, how many of those leaders are \"flagged\" (performing poorly on the ranking above) and what percentage that represents."
+      }
+    ]
+  },
+  {
+    "file": "_StoresContent.cshtml",
+    "pagekey": "stores",
+    "title": "Stores",
+    "overview": "This page is a card-based directory of every store, each showing its headcount, turnover rate, resignations, OC/OM and a health status at a glance, for the selected period.",
+    "filternote": "Choosing an Operation Manager, Operation Consultant, Senior Operation Consultant or Operation Director filters the cards to just their stores. The period selector picks which month's snapshot is shown. The Sort dropdown and search box don't filter data, just how the cards are ordered/found.",
+    "sections": [
+      {
+        "title": "Smart Insights",
+        "body": "Company-wide totals for the selected period: headcount, resignations and turnover rate across every store."
+      },
+      {
+        "title": "Stores",
+        "body": "One card per store with its headcount, turnover rate, resignations, OC/OM and a health badge (Good / Watch / Critical) based on its turnover rate against the configured thresholds — plus a link into that store's Action Center detail if it has an open plan."
+      }
+    ]
+  },
+  {
+    "file": "_ReportsContent.cshtml",
+    "pagekey": "reports",
+    "title": "Reports",
+    "overview": "This page is a catalog of every downloadable Excel report, grouped by section (Turnover, Retention, Exit Interviews, etc.). Click any card to open that report's own page, where you pick a period and filters before downloading. This index page itself has no filters — it's just a directory.",
+    "filternote": null,
+    "sections": []
+  },
+  {
+    "file": "_ReportDetailContent.cshtml",
+    "pagekey": "reportdetail",
+    "title": "reportdetail",
+    "overview": "This page generates one downloadable Excel workbook for the report you picked. It doesn't show charts on-screen — instead, the filters below control exactly what data gets written into the Excel file once you download it, so the export matches what you actually need.",
+    "filternote": "Which filters appear depends on the report — a period or year/months selector, Store/OM/OC/SOC/OD filters, or (for comparison-style reports) two independent A/B period panels. Whatever you set here is baked into the Excel file the moment you click Download — change a filter and download again to get a different slice of the data.",
+    "sections": []
+  },
+  {
+    "file": "_StoreProfileContent.cshtml",
+    "pagekey": "storeprofile",
+    "title": "Store 360 Overview",
+    "overview": "This is the 360-degree profile for one store. Use it to understand the store's current workforce position, turnover and early-leaver pattern, risk signals, exit-interview themes and action-plan progress without leaving the store context.",
+    "filternote": "The From/To selectors control the profile's period-based KPIs and analyses. The action-plan and signal-history details come from the store's existing records; changing tabs keeps the same store and selected context.",
+    "sections": [
+      {
+        "title": "Branch Health Command Center",
+        "body": "The Branch Health Command Center combines the selected period's current KPIs with existing action-plan baselines, recurring signals and high-risk employees. The status is a decision aid, not a new metric or data source."
+      },
+      {
+        "title": "Risk Summary",
+        "body": "The Workforce and Early Warning tabs explain who is currently in the store, how the team is distributed, and which employees or signals require attention. Use the breakdowns by job, tenure, payroll group, gender and cost-center classifications to locate concentration."
+      },
+      {
+        "title": "Turnover Trend",
+        "body": "The Turnover tab shows the store's resignation pattern across the selected period and its available history. Compare the current rate with the trend and the action-plan baseline before deciding whether the issue is new or recurring."
+      },
+      {
+        "title": "Headcount Trend",
+        "body": "Alongside the Turnover Trend, the Overview tab also charts the store's Headcount Trend over the same history, and lists a few auto-generated Quick Insights worth a first look."
+      },
+      {
+        "title": "Retention",
+        "body": "The Retention tab shows how long this store's current team stays: the tenure-band mix, retention by job title and gender, and the monthly hiring trend — the flip side of the Turnover tab."
+      },
+      {
+        "title": "90-Day Early Leaver Rate",
+        "body": "The 90-Day tab focuses on employees who resigned within their first 90 days, using the existing hire and resignation records. It helps distinguish an onboarding or early-tenure pattern from broader store turnover."
+      },
+      {
+        "title": "Exit Sentiment",
+        "body": "The Exit Interviews tab connects resignation reasons, return intent, experience ratings and comments to the store and selected period. Use it to add context to the quantitative turnover and risk signals."
+      },
+      {
+        "title": "Action Plan",
+        "body": "The Action Center tab shows the active or resolved plan, its recommendations, completion progress, notes, metric snapshots, signal history and baseline changes. It is the follow-through view for issues identified elsewhere in the profile."
+      },
+      {
+        "title": "Store Leaders",
+        "body": "The Store Leaders tab lists every Store Leader who has run this store, with the period each led it and how many months that stretch covers — the current leader is marked, so you can line up a leadership change with a shift in the store's numbers."
+      }
+    ]
+  },
+  {
+    "file": "_ActionCenterDetailContent.cshtml",
+    "pagekey": "actioncenterdetail",
+    "title": "Action Center",
+    "overview": "The single-store drill-down: this store's Health Index and the six-pillar breakdown with the evidence behind each flag, a weighted action plan ranked by impact, the forward workforce outlook, and — when an Action Plan is open — its metrics, recommendations, signal history, notes, and close controls. See the Action Center page's guide for how the health score is computed.",
+    "filternote": "This page always shows one specific store — the one you opened from the Action Center table. Use the Notes section to log follow-up, and Manual Close to resolve the plan once addressed (with a reason).",
+    "sections": [
+      {
+        "title": "Store Health Index",
+        "body": "The store's overall Health Score and severity, then each pillar with its 0-100 severity, deviation chips, and the evidence numbers (e.g. this store's turnover vs. the company average). The Engagement pillar lists the specific exit-interview drivers that scored worst."
+      },
+      {
+        "title": "Weighted Action Plan",
+        "body": "The Weighted Action Plan — concrete actions ordered by impact weight, each tied to the pillar and evidence that triggered it. Where a store has an open plan, matching actions are checkable and stay in sync with its recommendations."
+      },
+      {
+        "title": "Workforce Outlook",
+        "body": "Workforce Outlook — current headcount versus the projected/required headcount for the store, the resulting staffing gap, and any planned hires. Shows a pending state until workforce projection data is uploaded."
+      },
+      {
+        "title": "Progress",
+        "body": "This store's current Turnover Rate, Early Leaver (90-Day) Rate and Retention Rate, each with the change versus the prior period."
+      },
+      {
+        "title": "Metric Trend Since Plan Opened",
+        "body": "How this store's flagged metric(s) have trended over time, so you can see whether the situation is improving since the plan was opened."
+      },
+      {
+        "title": "Monthly Turnover Performance",
+        "body": "Overall Turnover % and 90-Day Turnover % for every month this store has data, each with the change versus the previous month in percentage points — read from the same monthly turnover analysis already used elsewhere in the app, not a separate calculation."
+      },
+      {
+        "title": "Monthly Performance",
+        "body": "Every recorded monthly snapshot as a table — Turnover %, Early-Leaver %, Retention %, signal count, and the change in Turnover % versus the previous month — the same data behind the KPI cards and trend chart above, laid out month by month."
+      },
+      {
+        "title": "Detected issues",
+        "body": "The plain-language explanation of exactly what was detected and why this store was flagged."
+      },
+      {
+        "title": "Ownership & Target Date",
+        "body": "Admins can assign this plan to a name and set a target resolution date here; everyone else sees the same assignment read-only, with a badge once the target date is near or passed."
+      },
+      {
+        "title": "Recommendations",
+        "body": "Suggested actions for this store's specific issues, which can be checked off as they're completed."
+      },
+      {
+        "title": "Signal History",
+        "body": "Which signals fired in each period this store has uploaded data for. A period with no upload shows \"No data\" — it's never counted as clean. A signal marked \"Persistent\" has fired in at least 2 of the store's last 3 periods with data."
+      },
+      {
+        "title": "Notes",
+        "body": "A running log of follow-up notes on this plan — who wrote each one, when, and its role. Anyone with access to add notes can post here."
+      },
+      {
+        "title": "Manually Close This Plan",
+        "body": "Admins can close this plan manually, with a required reason, once the underlying issue has been addressed — even if the automatic detection signals haven't cleared yet on their own."
+      }
+    ]
+  }
+]
