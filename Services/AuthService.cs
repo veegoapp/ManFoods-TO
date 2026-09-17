@@ -93,6 +93,13 @@ public class AuthService : IAuthService
 
     public void ClearLockout(string email) => _cache.Remove(FailKey(email));
 
+    // How long a login_history row is kept, and how many rows are kept per
+    // user regardless of age — the table otherwise grows forever (nothing
+    // else in the app ever deletes from it; there's no background-job
+    // infrastructure to run a scheduled purge instead).
+    private static readonly TimeSpan RetentionPeriod = TimeSpan.FromDays(365);
+    private const int MaxRowsPerUser = 500;
+
     // Records the attempt once it's resolved against a known account — shared
     // by both the Home and Admin AccountControllers' Login actions, since they
     // both call ValidateAsync. Best-effort: a failure here must never block
@@ -114,10 +121,38 @@ public class AuthService : IAuthService
                 UserAgent = http?.Request.Headers.UserAgent.ToString(),
             });
             await _db.SaveChangesAsync();
+            await PruneHistoryAsync(user.Id);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to record login history for user {UserId}.", user.Id);
+        }
+    }
+
+    // Opportunistic cleanup, piggybacked on the same request that just wrote
+    // a row, so it doesn't need its own schedule. Failures here must never
+    // surface past LogAttemptAsync, so this stays inside that method's
+    // try/catch rather than getting one of its own.
+    private async Task PruneHistoryAsync(int userId)
+    {
+        // The per-user cap is cheap (scoped by the indexed user_id) so it
+        // runs every time. The age-based purge has no index to lean on —
+        // logged_in_at is only indexed together with user_id — so it's a
+        // full-table scan; only worth paying for occasionally.
+        var idsToKeep = await _db.LoginHistories
+            .Where(l => l.UserId == userId)
+            .OrderByDescending(l => l.LoggedInAt)
+            .Take(MaxRowsPerUser)
+            .Select(l => l.Id)
+            .ToListAsync();
+        await _db.LoginHistories
+            .Where(l => l.UserId == userId && !idsToKeep.Contains(l.Id))
+            .ExecuteDeleteAsync();
+
+        if (Random.Shared.Next(100) == 0)
+        {
+            var cutoff = DateTime.UtcNow - RetentionPeriod;
+            await _db.LoginHistories.Where(l => l.LoggedInAt < cutoff).ExecuteDeleteAsync();
         }
     }
 
