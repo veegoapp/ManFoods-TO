@@ -3,14 +3,23 @@ namespace MvcApp.Services;
 public interface IOtpService
 {
     /// <summary>Generates a compliant random temporary password (PasswordPolicy)
-    /// for every non-Admin account that has no password set yet (bulk-uploaded,
-    /// still pending — already-activated accounts are skipped entirely), sets
-    /// it as the account's real password hash directly (no OTP involved), and
-    /// marks the account MustChangePassword so the owner is forced to replace
-    /// it on first login. Returns the count generated and an Excel file
-    /// (Email, Phone, Temporary Password, and a ready-to-send SMS Message
-    /// column combining a welcome note, the portal link, and both).</summary>
+    /// for every non-Admin account still pending activation — either it has no
+    /// password set yet, or it does but hasn't completed its first-login change
+    /// yet (already-activated accounts are skipped entirely) — sets it as the
+    /// account's real password hash directly (no OTP involved, replacing
+    /// whatever temporary password was there before), and marks the account
+    /// MustChangePassword so the owner is forced to replace it on first login.
+    /// Returns the count generated and an Excel file (Email, Phone, Temporary
+    /// Password, and a ready-to-send SMS Message column combining a welcome
+    /// note, the portal link, and both).</summary>
     Task<(int count, byte[] excelBytes)> GenerateBulkDefaultPasswordsAsync();
+
+    /// <summary>Same as GenerateBulkDefaultPasswordsAsync but for one specific
+    /// non-Admin account still pending activation — regenerates (and thereby
+    /// invalidates) its temporary password instead of running the bulk sweep.
+    /// Returns null if the user doesn't exist, is an Admin, or has already
+    /// completed activation.</summary>
+    Task<string?> GenerateSingleDefaultPasswordAsync(int userId);
 
     /// <summary>Generates a fresh OTP for one specific User-role account,
     /// regardless of whether it already has a password (forgot-password case).
