@@ -674,6 +674,14 @@ public class DashboardController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
+    public async Task<IActionResult> GenerateDefaultPassword(int id)
+    {
+        var password = await _otp.GenerateSingleDefaultPasswordAsync(id);
+        if (password == null) return NotFound();
+        return Json(new { password });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> GenerateOtp(int id)
     {
         var otp = await _otp.GenerateSingleOtpAsync(id);

@@ -39,7 +39,7 @@ public class OtpService : IOtpService
     public async Task<(int count, byte[] excelBytes)> GenerateBulkDefaultPasswordsAsync()
     {
         var pendingUsers = await _db.Users
-            .Where(u => u.Role != "Admin" && u.PasswordHash == null)
+            .Where(u => u.Role != "Admin" && (u.PasswordHash == null || u.MustChangePassword))
             .ToListAsync();
 
         var results = new List<(string Email, string Phone, string Password)>();
@@ -90,6 +90,18 @@ public class OtpService : IOtpService
         using var stream = new MemoryStream();
         wb.SaveAs(stream);
         return (results.Count, stream.ToArray());
+    }
+
+    public async Task<string?> GenerateSingleDefaultPasswordAsync(int userId)
+    {
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null || user.Role == "Admin" || (user.PasswordHash != null && !user.MustChangePassword)) return null;
+
+        var password = PasswordPolicy.GenerateTemporaryPassword();
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+        user.MustChangePassword = true;
+        await _db.SaveChangesAsync();
+        return password;
     }
 
     public async Task<string?> GenerateSingleOtpAsync(int userId)

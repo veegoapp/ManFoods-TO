@@ -669,7 +669,7 @@
   <data name="Users_BulkUpload" xml:space="preserve"><value>رفع مستخدمين بالجملة</value></data>
   <data name="Users_BulkUploadDesc" xml:space="preserve"><value>ملف Excel بالبريد والهاتف — تُنشأ كحسابات مستخدمين معلقة بدون كلمة مرور.</value></data>
   <data name="Users_GenerateBulkOtps" xml:space="preserve"><value>توليد باسورد افتراضي</value></data>
-  <data name="Users_GenerateBulkOtpsDesc" xml:space="preserve"><value>تنزيل البريد والهاتف والباسورد المؤقت + رسالة SMS جاهزة للإرسال لكل مستخدم معلّق لسه معندوش باسورد.</value></data>
+  <data name="Users_GenerateBulkOtpsDesc" xml:space="preserve"><value>تنزيل البريد والهاتف والباسورد المؤقت + رسالة SMS جاهزة للإرسال لكل مستخدم لسه في حالة Pending Activation.</value></data>
   <data name="Users_UploadUsers" xml:space="preserve"><value>رفع المستخدمين</value></data>
   <data name="Users_GenerateDownloadOtps" xml:space="preserve"><value>توليد وتنزيل الباسوردات</value></data>
   <data name="Users_NoUsers" xml:space="preserve"><value>لا يوجد مستخدمون بعد</value></data>
@@ -1265,6 +1265,10 @@
 
   <!-- Users page -->
   <data name="Users_GenerateOtp" xml:space="preserve"><value>إنشاء رمز مؤقت</value></data>
+  <data name="Users_RegenerateDefaultPassword" xml:space="preserve"><value>إعادة توليد الباسورد المؤقتة</value></data>
+  <data name="Users_DefaultPasswordGenerated" xml:space="preserve"><value>تم توليد باسورد مؤقتة</value></data>
+  <data name="Users_DefaultPasswordGeneratedDesc" xml:space="preserve"><value>هتلغي الباسورد المؤقتة اللي كانت متبعتلّه قبل كده. ابعت دي لليوزر بنفسك.</value></data>
+  <data name="Users_DefaultPasswordFailed" xml:space="preserve"><value>تعذّر توليد باسورد مؤقتة.</value></data>
   <data name="Users_GenerateRecoveryKeyTitle" xml:space="preserve"><value>إنشاء مفتاح استرداد جديد للمسؤول</value></data>
   <data name="Users_RegenerateRecoveryKeyDesc" xml:space="preserve"><value>هذا مفتاح واحد مشترك لكل المسؤولين — إنشاء مفتاح جديد يُلغي القديم فورًا للجميع.</value></data>
   <data name="Users_DeleteConfirm" xml:space="preserve"><value>حذف المستخدم {0}؟</value></data>

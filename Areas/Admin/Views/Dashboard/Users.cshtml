@@ -208,6 +208,10 @@
                             <td class="text-end">
                                 @if (user.Role != "Admin")
                                 {
+                                    @if (!IsActive(user))
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-secondary me-1 js-generate-default-password" data-id="@user.Id" data-email="@user.Email" title="@L["Users_RegenerateDefaultPassword"]"><i class="bi bi-file-earmark-arrow-down"></i></button>
+                                    }
                                     <button type="button" class="btn btn-sm btn-outline-secondary me-1 js-generate-otp" data-id="@user.Id" data-email="@user.Email" title="@L["Users_GenerateOtp"]"><i class="bi bi-key"></i></button>
                                 }
                                 else if (isSuperAdmin && !SuperAdminPolicy.IsSuperAdmin(user.Email))
@@ -236,6 +240,7 @@
 
 <div id="usL" hidden
      data-otp-failed="@L["Users_OtpFailed"]"
+     data-default-password-failed="@L["Users_DefaultPasswordFailed"]"
      data-something-went-wrong="@L["Common_SomethingWentWrong"]"
      data-generated-email="@generatedEmail"
      data-generated-password="@generatedPassword"></div>
@@ -263,6 +268,19 @@
         </div>
         <p class="text-muted-custom small mb-3">@L["Users_ValidFor"]</p>
         <button type="button" class="btn btn-primary w-100" id="otpCloseBtn">@L["Users_Close"]</button>
+    </div>
+</div>
+
+<div id="defaultPasswordResultModal" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.5);align-items:center;justify-content:center">
+    <div class="card-dark" style="max-width:420px;width:90%">
+        <h6 class="mb-2"><i class="bi bi-file-earmark-arrow-down me-1"></i>@L["Users_DefaultPasswordGenerated"]</h6>
+        <p class="text-muted-custom small mb-2" id="defaultPasswordResultEmail"></p>
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <input type="text" id="defaultPasswordResultValue" class="form-control form-control-dark" readonly style="font-size:16px;font-weight:700"/>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="defaultPasswordCopyBtn" title="@L["Common_Copy"]"><i class="bi bi-clipboard"></i></button>
+        </div>
+        <p class="text-muted-custom small mb-3">@L["Users_DefaultPasswordGeneratedDesc"]</p>
+        <button type="button" class="btn btn-primary w-100" id="defaultPasswordCloseBtn">@L["Users_Close"]</button>
     </div>
 </div>
 
@@ -342,6 +360,36 @@
         navigator.clipboard.writeText(codeEl.value);
     });
     document.getElementById('otpCloseBtn').addEventListener('click', () => { modal.style.display = 'none'; });
+
+    // ── Regenerate a single pending user's default (temporary) password ──
+    const pwResultModal = document.getElementById('defaultPasswordResultModal');
+    const pwResultEmailEl = document.getElementById('defaultPasswordResultEmail');
+    const pwResultValueEl = document.getElementById('defaultPasswordResultValue');
+
+    document.querySelectorAll('.js-generate-default-password').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            try {
+                const res = await fetch(`/admin/dashboard/generatedefaultpassword/${btn.dataset.id}`, {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': token }
+                });
+                if (!res.ok) { alert(usL.defaultPasswordFailed); return; }
+                const data = await res.json();
+                pwResultEmailEl.textContent = btn.dataset.email;
+                pwResultValueEl.value = data.password;
+                pwResultModal.style.display = 'flex';
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    });
+
+    document.getElementById('defaultPasswordCopyBtn').addEventListener('click', () => {
+        pwResultValueEl.select();
+        navigator.clipboard.writeText(pwResultValueEl.value);
+    });
+    document.getElementById('defaultPasswordCloseBtn').addEventListener('click', () => { pwResultModal.style.display = 'none'; });
 
     // ── Regenerate admin recovery key ──────────────────────
     const pwModal = document.getElementById('recoveryPasswordModal');

@@ -669,7 +669,7 @@
   <data name="Users_BulkUpload" xml:space="preserve"><value>Bulk Upload Users</value></data>
   <data name="Users_BulkUploadDesc" xml:space="preserve"><value>Excel with Email + Phone — created as pending "User" accounts, no password yet.</value></data>
   <data name="Users_GenerateBulkOtps" xml:space="preserve"><value>Generate Default Passwords</value></data>
-  <data name="Users_GenerateBulkOtpsDesc" xml:space="preserve"><value>Downloads Email + Phone + Temporary Password + a ready-to-send SMS message for every pending user who doesn't have a password yet.</value></data>
+  <data name="Users_GenerateBulkOtpsDesc" xml:space="preserve"><value>Downloads Email + Phone + Temporary Password + a ready-to-send SMS message for every user still pending activation.</value></data>
   <data name="Users_UploadUsers" xml:space="preserve"><value>Upload Users</value></data>
   <data name="Users_GenerateDownloadOtps" xml:space="preserve"><value>Generate &amp; Download Passwords</value></data>
   <data name="Users_NoUsers" xml:space="preserve"><value>No users yet</value></data>
@@ -1259,6 +1259,10 @@
 
   <!-- Users page -->
   <data name="Users_GenerateOtp" xml:space="preserve"><value>Generate OTP</value></data>
+  <data name="Users_RegenerateDefaultPassword" xml:space="preserve"><value>Regenerate Default Password</value></data>
+  <data name="Users_DefaultPasswordGenerated" xml:space="preserve"><value>Default Password Generated</value></data>
+  <data name="Users_DefaultPasswordGeneratedDesc" xml:space="preserve"><value>This replaces the account's previous temporary password. Send this to the user yourself.</value></data>
+  <data name="Users_DefaultPasswordFailed" xml:space="preserve"><value>Failed to generate a default password.</value></data>
   <data name="Users_GenerateRecoveryKeyTitle" xml:space="preserve"><value>Generate a new admin recovery key</value></data>
   <data name="Users_RegenerateRecoveryKeyDesc" xml:space="preserve"><value>This is a single shared key for all admins — regenerating it invalidates the old one immediately for everyone.</value></data>
   <data name="Users_DeleteConfirm" xml:space="preserve"><value>Delete user {0}?</value></data>
