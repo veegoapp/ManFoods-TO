@@ -16,23 +16,26 @@ const WHITE = "FFFFFF";
 const logoBuf = fs.readFileSync(__dirname + "/mclogo.png");
 const CONTENT_WIDTH = 10440;
 
-// Real portal screenshots (sent by the user), keyed by PageKey. Sized to a
-// fixed display width with height kept proportional to each screenshot's
-// actual aspect ratio — some of these are full mobile-page captures and run
-// tall, which is expected; they are not cropped.
-const screenshotDims = JSON.parse(fs.readFileSync(__dirname + "/screenshot_dims.json", "utf8"));
-function pageScreenshot(pagekey) {
-  const dims = screenshotDims[pagekey];
-  const imgPath = __dirname + `/screenshots/${pagekey}.jpg`;
-  if (!dims || !fs.existsSync(imgPath)) return null;
+// Sample chart images per page — drawn fresh (not cropped from the real
+// screenshots), but using the exact category labels read off the user's real
+// portal screenshots (job titles, payroll groups, exit reasons, risk
+// factors, etc.). Values are illustrative, not the store's real figures.
+const chartSizes = JSON.parse(fs.readFileSync(__dirname + "/chart_sample_sizes.json", "utf8"));
+const DISPLAY_W = 480;
+function pageChartSample(pagekey) {
+  const size = chartSizes[pagekey];
+  const imgPath = __dirname + `/chart_samples/${pagekey}.png`;
+  if (!size || !fs.existsSync(imgPath)) return null;
+  const [w, h] = size;
+  const height = Math.round(DISPLAY_W * h / w);
   return [
     new Paragraph({
-      children: [new ImageRun({ type: "jpg", data: fs.readFileSync(imgPath), transformation: { width: dims.width, height: dims.height } })],
+      children: [new ImageRun({ type: "png", data: fs.readFileSync(imgPath), transformation: { width: DISPLAY_W, height } })],
       alignment: AlignmentType.CENTER,
       spacing: { before: 60, after: 30 },
     }),
     new Paragraph({
-      children: [new TextRun({ text: "Live portal screenshot", italics: true, size: 14, color: MUTED })],
+      children: [new TextRun({ text: "Illustrative sample — labels match the live portal; values do not.", italics: true, size: 14, color: MUTED })],
       alignment: AlignmentType.CENTER,
       spacing: { after: 160 },
     }),
@@ -166,7 +169,7 @@ pages.forEach((p, idx) => {
   );
   if (p.overview) children.push(P(p.overview));
   if (p.filternote) children.push(PMuted(p.filternote));
-  const shot = pageScreenshot(p.pagekey);
+  const shot = pageChartSample(p.pagekey);
   if (shot) children.push(...shot);
   if (p.sections && p.sections.length) {
     children.push(H2("What's on this page"));
