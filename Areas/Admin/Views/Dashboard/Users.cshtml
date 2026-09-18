@@ -211,6 +211,7 @@
                                     @if (!IsActive(user))
                                     {
                                         <button type="button" class="btn btn-sm btn-outline-secondary me-1 js-generate-default-password" data-id="@user.Id" data-email="@user.Email" title="@L["Users_RegenerateDefaultPassword"]"><i class="bi bi-file-earmark-arrow-down"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary me-1 js-send-outlook-credentials" data-id="@user.Id" data-email="@user.Email" title="@L["Users_SendOutlookCredentials"]"><i class="bi bi-envelope-fill"></i></button>
                                     }
                                     <button type="button" class="btn btn-sm btn-outline-secondary me-1 js-generate-otp" data-id="@user.Id" data-email="@user.Email" title="@L["Users_GenerateOtp"]"><i class="bi bi-key"></i></button>
                                 }
@@ -242,6 +243,8 @@
      data-otp-failed="@L["Users_OtpFailed"]"
      data-default-password-failed="@L["Users_DefaultPasswordFailed"]"
      data-something-went-wrong="@L["Common_SomethingWentWrong"]"
+     data-outlook-subject="@L["Users_OutlookEmailSubject"]"
+     data-outlook-invalid-email="@L["Users_OutlookInvalidEmail"]"
      data-generated-email="@generatedEmail"
      data-generated-password="@generatedPassword"></div>
 
@@ -390,6 +393,43 @@
         navigator.clipboard.writeText(pwResultValueEl.value);
     });
     document.getElementById('defaultPasswordCloseBtn').addEventListener('click', () => { pwResultModal.style.display = 'none'; });
+
+    // ── Send a pending user's temporary-password credentials via Outlook ──
+    // Reuses the same single-user password-generation endpoint as the button
+    // above (new password generated server-side, only the BCrypt hash is
+    // persisted) and the same welcome/portal-link wording the bulk Excel
+    // export uses (returned as "message" from that endpoint) — the plaintext
+    // password never leaves browser memory for longer than this click.
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    document.querySelectorAll('.js-send-outlook-credentials').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const email = (btn.dataset.email || '').trim();
+            if (!emailPattern.test(email)) { alert(usL.outlookInvalidEmail); return; }
+
+            btn.disabled = true;
+            try {
+                const res = await fetch(`/admin/dashboard/generatedefaultpassword/${btn.dataset.id}`, {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': token }
+                });
+                if (!res.ok) { alert(usL.defaultPasswordFailed); return; }
+                const data = await res.json();
+                if (!data.password || !data.message) { alert(usL.somethingWentWrong); return; }
+
+                const mailto = `mailto:${encodeURIComponent(email)}` +
+                    `?subject=${encodeURIComponent(usL.outlookSubject)}` +
+                    `&body=${encodeURIComponent(data.message)}`;
+                // Navigating to a mailto: URL hands off to the OS's registered
+                // mail client (Outlook Desktop, when set as default) and opens
+                // a compose window pre-filled but unsent — it does not send
+                // anything itself and does not leave this page.
+                window.location.href = mailto;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    });
 
     // ── Regenerate admin recovery key ──────────────────────
     const pwModal = document.getElementById('recoveryPasswordModal');

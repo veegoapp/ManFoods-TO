@@ -1277,6 +1277,9 @@
   <data name="Users_SaveKeyWarning" xml:space="preserve"><value>احفظه الآن — لن يُعرض مرة أخرى، ولن يعمل المفتاح القديم بعد ذلك.</value></data>
   <data name="Users_OtpFailed" xml:space="preserve"><value>تعذّر إنشاء الرمز المؤقت.</value></data>
   <data name="Common_SomethingWentWrong" xml:space="preserve"><value>حدث خطأ ما.</value></data>
+  <data name="Users_SendOutlookCredentials" xml:space="preserve"><value>إرسال بيانات الدخول عبر Outlook</value></data>
+  <data name="Users_OutlookEmailSubject" xml:space="preserve"><value>بيانات دخولك لبوابة McDonald's Crew Insights Hub</value></data>
+  <data name="Users_OutlookInvalidEmail" xml:space="preserve"><value>لا يوجد بريد إلكتروني صالح مسجّل لهذا المستخدم.</value></data>
 
   <!-- Create user placeholder -->
   <data name="Users_MinSixChars" xml:space="preserve"><value>6 أحرف على الأقل</value></data>

@@ -92,16 +92,18 @@ public class OtpService : IOtpService
         return (results.Count, stream.ToArray());
     }
 
-    public async Task<string?> GenerateSingleDefaultPasswordAsync(int userId)
+    public async Task<(string? Password, string? Message)> GenerateSingleDefaultPasswordAsync(int userId)
     {
         var user = await _db.Users.FindAsync(userId);
-        if (user == null || user.Role == "Admin" || (user.PasswordHash != null && !user.MustChangePassword)) return null;
+        if (user == null || user.Role == "Admin" || (user.PasswordHash != null && !user.MustChangePassword)) return (null, null);
 
         var password = PasswordPolicy.GenerateTemporaryPassword();
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
         user.MustChangePassword = true;
         await _db.SaveChangesAsync();
-        return password;
+        // Same wording as the bulk Excel's SMS Message column (BuildSmsMessage) —
+        // single source of truth for the welcome/portal-link/credentials text.
+        return (password, BuildSmsMessage(user.Email, password));
     }
 
     public async Task<string?> GenerateSingleOtpAsync(int userId)

@@ -17,9 +17,12 @@ public interface IOtpService
     /// <summary>Same as GenerateBulkDefaultPasswordsAsync but for one specific
     /// non-Admin account still pending activation — regenerates (and thereby
     /// invalidates) its temporary password instead of running the bulk sweep.
-    /// Returns null if the user doesn't exist, is an Admin, or has already
-    /// completed activation.</summary>
-    Task<string?> GenerateSingleDefaultPasswordAsync(int userId);
+    /// Also returns the same ready-to-send welcome message (portal link +
+    /// username + password) used in the bulk Excel's SMS Message column, so
+    /// callers (e.g. the Outlook "send credentials" button) don't have to
+    /// duplicate that wording. Password and Message are null if the user
+    /// doesn't exist, is an Admin, or has already completed activation.</summary>
+    Task<(string? Password, string? Message)> GenerateSingleDefaultPasswordAsync(int userId);
 
     /// <summary>Generates a fresh OTP for one specific User-role account,
     /// regardless of whether it already has a password (forgot-password case).

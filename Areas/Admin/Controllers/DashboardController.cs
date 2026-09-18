@@ -676,9 +676,12 @@ public class DashboardController : Controller
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> GenerateDefaultPassword(int id)
     {
-        var password = await _otp.GenerateSingleDefaultPasswordAsync(id);
+        var (password, message) = await _otp.GenerateSingleDefaultPasswordAsync(id);
         if (password == null) return NotFound();
-        return Json(new { password });
+        // "message" is the same welcome/portal-link/credentials wording as the
+        // bulk Excel's SMS Message column — used by the Users page's Outlook
+        // "send credentials" button to pre-fill the email body.
+        return Json(new { password, message });
     }
 
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
