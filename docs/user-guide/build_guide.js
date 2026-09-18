@@ -16,6 +16,29 @@ const WHITE = "FFFFFF";
 const logoBuf = fs.readFileSync(__dirname + "/mclogo.png");
 const CONTENT_WIDTH = 10440;
 
+// Real portal screenshots (sent by the user), keyed by PageKey. Sized to a
+// fixed display width with height kept proportional to each screenshot's
+// actual aspect ratio — some of these are full mobile-page captures and run
+// tall, which is expected; they are not cropped.
+const screenshotDims = JSON.parse(fs.readFileSync(__dirname + "/screenshot_dims.json", "utf8"));
+function pageScreenshot(pagekey) {
+  const dims = screenshotDims[pagekey];
+  const imgPath = __dirname + `/screenshots/${pagekey}.jpg`;
+  if (!dims || !fs.existsSync(imgPath)) return null;
+  return [
+    new Paragraph({
+      children: [new ImageRun({ type: "jpg", data: fs.readFileSync(imgPath), transformation: { width: dims.width, height: dims.height } })],
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 60, after: 30 },
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: "Live portal screenshot", italics: true, size: 14, color: MUTED })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 160 },
+    }),
+  ];
+}
+
 const NO_BORDER = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
 const noBorders = { top: NO_BORDER, bottom: NO_BORDER, left: NO_BORDER, right: NO_BORDER, insideHorizontal: NO_BORDER, insideVertical: NO_BORDER };
 
@@ -143,6 +166,8 @@ pages.forEach((p, idx) => {
   );
   if (p.overview) children.push(P(p.overview));
   if (p.filternote) children.push(PMuted(p.filternote));
+  const shot = pageScreenshot(p.pagekey);
+  if (shot) children.push(...shot);
   if (p.sections && p.sections.length) {
     children.push(H2("What's on this page"));
     p.sections.forEach((s) => children.push(sectionBullet(s.title, s.body)));
