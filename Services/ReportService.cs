@@ -49,6 +49,7 @@ public class ReportService : IReportService
     private readonly IEarlyWarningService _earlyWarning;
     private readonly IStoreActionPlanService _actionPlans;
     private readonly IStoreService _stores;
+    private readonly IAccessAreaContext _areaContext;
 
     public ReportService(
         IDashboardService dashboard,
@@ -58,7 +59,8 @@ public class ReportService : IReportService
         IScorecardService scorecard,
         IEarlyWarningService earlyWarning,
         IStoreActionPlanService actionPlans,
-        IStoreService stores)
+        IStoreService stores,
+        IAccessAreaContext areaContext)
     {
         _dashboard = dashboard;
         _ninetyDay = ninetyDay;
@@ -68,6 +70,28 @@ public class ReportService : IReportService
         _earlyWarning = earlyWarning;
         _actionPlans = actionPlans;
         _stores = stores;
+        _areaContext = areaContext;
+    }
+
+    /// <summary>Runs a fetch under a specific access area instead of whatever the
+    /// current export endpoint is tagged with. The Reports export flow runs
+    /// entirely under the umbrella "reports" area, but a couple of sections
+    /// (exit-interview comments, the 90-day early-leaver list) have their own
+    /// stricter sub-permission on the Settings page — this makes StoreAccessService
+    /// honor that sub-permission here too, instead of just the umbrella "reports"
+    /// toggle, so restricting the sub-area also restricts the exported report.</summary>
+    private async Task<T> WithAreaAsync<T>(string area, Func<Task<T>> fetch)
+    {
+        var previous = _areaContext.Area;
+        _areaContext.Area = area;
+        try
+        {
+            return await fetch();
+        }
+        finally
+        {
+            _areaContext.Area = previous;
+        }
     }
 
     /// <summary>Latest known Head Manager/OC/SOC/OM/OD per store, scoped to what
@@ -355,7 +379,8 @@ public class ReportService : IReportService
         var reasonTotals = new Dictionary<string, int>();
         foreach (var p in periods)
         {
-            var leavers = await _ninetyDay.GetEarlyLeaversAsync(p.Month, p.Year, store, role, assignedName);
+            var leavers = await WithAreaAsync(AccessAreas.NinetyDayLeavers,
+                () => _ninetyDay.GetEarlyLeaversAsync(p.Month, p.Year, store, role, assignedName));
             var cohortLabel = $"{p.Month}-{p.Year}";
             foreach (var lv in leavers)
             {
@@ -512,7 +537,8 @@ public class ReportService : IReportService
         var overallExperience = await _exitInterviews.GetOverallExperienceAsync(filter, role, assignedName);
         var workload = await _exitInterviews.GetWorkloadConditionAsync(filter, role, assignedName);
         var drivers = await _exitInterviews.GetEngagementDriversAsync(filter, role, assignedName);
-        var comments = await _exitInterviews.GetCommentsAsync(filter, role, assignedName);
+        var comments = await WithAreaAsync(AccessAreas.ExitComments,
+            () => _exitInterviews.GetCommentsAsync(filter, role, assignedName));
 
         WriteLabelValueSheet(wb, "Reasons for Leaving", "Reason", "Count", reasons);
         WriteLabelValueSheet(wb, "Would Return", "Answer", "Count", wouldReturn);
