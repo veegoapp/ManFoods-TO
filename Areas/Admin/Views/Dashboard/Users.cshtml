@@ -400,7 +400,7 @@
     // persisted) and the same welcome/portal-link wording the bulk Excel
     // export uses (returned as "message" from that endpoint) — the plaintext
     // password never leaves browser memory for longer than this click.
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailPattern = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
 
     document.querySelectorAll('.js-send-outlook-credentials').forEach(btn => {
         btn.addEventListener('click', async () => {
