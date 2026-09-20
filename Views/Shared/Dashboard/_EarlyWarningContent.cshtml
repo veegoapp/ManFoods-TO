@@ -565,7 +565,7 @@ function ewRowHtml(r) {
             <td class="px-3 py-2" style="color:var(--text-2)">${sapEscape(r.hireDate)}</td>
             <td class="px-3 py-2">${r.tenureDays}</td>
             <td class="px-3 py-2 text-center">${ewRiskBadge(r.stars)}</td>
-            <td class="px-3 py-2" style="font-size:12px;color:var(--text-2)">${r.reasons.map(x => `• ${ewReasonText(x)}`).join('<br>')}</td>
+            <td class="px-3 py-2" style="font-size:12px;font-weight:600;color:var(--text-2)">${r.reasons.map(x => `• ${ewReasonText(x)}`).join('<br>')}</td>
         </tr>`;
 }
 
