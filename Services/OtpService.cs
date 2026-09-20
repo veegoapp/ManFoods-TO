@@ -38,9 +38,30 @@ public class OtpService : IOtpService
     // knows their deadline up front.
     private static readonly TimeSpan TempPasswordValidity = TimeSpan.FromHours(24);
 
-    private static string BuildSmsMessage(string email, string password, DateTime expiresAtUtc) =>
-        $"{WelcomeMessage}\n{PortalUrl}\nUsername: {email}\nTemporary Password: {password}\n" +
-        $"This temporary password is valid for 24 hours only and will expire on {expiresAtUtc:yyyy-MM-dd} at {expiresAtUtc:HH:mm} UTC.";
+    // The recipient reads this deadline on their phone/PC in Cairo, not in
+    // UTC — convert before displaying. "Africa/Cairo" is the IANA id (Linux
+    // hosting); "Egypt Standard Time" is the Windows id used by the current
+    // host — tried in that order, with a fixed UTC+2 as a last resort so this
+    // never throws regardless of which OS/tzdata the app happens to run on.
+    private static readonly TimeZoneInfo CairoTimeZone = ResolveCairoTimeZone();
+
+    private static TimeZoneInfo ResolveCairoTimeZone()
+    {
+        foreach (var id in new[] { "Africa/Cairo", "Egypt Standard Time" })
+        {
+            try { return TimeZoneInfo.FindSystemTimeZoneById(id); }
+            catch (TimeZoneNotFoundException) { }
+            catch (InvalidTimeZoneException) { }
+        }
+        return TimeZoneInfo.CreateCustomTimeZone("Cairo-Fixed", TimeSpan.FromHours(2), "Cairo Time", "Cairo Time");
+    }
+
+    private static string BuildSmsMessage(string email, string password, DateTime expiresAtUtc)
+    {
+        var expiresAtCairo = TimeZoneInfo.ConvertTimeFromUtc(expiresAtUtc, CairoTimeZone);
+        return $"{WelcomeMessage}\n{PortalUrl}\nUsername: {email}\nTemporary Password: {password}\n" +
+            $"This temporary password is valid for 24 hours only and will expire on {expiresAtCairo:yyyy-MM-dd} at {expiresAtCairo:HH:mm} Cairo time.";
+    }
 
     public async Task<(int count, byte[] excelBytes)> GenerateBulkDefaultPasswordsAsync()
     {
