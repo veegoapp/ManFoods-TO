@@ -1375,6 +1375,7 @@
   <!-- Controller flash / auth messages -->
   <data name="Msg_InvalidCredentials" xml:space="preserve"><value>Invalid email or password</value></data>
   <data name="Msg_AccountLockedOut" xml:space="preserve"><value>Too many failed attempts. Please wait 15 minutes and try again.</value></data>
+  <data name="Msg_TempPasswordExpired" xml:space="preserve"><value>This temporary password has expired. Please ask your administrator to send you a new one.</value></data>
   <data name="Msg_AdminOnly" xml:space="preserve"><value>Access denied. Admin credentials required.</value></data>
   <data name="Msg_AdminUseAdminPortal" xml:space="preserve"><value>Admin accounts must use the admin portal.</value></data>
   <data name="Msg_InvalidRecoveryKey" xml:space="preserve"><value>Invalid recovery key.</value></data>

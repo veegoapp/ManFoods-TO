@@ -115,6 +115,7 @@ public class UserService : IUserService
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(temporaryPassword),
             Role = role,
             MustChangePassword = true,
+            TempPasswordExpiresAt = DateTime.UtcNow.AddHours(24),
         };
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
@@ -146,7 +147,10 @@ public class UserService : IUserService
         user.AssignedName = vm.AssignedName?.Trim() ?? "";
         user.Role = role;
         if (!string.IsNullOrEmpty(vm.Password))
+        {
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(vm.Password);
+            user.TempPasswordExpiresAt = null;
+        }
         await _db.SaveChangesAsync();
         // IsValidAsync only ever rejects a session over a Role mismatch (see
         // SessionValidationService), so only a role change can actually flip
@@ -200,6 +204,7 @@ public class UserService : IUserService
         if (user == null) return false;
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         user.MustChangePassword = false;
+        user.TempPasswordExpiresAt = null;
         await _db.SaveChangesAsync();
         _auth.ClearLockout(user.Email);
         return true;

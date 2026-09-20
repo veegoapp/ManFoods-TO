@@ -33,8 +33,14 @@ public class OtpService : IOtpService
     private const string PortalUrl = "https://mcd-crew-hub.runasp.net/login";
     private const string WelcomeMessage = "Welcome to McDonald's Crew Insights Hub!";
 
-    private static string BuildSmsMessage(string email, string password) =>
-        $"{WelcomeMessage}\n{PortalUrl}\nUsername: {email}\nTemporary Password: {password}";
+    // How long a system-generated temporary password stays valid — enforced
+    // at login in AuthService.ValidateAsync, and stated here so the recipient
+    // knows their deadline up front.
+    private static readonly TimeSpan TempPasswordValidity = TimeSpan.FromHours(24);
+
+    private static string BuildSmsMessage(string email, string password, DateTime expiresAtUtc) =>
+        $"{WelcomeMessage}\n{PortalUrl}\nUsername: {email}\nTemporary Password: {password}\n" +
+        $"This temporary password is valid for 24 hours only and will expire on {expiresAtUtc:yyyy-MM-dd} at {expiresAtUtc:HH:mm} UTC.";
 
     public async Task<(int count, byte[] excelBytes)> GenerateBulkDefaultPasswordsAsync()
     {
@@ -42,14 +48,16 @@ public class OtpService : IOtpService
             .Where(u => u.Role != "Admin" && (u.PasswordHash == null || u.MustChangePassword))
             .ToListAsync();
 
-        var results = new List<(string Email, string Phone, string Password)>();
+        var results = new List<(string Email, string Phone, string Password, DateTime ExpiresAtUtc)>();
 
         foreach (var user in pendingUsers)
         {
             var password = PasswordPolicy.GenerateTemporaryPassword();
+            var expiresAtUtc = DateTime.UtcNow.Add(TempPasswordValidity);
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
             user.MustChangePassword = true;
-            results.Add((user.Email, user.Phone, password));
+            user.TempPasswordExpiresAt = expiresAtUtc;
+            results.Add((user.Email, user.Phone, password, expiresAtUtc));
         }
 
         if (results.Count > 0) await _db.SaveChangesAsync();
@@ -74,7 +82,7 @@ public class OtpService : IOtpService
             ws.Cell(row, 3).Value = results[i].Password;
 
             var smsCell = ws.Cell(row, 4);
-            smsCell.Value = BuildSmsMessage(results[i].Email, results[i].Password);
+            smsCell.Value = BuildSmsMessage(results[i].Email, results[i].Password, results[i].ExpiresAtUtc);
             // Real line breaks inside the cell (not a delimiter) — copying
             // this cell into an SMS/portal tool sends each line on its own,
             // exactly as it's laid out here.
@@ -98,12 +106,14 @@ public class OtpService : IOtpService
         if (user == null || user.Role == "Admin" || (user.PasswordHash != null && !user.MustChangePassword)) return (null, null);
 
         var password = PasswordPolicy.GenerateTemporaryPassword();
+        var expiresAtUtc = DateTime.UtcNow.Add(TempPasswordValidity);
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
         user.MustChangePassword = true;
+        user.TempPasswordExpiresAt = expiresAtUtc;
         await _db.SaveChangesAsync();
         // Same wording as the bulk Excel's SMS Message column (BuildSmsMessage) —
         // single source of truth for the welcome/portal-link/credentials text.
-        return (password, BuildSmsMessage(user.Email, password));
+        return (password, BuildSmsMessage(user.Email, password, expiresAtUtc));
     }
 
     public async Task<string?> GenerateSingleOtpAsync(int userId)
@@ -154,6 +164,7 @@ public class OtpService : IOtpService
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         user.MustChangePassword = false;
+        user.TempPasswordExpiresAt = null;
         otp.IsUsed = true;
         await _db.SaveChangesAsync();
         return (true, _L["Msg_PasswordSetSuccess"].Value);
@@ -218,6 +229,7 @@ public class OtpService : IOtpService
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         user.MustChangePassword = false;
+        user.TempPasswordExpiresAt = null;
         otp.IsUsed = true;
         await _db.SaveChangesAsync();
         _auth.ClearLockout(user.Email);

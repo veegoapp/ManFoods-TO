@@ -31,7 +31,7 @@ public class AuthService : IAuthService
         _httpContext = httpContext;
     }
 
-    public async Task<(User? User, string? FailReason, bool IsLockedOut)> ValidateAsync(string email, string password, string portal)
+    public async Task<(User? User, string? FailReason, bool IsLockedOut, bool IsTempPasswordExpired)> ValidateAsync(string email, string password, string portal)
     {
         var failKey = FailKey(email);
         if (_cache.TryGetValue(failKey, out int failCount) && failCount >= MaxFailedAttempts)
@@ -47,7 +47,7 @@ public class AuthService : IAuthService
             // whole point of checking the lockout before touching the
             // database, and every attempt that built up to this lockout was
             // already logged individually below.
-            return (null, "Account temporarily locked after repeated failed attempts.", true);
+            return (null, "Account temporarily locked after repeated failed attempts.", true, false);
         }
 
         void RecordFailure() => _cache.Set(failKey, failCount + 1, LockoutWindow);
@@ -63,7 +63,7 @@ public class AuthService : IAuthService
             // Not logged to login_history — there's no account to attach the
             // row to, and logging it under some placeholder would let this
             // page be used to probe which emails are registered.
-            return (null, reason, false);
+            return (null, reason, false, false);
         }
         // Bulk-created accounts start with no password set (pending activation
         // via the OTP flow) — reject the login attempt instead of letting
@@ -74,7 +74,7 @@ public class AuthService : IAuthService
             _logger.LogWarning("Login failed: {Reason}", reason);
             RecordFailure();
             await LogAttemptAsync(user, portal, success: false, "no-password-set");
-            return (null, reason, false);
+            return (null, reason, false, false);
         }
 
         if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
@@ -83,12 +83,24 @@ public class AuthService : IAuthService
             _logger.LogWarning("Login failed: {Reason}", reason);
             RecordFailure();
             await LogAttemptAsync(user, portal, success: false, "wrong-password");
-            return (null, reason, false);
+            return (null, reason, false, false);
+        }
+
+        // A system-generated temporary password (Add User, single/bulk
+        // "Generate Default Password") is only good for 24 hours from
+        // issuance — past that, the correct temp password still won't let
+        // them in; an admin has to regenerate a new one.
+        if (user.MustChangePassword && user.TempPasswordExpiresAt.HasValue && user.TempPasswordExpiresAt.Value <= DateTime.UtcNow)
+        {
+            var reason = $"Temporary password expired for '{email.ToLower()}'.";
+            _logger.LogWarning("Login failed: {Reason}", reason);
+            await LogAttemptAsync(user, portal, success: false, "temp-password-expired");
+            return (null, reason, false, true);
         }
 
         _cache.Remove(failKey);
         await LogAttemptAsync(user, portal, success: true, null);
-        return (user, null, false);
+        return (user, null, false, false);
     }
 
     public void ClearLockout(string email) => _cache.Remove(FailKey(email));
@@ -163,6 +175,7 @@ public class AuthService : IAuthService
         if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash)) return false;
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         user.MustChangePassword = false;
+        user.TempPasswordExpiresAt = null;
         await _db.SaveChangesAsync();
         ClearLockout(user.Email);
         return true;
@@ -174,6 +187,7 @@ public class AuthService : IAuthService
         if (user == null) return false;
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         user.MustChangePassword = false;
+        user.TempPasswordExpiresAt = null;
         await _db.SaveChangesAsync();
         ClearLockout(user.Email);
         return true;

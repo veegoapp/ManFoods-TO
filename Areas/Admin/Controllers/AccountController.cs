@@ -38,10 +38,12 @@ public class AccountController : Controller
     {
         if (!ModelState.IsValid) return View(vm);
 
-        var (user, _, isLockedOut) = await _auth.ValidateAsync(vm.Email, vm.Password, "Admin");
+        var (user, _, isLockedOut, isTempPasswordExpired) = await _auth.ValidateAsync(vm.Email, vm.Password, "Admin");
         if (user == null)
         {
-            ModelState.AddModelError("", isLockedOut ? _L["Msg_AccountLockedOut"] : _L["Msg_InvalidCredentials"]);
+            ModelState.AddModelError("", isLockedOut ? _L["Msg_AccountLockedOut"]
+                : isTempPasswordExpired ? _L["Msg_TempPasswordExpired"]
+                : _L["Msg_InvalidCredentials"]);
             return View(vm);
         }
 

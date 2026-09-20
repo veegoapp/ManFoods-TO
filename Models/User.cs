@@ -38,6 +38,16 @@ public class User
     [Column("must_change_password")]
     public bool MustChangePassword { get; set; }
 
+    // Set whenever a system-generated temporary password is issued (manual
+    // Add User, single "Regenerate Default Password", or the bulk "Generate
+    // Default Passwords" export) — 24 hours from generation. Checked at login
+    // alongside MustChangePassword so a stale temporary password can't be
+    // used to sign in indefinitely; cleared to null whenever the account's
+    // real password is set (self-activation, forced change, or any admin
+    // reset).
+    [Column("temp_password_expires_at")]
+    public DateTime? TempPasswordExpiresAt { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

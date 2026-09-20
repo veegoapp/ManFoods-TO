@@ -43,6 +43,12 @@ ALTER TABLE dbo.users ALTER COLUMN password_hash NVARCHAR(MAX) NULL;
 IF COL_LENGTH('dbo.users', 'must_change_password') IS NULL
     ALTER TABLE dbo.users ADD must_change_password BIT NOT NULL DEFAULT 0;
 
+-- When a system-generated temporary password expires (24h from generation).
+-- Checked at login alongside must_change_password; cleared to NULL once the
+-- account's real password is set.
+IF COL_LENGTH('dbo.users', 'temp_password_expires_at') IS NULL
+    ALTER TABLE dbo.users ADD temp_password_expires_at DATETIME2 NULL;
+
 -- One-time historical cleanup (already applied): Admin_Full/Admin_Read were
 -- folded into Admin, and Viewer into User. Operation_Manager/Operation_Consultant
 -- are valid role values again (per-store access restriction) — do NOT add a
