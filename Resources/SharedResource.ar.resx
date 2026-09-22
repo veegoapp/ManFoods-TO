@@ -1228,7 +1228,7 @@
   <data name="Rep_Title_TrendMatrix" xml:space="preserve"><value>مصفوفة اتجاه الدوران</value></data>
   <data name="Rep_Desc_TrendMatrix" xml:space="preserve"><value>جدول بيانات كامل — صف لكل فرع وعمود لكل شهر، يعرض معدل الدوران % لكل الفترات المتاحة بدءًا من السنة المحددة، مع عمود للمتوسط.</value></data>
   <data name="Rep_Title_Workforce" xml:space="preserve"><value>القوى العاملة</value></data>
-  <data name="Rep_Desc_Workforce" xml:space="preserve"><value>تركيبة القوى العاملة النشطة للشهر المحدد — عدد الموظفين حسب المسمى الوظيفي ومجموعة الرواتب ومدة الخدمة والنوع — إضافة إلى اتجاه عدد الموظفين عبر الزمن.</value></data>
+  <data name="Rep_Desc_Workforce" xml:space="preserve"><value>تركيبة القوى العاملة النشطة للشهر المحدد — عدد الموظفين حسب المسمى الوظيفي ومجموعة الرواتب ومدة الخدمة والنوع، وعدد الموظفين حسب النوع لكل متجر — إضافة إلى اتجاه عدد الموظفين عبر الزمن.</value></data>
   <data name="Rep_Title_OcOmComparison" xml:space="preserve"><value>مقارنة استشاريي العمليات ومديري التشغيل</value></data>
   <data name="Rep_Desc_OcOmComparison" xml:space="preserve"><value>الفروع وعدد الموظفين والاستقالات ومتوسط معدل الدوران مجمّعة حسب استشاري العمليات ومدير التشغيل واستشاري أول العمليات ومدير أول التشغيل.</value></data>
   <data name="Rep_Title_Turnover" xml:space="preserve"><value>معدل الدوران</value></data>

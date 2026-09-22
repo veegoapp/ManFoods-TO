@@ -1222,7 +1222,7 @@
   <data name="Rep_Title_TrendMatrix" xml:space="preserve"><value>Turnover Trend Matrix</value></data>
   <data name="Rep_Desc_TrendMatrix" xml:space="preserve"><value>Full data table — one row per store, one column per month, showing Turnover % across all available periods from the selected year onward, with an average column.</value></data>
   <data name="Rep_Title_Workforce" xml:space="preserve"><value>Workforce</value></data>
-  <data name="Rep_Desc_Workforce" xml:space="preserve"><value>Active workforce composition for the selected month — Headcount by Job Title, Payroll Group, Tenure, and Gender — plus the Headcount Trend over time.</value></data>
+  <data name="Rep_Desc_Workforce" xml:space="preserve"><value>Active workforce composition for the selected month — Headcount by Job Title, Payroll Group, Tenure, and Gender, Gender Count by Store — plus the Headcount Trend over time.</value></data>
   <data name="Rep_Title_OcOmComparison" xml:space="preserve"><value>OC / OM Comparison</value></data>
   <data name="Rep_Desc_OcOmComparison" xml:space="preserve"><value>Stores, headcount, resignations, and average turnover rate rolled up by Operation Consultant, Operation Manager, Senior Operation Consultant, and Operation Director.</value></data>
   <data name="Rep_Title_Turnover" xml:space="preserve"><value>Turnover</value></data>

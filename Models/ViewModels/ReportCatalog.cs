@@ -57,7 +57,7 @@ public static class ReportCatalog
         new ReportDefinition
         {
             Id = "workforce", Section = "Store Operations", Title = "Workforce",
-            Description = "Detailed employee-level roster plus active workforce composition for the selected month — Headcount by Job Title, Payroll Group, Tenure, and Gender — and the Headcount Trend over time.",
+            Description = "Detailed employee-level roster plus active workforce composition for the selected month — Headcount by Job Title, Payroll Group, Tenure, and Gender, Gender Count by Store — and the Headcount Trend over time.",
             SectionKey = "Rep_Section_StoreOperations", TitleKey = "Rep_Title_Workforce", DescriptionKey = "Rep_Desc_Workforce",
             Icon = "bi-people-fill", IconBg = "oklch(0.6 0.13 250 / .10)", IconColor = "oklch(0.5 0.13 250)",
             UsesPeriod = true, UsesStore = true, UsesOmOc = true,

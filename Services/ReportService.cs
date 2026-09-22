@@ -900,6 +900,33 @@ public class ReportService : IReportService
         WriteLabelValueSheet(wb, "Headcount By Tenure", "Tenure Bucket", "Headcount", byTenure);
         WriteLabelValueSheet(wb, "Headcount By Gender", "Gender", "Headcount", byGender);
 
+        // Gender count per store — one row per store, one column per gender
+        // value actually present in this period's roster (Male/Female first,
+        // any other value after, blank Gender grouped under "Unspecified"),
+        // built from the same employee roster as the Workforce Detail sheet
+        // above so the two sheets never disagree.
+        static string GenderKey(string g) => string.IsNullOrWhiteSpace(g) ? "Unspecified" : g;
+        var genderValues = details.Select(e => GenderKey(e.Gender)).Distinct()
+            .OrderBy(g => g == "Male" ? 0 : g == "Female" ? 1 : g == "Unspecified" ? 2 : 3)
+            .ThenBy(g => g)
+            .ToList();
+        var storeGroups = details.GroupBy(e => e.Store).OrderBy(g => g.Key).ToList();
+        var wsGenderByStore = AddSheet(wb, "Gender Count By Store");
+        StyleHeader(wsGenderByStore, new[] { "Store" }.Concat(genderValues).Concat(new[] { "Total" }).ToArray());
+        for (int i = 0; i < storeGroups.Count; i++)
+        {
+            var group = storeGroups[i];
+            wsGenderByStore.Cell(i + 2, 1).Value = SafeText(group.Key);
+            int col = 2;
+            foreach (var gender in genderValues)
+            {
+                SetIntCell(wsGenderByStore.Cell(i + 2, col), group.Count(e => GenderKey(e.Gender) == gender));
+                col++;
+            }
+            SetIntCell(wsGenderByStore.Cell(i + 2, col), group.Count());
+        }
+        Finalize(wsGenderByStore);
+
         var wsTrend = AddSheet(wb, "Headcount Trend");
         StyleHeader(wsTrend, new[] { "Period", "Headcount" });
         for (int i = 0; i < trend.Count; i++)
