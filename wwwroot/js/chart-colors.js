@@ -15,19 +15,25 @@ function sapEscape(s) {
     return div.innerHTML;
 }
 
-// Tooltip hit-testing: require the pointer to actually be over an element
-// (intersect: true) before showing anything, using the nearest such element
-// (mode: 'nearest'). This is what keeps the popup's name/number matched to
-// the exact bar/segment under the cursor — the earlier bug (tooltip showing
-// a neighboring bar's data) came from intersect:false, which matches by
-// nearest-pixel-distance even over empty space next to a different bar's
-// tip. Set globally so every current and future chart gets it without
-// per-chart edits. This file is loaded after Chart.js on all chart pages,
-// including Action Center pages that do not load dashboard.js.
+// Tooltip hit-testing: the popup must only appear when the cursor is
+// actually over a rendered bar/segment, and must show THAT element's data.
+// The key setting is intersect:true — the earlier bug (tooltip showing a
+// neighboring column's data, or popping up in the empty space between two
+// bars) came from intersect:false, which matches by nearest-pixel-distance
+// even when the pointer isn't over any element at all. mode:'index' means a
+// hovered bar also reveals the other series sharing its category (e.g. the
+// A-vs-B comparison bars) — but combined with intersect:true it still only
+// fires when the pointer is genuinely over one of those bars, never over
+// empty space. For single-series charts index+intersect resolves to just
+// the one bar under the cursor. Set globally so every current and future
+// chart gets it without per-chart edits; line charts opt back into
+// intersect:false locally, where a crosshair-anywhere read is wanted. This
+// file is loaded after Chart.js on all chart pages, including Action Center
+// pages that do not load dashboard.js.
 if (typeof Chart !== 'undefined') {
-    Chart.defaults.interaction.mode = 'nearest';
+    Chart.defaults.interaction.mode = 'index';
     Chart.defaults.interaction.intersect = true;
-    Chart.defaults.plugins.tooltip.mode = 'nearest';
+    Chart.defaults.plugins.tooltip.mode = 'index';
     Chart.defaults.plugins.tooltip.intersect = true;
     // Horizontal bar charts (indexAxis:'y' — every leaderboard/ranking chart
     // in the app) otherwise always keep their category labels on the left

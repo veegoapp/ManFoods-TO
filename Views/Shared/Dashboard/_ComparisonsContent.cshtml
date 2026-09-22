@@ -838,7 +838,7 @@ function cmpRenderCharts(dataA, dataB) {
             { label: cmpLabel('B'), data: t.seriesB, backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
         ] },
         options: {
-            interaction: { mode: 'index', intersect: false },
+            interaction: { mode: 'index', intersect: true },
             plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.formattedValue}%` } },
                 datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v > 0 ? v.toFixed(1) + '%' : '' } },
             scales: { y: { ticks: { callback: v => v + '%' } } }
@@ -853,7 +853,7 @@ function cmpRenderCharts(dataA, dataB) {
             { label: cmpLabel('B'), data: n.seriesB, backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
         ] },
         options: {
-            interaction: { mode: 'index', intersect: false },
+            interaction: { mode: 'index', intersect: true },
             plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.formattedValue}%` } },
                 datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v > 0 ? v.toFixed(1) + '%' : '' } },
             scales: { y: { ticks: { callback: v => v + '%' } } }
@@ -868,7 +868,7 @@ function cmpRenderCharts(dataA, dataB) {
             { label: cmpLabel('B'), data: workforce.seriesB, backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
         ] },
         options: {
-            interaction: { mode: 'index', intersect: false },
+            interaction: { mode: 'index', intersect: true },
             plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.formattedValue}` } },
                 datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v > 0 ? v : '' } }
         }
@@ -882,7 +882,7 @@ function cmpRenderCharts(dataA, dataB) {
             { label: cmpLabel('B'), data: resignations.seriesB, backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
         ] },
         options: {
-            interaction: { mode: 'index', intersect: false },
+            interaction: { mode: 'index', intersect: true },
             plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.formattedValue}` } },
                 datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v > 0 ? v : '' } }
         }
@@ -903,7 +903,7 @@ function cmpRenderCharts(dataA, dataB) {
             { label: cmpLabel('B'), data: retentionValues(dataB.retention), backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
         ] },
         options: {
-            interaction: { mode: 'index', intersect: false },
+            interaction: { mode: 'index', intersect: true },
             plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.raw == null ? '—' : c.formattedValue + '%'}` } },
                 datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v == null ? '' : v.toFixed(1) + '%' } },
             scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } }
@@ -923,7 +923,7 @@ function cmpRenderCharts(dataA, dataB) {
         ] },
         options: {
             indexAxis: 'y',
-            interaction: { mode: 'index', intersect: false },
+            interaction: { mode: 'index', intersect: true },
             plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.formattedValue}` } } }
         }
     });
@@ -937,7 +937,7 @@ function cmpRenderCharts(dataA, dataB) {
             { label: cmpLabel('B'), data: [sentimentB], backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
         ] },
         options: {
-            interaction: { mode: 'index', intersect: false },
+            interaction: { mode: 'index', intersect: true },
             plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.formattedValue}%` } },
                 datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v.toFixed(1) + '%' } },
             scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } }
