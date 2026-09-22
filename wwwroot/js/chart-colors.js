@@ -35,6 +35,33 @@ if (typeof Chart !== 'undefined') {
     Chart.defaults.interaction.intersect = true;
     Chart.defaults.plugins.tooltip.mode = 'index';
     Chart.defaults.plugins.tooltip.intersect = true;
+
+    // The admin portal renders under CSS `zoom: 0.8` (admin-theme.css). CSS
+    // zoom is invisible to Chart.js 4's pointer math: the browser hands it a
+    // cursor position already shrunk by the zoom factor (e.g. offsetX 208 for
+    // a bar Chart.js has laid out at x=260), and Chart.js compares that
+    // against its own unzoomed element coordinates without dividing the zoom
+    // back out. The mismatch is zero at the canvas's top-left origin and
+    // grows with distance — so the first bar reads roughly right while every
+    // bar after it resolves to a neighbor or to the empty gap between bars.
+    // This plugin restores the mapping by scaling each event's position back
+    // up by the same factor before Chart.js runs hit-testing. The factor is
+    // measured live (rendered width ÷ layout width), so it self-corrects for
+    // any zoom value and is a no-op (ratio ≈ 1) on pages with no zoom.
+    Chart.register({
+        id: 'ancestorZoomFix',
+        beforeEvent(chart, args) {
+            const e = args.event;
+            if (!e || e.x == null || e.y == null) return;
+            const layoutW = chart.canvas.offsetWidth;
+            if (!layoutW) return;
+            const ratio = chart.canvas.getBoundingClientRect().width / layoutW;
+            if (ratio > 0 && Math.abs(ratio - 1) > 0.01) {
+                e.x /= ratio;
+                e.y /= ratio;
+            }
+        }
+    });
     // Horizontal bar charts (indexAxis:'y' — every leaderboard/ranking chart
     // in the app) otherwise always keep their category labels on the left
     // and grow bars rightward, regardless of page direction: correct for an
