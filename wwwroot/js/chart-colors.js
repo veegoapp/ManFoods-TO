@@ -15,15 +15,20 @@ function sapEscape(s) {
     return div.innerHTML;
 }
 
-// Tooltips are switched off app-wide (removed by request — no hover popup on
-// any chart, anywhere). Forced at the Proxy construction level below rather
-// than just a global default, because a number of individual charts set
-// their own `tooltip: { enabled: true, callbacks: {...} }`, which would
-// otherwise override a plain Chart.defaults change — this way it's off
-// unconditionally, for every current and future chart, with no per-chart
-// edits needed. This file is loaded after Chart.js on all chart pages,
+// Tooltip hit-testing: require the pointer to actually be over an element
+// (intersect: true) before showing anything, using the nearest such element
+// (mode: 'nearest'). This is what keeps the popup's name/number matched to
+// the exact bar/segment under the cursor — the earlier bug (tooltip showing
+// a neighboring bar's data) came from intersect:false, which matches by
+// nearest-pixel-distance even over empty space next to a different bar's
+// tip. Set globally so every current and future chart gets it without
+// per-chart edits. This file is loaded after Chart.js on all chart pages,
 // including Action Center pages that do not load dashboard.js.
 if (typeof Chart !== 'undefined') {
+    Chart.defaults.interaction.mode = 'nearest';
+    Chart.defaults.interaction.intersect = true;
+    Chart.defaults.plugins.tooltip.mode = 'nearest';
+    Chart.defaults.plugins.tooltip.intersect = true;
     // Horizontal bar charts (indexAxis:'y' — every leaderboard/ranking chart
     // in the app) otherwise always keep their category labels on the left
     // and grow bars rightward, regardless of page direction: correct for an
@@ -48,8 +53,6 @@ if (typeof Chart !== 'undefined') {
                 config.options.scales.y = Object.assign({}, config.options.scales.y, { position: 'right' });
                 config.options.scales.x = Object.assign({}, config.options.scales.x, { reverse: true });
             }
-            config.options.plugins = config.options.plugins || {};
-            config.options.plugins.tooltip = Object.assign({}, config.options.plugins.tooltip, { enabled: false });
             return new target(ctx, config);
         }
     });
