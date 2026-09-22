@@ -231,21 +231,21 @@ async function loadCharts() {
     jobTitleChart = mkChart(jobTitleChart, 'jobTitleChart', {
         type: 'bar',
         data: { labels: jobTitleLabels, datasets: [{ data: jobTitle.map(d=>d.value), backgroundColor: ChartColors.colorsByLabel(jobTitleLabels, null), borderRadius: 4 }] },
-        options: { indexAxis:'y', plugins:{legend:{display:false}, tooltip:{enabled:true, callbacks:{label: c => ` ${c.formattedValue} ${DASH_L.resignationsSuffix || ''}`}}}, scales:{x:{grid:{color:'#E4E2F5'},ticks:{color:'#5B5875'}},y:{grid:{display:false},ticks:{color:'#5B5875'}}} }
+        options: { indexAxis:'y', plugins:{legend:{display:false}, tooltip:{enabled:true, callbacks:{label: c => ` ${c.formattedValue} ${DASH_L.resignationsSuffix || ''}`}}, datalabels:{anchor:'center', align:'center', color:'#fff', font:{size:11, weight:'bold'}, formatter: v => v > 0 ? v : ''}}, scales:{x:{grid:{color:'#E4E2F5'},ticks:{color:'#5B5875'}},y:{grid:{display:false},ticks:{color:'#5B5875'}}} }
     });
 
     const tenureLabels = tenure.map(d=>d.label);
     tenureChart = mkChart(tenureChart, 'tenureChart', {
         type: 'bar',
         data: { labels: tenureLabels, datasets: [{ data: tenure.map(d=>d.value), backgroundColor: ChartColors.colorsByLabel(tenureLabels, null), borderRadius: 4 }] },
-        options: { plugins:{legend:{display:false}, tooltip:{enabled:true, callbacks:{label: c => ` ${c.formattedValue} ${DASH_L.resignationsSuffix || ''}`}}}, scales:{x:{grid:{display:false},ticks:{color:'#5B5875'}},y:{grid:{color:'#E4E2F5'},ticks:{color:'#5B5875'}}} }
+        options: { plugins:{legend:{display:false}, tooltip:{enabled:true, callbacks:{label: c => ` ${c.formattedValue} ${DASH_L.resignationsSuffix || ''}`}}, datalabels:{anchor:'center', align:'center', color:'#fff', font:{size:11, weight:'bold'}, formatter: v => v > 0 ? v : ''}}, scales:{x:{grid:{display:false},ticks:{color:'#5B5875'}},y:{grid:{color:'#E4E2F5'},ticks:{color:'#5B5875'}}} }
     });
 
     const genderLabels = gender.map(d=>d.label);
     genderChart = mkChart(genderChart, 'genderChart', {
         type: 'doughnut',
         data: { labels: genderLabels, datasets: [{ data: gender.map(d=>d.value), backgroundColor: ChartColors.colorsByLabel(genderLabels, ChartColors.GENDER_COLORS), borderWidth: 0 }] },
-        options: { plugins:{legend:{position:'bottom', labels:{color:'#5B5875', padding:16}}, tooltip:{enabled:true, callbacks:{label: c => ` ${c.label}: ${c.formattedValue}`}}} }
+        options: { plugins:{legend:{position:'bottom', labels:{color:'#5B5875', padding:16}}, tooltip:{enabled:true, callbacks:{label: c => ` ${c.label}: ${c.formattedValue}`}}, datalabels:{color:'#fff', font:{size:11, weight:'700'}, textShadowBlur:4, textShadowColor:'rgba(0,0,0,0.4)', formatter: (v, c) => { const t = c.chart.data.datasets[0].data.reduce((a,b)=>a+b,0); return t > 0 && v > 0 ? Math.round(v / t * 100) + '%' : ''; }}} }
     });
 }
 
