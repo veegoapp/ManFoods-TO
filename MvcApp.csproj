@@ -30,4 +30,7 @@
     <None Remove="Tools/**/*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="MvcApp.Tests" />
+  </ItemGroup>
 </Project>
