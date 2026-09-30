@@ -948,13 +948,14 @@ public class ReportService : IReportService
     }
 
     // ── Workforce Planning (projected vs actual) ─────────────
-    public async Task<XLWorkbook> BuildWorkforcePlanningReportAsync(int year, string? months, string? store, string? jobs, string role, string? assignedName)
+    public async Task<XLWorkbook> BuildWorkforcePlanningReportAsync(int year, string? months, string? store, string? jobs, string role, string? assignedName,
+        string? om = null, string? oc = null, string? soc = null, string? od = null)
     {
         var monthList = string.IsNullOrWhiteSpace(months)
             ? null
             : months.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Select(m => int.TryParse(m, out var n) ? n : 0).Where(n => n is >= 1 and <= 12).Distinct().ToList();
-        var rows = await _planning.GetDetailAsync(year, monthList, store, jobs, role, assignedName);
+        var rows = await _planning.GetDetailAsync(year, monthList, store, jobs, role, assignedName, om, oc, soc, od);
 
         var wb = new XLWorkbook();
         var monthName = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames;
@@ -966,20 +967,28 @@ public class ReportService : IReportService
         sum.Cell(2, 1).Value = "Store filter"; sum.Cell(2, 2).Value = string.IsNullOrWhiteSpace(store) ? "All accessible stores" : SafeText(store);
         sum.Cell(3, 1).Value = "Job filter"; sum.Cell(3, 2).Value = string.IsNullOrWhiteSpace(jobs) ? "All job titles" : SafeText(jobs);
         sum.Cell(4, 1).Value = "Months"; sum.Cell(4, 2).Value = monthList is { Count: > 0 } ? string.Join(", ", monthList.OrderBy(m => m).Select(m => monthName[m - 1])) : "All months in the projection";
-        sum.Cell(5, 1).Value = "Generated"; sum.Cell(5, 2).Value = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC";
-        sum.Range(2, 1, 5, 1).Style.Font.Bold = true;
-        sum.Cell(6, 1).Value = "Gap = Projected − Actual (positive = shortage). Fill rate = Actual ÷ Projected. Hiring need = shortage + expected resignations (average monthly resignations of the last 6 roster months), never below zero per store and job — an estimate. Only stores with a projection for a month are compared in that month; months without an uploaded roster show the projection only.";
-        sum.Cell(6, 1).Style.Font.Italic = true;
+        var responsible = string.Join("; ", new[]
+        {
+            string.IsNullOrWhiteSpace(oc) ? null : "Consultant: " + oc,
+            string.IsNullOrWhiteSpace(om) ? null : "Manager: " + om,
+            string.IsNullOrWhiteSpace(soc) ? null : "Senior consultant: " + soc,
+            string.IsNullOrWhiteSpace(od) ? null : "Director: " + od,
+        }.Where(x => x != null));
+        sum.Cell(5, 1).Value = "Responsible filter"; sum.Cell(5, 2).Value = responsible.Length == 0 ? "All" : SafeText(responsible);
+        sum.Cell(6, 1).Value = "Generated"; sum.Cell(6, 2).Value = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC";
+        sum.Range(2, 1, 6, 1).Style.Font.Bold = true;
+        sum.Cell(7, 1).Value = "Gap = Projected − Actual (positive = shortage). Fill rate = Actual ÷ Projected. Hiring need = shortage + expected resignations (average monthly resignations of the last 6 roster months), never below zero per store and job — an estimate. Only stores with a projection for a month are compared in that month; months without an uploaded roster show the projection only.";
+        sum.Cell(7, 1).Style.Font.Italic = true;
 
         if (rows.Count == 0)
         {
-            sum.Cell(8, 1).Value = "No projection data matches the selected filters.";
+            sum.Cell(9, 1).Value = "No projection data matches the selected filters.";
             sum.Columns().AdjustToContents();
             return wb;
         }
 
         // Per-month totals (live formulas for Gap and Fill so the sheet stays editable).
-        const int hdr = 8;
+        const int hdr = 9;
         string[] mh = { "Month", "Projected", "Actual", "Gap", "Fill rate", "Hiring need (est.)" };
         for (int i = 0; i < mh.Length; i++)
         {

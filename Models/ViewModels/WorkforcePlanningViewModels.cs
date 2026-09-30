@@ -14,6 +14,12 @@ public class WorkforcePlanningDto
     public int Month { get; set; }
     public List<string> Stores { get; set; } = new();
     public List<string> Jobs { get; set; } = new();
+    /// <summary>Filter options: the people responsible for the stores the caller can see
+    /// that have a projection this year (from the Store Reference file).</summary>
+    public List<string> OperationConsultants { get; set; } = new();
+    public List<string> OperationManagers { get; set; } = new();
+    public List<string> SeniorOperationConsultants { get; set; } = new();
+    public List<string> OperationDirectors { get; set; } = new();
     /// <summary>Whether the selected month has an uploaded active-employee roster
     /// (future months only have a projection).</summary>
     public bool HasActual { get; set; }

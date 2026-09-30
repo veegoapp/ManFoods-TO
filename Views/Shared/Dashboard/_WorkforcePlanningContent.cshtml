@@ -62,6 +62,11 @@
         <div class="wp-select-wrap"><select id="wpMonth" class="wp-select" aria-label="@L["WP_Month"]"></select><i class="bi bi-chevron-down"></i></div>
         <div class="wp-select-wrap"><select id="wpStore" class="wp-select" aria-label="@L["WP_ColStore"]"></select><i class="bi bi-chevron-down"></i></div>
         <div class="wp-select-wrap"><select id="wpJob" class="wp-select" aria-label="@L["WP_ColJob"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="wp-select-wrap"><select id="wpOc" class="wp-select" aria-label="@L["Common_OperationConsultant"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="wp-select-wrap"><select id="wpOm" class="wp-select" aria-label="@L["Common_OperationManagers"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="wp-select-wrap"><select id="wpSoc" class="wp-select" aria-label="@L["Common_SeniorOperationConsultants"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="wp-select-wrap"><select id="wpOd" class="wp-select" aria-label="@L["Common_OperationDirectors"]"></select><i class="bi bi-chevron-down"></i></div>
+        <button type="button" class="reset-filters-btn" id="wpReset"><i class="bi bi-arrow-counterclockwise"></i>@L["Common_ResetFilters"]</button>
     </div>
 </div>
 
@@ -146,7 +151,7 @@
 </div>
 
 <div id="wpL" hidden
-     data-all-stores="@L["WP_AllStores"]" data-all-jobs="@L["WP_AllJobs"]"
+     data-all-oc="@L["Common_AllOperationConsultants"]" data-all-om="@L["Common_AllOperationManagers"]" data-all-soc="@L["WP_AllSoc"]" data-all-od="@L["WP_AllOd"]" data-all-stores="@L["WP_AllStores"]" data-all-jobs="@L["WP_AllJobs"]"
      data-kpi-projected="@L["WP_KpiProjected"]" data-kpi-projected-desc="@L["WP_KpiProjectedDesc"]"
      data-kpi-actual="@L["WP_KpiActual"]" data-kpi-actual-desc="@L["WP_KpiActualDesc"]"
      data-kpi-gap="@L["WP_KpiGap"]" data-kpi-gap-desc="@L["WP_KpiGapDesc"]"
@@ -166,7 +171,7 @@
    and per-store breakdowns and the year's trend; the server caches the heavy
    reads, so changing a filter here never re-reads whole tables from the DB. */
 const wpL = document.getElementById('wpL').dataset;
-const wpState = { year: '', month: '', store: '', job: '' };
+const wpState = { year: '', month: '', store: '', job: '', oc: '', om: '', soc: '', od: '' };
 let wpJobChart, wpTrendChart, wpData;
 
 // Bar colours: dark enough for the white value labels drawn on the bars.
@@ -188,6 +193,7 @@ async function wpLoad() {
     if (wpState.month) q.set('month', wpState.month);
     if (wpState.store) q.set('store', wpState.store);
     if (wpState.job) q.set('jobs', wpState.job);
+    ['oc', 'om', 'soc', 'od'].forEach(k => { if (wpState[k]) q.set(k, wpState[k]); });
     let d;
     try {
         const r = await fetch('/api/workforce-planning/summary?' + q);
@@ -214,6 +220,11 @@ async function wpLoad() {
     wpFillSelect('wpMonth', d.months.map(m => ({ value: m, label: wpMonthName(m) })), d.month);
     wpFillSelect('wpStore', [{ value: '', label: wpL.allStores }].concat(d.stores.map(s => ({ value: s, label: s }))), wpState.store);
     wpFillSelect('wpJob', [{ value: '', label: wpL.allJobs }].concat(d.jobs.map(j => ({ value: j, label: j }))), wpState.job);
+    const people = (id, all, list, key) => wpFillSelect(id, [{ value: '', label: all }].concat((list || []).map(n => ({ value: n, label: n }))), wpState[key]);
+    people('wpOc', wpL.allOc, d.operationConsultants, 'oc');
+    people('wpOm', wpL.allOm, d.operationManagers, 'om');
+    people('wpSoc', wpL.allSoc, d.seniorOperationConsultants, 'soc');
+    people('wpOd', wpL.allOd, d.operationDirectors, 'od');
 
     document.getElementById('wpNoActual').hidden = d.hasActual;
     wpRenderKpis(d);
@@ -438,6 +449,12 @@ document.getElementById('wpYear').addEventListener('change', e => { wpState.year
 document.getElementById('wpMonth').addEventListener('change', e => { wpState.month = e.target.value; wpLoad(); });
 document.getElementById('wpStore').addEventListener('change', e => { wpState.store = e.target.value; wpLoad(); });
 document.getElementById('wpJob').addEventListener('change', e => { wpState.job = e.target.value; wpLoad(); });
+[['wpOc', 'oc'], ['wpOm', 'om'], ['wpSoc', 'soc'], ['wpOd', 'od']].forEach(([id, key]) =>
+    document.getElementById(id).addEventListener('change', e => { wpState[key] = e.target.value; wpLoad(); }));
+document.getElementById('wpReset').addEventListener('click', () => {
+    Object.keys(wpState).forEach(k => { wpState[k] = ''; });
+    wpLoad();
+});
 document.getElementById('wpSearch').addEventListener('input', wpRenderStores);
 document.querySelectorAll('#wpStoreHead th.sortable').forEach(th => th.addEventListener('click', () => {
     wpToggleSort(wpSort, th.dataset.sort);

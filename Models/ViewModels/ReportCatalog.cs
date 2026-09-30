@@ -70,7 +70,7 @@ public static class ReportCatalog
             Description = "Projected vs actual headcount by job and store — summary, by month, by store, by job, the full data sheet and ready-made Excel pivot tables.",
             SectionKey = "Rep_Section_StoreOperations", TitleKey = "Rep_Title_WorkforcePlanning", DescriptionKey = "Rep_Desc_WorkforcePlanning",
             Icon = "bi-diagram-3-fill", IconBg = "oklch(0.62 0.15 155 / .10)", IconColor = "oklch(0.5 0.15 155)",
-            UsesYear = true, UsesMonths = true, UsesStore = true, UsesJobs = true,
+            UsesYear = true, UsesMonths = true, UsesStore = true, UsesJobs = true, UsesOmOc = true,
         },
 
         // ── Turnover ──────────────────────────────────────────

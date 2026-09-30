@@ -18,11 +18,12 @@ public class WorkforcePlanningApiController : ControllerBase
     public WorkforcePlanningApiController(IWorkforcePlanningService planning) => _planning = planning;
 
     [HttpGet("summary")]
-    public async Task<IActionResult> Summary([FromQuery] int? year, [FromQuery] int? month, [FromQuery] string? store, [FromQuery] string? jobs)
+    public async Task<IActionResult> Summary([FromQuery] int? year, [FromQuery] int? month, [FromQuery] string? store, [FromQuery] string? jobs,
+        [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? soc, [FromQuery] string? od)
     {
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetEmail();
-        return Ok(await _planning.GetAsync(year, month, store, jobs, role, assignedName));
+        return Ok(await _planning.GetAsync(year, month, store, jobs, role, assignedName, om, oc, soc, od));
     }
 
     // The two endpoints below feed the Stores and Store Profile pages, which run on the

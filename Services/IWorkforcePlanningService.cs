@@ -8,7 +8,8 @@ public interface IWorkforcePlanningService
     /// scoped to the stores the caller may see. <paramref name="stores"/> and
     /// <paramref name="jobs"/> are optional comma-separated filters. Year/month
     /// default to the current period when it has projection data, else the latest.</summary>
-    Task<WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName);
+    Task<WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName,
+        string? om = null, string? oc = null, string? soc = null, string? od = null);
 
     /// <summary>Per-store fill for one exact year/month (empty when that month has no
     /// projection — it never falls back to another period), optionally narrowed to jobs.</summary>
@@ -21,7 +22,8 @@ public interface IWorkforcePlanningService
     /// <summary>Flat projected-vs-actual rows (one per store, job and month) for the
     /// chosen year, optionally narrowed to <paramref name="months"/> (1-12),
     /// comma-separated store and job filters, and the caller's store access.</summary>
-    Task<List<PlanningDetailRow>> GetDetailAsync(int year, IReadOnlyCollection<int>? months, string? stores, string? jobs, string role, string? assignedName);
+    Task<List<PlanningDetailRow>> GetDetailAsync(int year, IReadOnlyCollection<int>? months, string? stores, string? jobs, string role, string? assignedName,
+        string? om = null, string? oc = null, string? soc = null, string? od = null);
 
     /// <summary>Year/month pairs that have projection rows (drives the report's filters).</summary>
     Task<List<PeriodItem>> GetProjectionPeriodsAsync();
