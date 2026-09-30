@@ -107,6 +107,8 @@ public class PlanningDetailRow
     public string OperationManager { get; set; } = "";
     public string SeniorOperationConsultant { get; set; } = "";
     public string OperationDirector { get; set; } = "";
+    /// <summary>The job's payroll group, learned from the active-employee roster ("" = unknown).</summary>
+    public string PayrollGroup { get; set; } = "";
 }
 
 /// <summary>A store's staffing fill for one month — drives the badge on the Stores page cards.</summary>

@@ -1132,7 +1132,7 @@ public class ReportService : IReportService
 
         // ── Data: one flat row per store/job/month — the pivot tables' source ──
         var data = AddSheet(wb, "Data");
-        string[] dh = { "Period", "Year", "Month", "Store", "Job Title", "Projected", "Actual", "Gap", "Fill %", "Expected Resignations", "Hiring Need", "Operation Consultant", "Operation Manager", "Senior Operation Consultant", "Operation Director", "Shortage" };
+        string[] dh = { "Period", "Year", "Month", "Store", "Job Title", "Projected", "Actual", "Gap", "Fill %", "Expected Resignations", "Hiring Need", "Operation Consultant", "Operation Manager", "Senior Operation Consultant", "Operation Director", "Shortage", "Payroll Group" };
         StyleHeader(data, dh);
         int dr = 2;
         foreach (var r in rows)
@@ -1156,6 +1156,7 @@ public class ReportService : IReportService
             data.Cell(dr, 13).Value = SafeText(r.OperationManager);
             data.Cell(dr, 14).Value = SafeText(r.SeniorOperationConsultant);
             data.Cell(dr, 15).Value = SafeText(r.OperationDirector);
+            data.Cell(dr, 17).Value = string.IsNullOrWhiteSpace(r.PayrollGroup) ? "Unassigned" : SafeText(r.PayrollGroup);
             dr++;
         }
         var lastRow = dr - 1;
@@ -1181,6 +1182,7 @@ public class ReportService : IReportService
         AddPivot("Pivot Store x Period", "PivotStorePeriod", "Store", "Period", "Projected");
         AddPivot("Pivot Job x Period", "PivotJobPeriod", "Job Title", "Period", "Projected");
         AddPivot("Pivot Store Gap", "PivotStoreGap", "Store", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
+        AddPivot("Pivot Payroll Group", "PivotPayrollGroup", "Payroll Group", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
         AddPivot("Pivot Consultant Gap", "PivotConsultantGap", "Operation Consultant", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
         return wb;
     }

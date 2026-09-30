@@ -486,6 +486,14 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                 row.SeniorOperationConsultant = lead.Soc; row.OperationDirector = lead.Od;
             }
         }
+        // Payroll group of each row's job (same month-aware lookup the page uses).
+        foreach (var month in rows.Select(r => r.Month).Distinct().ToList())
+        {
+            var groups = await GetJobPayrollGroupsAsync(year, month);
+            foreach (var r in rows.Where(r => r.Month == month))
+                r.PayrollGroup = groups.TryGetValue(Norm(r.Job), out var pg) ? pg : "";
+        }
+
         // Expected resignations and hiring need for months that have a roster.
         foreach (var month in rows.Where(r => r.Actual.HasValue).Select(r => r.Month).Distinct().ToList())
         {
