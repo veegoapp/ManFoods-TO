@@ -1935,4 +1935,28 @@
   <data name="Guide_WP_Groups" xml:space="preserve"><value>الأرقام نفسها مجمّعة حسب المسؤولين عن الفروع — استشاريو العمليات والمديرون ومديرو الإدارة والاستشاريون الأوائل (من ملف الفروع). يعرض كل صف عدد الفروع التي يغطيها، والعدد المتوقّع والفعلي لها، والفجوة، واحتياج التعيين، وشريطًا ممتلئًا بنسبة الاكتمال (أخضر 95% فأكثر، كهرماني 85–95%، أحمر أقل من 85%). انقر على أي عنوان للترتيب. تُحتسب فقط الفروع المقارَنة في الشهر المحدد، وتنطبق فلاتر الفرع والوظيفة في الصفحة.</value></data>
   <data name="WP_AllSoc" xml:space="preserve"><value>كل استشاريي أول العمليات</value></data>
   <data name="WP_AllOd" xml:space="preserve"><value>كل مديري أول التشغيل</value></data>
+  <data name="WP_In_OverallOk_T" xml:space="preserve"><value>التوظيف جيد</value></data>
+  <data name="WP_In_OverallWatch_T" xml:space="preserve"><value>أقل قليلًا من الخطة</value></data>
+  <data name="WP_In_OverallLow_T" xml:space="preserve"><value>نقص في التوظيف</value></data>
+  <data name="WP_In_Overall_D" xml:space="preserve"><value>{0}% من العدد المخطّط متوفر ({1} من {2}، الفجوة {3}).</value></data>
+  <data name="WP_In_WorstStore_T" xml:space="preserve"><value>أكثر فرع نقصًا</value></data>
+  <data name="WP_In_WorstStore_D" xml:space="preserve"><value>{0} — مكتمل {1}%، ناقص {2}.</value></data>
+  <data name="WP_In_StoresBelow_T" xml:space="preserve"><value>فروع أقل من الخطة</value></data>
+  <data name="WP_In_StoresBelow_D" xml:space="preserve"><value>{0} فرع أقل من 85%، و{1} فرع بين 85% و95% من المتوقّع.</value></data>
+  <data name="WP_In_StoresOk_T" xml:space="preserve"><value>كل الفروع في المسار</value></data>
+  <data name="WP_In_StoresOk_D" xml:space="preserve"><value>كل الفروع المقارَنة عند 95% أو أكثر من المتوقّع.</value></data>
+  <data name="WP_In_WorstJob_T" xml:space="preserve"><value>أكبر نقص حسب الوظيفة</value></data>
+  <data name="WP_In_WorstJob_D" xml:space="preserve"><value>{0} — ناقص {1} (مكتمل {2}%).</value></data>
+  <data name="WP_In_Hiring_T" xml:space="preserve"><value>احتياج التعيين التقديري</value></data>
+  <data name="WP_In_Hiring_D" xml:space="preserve"><value>المطلوب تقريبًا {0} تعيين: {1} لسد النقص، وحوالي {2} استقالة متوقعة في الشهر (تقدير).</value></data>
+  <data name="WP_In_NoHiring_T" xml:space="preserve"><value>لا حاجة لتعيين</value></data>
+  <data name="WP_In_NoHiring_D" xml:space="preserve"><value>العدد الحالي يغطي المتوقّع والاستقالات المتوقعة.</value></data>
+  <data name="WP_In_WorstOc_T" xml:space="preserve"><value>الاستشاري الأكثر نقصًا</value></data>
+  <data name="WP_In_WorstOc_D" xml:space="preserve"><value>فروع {0} ({1} فرع) مكتملة {2}% (ناقص {3}).</value></data>
+  <data name="WP_In_Surplus_T" xml:space="preserve"><value>فروع فوق المتوقّع</value></data>
+  <data name="WP_In_Surplus_D" xml:space="preserve"><value>{0} فرع أعلى من المتوقّع بأكثر من 10%.</value></data>
+  <data name="WP_In_Outlook_T" xml:space="preserve"><value>خطة الشهر القادم</value></data>
+  <data name="WP_In_Outlook_D" xml:space="preserve"><value>خطة {0}: {1} موظف ({2} مقارنة بالحالي).</value></data>
+  <data name="WP_In_NoData" xml:space="preserve"><value>لا توجد تحليلات للفلاتر المحددة.</value></data>
+  <data name="Guide_WP_Insights" xml:space="preserve"><value>استنتاجات تلقائية محسوبة من أرقام هذه الصفحة وفق الفلاتر الحالية: التوظيف بوجه عام، وأكثر فرع نقصًا، وأكبر نقص حسب الوظيفة، وعدد الفروع الأقل من الخطة، واحتياج التعيين التقديري، والاستشاري الأكثر نقصًا، والفروع الأعلى من المتوقّع، وخطة الشهر القادم. وتتحدّث عند تغيير أي فلتر.</value></data>
 </root>
