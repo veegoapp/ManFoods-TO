@@ -649,19 +649,47 @@ public class UploadService : IUploadService
             knownJobs.TryAdd(Fold(CollapseSpaces(n)), CollapseSpaces(n));
         }
 
-        var rows = new Dictionary<(int Month, string Store, string Job), int>();
         var monthsSeen = new SortedSet<int>();
         var skippedSheets = new List<string>();
         var unknownStores = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
         var newJobs = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
         int badCells = 0;
+        int totalRows = 0;
 
+        // Cheap first pass over sheet names only, so a file with no month sheet
+        // is rejected before anything is deleted.
+        var monthSheets = new List<(IXLWorksheet Ws, int Month)>();
         foreach (var ws in wb.Worksheets)
         {
             var idx = Array.FindIndex(monthNames, n => n.Length > 0 && string.Equals(n, ws.Name.Trim(), StringComparison.OrdinalIgnoreCase));
-            if (idx < 0) { skippedSheets.Add(ws.Name); continue; }
-            int month = idx + 1;
+            if (idx < 0) skippedSheets.Add(ws.Name);
+            else monthSheets.Add((ws, idx + 1));
+        }
+        if (monthSheets.Count == 0)
+            throw new InvalidOperationException(_L["Msg_JobProjNoMonthSheets"].Value);
 
+        // Memory: parse and save one sheet at a time in small batches, clearing
+        // the EF change tracker after each batch, so the ~65k rows of a full year
+        // are never held as tracked entities at once (the hosting has little RAM).
+        const int BatchSize = 1000;
+        _db.ChangeTracker.AutoDetectChangesEnabled = false;
+        await using var tx = await _db.Database.BeginTransactionAsync();
+        // Whole-year replace: the workbook is the complete projection for the year.
+        await _db.JobHeadcountProjections.Where(j => j.Year == year).ExecuteDeleteAsync();
+        await _db.UploadLogs.Where(l => l.FileType == "job_projections" && l.Year == year).ExecuteDeleteAsync();
+
+        async Task FlushAsync(List<JobHeadcountProjection> batch)
+        {
+            if (batch.Count == 0) return;
+            _db.JobHeadcountProjections.AddRange(batch);
+            await _db.SaveChangesAsync();
+            _db.ChangeTracker.Clear();
+            batch.Clear();
+        }
+
+        var pending = new List<JobHeadcountProjection>(BatchSize);
+        foreach (var (ws, month) in monthSheets)
+        {
             var lastCol = ws.LastColumnUsed()?.ColumnNumber() ?? 0;
             var jobCols = new List<(int Col, string Job)>();
             for (int c = 2; c <= lastCol; c++)
@@ -673,6 +701,9 @@ public class UploadService : IUploadService
                 jobCols.Add((c, job));
             }
 
+            // Last occurrence wins for a repeated store row or job column, so the
+            // unique (year, month, store, job) index can never be violated.
+            var sheetRows = new Dictionary<(string Store, string Job), int>();
             foreach (var row in ws.RowsUsed().Skip(1))
             {
                 var storeRaw = row.Cell(1).GetString();
@@ -688,8 +719,7 @@ public class UploadService : IUploadService
 
                 foreach (var (col, job) in jobCols)
                 {
-                    var cell = row.Cell(col);
-                    var text = cell.GetString().Trim();
+                    var text = row.Cell(col).GetString().Trim();
                     if (text.Length == 0) continue;
                     if (!double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d)
                         || d < 0 || d != Math.Floor(d) || d > int.MaxValue)
@@ -697,31 +727,32 @@ public class UploadService : IUploadService
                         badCells++;
                         continue;
                     }
-                    rows[(month, store, job)] = (int)d;
-                    monthsSeen.Add(month);
+                    sheetRows[(store, job)] = (int)d;
                 }
             }
+
+            foreach (var kv in sheetRows)
+            {
+                pending.Add(new JobHeadcountProjection
+                {
+                    Year = year, Month = month, StoreName = kv.Key.Store,
+                    JobTitle = kv.Key.Job, ProjectedHeadcount = kv.Value,
+                });
+                totalRows++;
+                if (pending.Count >= BatchSize) await FlushAsync(pending);
+            }
+            await FlushAsync(pending);
+            if (sheetRows.Count > 0) monthsSeen.Add(month);
         }
 
         if (monthsSeen.Count == 0)
-            throw new InvalidOperationException(_L["Msg_JobProjNoMonthSheets"].Value);
+            throw new InvalidOperationException(_L["Msg_JobProjNoMonthSheets"].Value); // rolls the delete back
 
-        var entities = rows.Select(kv => new JobHeadcountProjection
-        {
-            Year = year, Month = kv.Key.Month, StoreName = kv.Key.Store,
-            JobTitle = kv.Key.Job, ProjectedHeadcount = kv.Value,
-        }).ToList();
-
-        await using var tx = await _db.Database.BeginTransactionAsync();
-        // Whole-year replace: the workbook is the complete projection for the year.
-        await _db.JobHeadcountProjections.Where(j => j.Year == year).ExecuteDeleteAsync();
-        await _db.UploadLogs.Where(l => l.FileType == "job_projections" && l.Year == year).ExecuteDeleteAsync();
-        await _db.JobHeadcountProjections.AddRangeAsync(entities);
         _db.UploadLogs.Add(new UploadLog { FileType = "job_projections", FileName = file.FileName, Month = 0, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
         await _db.SaveChangesAsync();
         await tx.CommitAsync();
 
-        var message = string.Format(_L["Msg_JobProjProcessed"].Value, entities.Count, monthsSeen.Count, year);
+        var message = string.Format(_L["Msg_JobProjProcessed"].Value, totalRows, monthsSeen.Count, year);
 
         var warnings = new List<string>();
         static string Cap(IEnumerable<string> items) { var l = items.ToList(); return string.Join(", ", l.Take(10)) + (l.Count > 10 ? $" (+{l.Count - 10})" : ""); }
@@ -729,10 +760,10 @@ public class UploadService : IUploadService
         if (unknownStores.Count > 0) warnings.Add(string.Format(_L["Msg_JobProjUnknownStores"].Value, unknownStores.Count, Cap(unknownStores)));
         if (newJobs.Count > 0) warnings.Add(string.Format(_L["Msg_JobProjNewJobs"].Value, newJobs.Count, Cap(newJobs)));
         if (badCells > 0) warnings.Add(string.Format(_L["Msg_JobProjBadCells"].Value, badCells));
-        return (true, message, entities.Count, warnings.Count > 0 ? string.Join(" ", warnings) : null);
+        return (true, message, totalRows, warnings.Count > 0 ? string.Join(" ", warnings) : null);
     }
 
-    public async Task<(List<UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize, string sort = "date", string dir = "desc")
+    public async Task<(List<UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize, string sort = "date", string dir = "desc", string? kind = null)
     {
         var logs = await _db.UploadLogs.OrderByDescending(l => l.UploadDate)
             .Select(l => new { l.Id, l.FileType, l.FileName, l.Month, l.Year, l.UploadDate, l.UploadedBy, HasFile = l.FileContent != null })
@@ -779,8 +810,10 @@ public class UploadService : IUploadService
             });
         }
 
-        bool asc = dir == "asc";
-        IOrderedEnumerable<UploadHistoryItem> sorted = sort switch
+        // Optional per-tab filter: "period" | "exit_interviews" | "job_projections".
+        if (!string.IsNullOrEmpty(kind)) items = items.Where(i => i.Kind == kind).ToList();
+
+\1 = sort switch
         {
             "type" => asc ? items.OrderBy(i => i.Kind) : items.OrderByDescending(i => i.Kind),
             "name" => asc
@@ -811,16 +844,21 @@ public class UploadService : IUploadService
         return (log.FileContent, log.ContentType ?? "application/octet-stream", log.FileName);
     }
 
-    public async Task<UploadFilePreview?> PreviewFileAsync(int logId, int maxRows = 300)
+    public async Task<UploadFilePreview?> PreviewFileAsync(int logId, int maxRows = 300, string? sheet = null)
     {
         var log = await _db.UploadLogs.AsNoTracking().FirstOrDefaultAsync(l => l.Id == logId);
         if (log?.FileContent == null) return null;
 
         using var ms = new MemoryStream(log.FileContent);
         using var wb = new XLWorkbook(ms);
-        var ws = wb.Worksheet(1);
+        // Multi-sheet workbooks (e.g. the 12-month job projection) get a tab per
+        // sheet; the requested sheet is used, falling back to the first.
+        var sheetNames = wb.Worksheets.Select(w => w.Name).ToList();
+        var ws = (!string.IsNullOrEmpty(sheet) && wb.Worksheets.TryGetWorksheet(sheet, out var picked))
+            ? picked
+            : wb.Worksheet(1);
         var usedRange = ws.RangeUsed();
-        if (usedRange == null) return new UploadFilePreview { FileName = log.FileName };
+        if (usedRange == null) return new UploadFilePreview { FileName = log.FileName, SheetNames = sheetNames, Sheet = ws.Name };
 
         var headerRow = usedRange.FirstRow();
         var headers = headerRow.Cells().Select(c => c.GetString().Trim()).ToList();
@@ -834,6 +872,8 @@ public class UploadService : IUploadService
         return new UploadFilePreview
         {
             FileName = log.FileName,
+            SheetNames = sheetNames,
+            Sheet = ws.Name,
             Headers = headers,
             Rows = rows,
             TotalRows = dataRows.Count,

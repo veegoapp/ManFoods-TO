@@ -1859,4 +1859,7 @@
   <data name="Msg_JobProjNewJobs" xml:space="preserve"><value>{0} وظيفة مش موجودة في بيانات البوابة اتقبلت برضه: {1}.</value></data>
   <data name="Msg_JobProjBadCells" xml:space="preserve"><value>تم تخطّي {0} خلية لأنها مش أرقام صحيحة غير سالبة.</value></data>
   <data name="Msg_JobProjUploadFailed" xml:space="preserve"><value>فشل رفع توقّعات الوظائف: {0}</value></data>
+  <data name="DM_TabMonthly" xml:space="preserve"><value>بيانات القوى العاملة الشهرية</value></data>
+  <data name="DM_TabExit" xml:space="preserve"><value>مقابلات الخروج</value></data>
+  <data name="DM_TabJobProj" xml:space="preserve"><value>توقّعات الوظائف</value></data>
 </root>

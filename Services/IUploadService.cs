@@ -29,14 +29,14 @@ public interface IUploadService
     /// removes the whole group and its underlying data, since the month's
     /// data is only valid with all three present.
     /// </summary>
-    Task<(List<MvcApp.Models.ViewModels.UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize, string sort = "date", string dir = "desc");
+    Task<(List<MvcApp.Models.ViewModels.UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize, string sort = "date", string dir = "desc", string? kind = null);
     Task<List<MvcApp.Models.ViewModels.UploadHistoryItem>> GetAllHistoryAsync();
     Task DeleteLogAsync(int id);
     Task<(byte[] Content, string ContentType, string FileName)?> GetFileAsync(int id);
 
     /// <summary>Reads a single uploaded file's raw bytes and returns its first
     /// sheet as a header row + capped data rows, for an in-portal preview.</summary>
-    Task<MvcApp.Models.ViewModels.UploadFilePreview?> PreviewFileAsync(int logId, int maxRows = 300);
+    Task<MvcApp.Models.ViewModels.UploadFilePreview?> PreviewFileAsync(int logId, int maxRows = 300, string? sheet = null);
 
     /// <summary>
     /// Replaces a single file type (active_employees, resignations, or
