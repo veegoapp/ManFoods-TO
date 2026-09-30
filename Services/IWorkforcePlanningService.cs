@@ -34,7 +34,8 @@ public interface IWorkforcePlanningService
     /// <summary>Hires needed per store per month for a year. Months with an uploaded roster use the
     /// current hiring-need formula; later months are simulated from the latest roster (expected
     /// resignations leave, hires fill up to the projection). <paramref name="earlyLeaverPercent"/> is the
-    /// share of hires that leave within 90 days; hires are grossed up to cover it.</summary>
+    /// share of hires that leave within 90 days; hires are grossed up to cover it.
+    /// <paramref name="by"/> picks the rows: "store" (default), "job", "payroll" or "consultant".</summary>
     Task<HiringForecastDto> GetHiringForecastAsync(int? year, string? stores, string? jobs, string role, string? assignedName,
-        string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0);
+        string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0, string? by = null);
 }

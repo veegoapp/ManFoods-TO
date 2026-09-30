@@ -526,7 +526,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
     }
 
     public async Task<HiringForecastDto> GetHiringForecastAsync(int? year, string? stores, string? jobs, string role, string? assignedName,
-        string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0)
+        string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0, string? by = null)
     {
         var dto = new HiringForecastDto();
         var years = await GetYearsAsync();
@@ -591,11 +591,23 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         // of an earlier year (when the baseline is later than this year, nothing is simulated).
         Dictionary<string, int>? earlier = baseline / 100 < y ? await GetPeriodHeadcountAsync(baseline) : null;
 
-        var byStore = new Dictionary<int, double[]>();
+        // Row dimension: store (default), job, payroll group or operation consultant.
+        var mode = (by ?? "store").Trim().ToLowerInvariant();
+        dto.By = mode is "job" or "payroll" or "consultant" ? mode : "store";
+        var groupOfJob = dto.By == "payroll" ? await GetJobPayrollGroupsAsync(y, 12) : null;
+        string RowKey(int store, int job) => dto.By switch
+        {
+            "job" => data.Jobs[job],
+            "payroll" => groupOfJob!.TryGetValue(Norm(data.Jobs[job]), out var g) ? g : "",
+            "consultant" => leaders.TryGetValue(data.Stores[store].Trim(), out var lc) ? lc.Oc : "",
+            _ => data.Stores[store],
+        };
+        var byStore = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase);
         foreach (var kv in projected)
         {
             var (store, job) = kv.Key;
-            var acc = byStore.TryGetValue(store, out var existing) ? existing : (byStore[store] = new double[12]);
+            var rowKey = RowKey(store, job);
+            var acc = byStore.TryGetValue(rowKey, out var existing) ? existing : (byStore[rowKey] = new double[12]);
             double? prev = null;
             for (int mon = 1; mon <= 12; mon++)
             {
@@ -627,12 +639,12 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         }
 
         // Round each store-month once, then add the rounded cells, so every row and column adds up exactly.
-        foreach (var kv in byStore.OrderBy(k => data.Stores[k.Key], StringComparer.OrdinalIgnoreCase))
+        foreach (var kv in byStore.OrderBy(k => k.Key, StringComparer.OrdinalIgnoreCase))
         {
             var row = new HiringForecastRowDto
             {
-                Store = data.Stores[kv.Key],
-                OperationConsultant = leaders.TryGetValue(data.Stores[kv.Key].Trim(), out var l) ? l.Oc : "",
+                Store = kv.Key,
+                OperationConsultant = dto.By == "store" && leaders.TryGetValue(kv.Key.Trim(), out var l) ? l.Oc : "",
             };
             for (int i = 0; i < 12; i++) { row.Months[i] = RoundNeed(kv.Value[i]); row.Total += row.Months[i]; dto.MonthTotals[i] += row.Months[i]; }
             dto.GrandTotal += row.Total;

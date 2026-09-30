@@ -416,6 +416,24 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task HiringForecast_ByJob_GroupsRowsByJobAndKeepsTheSameTotal()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "1 | A", "GEM", 4); Proj(db, 1, "2 | B", "Crew", 6);
+        Active(db, 1, "1 | A", "Crew", 8); Active(db, 1, "1 | A", "GEM", 3); Active(db, 1, "2 | B", "Crew", 6);
+        await db.SaveChangesAsync();
+
+        var byStore = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null);
+        var byJob = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null, by: "job");
+
+        Assert.Equal("job", byJob.By);
+        Assert.Equal(new[] { "Crew", "GEM" }, byJob.Rows.Select(r => r.Store).ToArray());
+        Assert.Equal(2, byJob.Rows.Single(r => r.Store == "Crew").Months[0]);
+        Assert.Equal(1, byJob.Rows.Single(r => r.Store == "GEM").Months[0]);
+        Assert.Equal(byStore.GrandTotal, byJob.GrandTotal);
+    }
+
+    [Fact]
     public async Task HiringForecast_NoRoster_HasNoRows()
     {
         var db = NewDb();
@@ -441,7 +459,7 @@ public class WorkforcePlanningReportTests
         public Task<MvcApp.Models.ViewModels.StorePlanDto> GetStorePlanAsync(string store, int year, int month, string role, string? assignedName) => throw new NotSupportedException();
         public Task<List<MvcApp.Models.ViewModels.PeriodItem>> GetProjectionPeriodsAsync() => Task.FromResult(new List<MvcApp.Models.ViewModels.PeriodItem>());
         public Task<List<string>> GetProjectionJobsAsync() => Task.FromResult(new List<string>());
-        public Task<MvcApp.Models.ViewModels.HiringForecastDto> GetHiringForecastAsync(int? year, string? stores, string? jobs, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0) => Task.FromResult(new MvcApp.Models.ViewModels.HiringForecastDto());
+        public Task<MvcApp.Models.ViewModels.HiringForecastDto> GetHiringForecastAsync(int? year, string? stores, string? jobs, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0, string? by = null) => Task.FromResult(new MvcApp.Models.ViewModels.HiringForecastDto());
     }
 
     private static ReportService NewReports(IWorkforcePlanningService planning) =>

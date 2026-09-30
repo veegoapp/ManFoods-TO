@@ -160,6 +160,8 @@ public class HiringForecastDto
     public List<string> OperationDirectors { get; set; } = new();
     /// <summary>False when no active-employee roster exists to start the forecast from.</summary>
     public bool HasRoster { get; set; }
+    /// <summary>What each row is: "store" | "job" | "payroll" | "consultant".</summary>
+    public string By { get; set; } = "store";
     /// <summary>Latest roster the forecast starts from (0 when none).</summary>
     public int BaselineYear { get; set; }
     public int BaselineMonth { get; set; }
