@@ -60,26 +60,27 @@ public class WorkforcePlanningService : IWorkforcePlanningService
     private static string Norm(string? s) => Regex.Replace((s ?? "").Trim(), @"\s+", " ").ToLowerInvariant();
     private static string AttrKey(string store, string job) => Norm(store) + "\u001f" + Norm(job);
 
-    // Operation Consultant per store for the planned period, from the Store Reference file;
-    // a store missing from that period falls back to its most recent entry.
-    private async Task<Dictionary<string, string>> GetOperationConsultantsAsync(int year, int month)
-    {
-        var key = $"planning:oc:{year}:{month}";
-        if (_cache.TryGetValue(key, out Dictionary<string, string>? cached) && cached != null) return cached;
+    // The people responsible for each store, from the Store Reference file: the entry for the
+    // planned period if there is one, else the latest earlier entry, else the latest overall.
+    private sealed record Leaders(string Oc, string Om, string Soc, string Od);
 
-        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    private async Task<Dictionary<string, Leaders>> GetLeadershipAsync(int year, int month)
+    {
+        var key = $"planning:leaders:{year}:{month}";
+        if (_cache.TryGetValue(key, out Dictionary<string, Leaders>? cached) && cached != null) return cached;
+
+        var map = new Dictionary<string, Leaders>(StringComparer.OrdinalIgnoreCase);
         var target = year * 100 + month;
         var rows = await _db.StoreReferences.AsNoTracking()
-            .Where(s => s.OperationConsultant != "")
-            .Select(s => new { s.StoreName, s.OperationConsultant, Period = s.Year * 100 + s.Month })
+            .Select(s => new { s.StoreName, s.OperationConsultant, s.OperationManager, s.SeniorOperationConsultant, s.OperationDirector, Period = s.Year * 100 + s.Month })
             .ToListAsync();
         foreach (var g in rows.GroupBy(r => r.StoreName.Trim(), StringComparer.OrdinalIgnoreCase))
         {
-            // Prefer the planned period, else the latest period at or before it, else the latest overall.
             var pick = g.Where(r => r.Period == target).FirstOrDefault()
                     ?? g.Where(r => r.Period < target).OrderByDescending(r => r.Period).FirstOrDefault()
                     ?? g.OrderByDescending(r => r.Period).First();
-            map[g.Key] = pick.OperationConsultant.Trim();
+            map[g.Key] = new Leaders((pick.OperationConsultant ?? "").Trim(), (pick.OperationManager ?? "").Trim(),
+                (pick.SeniorOperationConsultant ?? "").Trim(), (pick.OperationDirector ?? "").Trim());
         }
         _cache.Set(key, map, CacheOptions());
         return map;
@@ -238,8 +239,8 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         dto.ByJob = sel.ByJob.Select(kv => Row(data.Jobs[kv.Key], kv.Value, dto.HasActual))
             .OrderByDescending(r => r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
 
-        var consultants = await GetOperationConsultantsAsync(y, m);
-        foreach (var r in dto.ByStore) r.OperationConsultant = consultants.TryGetValue(r.Name.Trim(), out var oc) ? oc : "";
+        var leaders = await GetLeadershipAsync(y, m);
+        foreach (var r in dto.ByStore) r.OperationConsultant = leaders.TryGetValue(r.Name.Trim(), out var l) ? l.Oc : "";
 
         var actualTotal = sel.Actual ?? 0;
         dto.Kpis = new PlanningKpiDto
@@ -254,6 +255,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
 
         // Hiring need: per store+job the shortage plus expected resignations, never below
         // zero (a surplus in one job can't cover another), summed and rounded for display.
+        Dictionary<string, double[]>? storeNeed = null; // store -> [need, expected resignations], unrounded
         if (includeHiring && dto.HasActual)
         {
             var attrition = await GetAttritionAsync(y, m);
@@ -273,6 +275,40 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             foreach (var r in dto.ByJob) if (byJobNeed.TryGetValue(r.Name, out var v)) { r.HiringNeed = RoundNeed(v[0]); r.ExpectedAttrition = Math.Round(v[1], 1); }
             dto.Kpis.HiringNeed = RoundNeed(totalNeed);
             dto.Kpis.ExpectedAttrition = Math.Round(totalAttr, 1);
+            storeNeed = byStoreNeed;
+        }
+
+        // Roll the compared stores up by the people responsible for them. Figures are summed from
+        // the stores (hiring need from the unrounded per-store values), so each table adds up.
+        if (includeHiring)
+        {
+            List<PlanningRowDto> RollUp(Func<Leaders, string> pick)
+            {
+                var acc = new Dictionary<string, (int Stores, int P, int A, double Need, double Attr)>(StringComparer.OrdinalIgnoreCase);
+                foreach (var r in dto.ByStore)
+                {
+                    if (!leaders.TryGetValue(r.Name.Trim(), out var l)) continue;
+                    var name = pick(l);
+                    if (string.IsNullOrWhiteSpace(name)) continue;
+                    acc.TryGetValue(name, out var a);
+                    double need = 0, attr = 0;
+                    if (storeNeed != null && storeNeed.TryGetValue(r.Name, out var sn)) { need = sn[0]; attr = sn[1]; }
+                    acc[name] = (a.Stores + 1, a.P + r.Projected, a.A + (dto.HasActual ? r.Actual : 0), a.Need + need, a.Attr + attr);
+                }
+                return acc.Select(kv =>
+                    {
+                        var row = Row(kv.Key, new[] { kv.Value.P, kv.Value.A }, dto.HasActual);
+                        row.StoreCount = kv.Value.Stores;
+                        row.HiringNeed = RoundNeed(kv.Value.Need);
+                        row.ExpectedAttrition = Math.Round(kv.Value.Attr, 1);
+                        return row;
+                    })
+                    .OrderByDescending(r => dto.HasActual ? r.Gap : r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            }
+            dto.ByOperationConsultant = RollUp(l => l.Oc);
+            dto.ByOperationDirector = RollUp(l => l.Od);
+            dto.ByOperationManager = RollUp(l => l.Om);
+            dto.BySeniorOperationConsultant = RollUp(l => l.Soc);
         }
 
         foreach (var mon in includeTrend ? projMonths : new List<int>())

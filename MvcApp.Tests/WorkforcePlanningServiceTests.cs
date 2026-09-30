@@ -199,6 +199,33 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task RollUps_SumTheStoresUnderEachConsultantManagerAndDirector()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "2 | B", "Crew", 20); Proj(db, 1, "3 | C", "Crew", 6); Proj(db, 1, "4 | D", "Crew", 5);
+        Active(db, 1, "1 | A", "Crew", 8); Active(db, 1, "2 | B", "Crew", 20); Active(db, 1, "3 | C", "Crew", 3); Active(db, 1, "4 | D", "Crew", 5);
+        db.StoreReferences.AddRange(
+            new StoreReference { Year = 2026, Month = 1, StoreName = "1 | A", OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+            new StoreReference { Year = 2026, Month = 1, StoreName = "2 | B", OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+            new StoreReference { Year = 2026, Month = 1, StoreName = "3 | C", OperationConsultant = "Bob", OperationManager = "Mona", OperationDirector = "Eve", SeniorOperationConsultant = "Sam" });
+        // store 4 has no Store Reference entry at all -> left out of every roll-up
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        var amy = Assert.Single(dto.ByOperationConsultant, r => r.Name == "Amy");
+        Assert.Equal(2, amy.StoreCount); Assert.Equal(30, amy.Projected); Assert.Equal(28, amy.Actual); Assert.Equal(2, amy.Gap);
+        Assert.Equal(2, amy.HiringNeed);                 // store 2 is at plan (0), store 1 short by 2
+        var bob = Assert.Single(dto.ByOperationConsultant, r => r.Name == "Bob");
+        Assert.Equal(3, bob.Gap); Assert.Equal("critical", bob.Status); // 3 of 6 = 50%
+
+        var mona = Assert.Single(dto.ByOperationManager);
+        Assert.Equal(3, mona.StoreCount); Assert.Equal(36, mona.Projected); Assert.Equal(31, mona.Actual);
+        Assert.Equal(2, dto.ByOperationDirector.Count);
+        Assert.Equal("Eve", dto.ByOperationDirector[0].Name);              // shortage 3 beats Dan's 2: largest shortage first
+    }
+
+    [Fact]
     public async Task StoreAndJobFilters_NarrowTheResult()
     {
         var db = NewDb();

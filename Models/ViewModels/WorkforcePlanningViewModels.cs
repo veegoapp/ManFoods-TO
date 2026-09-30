@@ -23,6 +23,12 @@ public class WorkforcePlanningDto
     public PlanningKpiDto Kpis { get; set; } = new();
     public List<PlanningRowDto> ByJob { get; set; } = new();
     public List<PlanningRowDto> ByStore { get; set; } = new();
+    /// <summary>The same projected-vs-actual figures rolled up by the people responsible for the stores
+    /// (from the Store Reference file), for the compared stores only.</summary>
+    public List<PlanningRowDto> ByOperationConsultant { get; set; } = new();
+    public List<PlanningRowDto> ByOperationDirector { get; set; } = new();
+    public List<PlanningRowDto> ByOperationManager { get; set; } = new();
+    public List<PlanningRowDto> BySeniorOperationConsultant { get; set; } = new();
     public List<PlanningTrendPointDto> Trend { get; set; } = new();
 }
 
@@ -55,6 +61,8 @@ public class PlanningRowDto
     public double ExpectedAttrition { get; set; }
     /// <summary>Operation Consultant of the store (only filled for store rows).</summary>
     public string OperationConsultant { get; set; } = "";
+    /// <summary>Number of stores rolled up into the row (only for the consultant/manager tables).</summary>
+    public int StoreCount { get; set; }
 }
 
 public class PlanningTrendPointDto
