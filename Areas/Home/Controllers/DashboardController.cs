@@ -29,6 +29,8 @@ public class DashboardController : Controller
 
     public IActionResult Workforce() => View();
 
+    public IActionResult WorkforcePlanning() => View();
+
     public IActionResult Retention() => View();
 
     public IActionResult Stores() => View();

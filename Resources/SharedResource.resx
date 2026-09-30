@@ -31,7 +31,7 @@
   <data name="Nav_MyWorkspace" xml:space="preserve"><value>My Workspace</value></data>
   <data name="Nav_Turnover" xml:space="preserve"><value>Turnover</value></data>
   <data name="Nav_Comparisons" xml:space="preserve"><value>Comparisons</value></data>
-  <data name="Nav_Workforce" xml:space="preserve"><value>Workforce</value></data>
+  <data name="Nav_Workforce" xml:space="preserve"><value>Workforce Overview</value></data>
   <data name="Nav_Retention" xml:space="preserve"><value>Retention</value></data>
   <data name="Nav_ExitInterviews" xml:space="preserve"><value>Exit Interviews</value></data>
   <data name="Nav_NinetyDay" xml:space="preserve"><value>90-Day Turnover</value></data>
@@ -429,7 +429,7 @@
   <data name="Comparisons_StoreBreakdownHint" xml:space="preserve"><value>Shown when both periods use "All Stores"</value></data>
   <data name="Chart_TurnoverByStoreCompare" xml:space="preserve"><value>Turnover Rate by Store — A vs B</value></data>
   <data name="Chart_NinetyDayByStoreCompare" xml:space="preserve"><value>90-Day Rate by Store — A vs B</value></data>
-  <data name="Page_Workforce" xml:space="preserve"><value>Workforce</value></data>
+  <data name="Page_Workforce" xml:space="preserve"><value>Workforce Overview</value></data>
   <data name="Page_WorkforceSub" xml:space="preserve"><value>Headcount composition and distribution across stores</value></data>
   <data name="Guide_Workforce_Overview" xml:space="preserve"><value>This page is a snapshot of who currently works for you — active headcount broken down by job title, tenure, payroll group, gender and store — plus a trend of total headcount over time. Unlike the Turnover page, most charts here count active employees, not resignations.</value></data>
   <data name="Guide_Workforce_Chart_JobTitle" xml:space="preserve"><value>Current headcount grouped by job title for the selected period.</value></data>
@@ -1856,4 +1856,46 @@
   <data name="DM_TabMonthly" xml:space="preserve"><value>Monthly Workforce Data</value></data>
   <data name="DM_TabExit" xml:space="preserve"><value>Exit Interviews</value></data>
   <data name="DM_TabJobProj" xml:space="preserve"><value>Job Projection</value></data>
+  <data name="Nav_WorkforcePlanning" xml:space="preserve"><value>Workforce Planning</value></data>
+  <data name="Page_WorkforcePlanning" xml:space="preserve"><value>Workforce Planning</value></data>
+  <data name="Page_WorkforcePlanningSub" xml:space="preserve"><value>Projected headcount against who actually works for you, by job and store</value></data>
+  <data name="WP_Year" xml:space="preserve"><value>Year</value></data>
+  <data name="WP_Month" xml:space="preserve"><value>Month</value></data>
+  <data name="WP_AllStores" xml:space="preserve"><value>All stores</value></data>
+  <data name="WP_AllJobs" xml:space="preserve"><value>All job titles</value></data>
+  <data name="WP_ColJob" xml:space="preserve"><value>Job title</value></data>
+  <data name="WP_KpiProjected" xml:space="preserve"><value>Projected Headcount</value></data>
+  <data name="WP_KpiProjectedDesc" xml:space="preserve"><value>Planned number of employees for the selected month</value></data>
+  <data name="WP_KpiActual" xml:space="preserve"><value>Actual Headcount</value></data>
+  <data name="WP_KpiActualDesc" xml:space="preserve"><value>Active employees in the same stores for that month</value></data>
+  <data name="WP_KpiGap" xml:space="preserve"><value>Gap</value></data>
+  <data name="WP_KpiGapDesc" xml:space="preserve"><value>Projected minus actual. Positive = shortage, negative = surplus</value></data>
+  <data name="WP_KpiFill" xml:space="preserve"><value>Fill Rate</value></data>
+  <data name="WP_KpiFillDesc" xml:space="preserve"><value>Actual as a share of projected headcount</value></data>
+  <data name="WP_ChartByJob" xml:space="preserve"><value>Projected vs Actual by Job Title</value></data>
+  <data name="WP_ChartByJobSub" xml:space="preserve"><value>Planned headcount next to actual headcount for each job</value></data>
+  <data name="WP_ChartTrend" xml:space="preserve"><value>Projection Through the Year</value></data>
+  <data name="WP_ChartTrendSub" xml:space="preserve"><value>Monthly projected headcount, with actual headcount for months already uploaded</value></data>
+  <data name="WP_Projected" xml:space="preserve"><value>Projected</value></data>
+  <data name="WP_Actual" xml:space="preserve"><value>Actual</value></data>
+  <data name="WP_StoresTable" xml:space="preserve"><value>Stores: Projected vs Actual</value></data>
+  <data name="WP_StoresTableSub" xml:space="preserve"><value>Stores with the largest shortage first</value></data>
+  <data name="WP_ColStore" xml:space="preserve"><value>Store</value></data>
+  <data name="WP_ColProjected" xml:space="preserve"><value>Projected</value></data>
+  <data name="WP_ColActual" xml:space="preserve"><value>Actual</value></data>
+  <data name="WP_ColGap" xml:space="preserve"><value>Gap</value></data>
+  <data name="WP_ColFill" xml:space="preserve"><value>Fill rate</value></data>
+  <data name="WP_ColStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="WP_StatusOk" xml:space="preserve"><value>On track</value></data>
+  <data name="WP_StatusWatch" xml:space="preserve"><value>Watch</value></data>
+  <data name="WP_StatusCritical" xml:space="preserve"><value>Understaffed</value></data>
+  <data name="WP_StatusNone" xml:space="preserve"><value>No actual data</value></data>
+  <data name="WP_Shortage" xml:space="preserve"><value>shortage</value></data>
+  <data name="WP_Surplus" xml:space="preserve"><value>surplus</value></data>
+  <data name="WP_Search" xml:space="preserve"><value>Search stores…</value></data>
+  <data name="WP_NoData" xml:space="preserve"><value>No job projection has been uploaded yet.</value></data>
+  <data name="WP_NoDataAdmin" xml:space="preserve"><value>Upload a job projection in Data Management</value></data>
+  <data name="WP_NoActual" xml:space="preserve"><value>There is no active-employee roster for this month yet (it is a future month), so only the projection is shown.</value></data>
+  <data name="Set_Access_Area_workforce_planning" xml:space="preserve"><value>Workforce Planning</value></data>
+  <data name="Set_Access_Desc_workforce_planning" xml:space="preserve"><value>The Workforce Planning page (projected vs actual headcount).</value></data>
 </root>

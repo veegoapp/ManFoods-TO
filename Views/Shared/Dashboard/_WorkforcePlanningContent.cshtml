@@ -1,0 +1,264 @@
+@{
+    var __area = ViewContext.RouteData.Values["area"]?.ToString();
+    var __isAdminArea = !string.Equals(__area, "Home", StringComparison.OrdinalIgnoreCase);
+}
+<style>
+.wp-select-wrap { position:relative; }
+.wp-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 34px 0 14px; min-width:110px; max-width:260px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.wp-select:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.wp-select-wrap i { position:absolute; top:50%; right:12px; transform:translateY(-50%); font-size:11px; color:var(--text-3); pointer-events:none; }
+[dir="rtl"] .wp-select { padding:0 14px 0 34px; }
+[dir="rtl"] .wp-select-wrap i { right:auto; left:12px; }
+
+.wp-note {
+    display:flex; align-items:flex-start; gap:10px; margin-bottom:18px; padding:12px 14px; font-size:13px;
+    background:oklch(0.75 0.16 75 / .1); border:1px solid oklch(0.75 0.16 75 / .35);
+    border-radius:var(--radius-sm); color:var(--text-2);
+}
+.wp-note i { color:oklch(0.6 0.14 75); font-size:16px; flex-shrink:0; margin-top:1px; }
+
+.wp-table-wrap { max-height:520px; overflow:auto; }
+.wp-table { width:100%; border-collapse:collapse; font-size:13.5px; }
+.wp-table th, .wp-table td { padding:10px 14px; border-bottom:1px solid var(--card-border); text-align:start; white-space:nowrap; }
+.wp-table th { position:sticky; top:0; background:var(--bg-2); color:var(--text); font-weight:700; }
+.wp-table td.num, .wp-table th.num { text-align:end; font-variant-numeric:tabular-nums; }
+.wp-table tbody tr:hover { background:var(--bg-2); }
+.wp-pill { font-size:11px; font-weight:700; padding:3px 10px; border-radius:12px; display:inline-block; }
+.wp-pill.ok { background:oklch(0.62 0.15 155 / .14); color:oklch(0.45 0.15 155); }
+.wp-pill.watch { background:oklch(0.75 0.16 75 / .18); color:oklch(0.5 0.14 75); }
+.wp-pill.critical { background:oklch(0.6 0.22 22 / .14); color:oklch(0.5 0.2 22); }
+.wp-pill.none { background:var(--bg-2); color:var(--text-3); }
+.wp-fill { display:inline-block; width:70px; height:6px; border-radius:3px; background:var(--bg-2); vertical-align:middle; margin-inline-end:8px; overflow:hidden; }
+.wp-fill > span { display:block; height:100%; border-radius:3px; }
+.wp-search {
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13px; height:36px; padding:0 12px; min-width:200px;
+}
+.wp-empty { padding:40px 20px; text-align:center; color:var(--text-3); font-size:14px; }
+.wp-empty i { font-size:34px; display:block; margin-bottom:10px; }
+.chart-body canvas { direction:ltr; }
+</style>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">@L["Page_WorkforcePlanning"]</h1>
+        <p class="page-subtitle">@L["Page_WorkforcePlanningSub"]</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap align-items-end" id="wpFilters" hidden>
+        <div class="wp-select-wrap"><select id="wpYear" class="wp-select" aria-label="@L["WP_Year"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="wp-select-wrap"><select id="wpMonth" class="wp-select" aria-label="@L["WP_Month"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="wp-select-wrap"><select id="wpStore" class="wp-select" aria-label="@L["WP_ColStore"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="wp-select-wrap"><select id="wpJob" class="wp-select" aria-label="@L["WP_ColJob"]"></select><i class="bi bi-chevron-down"></i></div>
+    </div>
+</div>
+
+<div id="wpEmpty" class="chart-card" hidden>
+    <div class="wp-empty">
+        <i class="bi bi-graph-up-arrow"></i>
+        <div>@L["WP_NoData"]</div>
+        @if (__isAdminArea)
+        {
+            <div class="mt-2"><a href="/admin/dashboard/uploads?tab=jobproj">@L["WP_NoDataAdmin"]</a></div>
+        }
+    </div>
+</div>
+
+<div id="wpBody" hidden>
+    <div id="wpNoActual" class="wp-note" hidden><i class="bi bi-info-circle-fill"></i><span>@L["WP_NoActual"]</span></div>
+
+    <div id="wpKpis" class="kpi-grid mb-4"></div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-xl-7">
+            <div class="chart-card h-100">
+                <div class="chart-header"><h6>@L["WP_ChartByJob"]</h6><p>@L["WP_ChartByJobSub"]</p></div>
+                <div class="chart-body" id="wpJobWrap" style="position:relative"><canvas id="wpJobChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-5">
+            <div class="chart-card h-100">
+                <div class="chart-header"><h6>@L["WP_ChartTrend"]</h6><p>@L["WP_ChartTrendSub"]</p></div>
+                <div class="chart-body" style="position:relative;height:320px"><canvas id="wpTrendChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-card mb-4">
+        <div class="chart-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div><h6>@L["WP_StoresTable"]</h6><p>@L["WP_StoresTableSub"]</p></div>
+            <input type="search" id="wpSearch" class="wp-search" placeholder="@L["WP_Search"]">
+        </div>
+        <div class="wp-table-wrap">
+            <table class="wp-table">
+                <thead><tr>
+                    <th>@L["WP_ColStore"]</th>
+                    <th class="num">@L["WP_ColProjected"]</th>
+                    <th class="num">@L["WP_ColActual"]</th>
+                    <th class="num">@L["WP_ColGap"]</th>
+                    <th>@L["WP_ColFill"]</th>
+                    <th>@L["WP_ColStatus"]</th>
+                </tr></thead>
+                <tbody id="wpStoreRows"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="wpL" hidden
+     data-all-stores="@L["WP_AllStores"]" data-all-jobs="@L["WP_AllJobs"]"
+     data-kpi-projected="@L["WP_KpiProjected"]" data-kpi-projected-desc="@L["WP_KpiProjectedDesc"]"
+     data-kpi-actual="@L["WP_KpiActual"]" data-kpi-actual-desc="@L["WP_KpiActualDesc"]"
+     data-kpi-gap="@L["WP_KpiGap"]" data-kpi-gap-desc="@L["WP_KpiGapDesc"]"
+     data-kpi-fill="@L["WP_KpiFill"]" data-kpi-fill-desc="@L["WP_KpiFillDesc"]"
+     data-projected="@L["WP_Projected"]" data-actual="@L["WP_Actual"]"
+     data-ok="@L["WP_StatusOk"]" data-watch="@L["WP_StatusWatch"]" data-critical="@L["WP_StatusCritical"]" data-none="@L["WP_StatusNone"]"
+     data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
+     data-error="@L["Common_NoData"]"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="~/js/chart-colors.js" asp-append-version="true"></script>
+<script>
+/* Workforce Planning — projected vs actual headcount. One endpoint
+   (/api/workforce-planning/summary) returns the filter options, KPIs, per-job
+   and per-store breakdowns and the year's trend; the server caches the heavy
+   reads, so changing a filter here never re-reads whole tables from the DB. */
+const wpL = document.getElementById('wpL').dataset;
+const wpState = { year: '', month: '', store: '', job: '' };
+let wpJobChart, wpTrendChart, wpData;
+
+const wpMonthName = (m, style) => new Date(2000, m - 1, 1).toLocaleString('default', { month: style || 'long' });
+const wpPillLabel = s => wpL[s] || '';
+const wpFillColor = s => s === 'critical' ? 'oklch(0.6 0.22 22)' : s === 'watch' ? 'oklch(0.75 0.16 75)' : 'oklch(0.62 0.15 155)';
+
+function wpFillSelect(id, options, value) {
+    const el = document.getElementById(id);
+    el.innerHTML = options.map(o => `<option value="${sapEscape(o.value)}">${sapEscape(o.label)}</option>`).join('');
+    el.value = String(value ?? '');
+}
+
+async function wpLoad() {
+    const q = new URLSearchParams();
+    if (wpState.year) q.set('year', wpState.year);
+    if (wpState.month) q.set('month', wpState.month);
+    if (wpState.store) q.set('store', wpState.store);
+    if (wpState.job) q.set('jobs', wpState.job);
+    let d;
+    try {
+        const r = await fetch('/api/workforce-planning/summary?' + q);
+        if (!r.ok) throw new Error();
+        d = await r.json();
+    } catch {
+        document.getElementById('wpEmpty').hidden = false;
+        return;
+    }
+    wpData = d;
+    if (!d.hasData) {
+        document.getElementById('wpEmpty').hidden = false;
+        document.getElementById('wpBody').hidden = true;
+        document.getElementById('wpFilters').hidden = true;
+        return;
+    }
+    document.getElementById('wpEmpty').hidden = true;
+    document.getElementById('wpBody').hidden = false;
+    document.getElementById('wpFilters').hidden = false;
+
+    // Keep the state in sync with what the server actually resolved.
+    wpState.year = d.year; wpState.month = d.month;
+    wpFillSelect('wpYear', d.years.map(y => ({ value: y, label: y })), d.year);
+    wpFillSelect('wpMonth', d.months.map(m => ({ value: m, label: wpMonthName(m) })), d.month);
+    wpFillSelect('wpStore', [{ value: '', label: wpL.allStores }].concat(d.stores.map(s => ({ value: s, label: s }))), wpState.store);
+    wpFillSelect('wpJob', [{ value: '', label: wpL.allJobs }].concat(d.jobs.map(j => ({ value: j, label: j }))), wpState.job);
+
+    document.getElementById('wpNoActual').hidden = d.hasActual;
+    wpRenderKpis(d);
+    wpRenderJobChart(d);
+    wpRenderTrend(d);
+    wpRenderStores();
+}
+
+function wpRenderKpis(d) {
+    const k = d.kpis, has = d.hasActual;
+    const dash = '—';
+    const gapColor = !has ? '' : k.gap > 0 ? 'text-danger' : 'text-success';
+    const fillColor = !has ? '' : k.fillPercent >= 95 ? 'text-success' : k.fillPercent >= 85 ? '' : 'text-danger';
+    const card = (icon, cls, val, label, desc) =>
+        `<div class="kpi-card"><div class="kpi-icon ${cls}"><i class="bi ${icon}"></i></div><div class="kpi-value ${cls}">${val}</div><div class="kpi-label">${sapEscape(label)}</div><div class="kpi-desc">${sapEscape(desc)}</div></div>`;
+    document.getElementById('wpKpis').innerHTML =
+        card('bi-bullseye', '', k.projected, wpL.kpiProjected, wpL.kpiProjectedDesc) +
+        card('bi-people-fill', '', has ? k.actual : dash, wpL.kpiActual, wpL.kpiActualDesc) +
+        card('bi-arrow-down-up', gapColor, has ? (k.gap > 0 ? '+' : '') + k.gap : dash, wpL.kpiGap, wpL.kpiGapDesc) +
+        card('bi-percent', fillColor, has ? k.fillPercent + '%' : dash, wpL.kpiFill, wpL.kpiFillDesc);
+}
+
+function wpRenderJobChart(d) {
+    const rows = d.byJob.filter(r => r.projected > 0 || r.actual > 0);
+    const wrap = document.getElementById('wpJobWrap');
+    wrap.style.height = Math.max(260, rows.length * 30 + 60) + 'px';
+    const datasets = [{ label: wpL.projected, data: rows.map(r => r.projected), backgroundColor: 'oklch(0.72 0.05 258)', borderRadius: 3 }];
+    if (d.hasActual) datasets.push({ label: wpL.actual, data: rows.map(r => r.actual), backgroundColor: 'oklch(0.55 0.19 25)', borderRadius: 3 });
+    if (wpJobChart) wpJobChart.destroy();
+    wpJobChart = new Chart(document.getElementById('wpJobChart'), {
+        type: 'bar',
+        data: { labels: rows.map(r => r.name), datasets },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+            scales: { x: { beginAtZero: true, grid: { color: 'rgba(128,128,128,.12)' } }, y: { grid: { display: false } } }
+        }
+    });
+}
+
+function wpRenderTrend(d) {
+    if (wpTrendChart) wpTrendChart.destroy();
+    wpTrendChart = new Chart(document.getElementById('wpTrendChart'), {
+        type: 'line',
+        data: {
+            labels: d.trend.map(t => wpMonthName(t.month, 'short')),
+            datasets: [
+                { label: wpL.projected, data: d.trend.map(t => t.projected), borderColor: 'oklch(0.6 0.05 258)', backgroundColor: 'oklch(0.6 0.05 258)', borderDash: [6, 4], tension: .25, pointRadius: 3 },
+                { label: wpL.actual, data: d.trend.map(t => t.actual), borderColor: 'oklch(0.55 0.19 25)', backgroundColor: 'oklch(0.55 0.19 25)', tension: .25, pointRadius: 3, spanGaps: false }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'bottom' } },
+            scales: { y: { beginAtZero: false, grid: { color: 'rgba(128,128,128,.12)' } }, x: { grid: { display: false } } }
+        }
+    });
+}
+
+function wpRenderStores() {
+    const term = (document.getElementById('wpSearch').value || '').trim().toLowerCase();
+    const has = wpData.hasActual;
+    const rows = wpData.byStore.filter(r => !term || r.name.toLowerCase().includes(term));
+    document.getElementById('wpStoreRows').innerHTML = rows.map(r => {
+        const gapTxt = has ? (r.gap > 0 ? '+' : '') + r.gap : '—';
+        const gapCls = !has ? '' : r.gap > 0 ? 'text-danger' : 'text-success';
+        const fill = has
+            ? `<span class="wp-fill"><span style="width:${Math.min(100, r.fillPercent)}%;background:${wpFillColor(r.status)}"></span></span>${r.fillPercent}%`
+            : '—';
+        return `<tr>
+            <td>${sapEscape(r.name)}</td>
+            <td class="num">${r.projected}</td>
+            <td class="num">${has ? r.actual : '—'}</td>
+            <td class="num ${gapCls}">${gapTxt}</td>
+            <td>${fill}</td>
+            <td><span class="wp-pill ${r.status}">${sapEscape(wpPillLabel(r.status))}</span></td>
+        </tr>`;
+    }).join('');
+}
+
+document.getElementById('wpYear').addEventListener('change', e => { wpState.year = e.target.value; wpState.month = ''; wpLoad(); });
+document.getElementById('wpMonth').addEventListener('change', e => { wpState.month = e.target.value; wpLoad(); });
+document.getElementById('wpStore').addEventListener('change', e => { wpState.store = e.target.value; wpLoad(); });
+document.getElementById('wpJob').addEventListener('change', e => { wpState.job = e.target.value; wpLoad(); });
+document.getElementById('wpSearch').addEventListener('input', wpRenderStores);
+wpLoad();
+</script>

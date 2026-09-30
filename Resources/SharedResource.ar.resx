@@ -31,7 +31,7 @@
   <data name="Nav_MyWorkspace" xml:space="preserve"><value>مساحتي</value></data>
   <data name="Nav_Turnover" xml:space="preserve"><value>الدوران</value></data>
   <data name="Nav_Comparisons" xml:space="preserve"><value>المقارنات</value></data>
-  <data name="Nav_Workforce" xml:space="preserve"><value>القوى العاملة</value></data>
+  <data name="Nav_Workforce" xml:space="preserve"><value>نظرة عامة على القوى العاملة</value></data>
   <data name="Nav_Retention" xml:space="preserve"><value>الاحتفاظ</value></data>
   <data name="Nav_ExitInterviews" xml:space="preserve"><value>مقابلات الخروج</value></data>
   <data name="Nav_NinetyDay" xml:space="preserve"><value>دوران 90 يوم</value></data>
@@ -429,7 +429,7 @@
   <data name="Comparisons_StoreBreakdownHint" xml:space="preserve"><value>يظهر لما تكون الفترتين على "كل الفروع"</value></data>
   <data name="Chart_TurnoverByStoreCompare" xml:space="preserve"><value>معدل الدوران حسب الفرع — A مقابل B</value></data>
   <data name="Chart_NinetyDayByStoreCompare" xml:space="preserve"><value>معدل 90 يوم حسب الفرع — A مقابل B</value></data>
-  <data name="Page_Workforce" xml:space="preserve"><value>القوى العاملة</value></data>
+  <data name="Page_Workforce" xml:space="preserve"><value>نظرة عامة على القوى العاملة</value></data>
   <data name="Page_WorkforceSub" xml:space="preserve"><value>تكوين وتوزيع الموظفين عبر الفروع</value></data>
   <data name="Guide_Workforce_Overview" xml:space="preserve"><value>هذه الصفحة عبارة عن لقطة سريعة لمن يعمل لديك حاليًا — عدد الموظفين الحاليين مقسّم حسب المسمى الوظيفي ومدة الخدمة وفئة الرواتب والجنس والفرع، إضافة إلى اتجاه إجمالي عدد الموظفين مع الوقت. وعلى عكس صفحة معدل الدوران، تحتسب معظم الرسوم البيانية هنا الموظفين الحاليين وليس الاستقالات.</value></data>
   <data name="Guide_Workforce_Chart_JobTitle" xml:space="preserve"><value>عدد الموظفين الحاليين مقسّم حسب المسمى الوظيفي للفترة المختارة.</value></data>
@@ -1862,4 +1862,46 @@
   <data name="DM_TabMonthly" xml:space="preserve"><value>بيانات القوى العاملة الشهرية</value></data>
   <data name="DM_TabExit" xml:space="preserve"><value>مقابلات الخروج</value></data>
   <data name="DM_TabJobProj" xml:space="preserve"><value>توقّعات الوظائف</value></data>
+  <data name="Nav_WorkforcePlanning" xml:space="preserve"><value>تخطيط القوى العاملة</value></data>
+  <data name="Page_WorkforcePlanning" xml:space="preserve"><value>تخطيط القوى العاملة</value></data>
+  <data name="Page_WorkforcePlanningSub" xml:space="preserve"><value>العدد المتوقّع مقابل اللي شغّال فعلًا، حسب الوظيفة والفرع</value></data>
+  <data name="WP_Year" xml:space="preserve"><value>السنة</value></data>
+  <data name="WP_Month" xml:space="preserve"><value>الشهر</value></data>
+  <data name="WP_AllStores" xml:space="preserve"><value>كل الفروع</value></data>
+  <data name="WP_AllJobs" xml:space="preserve"><value>كل الوظائف</value></data>
+  <data name="WP_ColJob" xml:space="preserve"><value>الوظيفة</value></data>
+  <data name="WP_KpiProjected" xml:space="preserve"><value>العدد المتوقّع</value></data>
+  <data name="WP_KpiProjectedDesc" xml:space="preserve"><value>عدد الموظفين المخطّط للشهر المختار</value></data>
+  <data name="WP_KpiActual" xml:space="preserve"><value>العدد الفعلي</value></data>
+  <data name="WP_KpiActualDesc" xml:space="preserve"><value>الموظفين النشطين في نفس الفروع في الشهر ده</value></data>
+  <data name="WP_KpiGap" xml:space="preserve"><value>الفجوة</value></data>
+  <data name="WP_KpiGapDesc" xml:space="preserve"><value>المتوقّع ناقص الفعلي. الموجب = عجز، والسالب = زيادة</value></data>
+  <data name="WP_KpiFill" xml:space="preserve"><value>نسبة الاكتمال</value></data>
+  <data name="WP_KpiFillDesc" xml:space="preserve"><value>العدد الفعلي كنسبة من المتوقّع</value></data>
+  <data name="WP_ChartByJob" xml:space="preserve"><value>المتوقّع مقابل الفعلي حسب الوظيفة</value></data>
+  <data name="WP_ChartByJobSub" xml:space="preserve"><value>العدد المخطّط جنب العدد الفعلي لكل وظيفة</value></data>
+  <data name="WP_ChartTrend" xml:space="preserve"><value>التوقّعات على مدار السنة</value></data>
+  <data name="WP_ChartTrendSub" xml:space="preserve"><value>العدد المتوقّع كل شهر، مع العدد الفعلي للشهور اللي اترفعت</value></data>
+  <data name="WP_Projected" xml:space="preserve"><value>المتوقّع</value></data>
+  <data name="WP_Actual" xml:space="preserve"><value>الفعلي</value></data>
+  <data name="WP_StoresTable" xml:space="preserve"><value>الفروع: المتوقّع مقابل الفعلي</value></data>
+  <data name="WP_StoresTableSub" xml:space="preserve"><value>الفروع الأكثر عجزًا في الأول</value></data>
+  <data name="WP_ColStore" xml:space="preserve"><value>الفرع</value></data>
+  <data name="WP_ColProjected" xml:space="preserve"><value>المتوقّع</value></data>
+  <data name="WP_ColActual" xml:space="preserve"><value>الفعلي</value></data>
+  <data name="WP_ColGap" xml:space="preserve"><value>الفجوة</value></data>
+  <data name="WP_ColFill" xml:space="preserve"><value>نسبة الاكتمال</value></data>
+  <data name="WP_ColStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="WP_StatusOk" xml:space="preserve"><value>تمام</value></data>
+  <data name="WP_StatusWatch" xml:space="preserve"><value>محتاج متابعة</value></data>
+  <data name="WP_StatusCritical" xml:space="preserve"><value>نقص حاد</value></data>
+  <data name="WP_StatusNone" xml:space="preserve"><value>لا توجد بيانات فعلية</value></data>
+  <data name="WP_Shortage" xml:space="preserve"><value>عجز</value></data>
+  <data name="WP_Surplus" xml:space="preserve"><value>زيادة</value></data>
+  <data name="WP_Search" xml:space="preserve"><value>ابحث عن فرع…</value></data>
+  <data name="WP_NoData" xml:space="preserve"><value>لسه ما اترفعش توقّعات وظائف.</value></data>
+  <data name="WP_NoDataAdmin" xml:space="preserve"><value>ارفع توقّعات الوظائف من إدارة البيانات</value></data>
+  <data name="WP_NoActual" xml:space="preserve"><value>مفيش بيانات موظفين فعلية للشهر ده لسه (شهر مستقبلي)، فالمعروض التوقّع بس.</value></data>
+  <data name="Set_Access_Area_workforce_planning" xml:space="preserve"><value>تخطيط القوى العاملة</value></data>
+  <data name="Set_Access_Desc_workforce_planning" xml:space="preserve"><value>صفحة تخطيط القوى العاملة (المتوقّع مقابل الفعلي).</value></data>
 </root>

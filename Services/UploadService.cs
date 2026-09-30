@@ -44,6 +44,7 @@ public class UploadService : IUploadService
     // (EarlyWarningService).
     private void InvalidateScorecardHistoricalCache()
     {
+        WorkforcePlanningService.InvalidateCache(); // planning compares projected vs active employees
         _cache.Remove(ScorecardService.HistoricalRecordsCacheKey);
         _cache.Remove(NinetyDayTurnoverService.ActiveHiresCacheKey);
         _cache.Remove(NinetyDayTurnoverService.ResignationTenuresCacheKey);
@@ -751,6 +752,7 @@ public class UploadService : IUploadService
         _db.UploadLogs.Add(new UploadLog { FileType = "job_projections", FileName = file.FileName, Month = 0, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
         await _db.SaveChangesAsync();
         await tx.CommitAsync();
+        WorkforcePlanningService.InvalidateCache();
 
         var message = string.Format(_L["Msg_JobProjProcessed"].Value, totalRows, monthsSeen.Count, year);
 
@@ -960,6 +962,7 @@ public class UploadService : IUploadService
             await _db.JobHeadcountProjections.Where(j => j.Year == log.Year).ExecuteDeleteAsync();
             await _db.UploadLogs.Where(l => l.FileType == "job_projections" && l.Year == log.Year).ExecuteDeleteAsync();
             await jtx.CommitAsync();
+            WorkforcePlanningService.InvalidateCache();
             return;
         }
 
