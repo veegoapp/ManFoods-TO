@@ -24,4 +24,25 @@ public class WorkforcePlanningApiController : ControllerBase
         var assignedName = HttpContext.Session.GetEmail();
         return Ok(await _planning.GetAsync(year, month, store, jobs, role, assignedName));
     }
+
+    // The two endpoints below feed the Stores and Store Profile pages, which run on the
+    // Analytics area, so they follow that area's store visibility rather than this page's.
+    [HttpGet("store-fill")]
+    [AccessArea(AccessAreas.Analytics)]
+    public async Task<IActionResult> StoreFill([FromQuery] int year, [FromQuery] int month, [FromQuery] string? jobs)
+    {
+        var role = HttpContext.Session.GetRole();
+        var assignedName = HttpContext.Session.GetEmail();
+        return Ok(await _planning.GetStoreFillAsync(year, month, jobs, role, assignedName));
+    }
+
+    [HttpGet("store-plan")]
+    [AccessArea(AccessAreas.Analytics)]
+    public async Task<IActionResult> StorePlan([FromQuery] string store, [FromQuery] int year, [FromQuery] int month)
+    {
+        if (string.IsNullOrWhiteSpace(store)) return BadRequest(new { error = "Store is required." });
+        var role = HttpContext.Session.GetRole();
+        var assignedName = HttpContext.Session.GetEmail();
+        return Ok(await _planning.GetStorePlanAsync(store, year, month, role, assignedName));
+    }
 }

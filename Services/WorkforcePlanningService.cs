@@ -83,12 +83,18 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         return data;
     }
 
-    public async Task<WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName)
+    public Task<WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName) =>
+        BuildAsync(year, month, stores, jobs, role, assignedName, strict: false, includeTrend: true);
+
+    // strict: use exactly the requested year/month or return "no data" (the page itself
+    // falls back to a sensible default period instead).
+    private async Task<WorkforcePlanningDto> BuildAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName, bool strict, bool includeTrend)
     {
         var dto = new WorkforcePlanningDto();
         var years = await GetYearsAsync();
         dto.Years = years;
         if (years.Count == 0) return dto;
+        if (strict && (!year.HasValue || !years.Contains(year.Value) || !month.HasValue)) return dto;
         dto.HasData = true;
 
         var now = DateTime.Now;
@@ -117,6 +123,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         var projMonths = data.Projected.Select(c => c.Month).Distinct().OrderBy(m => m).ToList();
         var actualMonths = data.Actual.Select(c => c.Month).Distinct().ToHashSet();
         dto.Months = projMonths;
+        if (strict && !projMonths.Contains(month!.Value)) { dto.HasData = false; return dto; }
         var m = month.HasValue && projMonths.Contains(month.Value) ? month.Value
               : (y == now.Year && projMonths.Contains(now.Month)) ? now.Month
               : actualMonths.Intersect(projMonths).DefaultIfEmpty(projMonths.Count > 0 ? projMonths[^1] : 1).Max();
@@ -167,12 +174,37 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             StoresShort = dto.HasActual ? dto.ByStore.Count(r => r.Status is "watch" or "critical") : 0,
         };
 
-        foreach (var mon in projMonths)
+        foreach (var mon in includeTrend ? projMonths : new List<int>())
         {
             var t = Aggregate(mon);
             dto.Trend.Add(new PlanningTrendPointDto { Month = mon, Projected = t.Projected, Actual = t.Actual });
         }
         return dto;
+    }
+
+    public async Task<List<StoreFillDto>> GetStoreFillAsync(int year, int month, string? jobs, string role, string? assignedName)
+    {
+        var dto = await BuildAsync(year, month, null, jobs, role, assignedName, strict: true, includeTrend: false);
+        if (!dto.HasData) return new List<StoreFillDto>();
+        return dto.ByStore.Select(r => new StoreFillDto
+        {
+            Store = r.Name, Projected = r.Projected, Actual = dto.HasActual ? r.Actual : null,
+            FillPercent = r.FillPercent, Status = r.Status,
+        }).ToList();
+    }
+
+    public async Task<StorePlanDto> GetStorePlanAsync(string store, int year, int month, string role, string? assignedName)
+    {
+        var plan = new StorePlanDto { Year = year, Month = month };
+        if (string.IsNullOrWhiteSpace(store)) return plan;
+        var dto = await BuildAsync(year, month, store, null, role, assignedName, strict: true, includeTrend: true);
+        if (!dto.HasData || dto.ByStore.Count == 0) return plan;
+        plan.HasData = true;
+        plan.HasActual = dto.HasActual;
+        plan.Kpis = dto.Kpis;
+        plan.ByJob = dto.ByJob;
+        plan.Upcoming = dto.Trend.Where(t => t.Month >= month).OrderBy(t => t.Month).Take(4).ToList();
+        return plan;
     }
 
     public async Task<List<PlanningDetailRow>> GetDetailAsync(int year, IReadOnlyCollection<int>? months, string? stores, string? jobs, string role, string? assignedName)

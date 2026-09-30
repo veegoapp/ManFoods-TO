@@ -89,6 +89,45 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task StoreFill_IsStrictAboutThePeriod_AndMapsEachStore()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "2 | B", "Crew", 10);
+        Active(db, 1, "1 | A", "Crew", 8); Active(db, 1, "2 | B", "Crew", 10);
+        await db.SaveChangesAsync();
+        var svc = NewService(db);
+
+        var fill = await svc.GetStoreFillAsync(2026, 1, null, "Admin", null);
+        Assert.Equal(2, fill.Count);
+        var a = Assert.Single(fill, f => f.Store == "1 | A");
+        Assert.Equal(10, a.Projected); Assert.Equal(8, a.Actual); Assert.Equal(80, a.FillPercent); Assert.Equal("critical", a.Status);
+
+        // A month or year with no projection must not fall back to another period.
+        Assert.Empty(await svc.GetStoreFillAsync(2026, 5, null, "Admin", null));
+        Assert.Empty(await svc.GetStoreFillAsync(2025, 1, null, "Admin", null));
+    }
+
+    [Fact]
+    public async Task StorePlan_ReturnsJobsAndUpcomingMonths_ForOneStore()
+    {
+        var db = NewDb();
+        for (int m = 1; m <= 6; m++) { Proj(db, m, "1 | A", "Crew", 10 + m); Proj(db, m, "2 | B", "Crew", 99); }
+        Active(db, 2, "1 | A", "Crew", 9);
+        await db.SaveChangesAsync();
+
+        var plan = await NewService(db).GetStorePlanAsync("1 | A", 2026, 2, "Admin", null);
+
+        Assert.True(plan.HasData);
+        Assert.Equal(12, plan.Kpis.Projected);
+        var crew = Assert.Single(plan.ByJob);
+        Assert.Equal(3, crew.Gap);
+        Assert.Equal(new[] { 2, 3, 4, 5 }, plan.Upcoming.Select(u => u.Month)); // this month + next three
+        Assert.Equal(new[] { 12, 13, 14, 15 }, plan.Upcoming.Select(u => u.Projected)); // only this store
+
+        Assert.False((await NewService(db).GetStorePlanAsync("9 | Nope", 2026, 2, "Admin", null)).HasData);
+    }
+
+    [Fact]
     public async Task StoreAndJobFilters_NarrowTheResult()
     {
         var db = NewDb();
@@ -109,6 +148,8 @@ public class WorkforcePlanningReportTests
         public List<MvcApp.Models.ViewModels.PlanningDetailRow> Rows { get; set; } = new();
         public Task<MvcApp.Models.ViewModels.WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName) => throw new NotSupportedException();
         public Task<List<MvcApp.Models.ViewModels.PlanningDetailRow>> GetDetailAsync(int year, IReadOnlyCollection<int>? months, string? stores, string? jobs, string role, string? assignedName) => Task.FromResult(Rows);
+        public Task<List<MvcApp.Models.ViewModels.StoreFillDto>> GetStoreFillAsync(int year, int month, string? jobs, string role, string? assignedName) => throw new NotSupportedException();
+        public Task<MvcApp.Models.ViewModels.StorePlanDto> GetStorePlanAsync(string store, int year, int month, string role, string? assignedName) => throw new NotSupportedException();
         public Task<List<MvcApp.Models.ViewModels.PeriodItem>> GetProjectionPeriodsAsync() => Task.FromResult(new List<MvcApp.Models.ViewModels.PeriodItem>());
         public Task<List<string>> GetProjectionJobsAsync() => Task.FromResult(new List<string>());
     }
