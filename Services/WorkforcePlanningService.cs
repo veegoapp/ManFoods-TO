@@ -101,6 +101,32 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             && (soc == null || soc.Contains(l.Soc)) && (od == null || od.Contains(l.Od));
     }
 
+    // Each job belongs to one payroll group. Learn it from the active-employee roster of the planned
+    // period (else the latest one before it, else the latest overall): the group most of the job's
+    // employees are in. Keyed by the normalised job title.
+    private async Task<Dictionary<string, string>> GetJobPayrollGroupsAsync(int year, int month)
+    {
+        var key = $"planning:paygroups:{year}:{month}";
+        if (_cache.TryGetValue(key, out Dictionary<string, string>? cached) && cached != null) return cached;
+
+        var map = new Dictionary<string, string>();
+        var keys = await GetRosterPeriodKeysAsync();
+        if (keys.Count > 0)
+        {
+            var target = year * 100 + month;
+            var period = keys.Where(k => k <= target).DefaultIfEmpty(keys[0]).First();
+            var rows = await _db.ActiveEmployees.AsNoTracking()
+                .Where(e => e.Year * 100 + e.Month == period && e.PayrollGroup != "")
+                .GroupBy(e => new { e.JobTitle, e.PayrollGroup })
+                .Select(g => new { g.Key.JobTitle, g.Key.PayrollGroup, Count = g.Count() })
+                .ToListAsync();
+            foreach (var g in rows.GroupBy(r => Norm(r.JobTitle)))
+                map[g.Key] = g.OrderByDescending(r => r.Count).First().PayrollGroup.Trim();
+        }
+        _cache.Set(key, map, CacheOptions());
+        return map;
+    }
+
     private async Task<List<int>> GetRosterPeriodKeysAsync()
     {
         const string key = "planning:roster-periods";
@@ -287,7 +313,8 @@ public class WorkforcePlanningService : IWorkforcePlanningService
 
         // Hiring need: per store+job the shortage plus expected resignations, never below
         // zero (a surplus in one job can't cover another), summed and rounded for display.
-        Dictionary<string, double[]>? storeNeed = null; // store -> [need, expected resignations], unrounded
+        Dictionary<string, double[]>? storeNeed = null; // store -> [need, expected resignations, shortage], unrounded
+        Dictionary<string, double[]>? jobNeed = null;   // job   -> same
         if (includeHiring && dto.HasActual)
         {
             var attrition = await GetAttritionAsync(y, m);
@@ -310,6 +337,32 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             dto.Kpis.ExpectedAttrition = Math.Round(totalAttr, 1);
             dto.Kpis.Shortage = RoundNeed(totalShort);
             storeNeed = byStoreNeed;
+            jobNeed = byJobNeed;
+        }
+
+        // Payroll groups: sum the per-job figures into each job's payroll group.
+        if (includeHiring)
+        {
+            var groupOfJob = await GetJobPayrollGroupsAsync(y, m);
+            var accPg = new Dictionary<string, (int P, int A, double Need, double Attr, double Short)>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kv in sel.ByJob)
+            {
+                var job = data.Jobs[kv.Key];
+                var group = groupOfJob.TryGetValue(Norm(job), out var g) ? g : "";
+                double need = 0, attr = 0, shortage = 0;
+                if (jobNeed != null && jobNeed.TryGetValue(job, out var jn)) { need = jn[0]; attr = jn[1]; shortage = jn[2]; }
+                accPg.TryGetValue(group, out var a);
+                accPg[group] = (a.P + kv.Value[0], a.A + (dto.HasActual ? kv.Value[1] : 0), a.Need + need, a.Attr + attr, a.Short + shortage);
+            }
+            dto.ByPayrollGroup = accPg.Select(kv =>
+                {
+                    var row = Row(kv.Key, new[] { kv.Value.P, kv.Value.A }, dto.HasActual);
+                    row.HiringNeed = RoundNeed(kv.Value.Need);
+                    row.ExpectedAttrition = Math.Round(kv.Value.Attr, 1);
+                    row.Shortage = RoundNeed(kv.Value.Short);
+                    return row;
+                })
+                .OrderBy(r => dto.HasActual ? r.Gap : -r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
         }
 
         // Roll the compared stores up by the people responsible for them. Figures are summed from

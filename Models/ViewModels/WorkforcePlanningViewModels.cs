@@ -29,6 +29,10 @@ public class WorkforcePlanningDto
     public PlanningKpiDto Kpis { get; set; } = new();
     public List<PlanningRowDto> ByJob { get; set; } = new();
     public List<PlanningRowDto> ByStore { get; set; } = new();
+    /// <summary>Projected vs actual per payroll group. A job belongs to one payroll group (taken from
+    /// the active-employee roster), so the projection per job is summed into that group. Jobs with no
+    /// employee to learn their group from are listed under an empty name ("unassigned").</summary>
+    public List<PlanningRowDto> ByPayrollGroup { get; set; } = new();
     /// <summary>The same projected-vs-actual figures rolled up by the people responsible for the stores
     /// (from the Store Reference file), for the compared stores only.</summary>
     public List<PlanningRowDto> ByOperationConsultant { get; set; } = new();

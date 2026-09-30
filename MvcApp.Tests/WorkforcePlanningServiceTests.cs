@@ -324,6 +324,34 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task PayrollGroups_SumTheirJobs_UsingTheGroupLearnedFromTheRoster()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "1 | A", "Crew Trainer", 4); Proj(db, 1, "1 | A", "GEM", 3); Proj(db, 1, "1 | A", "Newly Added Job", 2);
+        Proj(db, 1, "2 | B", "Crew", 6);
+        void Emp(string store, string job, string group, int count)
+        {
+            for (int i = 0; i < count; i++)
+                db.ActiveEmployees.Add(new ActiveEmployee { Year = 2026, Month = 1, Store = store, JobTitle = job, PayrollGroup = group, EmployeeId = Guid.NewGuid().ToString() });
+        }
+        Emp("1 | A", "Crew", "Hourly", 8); Emp("1 | A", "Crew Trainer", "Hourly", 6); Emp("1 | A", "GEM", "Monthly", 3); Emp("2 | B", "Crew", "Hourly", 6);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        var hourly = Assert.Single(dto.ByPayrollGroup, r => r.Name == "Hourly");
+        Assert.Equal(20, hourly.Projected);            // Crew 10 + Crew Trainer 4 + Crew (store 2) 6
+        Assert.Equal(20, hourly.Actual);                // 8 + 6 + 6
+        Assert.Equal(0, hourly.Gap);
+        Assert.Equal(2, hourly.Shortage);               // Crew in store 1 is 2 short; the trainer surplus does not offset it
+        var monthly = Assert.Single(dto.ByPayrollGroup, r => r.Name == "Monthly");
+        Assert.Equal(3, monthly.Projected); Assert.Equal(3, monthly.Actual);
+        var unassigned = Assert.Single(dto.ByPayrollGroup, r => r.Name == "");   // a job nobody works yet has no known group
+        Assert.Equal(2, unassigned.Projected);
+        Assert.Equal(dto.Kpis.Projected, dto.ByPayrollGroup.Sum(r => r.Projected));
+    }
+
+    [Fact]
     public async Task StoreAndJobFilters_NarrowTheResult()
     {
         var db = NewDb();

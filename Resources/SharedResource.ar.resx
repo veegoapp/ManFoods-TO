@@ -1963,4 +1963,11 @@
   <data name="WP_ColShortage" xml:space="preserve"><value>النقص</value></data>
   <data name="WP_ColAttrition" xml:space="preserve"><value>الاستقالات المتوقعة</value></data>
   <data name="WP_In_OverallOver_T" xml:space="preserve"><value>أعلى من الخطة</value></data>
+  <data name="WP_ChartByPayroll" xml:space="preserve"><value>المتوقّع مقابل الفعلي حسب مجموعة الرواتب</value></data>
+  <data name="WP_ChartByPayrollSub" xml:space="preserve"><value>العدد المخطّط والفعلي لكل مجموعة رواتب</value></data>
+  <data name="WP_PayrollTable" xml:space="preserve"><value>مجموعات الرواتب</value></data>
+  <data name="WP_PayrollTableSub" xml:space="preserve"><value>الأرقام نفسها في جدول — انقر على عنوان للترتيب</value></data>
+  <data name="WP_Unassigned" xml:space="preserve"><value>غير محدد</value></data>
+  <data name="WP_In_WorstPg_T" xml:space="preserve"><value>مجموعة الرواتب الأكثر نقصًا</value></data>
+  <data name="Guide_WP_Payroll" xml:space="preserve"><value>العدد المخطّط والفعلي لكل مجموعة رواتب، مع الأرقام نفسها في جدول قابل للترتيب. تُرفع التوقّعات لكل مسمى وظيفي، وكل وظيفة تتبع مجموعة رواتب واحدة (من ملف الموظفين النشطين)، فيُضاف توقّع كل وظيفة إلى مجموعتها. والوظيفة التي لا يعمل بها أحد بعد ليس لها مجموعة معروفة وتظهر ضمن «غير محدد». وتنطبق فلاتر الصفحة.</value></data>
 </root>

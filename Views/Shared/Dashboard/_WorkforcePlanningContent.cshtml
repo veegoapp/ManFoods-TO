@@ -85,6 +85,7 @@
             new() { Icon = "bi-lightbulb-fill", Title = L["Common_SmartInsights"], Body = L["Guide_WP_Insights"] },
             new() { Icon = "bi-bar-chart-line-fill", Title = L["WP_ChartByJob"], Body = L["Guide_WP_ByJob"] },
             new() { Icon = "bi-graph-up-arrow", Title = L["WP_ChartTrend"], Body = L["Guide_WP_Trend"] },
+            new() { Icon = "bi-wallet2", Title = L["WP_ChartByPayroll"], Body = L["Guide_WP_Payroll"] },
             new() { Icon = "bi-shop", Title = L["WP_StoresTable"], Body = L["Guide_WP_Stores"] },
             new() { Icon = "bi-people", Title = L["Common_ByOcOm"], Body = L["Guide_WP_Groups"] },
             new() { Icon = "bi-calculator", Title = L["Guide_WP_HiringTitle"], Body = L["Guide_WP_HiringBody"] },
@@ -132,6 +133,29 @@
         </div>
     </div>
 
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-xl-5">
+            <div class="chart-card h-100">
+                <div class="chart-header"><h6>@L["WP_ChartByPayroll"]</h6><p>@L["WP_ChartByPayrollSub"]</p></div>
+                <div class="chart-body" style="position:relative;height:300px"><canvas id="wpPayrollChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-7">
+            <div class="chart-card h-100 p-0" style="overflow:hidden">
+                <div class="chart-header stat-card-header">
+                    <span class="stat-card-icon" style="--icon-color:oklch(0.55 0.15 155)"><i class="bi bi-wallet2"></i></span>
+                    <div><h6 class="mb-0">@L["WP_PayrollTable"]</h6><p class="mb-0">@L["WP_PayrollTableSub"]</p></div>
+                </div>
+                <div class="table-responsive wp-group-wrap">
+                    <table class="table table-hover table-sm mb-0" style="font-size:13px">
+                        <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1"><tr id="wpPayrollHead"></tr></thead>
+                        <tbody id="wpPayrollBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="chart-card mb-4">
         <div class="chart-header d-flex justify-content-between align-items-start flex-wrap gap-2">
             <div><h6>@L["WP_StoresTable"]</h6><p>@L["WP_StoresTableSub"]</p></div>
@@ -171,7 +195,7 @@
      data-kpi-fill="@L["WP_KpiFill"]" data-kpi-fill-desc="@L["WP_KpiFillDesc"]"
      data-projected="@L["WP_Projected"]" data-actual="@L["WP_Actual"]"
      data-ok="@L["WP_StatusOk"]" data-watch="@L["WP_StatusWatch"]" data-critical="@L["WP_StatusCritical"]" data-none="@L["WP_StatusNone"]"
-     data-col-name="@L["Common_Name"]" data-col-stores="@L["Common_Stores"]" data-col-projected="@L["WP_ColProjected"]" data-col-actual="@L["WP_ColActual"]" data-col-gap="@L["WP_ColGap"]" data-col-hiring="@L["WP_ColHiring"]" data-col-shortage="@L["WP_ColShortage"]" data-col-attrition="@L["WP_ColAttrition"]" data-over="@L["WP_StatusOver"]" data-col-fill="@L["WP_ColFill"]" data-col-status="@L["WP_ColStatus"]" data-no-rows="@L["Common_NoData"]" data-oc-title="@L["Common_OperationConsultants"]" data-oc-sub="@L["WP_GrpSubOc"]" data-od-title="@L["Common_OperationDirectors"]" data-od-sub="@L["WP_GrpSubOd"]" data-om-title="@L["Common_OperationManagers"]" data-om-sub="@L["WP_GrpSubOm"]" data-soc-title="@L["Common_SeniorOperationConsultants"]" data-soc-sub="@L["WP_GrpSubSoc"]" data-hiring="@L["WP_ColHiring"]" data-kpi-hiring="@L["WP_KpiHiring"]" data-kpi-hiring-desc="@L["WP_KpiHiringDesc"]" data-attr-note="@L["WP_AttrNote"]" data-no-attr="@L["WP_NoAttrition"]" data-gap="@L["WP_ColGap"]" data-fill="@L["WP_ColFill"]" data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
+     data-col-name="@L["Common_Name"]" data-col-stores="@L["Common_Stores"]" data-col-projected="@L["WP_ColProjected"]" data-col-actual="@L["WP_ColActual"]" data-col-gap="@L["WP_ColGap"]" data-unassigned="@L["WP_Unassigned"]" data-col-hiring="@L["WP_ColHiring"]" data-col-shortage="@L["WP_ColShortage"]" data-col-attrition="@L["WP_ColAttrition"]" data-over="@L["WP_StatusOver"]" data-col-fill="@L["WP_ColFill"]" data-col-status="@L["WP_ColStatus"]" data-no-rows="@L["Common_NoData"]" data-oc-title="@L["Common_OperationConsultants"]" data-oc-sub="@L["WP_GrpSubOc"]" data-od-title="@L["Common_OperationDirectors"]" data-od-sub="@L["WP_GrpSubOd"]" data-om-title="@L["Common_OperationManagers"]" data-om-sub="@L["WP_GrpSubOm"]" data-soc-title="@L["Common_SeniorOperationConsultants"]" data-soc-sub="@L["WP_GrpSubSoc"]" data-hiring="@L["WP_ColHiring"]" data-kpi-hiring="@L["WP_KpiHiring"]" data-kpi-hiring-desc="@L["WP_KpiHiringDesc"]" data-attr-note="@L["WP_AttrNote"]" data-no-attr="@L["WP_NoAttrition"]" data-gap="@L["WP_ColGap"]" data-fill="@L["WP_ColFill"]" data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
      data-error="@L["Common_NoData"]"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -189,6 +213,7 @@ const WP_I = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new Dictionary<
     ["OverallWatch_T"] = L["WP_In_OverallWatch_T"].Value,
     ["OverallLow_T"] = L["WP_In_OverallLow_T"].Value,
     ["OverallOver_T"] = L["WP_In_OverallOver_T"].Value,
+    ["WorstPg_T"] = L["WP_In_WorstPg_T"].Value,
     ["Overall_D"] = L["WP_In_Overall_D"].Value,
     ["WorstStore_T"] = L["WP_In_WorstStore_T"].Value,
     ["WorstStore_D"] = L["WP_In_WorstStore_D"].Value,
@@ -273,6 +298,7 @@ async function wpLoad() {
     wpRenderInsights(d);
     wpRenderJobChart(d);
     wpRenderTrend(d);
+    wpRenderPayroll(d);
     wpRenderStores();
     wpRenderGroups();
 }
@@ -301,6 +327,9 @@ function wpRenderInsights(d) {
         const stores = d.byStore.filter(r => r.projected > 0);
         const worst = [...stores].filter(r => r.gap < 0).sort((a, b) => a.fillPercent - b.fillPercent || a.gap - b.gap)[0];
         if (worst) add('bi-shop', worst.status === 'critical' ? 'danger' : 'warning', WP_I.WorstStore_T, wpFmt(WP_I.WorstStore_D, worst.name, worst.fillPercent, Math.abs(worst.gap)));
+
+        const pg = [...wpPayrollRows(d)].filter(r => r.gap < 0 && r.projected > 0).sort((a, b) => a.fillPercent - b.fillPercent || a.gap - b.gap)[0];
+        if (pg && pg.status !== 'ok') add('bi-wallet2', pg.status === 'critical' ? 'danger' : 'warning', WP_I.WorstPg_T, wpFmt(WP_I.WorstStore_D, pg.name, pg.fillPercent, Math.abs(pg.gap)));
 
         const critical = stores.filter(r => r.status === 'critical').length, watch = stores.filter(r => r.status === 'watch').length;
         if (critical + watch > 0) add('bi-graph-down-arrow', critical > 0 ? 'danger' : 'warning', WP_I.StoresBelow_T, wpFmt(WP_I.StoresBelow_D, critical, watch));
@@ -526,6 +555,78 @@ function wpRenderGroup(g) {
 function wpRenderGroups() {
     wpBuildGroups();
     WP_GROUP_DEFS.forEach(wpRenderGroup);
+}
+
+/* ── Payroll groups: chart + table (a job belongs to one payroll group) ── */
+let wpPayrollChart;
+const wpPayrollSort = { key: null, dir: 'asc' };
+const wpPayrollRows = d => (d.byPayrollGroup || []).map(r => ({ ...r, name: r.name || wpL.unassigned }));
+
+function wpRenderPayroll(d) {
+    const rows = wpPayrollRows(d);
+    const has = d.hasActual;
+
+    if (wpPayrollChart) wpPayrollChart.destroy();
+    const datasets = [{ label: wpL.projected, data: rows.map(r => r.projected), backgroundColor: WP_PROJECTED, borderRadius: 3 }];
+    if (has) datasets.push({ label: wpL.actual, data: rows.map(r => r.actual), backgroundColor: WP_ACTUAL, borderRadius: 3 });
+    wpPayrollChart = new Chart(document.getElementById('wpPayrollChart'), {
+        type: 'bar',
+        data: { labels: rows.map(r => r.name), datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        label: c => ` ${c.dataset.label}: ${c.formattedValue}`,
+                        afterBody: items => {
+                            const r = rows[items[0].dataIndex];
+                            return has ? [`${wpL.gap}: ${wpGapText(r.gap)}`, `${wpL.fill}: ${r.fillPercent}%`, `${wpL.hiring}: ${r.hiringNeed}`] : [];
+                        }
+                    }
+                },
+                datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 11, weight: 'bold' }, formatter: v => v > 0 ? v : '' }
+            },
+            scales: { y: { beginAtZero: true, grid: { color: 'rgba(128,128,128,.12)' } }, x: { grid: { display: false } } }
+        }
+    });
+
+    const head = document.getElementById('wpPayrollHead');
+    if (!head.dataset.built) {
+        head.dataset.built = '1';
+        head.innerHTML = wpTh('name', wpL.colName) + wpTh('projected', wpL.colProjected, 'text-center') + wpTh('actual', wpL.colActual, 'text-center')
+            + wpTh('gap', wpL.colGap, 'text-center') + wpTh('shortage', wpL.colShortage, 'text-center') + wpTh('hiring', wpL.colHiring, 'text-center')
+            + wpTh('fill', wpL.colFill) + wpTh('status', wpL.colStatus);
+        head.querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => {
+            wpToggleSort(wpPayrollSort, th.dataset.sort);
+            wpRenderPayrollTable(wpData);
+        }));
+    }
+    wpRenderPayrollTable(d);
+}
+
+function wpRenderPayrollTable(d) {
+    const has = d.hasActual;
+    const rows = wpSortRowsBy(wpPayrollRows(d), wpPayrollSort);
+    wpMarkSorted(document.getElementById('wpPayrollHead'), wpPayrollSort);
+    const body = document.getElementById('wpPayrollBody');
+    if (!rows.length) { body.innerHTML = `<tr><td colspan="8" class="text-center py-3 text-muted">${sapEscape(wpL.noRows)}</td></tr>`; return; }
+    body.innerHTML = rows.map(r => {
+        const tube = has
+            ? `<span class="wp-tube"><span style="width:${Math.min(100, r.fillPercent)}%;background:${wpFillColor(r.status)}"></span></span><b>${r.fillPercent}%</b>`
+            : '—';
+        return `<tr>
+            <td class="px-3 py-2 fw-semibold">${sapEscape(r.name)}</td>
+            <td class="px-3 py-2 text-center">${r.projected}</td>
+            <td class="px-3 py-2 text-center">${has ? r.actual : '—'}</td>
+            <td class="px-3 py-2 text-center ${has ? wpGapClass(r.gap) : ''}">${has ? wpGapText(r.gap) : '—'}</td>
+            <td class="px-3 py-2 text-center">${has ? r.shortage : '—'}</td>
+            <td class="px-3 py-2 text-center">${has ? r.hiringNeed : '—'}</td>
+            <td class="px-3 py-2" style="white-space:nowrap">${tube}</td>
+            <td class="px-3 py-2"><span class="wp-pill ${r.status}">${sapEscape(wpPillLabel(r.status))}</span></td>
+        </tr>`;
+    }).join('');
 }
 
 function wpRenderStores() {

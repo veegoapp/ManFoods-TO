@@ -1957,4 +1957,11 @@
   <data name="WP_ColShortage" xml:space="preserve"><value>Shortage</value></data>
   <data name="WP_ColAttrition" xml:space="preserve"><value>Expected resignations</value></data>
   <data name="WP_In_OverallOver_T" xml:space="preserve"><value>Above plan</value></data>
+  <data name="WP_ChartByPayroll" xml:space="preserve"><value>Projected vs Actual by Payroll Group</value></data>
+  <data name="WP_ChartByPayrollSub" xml:space="preserve"><value>Planned and actual headcount for each payroll group</value></data>
+  <data name="WP_PayrollTable" xml:space="preserve"><value>Payroll Groups</value></data>
+  <data name="WP_PayrollTableSub" xml:space="preserve"><value>Same figures in a table — click a header to sort</value></data>
+  <data name="WP_Unassigned" xml:space="preserve"><value>Unassigned</value></data>
+  <data name="WP_In_WorstPg_T" xml:space="preserve"><value>Payroll group with the biggest shortage</value></data>
+  <data name="Guide_WP_Payroll" xml:space="preserve"><value>Planned and actual headcount for each payroll group, with the same numbers in a sortable table. The projection is uploaded per job title, and every job belongs to a single payroll group (taken from the active-employee roster), so each job's projection is added to its group. A job that nobody works in yet has no known group and is listed as Unassigned. The filters on the page apply.</value></data>
 </root>
