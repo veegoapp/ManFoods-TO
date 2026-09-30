@@ -1,5 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Primitives;
 using MvcApp.Data;
 using MvcApp.Models;
 using MvcApp.Models.ViewModels;
@@ -14,13 +16,24 @@ public class StoreAccessService : IStoreAccessService
     // behaviour). In the app both are injected.
     private readonly IAccessPolicyService? _policy;
     private readonly IAccessAreaContext? _areaContext;
+    // Optional like the two above: without a cache every call reads the database.
+    private readonly IMemoryCache? _cache;
 
-    public StoreAccessService(AppDbContext db, IAccessPolicyService? policy = null, IAccessAreaContext? areaContext = null)
+    public StoreAccessService(AppDbContext db, IAccessPolicyService? policy = null, IAccessAreaContext? areaContext = null, IMemoryCache? cache = null)
     {
         _db = db;
         _policy = policy;
         _areaContext = areaContext;
+        _cache = cache;
     }
+
+    // "Which stores does this person own" is asked on nearly every request but
+    // only changes when a Store Reference file is uploaded/updated/deleted, so the
+    // answer is cached per role+email and dropped on those changes (plus a short
+    // TTL as a safety net). One token covers every cached entry.
+    private static readonly TimeSpan OwnStoresTtl = TimeSpan.FromMinutes(5);
+    private static CancellationTokenSource _reset = new();
+    public static void InvalidateCache() => Interlocked.Exchange(ref _reset, new CancellationTokenSource()).Cancel();
 
     // The one place that knows which StoreReference email column each
     // restricted role is matched against. Adding a future role (once its
@@ -98,6 +111,20 @@ public class StoreAccessService : IStoreAccessService
     }
 
     private async Task<List<string>> ComputeOwnStoreNamesAsync(string role, string? email)
+    {
+        if (_cache == null) return await LoadOwnStoreNamesAsync(role, email);
+
+        var key = $"store-access:{role}:{(email ?? "").Trim().ToLowerInvariant()}";
+        if (_cache.TryGetValue(key, out List<string>? cached) && cached != null) return new List<string>(cached);
+
+        var names = await LoadOwnStoreNamesAsync(role, email);
+        _cache.Set(key, names, new MemoryCacheEntryOptions()
+            .AddExpirationToken(new CancellationChangeToken(_reset.Token))
+            .SetAbsoluteExpiration(OwnStoresTtl));
+        return new List<string>(names);
+    }
+
+    private async Task<List<string>> LoadOwnStoreNamesAsync(string role, string? email)
     {
         // A role that isn't Admin/User but also isn't one of the known
         // store-restricted roles (e.g. an invalid/misspelled Bulk Upload
