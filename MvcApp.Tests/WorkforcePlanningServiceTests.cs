@@ -127,6 +127,60 @@ public class WorkforcePlanningServiceTests
         Assert.False((await NewService(db).GetStorePlanAsync("9 | Nope", 2026, 2, "Admin", null)).HasData);
     }
 
+    private static void Resigned(AppDbContext db, int month, string store, string job, int count)
+    {
+        for (int i = 0; i < count; i++)
+            db.Resignations.Add(new Resignation { Year = 2026, Month = month, Store = store, JobTitle = job, EmployeeId = Guid.NewGuid().ToString() });
+    }
+
+    [Fact]
+    public async Task HiringNeed_IsShortagePlusExpectedResignations_NeverBelowZero()
+    {
+        var db = NewDb();
+        // Six roster months; month 6 is the one being planned.
+        for (int m = 1; m <= 6; m++) { Active(db, m, "9 | Other", "MDS", 1); Resigned(db, m, "1 | A", "Crew", 1); }
+        Proj(db, 6, "1 | A", "Crew", 10); Active(db, 6, "1 | A", "Crew", 8);     // short by 2, loses ~1/month -> need 3
+        Proj(db, 6, "2 | B", "Crew", 5);  Active(db, 6, "2 | B", "Crew", 8);     // 3 over, no resignations -> need 0
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 6, null, null, "Admin", null);
+
+        Assert.Equal(6, dto.AttritionMonths);
+        Assert.Equal(3, Assert.Single(dto.ByStore, r => r.Name == "1 | A").HiringNeed);
+        Assert.Equal(1.0, Assert.Single(dto.ByStore, r => r.Name == "1 | A").ExpectedAttrition);
+        Assert.Equal(0, Assert.Single(dto.ByStore, r => r.Name == "2 | B").HiringNeed);
+        Assert.Equal(3, dto.Kpis.HiringNeed); // a surplus in one store does not offset another's need
+    }
+
+    [Fact]
+    public async Task HiringNeed_WithoutResignationHistory_EqualsTheShortage()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10); Active(db, 1, "1 | A", "Crew", 7);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        Assert.Equal(3, dto.Kpis.HiringNeed);
+        Assert.Equal(0, dto.Kpis.ExpectedAttrition);
+    }
+
+    [Fact]
+    public async Task HiringNeed_OnlyCountsRecentMonths()
+    {
+        var db = NewDb();
+        for (int m = 1; m <= 8; m++) Active(db, m, "9 | Other", "MDS", 1);
+        Resigned(db, 1, "1 | A", "Crew", 12);   // older than the last 6 roster months -> ignored
+        Resigned(db, 8, "1 | A", "Crew", 6);    // within months 3..8 -> 1 per month
+        Proj(db, 8, "1 | A", "Crew", 10); Active(db, 8, "1 | A", "Crew", 10);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 8, null, null, "Admin", null);
+
+        Assert.Equal(1.0, dto.Kpis.ExpectedAttrition);
+        Assert.Equal(1, dto.Kpis.HiringNeed);
+    }
+
     [Fact]
     public async Task StoreAndJobFilters_NarrowTheResult()
     {
@@ -164,8 +218,8 @@ public class WorkforcePlanningReportTests
         {
             Rows =
             {
-                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", Projected = 10, Actual = 8 },
-                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4 },
+                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", Projected = 10, Actual = 8, ExpectedAttrition = 1.5, HiringNeed = 3.5 },
+                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4, ExpectedAttrition = 0.5, HiringNeed = 0.5 },
                 new() { Year = 2026, Month = 2, Store = "1 | A", Job = "Crew", Projected = 11, Actual = null },
             }
         };
@@ -184,6 +238,15 @@ public class WorkforcePlanningReportTests
         Assert.Contains(names, n => n.StartsWith("By Job"));
         Assert.Equal(3, names.Count(n => n.StartsWith("Pivot")));
         Assert.Equal(4, reopened.Worksheet("Data").LastRowUsed()!.RowNumber()); // header + 3 rows
+
+        // Hiring need columns: Data sheet, month summary and per-store breakdown.
+        var dataWs = reopened.Worksheet("Data");
+        Assert.Equal("Hiring Need", dataWs.Cell(1, 11).GetString());
+        Assert.Equal(3.5, dataWs.Cell(2, 11).GetDouble());
+        Assert.Equal(4, reopened.Worksheet("Summary").Cell(9, 6).GetDouble()); // Jan: 3.5 + 0.5 -> 4
+        var byStore = reopened.Worksheets.First(w => w.Name.StartsWith("By Store"));
+        Assert.Equal("Hiring need (est.)", byStore.Cell(1, 7).GetString());
+        Assert.Equal(4, byStore.Cell(2, 7).GetDouble());
 
         // …and the raw package must really contain pivot table parts.
         ms.Position = 0;
