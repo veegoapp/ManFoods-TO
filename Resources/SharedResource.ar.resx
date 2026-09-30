@@ -1963,4 +1963,54 @@
   <data name="WP_ColShortage" xml:space="preserve"><value>النقص</value></data>
   <data name="WP_ColAttrition" xml:space="preserve"><value>الاستقالات المتوقعة</value></data>
   <data name="WP_In_OverallOver_T" xml:space="preserve"><value>أعلى من الخطة</value></data>
+  <data name="WP_ChartByPayroll" xml:space="preserve"><value>المتوقّع مقابل الفعلي حسب مجموعة الرواتب</value></data>
+  <data name="WP_ChartByPayrollSub" xml:space="preserve"><value>العدد المخطّط والفعلي لكل مجموعة رواتب</value></data>
+  <data name="WP_PayrollTable" xml:space="preserve"><value>مجموعات الرواتب</value></data>
+  <data name="WP_PayrollTableSub" xml:space="preserve"><value>الأرقام نفسها في جدول — انقر على عنوان للترتيب</value></data>
+  <data name="WP_Unassigned" xml:space="preserve"><value>غير محدد</value></data>
+  <data name="WP_In_WorstPg_T" xml:space="preserve"><value>مجموعة الرواتب الأكثر نقصًا</value></data>
+  <data name="Guide_WP_Payroll" xml:space="preserve"><value>العدد المخطّط والفعلي لكل مجموعة رواتب، مع الأرقام نفسها في جدول قابل للترتيب. تُرفع التوقّعات لكل مسمى وظيفي، وكل وظيفة تتبع مجموعة رواتب واحدة (من ملف الموظفين النشطين)، فيُضاف توقّع كل وظيفة إلى مجموعتها. والوظيفة التي لا يعمل بها أحد بعد ليس لها مجموعة معروفة وتظهر ضمن «غير محدد». وتنطبق فلاتر الصفحة.</value></data>
+  <data name="Nav_HiringForecast" xml:space="preserve"><value>توقعات التعيين</value></data>
+  <data name="Page_HiringForecast" xml:space="preserve"><value>توقعات التعيين</value></data>
+  <data name="Page_HiringForecastSub" xml:space="preserve"><value>كم شخصًا يحتاج كل فرع لتعيينه، شهرًا بشهر</value></data>
+  <data name="HF_Title" xml:space="preserve"><value>التعيينات المطلوبة لكل فرع</value></data>
+  <data name="HF_Sub" xml:space="preserve"><value>كل خلية هي عدد من يجب تعيينهم في هذا الشهر للوصول إلى التوقّع</value></data>
+  <data name="HF_Legend" xml:space="preserve"><value>كلما زاد احمرار الخلية زاد عدد التعيينات. أشهر «قائمة فعلية» تعتمد على قائمة الموظفين المرفوعة، وأشهر «تقدير» محسوبة من آخر قائمة. تقدير وليس التزامًا.</value></data>
+  <data name="HF_Total" xml:space="preserve"><value>الإجمالي</value></data>
+  <data name="HF_Forecast" xml:space="preserve"><value>تقدير</value></data>
+  <data name="HF_Roster" xml:space="preserve"><value>قائمة فعلية</value></data>
+  <data name="HF_Note" xml:space="preserve"><value>يبدأ التقدير من قائمة الموظفين لشهر {0}. يغادر كل شهر المستقيلون المتوقعون (متوسط آخر {2} أشهر من القوائم) ثم تسدّ التعيينات الفرق حتى التوقّع. وتُزاد التعيينات بنسبة {1}٪ وهي نسبة من يغادرون خلال 90 يومًا من الموظفين الجدد على مستوى الشركة.</value></data>
+  <data name="HF_NoteNoRoster" xml:space="preserve"><value>لم يتم رفع قائمة الموظفين الحاليين بعد، فلا توجد نقطة بداية للتقدير.</value></data>
+  <data name="Guide_HF_Overview" xml:space="preserve"><value>جدول يوضح كم شخصًا يحتاج كل فرع لتعيينه في كل شهر من السنة، لتخطيط التوظيف مبكرًا.</value></data>
+  <data name="Guide_HF_FilterNote" xml:space="preserve"><value>تضيّق السنة والفرع والمسمى الوظيفي واستشاري العمليات والمدير والاستشاري الأول ومدير أول التشغيل الجدول وإجمالياته. ترى فقط الفروع المتاحة لك (الإعدادات ← الوصول، صف تخطيط القوى العاملة).</value></data>
+  <data name="Guide_HF_MatrixTitle" xml:space="preserve"><value>كيف تقرأ الجدول</value></data>
+  <data name="Guide_HF_Matrix" xml:space="preserve"><value>استخدم «عرض حسب» فوق الجدول لتجميع الصفوف حسب الفرع (مع استشاري العمليات) أو الوظيفة أو مجموعة الرواتب أو استشاري العمليات — الإجمالي لا يتغير، فقط طريقة التجميع. عمود لكل شهر وإجمالي في النهاية، وآخر صف يجمع كل الصفوف. اضغط على عنوان العمود للترتيب واستخدم البحث للوصول لصف. كلما زاد احمرار الخلية زادت التعيينات. الشرطة تعني أن التوقّع لا يحتوي بيانات لهذا الشهر.</value></data>
+  <data name="Guide_HF_MethodTitle" xml:space="preserve"><value>طريقة الحساب</value></data>
+  <data name="Guide_HF_Method" xml:space="preserve"><value>الأشهر التي لها قائمة موظفين مرفوعة: التعيينات = المتوقّع − الفعلي + الاستقالات المتوقعة (لا تقل عن صفر لكل فرع ووظيفة). الأشهر اللاحقة تُحاكى من آخر قائمة: يغادر المستقيلون المتوقعون ثم تسدّ التعيينات الفرق حتى توقّع ذلك الشهر. وأخيرًا تُزاد التعيينات بنسبة مغادرة الـ 90 يومًا على مستوى الشركة لأن بعض الموظفين الجدد يغادرون سريعًا ويجب تعويضهم.</value></data>
+  <data name="Guide_HF_LimitsTitle" xml:space="preserve"><value>من المهم معرفته</value></data>
+  <data name="Guide_HF_Limits" xml:space="preserve"><value>هذا تقدير مبني على الاستقالات السابقة والتوقّع، ويتغير مع رفع قوائم وتوقّعات جديدة. وليس أمر توظيف.</value></data>
+  <data name="HF_KpiYear" xml:space="preserve"><value>التعيينات المطلوبة في السنة</value></data>
+  <data name="HF_KpiYearDesc" xml:space="preserve"><value>إجمالي كل الفروع والأشهر المعروضة</value></data>
+  <data name="HF_KpiPeak" xml:space="preserve"><value>أكثر شهر ضغطًا</value></data>
+  <data name="HF_KpiPeakDesc" xml:space="preserve"><value>الشهر الذي فيه أكبر عدد تعيينات</value></data>
+  <data name="HF_KpiNext" xml:space="preserve"><value>الأشهر الثلاثة القادمة</value></data>
+  <data name="HF_KpiNextDesc" xml:space="preserve"><value>التعيينات المطلوبة في الأشهر الثلاثة القادمة</value></data>
+  <data name="HF_KpiStore" xml:space="preserve"><value>الفرع الأكثر احتياجًا</value></data>
+  <data name="HF_KpiStoreDesc" xml:space="preserve"><value>أعلى إجمالي على مدار السنة</value></data>
+  <data name="HF_ChartTitle" xml:space="preserve"><value>التعيينات المطلوبة في كل شهر</value></data>
+  <data name="HF_ChartSub" xml:space="preserve"><value>الأعمدة الداكنة من قائمة الموظفين المرفوعة، والفاتحة تقدير</value></data>
+  <data name="HF_ChartLabel" xml:space="preserve"><value>التعيينات المطلوبة</value></data>
+  <data name="HF_ViewBy" xml:space="preserve"><value>عرض حسب</value></data>
+  <data name="HF_ByPayroll" xml:space="preserve"><value>مجموعة الرواتب</value></data>
+  <data name="WP_RiskTitle" xml:space="preserve"><value>التغطية مقابل الدوران</value></data>
+  <data name="WP_RiskSub" xml:space="preserve"><value>كل نقطة فرع: مدى اكتمال عدده مقابل عدد من يغادرون</value></data>
+  <data name="WP_RiskX" xml:space="preserve"><value>نسبة التغطية % (الفعلي ÷ المتوقع)</value></data>
+  <data name="WP_RiskY" xml:space="preserve"><value>الدوران % (آخر 3 أشهر)</value></data>
+  <data name="WP_RiskResign" xml:space="preserve"><value>الاستقالات (3 أشهر)</value></data>
+  <data name="WP_RiskDanger" xml:space="preserve"><value>نقص في العدد ودوران أعلى من المتوسط</value></data>
+  <data name="WP_RiskNote" xml:space="preserve"><value>{0} فرع في المنطقة الحمراء: تغطية أقل من 95٪ ودوران أعلى من المتوسط ({1}٪). ابدأ بهذه الفروع.</value></data>
+  <data name="Guide_WP_Risk" xml:space="preserve"><value>نقطة لكل فرع أسفل الصفحة: الأفقي نسبة اكتمال الفرع (الفعلي ÷ المتوقع) والرأسي الدوران خلال آخر 3 أشهر. النقاط الحمراء هي الفروع بتغطية أقل من 95٪ ودوران أعلى من متوسط الفروع المعروضة، أي ناقصة عددًا وتفقد موظفين فتحتاج اهتمامًا أولًا. مرّر على النقطة لترى أرقام الفرع. تحتاج قائمة موظفين مرفوعة للشهر.</value></data>
+  <data name="Guide_HF_KpisTitle" xml:space="preserve"><value>كروت الملخص</value></data>
+  <data name="Guide_HF_Kpis" xml:space="preserve"><value>إجمالي التعيينات المطلوبة في السنة، وأكثر شهر ضغطًا، والتعيينات المطلوبة في الأشهر الثلاثة القادمة (من الشهر الحالي عند عرض السنة الحالية)، والفرع الأكثر تعيينًا. يظهر كارت الفرع فقط عند عرض الجدول حسب الفرع.</value></data>
+  <data name="Guide_HF_Chart" xml:space="preserve"><value>التعيينات المطلوبة في كل شهر. الأعمدة الداكنة أشهر لها قائمة موظفين مرفوعة، والفاتحة تقدير. مرّر على العمود لترى الشهر ورقمه.</value></data>
 </root>

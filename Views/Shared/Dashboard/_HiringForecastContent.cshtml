@@ -1,0 +1,304 @@
+@{
+    var __area = ViewContext.RouteData.Values["area"]?.ToString();
+    var __isAdminArea = !string.Equals(__area, "Home", StringComparison.OrdinalIgnoreCase);
+}
+<style>
+.hf-select-wrap { position:relative; }
+.hf-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 34px 0 14px; min-width:110px; max-width:260px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.hf-select:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.hf-select-wrap i { position:absolute; top:50%; right:12px; transform:translateY(-50%); font-size:11px; color:var(--text-3); pointer-events:none; }
+[dir="rtl"] .hf-select { padding:0 14px 0 34px; }
+[dir="rtl"] .hf-select-wrap i { right:auto; left:12px; }
+.hf-note {
+    display:flex; align-items:flex-start; gap:10px; margin-bottom:14px; padding:12px 14px; font-size:13px;
+    background:oklch(0.75 0.16 75 / .1); border:1px solid oklch(0.75 0.16 75 / .35);
+    border-radius:var(--radius-sm); color:var(--text-2);
+}
+.hf-note i { color:oklch(0.6 0.14 75); font-size:16px; flex-shrink:0; margin-top:1px; }
+.hf-wrap { max-height:640px; overflow:auto; }
+.hf-table { width:100%; border-collapse:separate; border-spacing:0; font-size:13.5px; }
+.hf-table th, .hf-table td { padding:9px 12px; border-bottom:1px solid var(--card-border); white-space:nowrap; text-align:start; }
+.hf-table thead th { position:sticky; top:0; z-index:2; background:var(--bg-2); color:var(--text); font-weight:700; }
+.hf-table td.num, .hf-table th.num { text-align:center; font-variant-numeric:tabular-nums; min-width:62px; }
+.hf-table th.sortable { cursor:pointer; user-select:none; }
+.hf-table th.sortable:hover { color:var(--red); }
+.hf-table th.sortable i { font-size:10px; margin-inline-start:5px; opacity:.35; }
+.hf-table th.sortable.sorted i { opacity:1; color:var(--red); }
+.hf-table th .hf-tag { display:block; font-size:10px; font-weight:600; color:var(--text-3); }
+.hf-table td.hf-zero { color:var(--text-3); }
+.hf-table td.hf-total, .hf-table th.hf-total { font-weight:700; background:var(--bg-2); }
+.hf-table tfoot td { position:sticky; bottom:0; z-index:2; background:var(--bg-2); font-weight:700; border-top:2px solid var(--card-border); }
+.hf-search {
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13px; height:36px; padding:0 12px; min-width:200px;
+}
+.hf-empty { padding:40px 20px; text-align:center; color:var(--text-3); font-size:14px; }
+.hf-empty i { font-size:34px; display:block; margin-bottom:10px; }
+.chart-body canvas { direction:ltr; }
+.hf-legend { font-size:12px; color:var(--text-3); }
+</style>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">@L["Page_HiringForecast"]</h1>
+        <p class="page-subtitle">@L["Page_HiringForecastSub"]</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap align-items-end" id="hfFilters" hidden>
+        <div class="hf-select-wrap"><select id="hfYear" class="hf-select" aria-label="@L["WP_Year"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="hf-select-wrap"><select id="hfStore" class="hf-select" aria-label="@L["WP_ColStore"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="hf-select-wrap"><select id="hfJob" class="hf-select" aria-label="@L["WP_ColJob"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="hf-select-wrap"><select id="hfOc" class="hf-select" aria-label="@L["Common_OperationConsultant"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="hf-select-wrap"><select id="hfOm" class="hf-select" aria-label="@L["Common_OperationManagers"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="hf-select-wrap"><select id="hfSoc" class="hf-select" aria-label="@L["Common_SeniorOperationConsultants"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="hf-select-wrap"><select id="hfOd" class="hf-select" aria-label="@L["Common_OperationDirectors"]"></select><i class="bi bi-chevron-down"></i></div>
+        <button type="button" class="reset-filters-btn" id="hfReset"><i class="bi bi-arrow-counterclockwise"></i>@L["Common_ResetFilters"]</button>
+    </div>
+</div>
+
+@{
+    var hiringForecastGuide = new PageGuideViewModel
+    {
+        PageKey = "hiringforecast",
+        Overview = L["Guide_HF_Overview"],
+        FilterNote = L["Guide_HF_FilterNote"],
+        Sections = new List<PageGuideSection>
+        {
+            new() { Icon = "bi-speedometer2", Title = L["Guide_HF_KpisTitle"], Body = L["Guide_HF_Kpis"] },
+            new() { Icon = "bi-bar-chart-fill", Title = L["HF_ChartTitle"], Body = L["Guide_HF_Chart"] },
+            new() { Icon = "bi-table", Title = L["Guide_HF_MatrixTitle"], Body = L["Guide_HF_Matrix"] },
+            new() { Icon = "bi-calculator", Title = L["Guide_HF_MethodTitle"], Body = L["Guide_HF_Method"] },
+            new() { Icon = "bi-exclamation-triangle", Title = L["Guide_HF_LimitsTitle"], Body = L["Guide_HF_Limits"] },
+        }
+    };
+}
+@await Html.PartialAsync("~/Views/Shared/Dashboard/_PageGuide.cshtml", hiringForecastGuide)
+
+<div id="hfEmpty" class="chart-card" hidden>
+    <div class="hf-empty">
+        <i class="bi bi-person-plus"></i>
+        <div id="hfEmptyText">@L["WP_NoData"]</div>
+        @if (__isAdminArea)
+        {
+            <div class="mt-2"><a href="/admin/dashboard/uploads?tab=jobproj">@L["WP_NoDataAdmin"]</a></div>
+        }
+    </div>
+</div>
+
+<div id="hfBody" hidden>
+    <div id="hfKpis" class="kpi-grid mb-3"></div>
+    <div class="chart-card mb-3">
+        <div class="chart-header"><h6>@L["HF_ChartTitle"]</h6><p>@L["HF_ChartSub"]</p></div>
+        <div class="chart-body" style="position:relative;height:280px"><canvas id="hfChart"></canvas></div>
+    </div>
+    <div id="hfNote" class="hf-note"><i class="bi bi-info-circle-fill"></i><span id="hfNoteText"></span></div>
+    <div class="chart-card">
+        <div class="chart-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div><h6>@L["HF_Title"]</h6><p>@L["HF_Sub"]</p></div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="hf-select-wrap"><select id="hfBy" class="hf-select" aria-label="@L["HF_ViewBy"]">
+                    <option value="store">@L["HF_ViewBy"]: @L["WP_ColStore"]</option>
+                    <option value="job">@L["HF_ViewBy"]: @L["WP_ColJob"]</option>
+                    <option value="payroll">@L["HF_ViewBy"]: @L["HF_ByPayroll"]</option>
+                    <option value="consultant">@L["HF_ViewBy"]: @L["Common_OperationConsultant"]</option>
+                </select><i class="bi bi-chevron-down"></i></div>
+                <input type="search" id="hfSearch" class="hf-search" placeholder="@L["WP_Search"]">
+            </div>
+        </div>
+        <div class="hf-wrap">
+            <table class="hf-table">
+                <thead><tr id="hfHead"></tr></thead>
+                <tbody id="hfBodyRows"></tbody>
+                <tfoot><tr id="hfFoot"></tr></tfoot>
+            </table>
+        </div>
+        <div class="hf-legend mt-2">@L["HF_Legend"]</div>
+    </div>
+</div>
+
+<div id="hfL" hidden
+     data-all-oc="@L["Common_AllOperationConsultants"]" data-all-om="@L["Common_AllOperationManagers"]" data-all-soc="@L["WP_AllSoc"]" data-all-od="@L["WP_AllOd"]" data-all-stores="@L["WP_AllStores"]" data-all-jobs="@L["WP_AllJobs"]"
+     data-kpi-year="@L["HF_KpiYear"]" data-kpi-year-d="@L["HF_KpiYearDesc"]" data-kpi-peak="@L["HF_KpiPeak"]" data-kpi-peak-d="@L["HF_KpiPeakDesc"]" data-kpi-next="@L["HF_KpiNext"]" data-kpi-next-d="@L["HF_KpiNextDesc"]" data-kpi-store="@L["HF_KpiStore"]" data-kpi-store-d="@L["HF_KpiStoreDesc"]"
+     data-chart-label="@L["HF_ChartLabel"]"
+     data-job="@L["WP_ColJob"]" data-payroll="@L["HF_ByPayroll"]"
+     data-store="@L["WP_ColStore"]" data-oc="@L["Common_OperationConsultant"]" data-total="@L["HF_Total"]" data-forecast="@L["HF_Forecast"]" data-roster="@L["HF_Roster"]"
+     data-note="@L["HF_Note"]" data-note-none="@L["HF_NoteNoRoster"]" data-no-rows="@L["Common_NoData"]"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="~/js/chart-colors.js" asp-append-version="true"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>Chart.register(ChartDataLabels);</script>
+<script>
+/* Hiring Forecast — hires needed per store per month. One endpoint
+   (/api/workforce-planning/hiring-forecast); the server caches the heavy reads. */
+const hfL = document.getElementById('hfL').dataset;
+const hfState = { by: 'store', year: '', store: '', job: '', oc: '', om: '', soc: '', od: '' };
+const hfSort = { key: 'total', dir: 'desc' };
+let hfData, hfChart;
+const hfMonthName = m => new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' });
+
+function hfFillSelect(id, options, value) {
+    const el = document.getElementById(id);
+    el.innerHTML = options.map(o => `<option value="${sapEscape(o.value)}">${sapEscape(o.label)}</option>`).join('');
+    el.value = String(value ?? '');
+}
+
+async function hfLoad() {
+    const q = new URLSearchParams();
+    q.set('by', hfState.by);
+    if (hfState.year) q.set('year', hfState.year);
+    if (hfState.store) q.set('store', hfState.store);
+    if (hfState.job) q.set('jobs', hfState.job);
+    ['oc', 'om', 'soc', 'od'].forEach(k => { if (hfState[k]) q.set(k, hfState[k]); });
+    let d;
+    try {
+        const r = await fetch('/api/workforce-planning/hiring-forecast?' + q);
+        if (!r.ok) throw new Error();
+        d = await r.json();
+    } catch {
+        document.getElementById('hfEmpty').hidden = false;
+        return;
+    }
+    hfData = d;
+    const show = d.hasData && d.hasRoster;
+    document.getElementById('hfEmpty').hidden = show;
+    document.getElementById('hfBody').hidden = !show;
+    document.getElementById('hfFilters').hidden = !d.hasData;
+    if (d.hasData && !d.hasRoster) document.getElementById('hfEmptyText').textContent = hfL.noteNone;
+    if (!d.hasData) return;
+
+    hfState.year = d.year;
+    hfFillSelect('hfYear', d.years.map(y => ({ value: y, label: y })), d.year);
+    hfFillSelect('hfStore', [{ value: '', label: hfL.allStores }].concat(d.stores.map(s => ({ value: s, label: s }))), hfState.store);
+    hfFillSelect('hfJob', [{ value: '', label: hfL.allJobs }].concat(d.jobs.map(j => ({ value: j, label: j }))), hfState.job);
+    const people = (id, all, list, key) => hfFillSelect(id, [{ value: '', label: all }].concat((list || []).map(n => ({ value: n, label: n }))), hfState[key]);
+    people('hfOc', hfL.allOc, d.operationConsultants, 'oc');
+    people('hfOm', hfL.allOm, d.operationManagers, 'om');
+    people('hfSoc', hfL.allSoc, d.seniorOperationConsultants, 'soc');
+    people('hfOd', hfL.allOd, d.operationDirectors, 'od');
+    if (!show) return;
+
+    document.getElementById('hfNoteText').textContent = hfL.note
+        .replace('{0}', hfMonthName(d.baselineMonth) + ' ' + d.baselineYear)
+        .replace('{1}', d.earlyLeaverRate).replace('{2}', d.attritionMonths);
+    hfRenderKpis(d);
+    hfRenderChart(d);
+    hfRender();
+}
+
+// Headline numbers, all derived from the matrix the server already returned.
+function hfRenderKpis(d) {
+    const idx = [...Array(12).keys()].filter(i => d.monthModes[i] !== 'none');
+    const card = (icon, cls, val, label, desc) =>
+        `<div class="kpi-card"><div class="kpi-icon ${cls}"><i class="bi ${icon}"></i></div><div class="kpi-value ${cls}">${val}</div><div class="kpi-label">${sapEscape(label)}</div><div class="kpi-desc">${sapEscape(desc)}</div></div>`;
+    let peak = null;
+    idx.forEach(i => { if (!peak || d.monthTotals[i] > d.monthTotals[peak.i]) peak = { i }; });
+    // "Next 3 months": from this month on when viewing the current year, else the first three months of the plan.
+    const now = new Date();
+    const upcoming = (d.year === now.getFullYear() ? idx.filter(i => i >= now.getMonth()) : idx).slice(0, 3);
+    const next3 = upcoming.reduce((a, i) => a + d.monthTotals[i], 0);
+    const top = d.rows.reduce((b, r) => (!b || r.total > b.total) ? r : b, null);
+    document.getElementById('hfKpis').innerHTML =
+        card('bi-person-plus-fill', d.grandTotal > 0 ? 'text-danger' : '', d.grandTotal, hfL.kpiYear, hfL.kpiYearD) +
+        card('bi-calendar-event', '', peak && d.monthTotals[peak.i] > 0 ? `${hfMonthName(peak.i + 1)} (${d.monthTotals[peak.i]})` : '—', hfL.kpiPeak, hfL.kpiPeakD) +
+        card('bi-calendar-range', '', upcoming.length ? next3 : '—', hfL.kpiNext, hfL.kpiNextD) +
+        (d.by === 'store' ? card('bi-shop', '', top && top.total > 0 ? `${sapEscape(top.store)} (${top.total})` : '—', hfL.kpiStore, hfL.kpiStoreD) : '');
+}
+
+// Hires per month: roster months in dark red, forecast months in a lighter red.
+function hfRenderChart(d) {
+    const idx = [...Array(12).keys()].filter(i => d.monthModes[i] !== 'none');
+    if (hfChart) hfChart.destroy();
+    hfChart = new Chart(document.getElementById('hfChart'), {
+        type: 'bar',
+        data: {
+            labels: idx.map(i => hfMonthName(i + 1)),
+            datasets: [{
+                data: idx.map(i => d.monthTotals[i]), borderRadius: 3,
+                backgroundColor: idx.map(i => d.monthModes[i] === 'forecast' ? 'oklch(0.72 0.14 25)' : 'oklch(0.52 0.2 25)'),
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: true, callbacks: {
+                    title: items => hfMonthName(idx[items[0].dataIndex] + 1) + ' — ' + (d.monthModes[idx[items[0].dataIndex]] === 'forecast' ? hfL.forecast : hfL.roster),
+                    label: c => ` ${hfL.chartLabel}: ${c.formattedValue}`,
+                } },
+                datalabels: { anchor: 'end', align: 'top', color: 'var(--text)', font: { size: 11, weight: 'bold' }, formatter: v => v > 0 ? v : '' }
+            },
+            layout: { padding: { top: 18 } },
+            scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(128,128,128,.12)' } } }
+        }
+    });
+}
+
+const hfVal = {
+    store: r => r.store.toLowerCase(), oc: r => (r.operationConsultant || '').toLowerCase(), total: r => r.total,
+};
+for (let i = 0; i < 12; i++) hfVal['m' + i] = r => r.months[i];
+
+function hfRender() {
+    const d = hfData;
+    const modes = d.monthModes;
+    const head = document.getElementById('hfHead');
+    const th = (key, label, cls, sub) => `<th class="sortable ${cls || ''}" data-sort="${key}">${sapEscape(label)}<i class="bi"></i>${sub ? `<span class="hf-tag">${sapEscape(sub)}</span>` : ''}</th>`;
+    const first = { store: hfL.store, job: hfL.job, payroll: hfL.payroll, consultant: hfL.oc }[d.by] || hfL.store;
+    let h = th('store', first) + (d.by === 'store' ? th('oc', hfL.oc) : '');
+    for (let i = 0; i < 12; i++) h += th('m' + i, hfMonthName(i + 1), 'num', modes[i] === 'none' ? '' : modes[i] === 'forecast' ? hfL.forecast : hfL.roster);
+    head.innerHTML = h + th('total', hfL.total, 'num hf-total');
+    head.querySelectorAll('th.sortable').forEach(el => el.addEventListener('click', () => {
+        hfSort.dir = hfSort.key === el.dataset.sort && hfSort.dir === 'asc' ? 'desc' : 'asc';
+        hfSort.key = el.dataset.sort;
+        hfRender();
+    }));
+    head.querySelectorAll('th.sortable').forEach(el => {
+        const on = el.dataset.sort === hfSort.key;
+        el.classList.toggle('sorted', on);
+        el.querySelector('i').className = 'bi ' + (on && hfSort.dir === 'asc' ? 'bi-caret-up-fill' : 'bi-caret-down-fill');
+    });
+
+    const term = (document.getElementById('hfSearch').value || '').trim().toLowerCase();
+    let rows = d.rows.filter(r => !term || r.store.toLowerCase().includes(term) || (r.operationConsultant || '').toLowerCase().includes(term));
+    const val = hfVal[hfSort.key], sign = hfSort.dir === 'asc' ? 1 : -1;
+    rows = [...rows].sort((a, b) => {
+        const x = val(a), y = val(b);
+        if (hfSort.key === 'oc' && (!x || !y) && x !== y) return !x ? 1 : -1;
+        const c = typeof x === 'string' ? x.localeCompare(y, undefined, { numeric: true }) : x - y;
+        return (c || a.store.localeCompare(b.store)) * sign;
+    });
+
+    // Colour each cell by its size relative to the biggest store-month on screen.
+    const max = Math.max(1, ...d.rows.flatMap(r => r.months));
+    const cell = (v, mode) => mode === 'none'
+        ? '<td class="num hf-zero">—</td>'
+        : `<td class="num ${v === 0 ? 'hf-zero' : ''}" style="${v > 0 ? `background:oklch(0.6 0.2 25 / ${(0.08 + 0.5 * v / max).toFixed(2)})` : ''}">${v}</td>`;
+    const body = document.getElementById('hfBodyRows');
+    body.innerHTML = rows.length ? rows.map(r =>
+        `<tr><td>${r.store ? sapEscape(r.store) : '—'}</td>${d.by === 'store' ? `<td>${r.operationConsultant ? sapEscape(r.operationConsultant) : '—'}</td>` : ''}`
+        + r.months.map((v, i) => cell(v, modes[i])).join('')
+        + `<td class="num hf-total">${r.total}</td></tr>`).join('')
+        : `<tr><td colspan="15" class="text-center py-3 text-muted">${sapEscape(hfL.noRows)}</td></tr>`;
+
+    // Totals always cover the filtered stores, not just the search result.
+    document.getElementById('hfFoot').innerHTML = `<td>${sapEscape(hfL.total)}</td>${d.by === 'store' ? '<td></td>' : ''}`
+        + d.monthTotals.map((v, i) => `<td class="num">${modes[i] === 'none' ? '—' : v}</td>`).join('')
+        + `<td class="num">${d.grandTotal}</td>`;
+}
+
+document.getElementById('hfBy').addEventListener('change', e => { hfState.by = e.target.value; hfLoad(); });
+document.getElementById('hfYear').addEventListener('change', e => { hfState.year = e.target.value; hfLoad(); });
+document.getElementById('hfStore').addEventListener('change', e => { hfState.store = e.target.value; hfLoad(); });
+document.getElementById('hfJob').addEventListener('change', e => { hfState.job = e.target.value; hfLoad(); });
+[['hfOc', 'oc'], ['hfOm', 'om'], ['hfSoc', 'soc'], ['hfOd', 'od']].forEach(([id, key]) =>
+    document.getElementById(id).addEventListener('change', e => { hfState[key] = e.target.value; hfLoad(); }));
+document.getElementById('hfReset').addEventListener('click', () => { Object.keys(hfState).forEach(k => { hfState[k] = k === 'by' ? hfState.by : ''; }); hfLoad(); });
+document.getElementById('hfSearch').addEventListener('input', () => hfData && hfRender());
+hfLoad();
+</script>

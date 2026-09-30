@@ -1130,9 +1130,42 @@ public class ReportService : IReportService
         }
         WriteGroups();
 
+        // ── Hiring Plan: hires needed per store per month (whole year, same store/job/responsible filters) ──
+        var forecast = await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, await EarlyLeaverRate.GetAsync(_ninetyDay, null));
+        if (forecast.Rows.Count > 0)
+        {
+            var hp = AddSheet(wb, "Hiring Plan");
+            var heads = new List<string> { "Store", "Operation Consultant" };
+            heads.AddRange(Enumerable.Range(0, 12).Select(i => monthName[i].Substring(0, 3) + (forecast.MonthModes[i] == "forecast" ? " (forecast)" : "")));
+            heads.Add("Total");
+            StyleHeader(hp, heads.ToArray());
+            int hr = 2;
+            foreach (var fr in forecast.Rows)
+            {
+                hp.Cell(hr, 1).Value = SafeText(fr.Store); hp.Cell(hr, 2).Value = SafeText(fr.OperationConsultant);
+                for (int i = 0; i < 12; i++) if (forecast.MonthModes[i] != "none") SetIntCell(hp.Cell(hr, 3 + i), fr.Months[i]);
+                hp.Cell(hr, 15).FormulaA1 = $"=SUM(C{hr}:N{hr})";
+                hr++;
+            }
+            hp.Cell(hr, 1).Value = "Total";
+            for (int c = 3; c <= 15; c++)
+            {
+                var col = hp.Cell(1, c).Address.ColumnLetter;
+                hp.Cell(hr, c).FormulaA1 = $"=SUM({col}2:{col}{hr - 1})";
+            }
+            hp.Range(hr, 1, hr, 15).Style.Font.Bold = true;
+            Finalize(hp);
+            hp.Range(hr, 1, hr, 15).Style.Fill.BackgroundColor = XLColor.FromHtml("#F3F3F3");
+            hp.Range(2, 3, hr - 1, 14).AddConditionalFormat().ColorScale()
+                .LowestValue(XLColor.White).HighestValue(XLColor.FromHtml("#F4A29B"));
+            hp.SheetView.FreezeRows(1); hp.SheetView.FreezeColumns(2);
+            hp.Cell(hr + 2, 1).Value = $"Hires needed per store. Months with an uploaded roster: max(0, projected − actual + expected resignations) per job. Later months are simulated from the {monthName[forecast.BaselineMonth - 1]} {forecast.BaselineYear} roster (expected resignations leave, hires fill up to the projection). Hires are grossed up by the company-wide 90-day early-leaver rate ({forecast.EarlyLeaverRate:0.#}%). An estimate, not a commitment.";
+            hp.Cell(hr + 2, 1).Style.Font.Italic = true;
+        }
+
         // ── Data: one flat row per store/job/month — the pivot tables' source ──
         var data = AddSheet(wb, "Data");
-        string[] dh = { "Period", "Year", "Month", "Store", "Job Title", "Projected", "Actual", "Gap", "Fill %", "Expected Resignations", "Hiring Need", "Operation Consultant", "Operation Manager", "Senior Operation Consultant", "Operation Director", "Shortage" };
+        string[] dh = { "Period", "Year", "Month", "Store", "Job Title", "Projected", "Actual", "Gap", "Fill %", "Expected Resignations", "Hiring Need", "Operation Consultant", "Operation Manager", "Senior Operation Consultant", "Operation Director", "Shortage", "Payroll Group" };
         StyleHeader(data, dh);
         int dr = 2;
         foreach (var r in rows)
@@ -1156,6 +1189,7 @@ public class ReportService : IReportService
             data.Cell(dr, 13).Value = SafeText(r.OperationManager);
             data.Cell(dr, 14).Value = SafeText(r.SeniorOperationConsultant);
             data.Cell(dr, 15).Value = SafeText(r.OperationDirector);
+            data.Cell(dr, 17).Value = string.IsNullOrWhiteSpace(r.PayrollGroup) ? "Unassigned" : SafeText(r.PayrollGroup);
             dr++;
         }
         var lastRow = dr - 1;
@@ -1181,6 +1215,7 @@ public class ReportService : IReportService
         AddPivot("Pivot Store x Period", "PivotStorePeriod", "Store", "Period", "Projected");
         AddPivot("Pivot Job x Period", "PivotJobPeriod", "Job Title", "Period", "Projected");
         AddPivot("Pivot Store Gap", "PivotStoreGap", "Store", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
+        AddPivot("Pivot Payroll Group", "PivotPayrollGroup", "Payroll Group", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
         AddPivot("Pivot Consultant Gap", "PivotConsultantGap", "Operation Consultant", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
         return wb;
     }

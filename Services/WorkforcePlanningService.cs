@@ -101,6 +101,32 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             && (soc == null || soc.Contains(l.Soc)) && (od == null || od.Contains(l.Od));
     }
 
+    // Each job belongs to one payroll group. Learn it from the active-employee roster of the planned
+    // period (else the latest one before it, else the latest overall): the group most of the job's
+    // employees are in. Keyed by the normalised job title.
+    private async Task<Dictionary<string, string>> GetJobPayrollGroupsAsync(int year, int month)
+    {
+        var key = $"planning:paygroups:{year}:{month}";
+        if (_cache.TryGetValue(key, out Dictionary<string, string>? cached) && cached != null) return cached;
+
+        var map = new Dictionary<string, string>();
+        var keys = await GetRosterPeriodKeysAsync();
+        if (keys.Count > 0)
+        {
+            var target = year * 100 + month;
+            var period = keys.Where(k => k <= target).DefaultIfEmpty(keys[0]).First();
+            var rows = await _db.ActiveEmployees.AsNoTracking()
+                .Where(e => e.Year * 100 + e.Month == period && e.PayrollGroup != "")
+                .GroupBy(e => new { e.JobTitle, e.PayrollGroup })
+                .Select(g => new { g.Key.JobTitle, g.Key.PayrollGroup, Count = g.Count() })
+                .ToListAsync();
+            foreach (var g in rows.GroupBy(r => Norm(r.JobTitle)))
+                map[g.Key] = g.OrderByDescending(r => r.Count).First().PayrollGroup.Trim();
+        }
+        _cache.Set(key, map, CacheOptions());
+        return map;
+    }
+
     private async Task<List<int>> GetRosterPeriodKeysAsync()
     {
         const string key = "planning:roster-periods";
@@ -287,7 +313,8 @@ public class WorkforcePlanningService : IWorkforcePlanningService
 
         // Hiring need: per store+job the shortage plus expected resignations, never below
         // zero (a surplus in one job can't cover another), summed and rounded for display.
-        Dictionary<string, double[]>? storeNeed = null; // store -> [need, expected resignations], unrounded
+        Dictionary<string, double[]>? storeNeed = null; // store -> [need, expected resignations, shortage], unrounded
+        Dictionary<string, double[]>? jobNeed = null;   // job   -> same
         if (includeHiring && dto.HasActual)
         {
             var attrition = await GetAttritionAsync(y, m);
@@ -310,6 +337,32 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             dto.Kpis.ExpectedAttrition = Math.Round(totalAttr, 1);
             dto.Kpis.Shortage = RoundNeed(totalShort);
             storeNeed = byStoreNeed;
+            jobNeed = byJobNeed;
+        }
+
+        // Payroll groups: sum the per-job figures into each job's payroll group.
+        if (includeHiring)
+        {
+            var groupOfJob = await GetJobPayrollGroupsAsync(y, m);
+            var accPg = new Dictionary<string, (int P, int A, double Need, double Attr, double Short)>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kv in sel.ByJob)
+            {
+                var job = data.Jobs[kv.Key];
+                var group = groupOfJob.TryGetValue(Norm(job), out var g) ? g : "";
+                double need = 0, attr = 0, shortage = 0;
+                if (jobNeed != null && jobNeed.TryGetValue(job, out var jn)) { need = jn[0]; attr = jn[1]; shortage = jn[2]; }
+                accPg.TryGetValue(group, out var a);
+                accPg[group] = (a.P + kv.Value[0], a.A + (dto.HasActual ? kv.Value[1] : 0), a.Need + need, a.Attr + attr, a.Short + shortage);
+            }
+            dto.ByPayrollGroup = accPg.Select(kv =>
+                {
+                    var row = Row(kv.Key, new[] { kv.Value.P, kv.Value.A }, dto.HasActual);
+                    row.HiringNeed = RoundNeed(kv.Value.Need);
+                    row.ExpectedAttrition = Math.Round(kv.Value.Attr, 1);
+                    row.Shortage = RoundNeed(kv.Value.Short);
+                    return row;
+                })
+                .OrderBy(r => dto.HasActual ? r.Gap : -r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
         }
 
         // Roll the compared stores up by the people responsible for them. Figures are summed from
@@ -433,6 +486,14 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                 row.SeniorOperationConsultant = lead.Soc; row.OperationDirector = lead.Od;
             }
         }
+        // Payroll group of each row's job (same month-aware lookup the page uses).
+        foreach (var month in rows.Select(r => r.Month).Distinct().ToList())
+        {
+            var groups = await GetJobPayrollGroupsAsync(year, month);
+            foreach (var r in rows.Where(r => r.Month == month))
+                r.PayrollGroup = groups.TryGetValue(Norm(r.Job), out var pg) ? pg : "";
+        }
+
         // Expected resignations and hiring need for months that have a roster.
         foreach (var month in rows.Where(r => r.Actual.HasValue).Select(r => r.Month).Distinct().ToList())
         {
@@ -445,6 +506,153 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             }
         }
         return rows;
+    }
+
+    // Headcount per store+job in one roster period (only used when that period is in an earlier year
+    // than the one being forecast, so the year's own data can't supply the starting point).
+    private async Task<Dictionary<string, int>> GetPeriodHeadcountAsync(int period)
+    {
+        var key = $"planning:baseline:{period}";
+        if (_cache.TryGetValue(key, out Dictionary<string, int>? cached) && cached != null) return cached;
+        var rows = await _db.ActiveEmployees.AsNoTracking()
+            .Where(e => e.Year * 100 + e.Month == period)
+            .GroupBy(e => new { e.Store, e.JobTitle })
+            .Select(g => new { g.Key.Store, g.Key.JobTitle, Count = g.Count() })
+            .ToListAsync();
+        var map = new Dictionary<string, int>();
+        foreach (var r in rows) { var k = AttrKey(r.Store, r.JobTitle); map[k] = (map.TryGetValue(k, out var v) ? v : 0) + r.Count; }
+        _cache.Set(key, map, CacheOptions());
+        return map;
+    }
+
+    public async Task<HiringForecastDto> GetHiringForecastAsync(int? year, string? stores, string? jobs, string role, string? assignedName,
+        string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0, string? by = null)
+    {
+        var dto = new HiringForecastDto();
+        var years = await GetYearsAsync();
+        dto.Years = years;
+        if (years.Count == 0) return dto;
+        dto.HasData = true;
+
+        var now = DateTime.Now;
+        var y = year.HasValue && years.Contains(year.Value) ? year.Value : (years.Contains(now.Year) ? now.Year : years[0]);
+        dto.Year = y;
+        var data = await GetYearDataAsync(y);
+
+        var accessible = await _storeAccess.GetAccessibleStoreNamesAsync(role, assignedName);
+        var accessibleSet = accessible == null ? null : new HashSet<string>(accessible.Select(s => s.Trim()), StringComparer.OrdinalIgnoreCase);
+        var storeSet = LeaderSet(stores);
+        var jobSet = LeaderSet(jobs);
+        var omSet = LeaderSet(om); var ocSet = LeaderSet(oc); var socSet = LeaderSet(soc); var odSet = LeaderSet(od);
+        var leaders = await GetLeadershipAsync(y, 12);
+
+        bool StoreOk(int i) =>
+            (accessibleSet == null || accessibleSet.Contains(data.Stores[i])) &&
+            (storeSet == null || storeSet.Contains(data.Stores[i])) &&
+            LeadersMatch(leaders.TryGetValue(data.Stores[i].Trim(), out var lead) ? lead : null, omSet, ocSet, socSet, odSet);
+
+        var visible = data.Projected.Select(c => c.Store).Distinct().Where(i => accessibleSet == null || accessibleSet.Contains(data.Stores[i])).ToList();
+        dto.Stores = visible.Select(i => data.Stores[i]).OrderBy(s => s, StringComparer.OrdinalIgnoreCase).ToList();
+        dto.Jobs = data.Projected.Select(c => c.Job).Distinct().Select(i => data.Jobs[i]).OrderBy(s => s, StringComparer.OrdinalIgnoreCase).ToList();
+        var visibleLeaders = visible.Select(i => leaders.TryGetValue(data.Stores[i].Trim(), out var vl) ? vl : null).Where(vl => vl != null).Select(vl => vl!).ToList();
+        List<string> Options(Func<Leaders, string> pick) => visibleLeaders.Select(pick).Where(n => !string.IsNullOrWhiteSpace(n))
+            .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
+        dto.OperationConsultants = Options(l => l.Oc); dto.OperationManagers = Options(l => l.Om);
+        dto.SeniorOperationConsultants = Options(l => l.Soc); dto.OperationDirectors = Options(l => l.Od);
+
+        // Where the forecast starts: the latest uploaded roster.
+        var rosterKeys = await GetRosterPeriodKeysAsync();
+        var baseline = rosterKeys.Count > 0 ? rosterKeys[0] : 0;
+        dto.HasRoster = baseline > 0;
+        dto.BaselineYear = baseline / 100; dto.BaselineMonth = baseline % 100;
+        if (!dto.HasRoster) return dto;
+
+        var rate = Math.Clamp(earlyLeaverPercent / 100.0, 0, 0.5);
+        dto.EarlyLeaverRate = Math.Round(rate * 100, 1);
+        var gross = 1.0 / (1.0 - rate);
+
+        var baseAttr = await GetAttritionAsync(baseline / 100, baseline % 100);
+        dto.AttritionMonths = baseAttr.Periods;
+        var actualMonths = data.Actual.Select(c => c.Month).Distinct().ToHashSet();
+        var projMonths = data.Projected.Select(c => c.Month).Distinct().ToHashSet();
+        var attrByMonth = new Dictionary<int, AttritionData>();
+        foreach (var mon in actualMonths) attrByMonth[mon] = await GetAttritionAsync(y, mon);
+
+        var actual = new Dictionary<(int Month, int Store, int Job), int>();
+        foreach (var c in data.Actual) actual[(c.Month, c.Store, c.Job)] = (actual.TryGetValue((c.Month, c.Store, c.Job), out var v) ? v : 0) + c.Count;
+        var projected = new Dictionary<(int Store, int Job), int[]>();
+        foreach (var c in data.Projected)
+        {
+            if (!StoreOk(c.Store) || (jobSet != null && !jobSet.Contains(data.Jobs[c.Job]))) continue;
+            if (!projected.TryGetValue((c.Store, c.Job), out var arr)) projected[(c.Store, c.Job)] = arr = new int[13];
+            arr[c.Month] += c.Count;
+        }
+        // The starting headcount of a forecast that begins before the year's own data: the roster
+        // of an earlier year (when the baseline is later than this year, nothing is simulated).
+        Dictionary<string, int>? earlier = baseline / 100 < y ? await GetPeriodHeadcountAsync(baseline) : null;
+
+        // Row dimension: store (default), job, payroll group or operation consultant.
+        var mode = (by ?? "store").Trim().ToLowerInvariant();
+        dto.By = mode is "job" or "payroll" or "consultant" ? mode : "store";
+        var groupOfJob = dto.By == "payroll" ? await GetJobPayrollGroupsAsync(y, 12) : null;
+        string RowKey(int store, int job) => dto.By switch
+        {
+            "job" => data.Jobs[job],
+            "payroll" => groupOfJob!.TryGetValue(Norm(data.Jobs[job]), out var g) ? g : "",
+            "consultant" => leaders.TryGetValue(data.Stores[store].Trim(), out var lc) ? lc.Oc : "",
+            _ => data.Stores[store],
+        };
+        var byStore = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase);
+        foreach (var kv in projected)
+        {
+            var (store, job) = kv.Key;
+            var rowKey = RowKey(store, job);
+            var acc = byStore.TryGetValue(rowKey, out var existing) ? existing : (byStore[rowKey] = new double[12]);
+            double? prev = null;
+            for (int mon = 1; mon <= 12; mon++)
+            {
+                var p = kv.Value[mon];
+                if (!projMonths.Contains(mon)) continue;
+                double hires;
+                if (actualMonths.Contains(mon))
+                {
+                    var a = actual.TryGetValue((mon, store, job), out var av) ? av : 0;
+                    var exp = attrByMonth[mon].PerMonth.TryGetValue(AttrKey(data.Stores[store], data.Jobs[job]), out var e1) ? e1 : 0;
+                    hires = Math.Max(0, p - a + exp);
+                    prev = a;
+                }
+                else
+                {
+                    if (prev == null)
+                    {
+                        if (earlier == null) continue; // no starting point in or before this year
+                        prev = earlier.TryGetValue(AttrKey(data.Stores[store], data.Jobs[job]), out var b) ? b : 0;
+                    }
+                    var exp = baseAttr.PerMonth.TryGetValue(AttrKey(data.Stores[store], data.Jobs[job]), out var e2) ? e2 : 0;
+                    var before = Math.Max(0, prev.Value - exp);
+                    var net = Math.Max(0, p - before);
+                    hires = net;
+                    prev = before + net;
+                }
+                acc[mon - 1] += hires * gross;
+            }
+        }
+
+        // Round each store-month once, then add the rounded cells, so every row and column adds up exactly.
+        foreach (var kv in byStore.OrderBy(k => k.Key, StringComparer.OrdinalIgnoreCase))
+        {
+            var row = new HiringForecastRowDto
+            {
+                Store = kv.Key,
+                OperationConsultant = dto.By == "store" && leaders.TryGetValue(kv.Key.Trim(), out var l) ? l.Oc : "",
+            };
+            for (int i = 0; i < 12; i++) { row.Months[i] = RoundNeed(kv.Value[i]); row.Total += row.Months[i]; dto.MonthTotals[i] += row.Months[i]; }
+            dto.GrandTotal += row.Total;
+            dto.Rows.Add(row);
+        }
+        for (int mon = 1; mon <= 12; mon++)
+            dto.MonthModes[mon - 1] = !projMonths.Contains(mon) ? "none" : actualMonths.Contains(mon) ? "actual" : (baseline / 100 < y || actualMonths.Count > 0) ? "forecast" : "none";
+        return dto;
     }
 
     public async Task<List<PeriodItem>> GetProjectionPeriodsAsync()

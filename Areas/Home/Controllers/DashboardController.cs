@@ -33,6 +33,8 @@ public class DashboardController : Controller
 
     public IActionResult WorkforcePlanning() => View();
 
+    public IActionResult HiringForecast() => View();
+
     public IActionResult Retention() => View();
 
     public IActionResult Stores() => View();

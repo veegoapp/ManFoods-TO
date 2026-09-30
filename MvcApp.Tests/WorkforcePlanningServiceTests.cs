@@ -279,6 +279,7 @@ public class WorkforcePlanningServiceTests
         var row = Assert.Single(rows);
         Assert.Equal("3 | C", row.Store);
         Assert.Equal("Bob", row.OperationConsultant); Assert.Equal("Mona", row.OperationManager);
+        Assert.Equal("", row.PayrollGroup); // no roster job mapping in this data set
         Assert.Equal("Sue", row.SeniorOperationConsultant); Assert.Equal("Eve", row.OperationDirector);
     }
 
@@ -324,6 +325,48 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task PayrollGroups_SumTheirJobs_UsingTheGroupLearnedFromTheRoster()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "1 | A", "Crew Trainer", 4); Proj(db, 1, "1 | A", "GEM", 3); Proj(db, 1, "1 | A", "Newly Added Job", 2);
+        Proj(db, 1, "2 | B", "Crew", 6);
+        void Emp(string store, string job, string group, int count)
+        {
+            for (int i = 0; i < count; i++)
+                db.ActiveEmployees.Add(new ActiveEmployee { Year = 2026, Month = 1, Store = store, JobTitle = job, PayrollGroup = group, EmployeeId = Guid.NewGuid().ToString() });
+        }
+        Emp("1 | A", "Crew", "Hourly", 8); Emp("1 | A", "Crew Trainer", "Hourly", 6); Emp("1 | A", "GEM", "Monthly", 3); Emp("2 | B", "Crew", "Hourly", 6);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        var hourly = Assert.Single(dto.ByPayrollGroup, r => r.Name == "Hourly");
+        Assert.Equal(20, hourly.Projected);            // Crew 10 + Crew Trainer 4 + Crew (store 2) 6
+        Assert.Equal(20, hourly.Actual);                // 8 + 6 + 6
+        Assert.Equal(0, hourly.Gap);
+        Assert.Equal(2, hourly.Shortage);               // Crew in store 1 is 2 short; the trainer surplus does not offset it
+        var monthly = Assert.Single(dto.ByPayrollGroup, r => r.Name == "Monthly");
+        Assert.Equal(3, monthly.Projected); Assert.Equal(3, monthly.Actual);
+        var unassigned = Assert.Single(dto.ByPayrollGroup, r => r.Name == "");   // a job nobody works yet has no known group
+        Assert.Equal(2, unassigned.Projected);
+        Assert.Equal(dto.Kpis.Projected, dto.ByPayrollGroup.Sum(r => r.Projected));
+    }
+
+    [Fact]
+    public async Task DetailRows_CarryThePayrollGroupOfTheirJob()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "1 | A", "Brand New Job", 2);
+        db.ActiveEmployees.Add(new ActiveEmployee { Year = 2026, Month = 1, Store = "1 | A", JobTitle = "Crew", PayrollGroup = "Hourly", EmployeeId = "E1" });
+        await db.SaveChangesAsync();
+
+        var rows = await NewService(db).GetDetailAsync(2026, null, null, null, "Admin", null);
+
+        Assert.Equal("Hourly", rows.Single(r => r.Job == "Crew").PayrollGroup);
+        Assert.Equal("", rows.Single(r => r.Job == "Brand New Job").PayrollGroup);
+    }
+
+    [Fact]
     public async Task StoreAndJobFilters_NarrowTheResult()
     {
         var db = NewDb();
@@ -334,6 +377,74 @@ public class WorkforcePlanningServiceTests
 
         Assert.Equal(10, dto.Kpis.Projected);
         Assert.Single(dto.ByStore);
+    }
+
+    [Fact]
+    public async Task HiringForecast_PastMonthUsesNeedFormula_FutureMonthsAreSimulated()
+    {
+        var db = NewDb();
+        // Jan: target 10, have 8. Feb: target 10. Mar: target 12.
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 2, "1 | A", "Crew", 10); Proj(db, 3, "1 | A", "Crew", 12);
+        Active(db, 1, "1 | A", "Crew", 8);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null);
+
+        Assert.True(dto.HasRoster);
+        var row = Assert.Single(dto.Rows);
+        Assert.Equal(2, row.Months[0]);          // Jan (roster): 10 - 8, no resignations history
+        Assert.Equal(2, row.Months[1]);          // Feb: still 8 people, need 2 to reach 10
+        Assert.Equal(2, row.Months[2]);          // Mar: 10 people after Feb, need 2 more to reach 12
+        Assert.Equal(6, row.Total);
+        Assert.Equal(6, dto.GrandTotal);
+        Assert.Equal("actual", dto.MonthModes[0]);
+        Assert.Equal("forecast", dto.MonthModes[1]);
+        Assert.Equal("none", dto.MonthModes[5]);
+    }
+
+    [Fact]
+    public async Task HiringForecast_EarlyLeaverRate_GrossesHiresUp()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10);
+        Active(db, 1, "1 | A", "Crew", 5);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null, earlyLeaverPercent: 50);
+
+        Assert.Equal(10, Assert.Single(dto.Rows).Months[0]); // 5 net hires / (1 - 0.5)
+    }
+
+    [Fact]
+    public async Task HiringForecast_ByJob_GroupsRowsByJobAndKeepsTheSameTotal()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "1 | A", "GEM", 4); Proj(db, 1, "2 | B", "Crew", 6);
+        Active(db, 1, "1 | A", "Crew", 8); Active(db, 1, "1 | A", "GEM", 3); Active(db, 1, "2 | B", "Crew", 6);
+        await db.SaveChangesAsync();
+
+        var byStore = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null);
+        var byJob = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null, by: "job");
+
+        Assert.Equal("job", byJob.By);
+        Assert.Equal(new[] { "Crew", "GEM" }, byJob.Rows.Select(r => r.Store).ToArray());
+        Assert.Equal(2, byJob.Rows.Single(r => r.Store == "Crew").Months[0]);
+        Assert.Equal(1, byJob.Rows.Single(r => r.Store == "GEM").Months[0]);
+        Assert.Equal(byStore.GrandTotal, byJob.GrandTotal);
+    }
+
+    [Fact]
+    public async Task HiringForecast_NoRoster_HasNoRows()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null);
+
+        Assert.True(dto.HasData);
+        Assert.False(dto.HasRoster);
+        Assert.Empty(dto.Rows);
     }
 }
 
@@ -348,6 +459,7 @@ public class WorkforcePlanningReportTests
         public Task<MvcApp.Models.ViewModels.StorePlanDto> GetStorePlanAsync(string store, int year, int month, string role, string? assignedName) => throw new NotSupportedException();
         public Task<List<MvcApp.Models.ViewModels.PeriodItem>> GetProjectionPeriodsAsync() => Task.FromResult(new List<MvcApp.Models.ViewModels.PeriodItem>());
         public Task<List<string>> GetProjectionJobsAsync() => Task.FromResult(new List<string>());
+        public Task<MvcApp.Models.ViewModels.HiringForecastDto> GetHiringForecastAsync(int? year, string? stores, string? jobs, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0, string? by = null) => Task.FromResult(new MvcApp.Models.ViewModels.HiringForecastDto());
     }
 
     private static ReportService NewReports(IWorkforcePlanningService planning) =>
@@ -360,7 +472,7 @@ public class WorkforcePlanningReportTests
         {
             Rows =
             {
-                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", Projected = 10, Actual = 8, ExpectedAttrition = 1.5, HiringNeed = 3.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", PayrollGroup = "Hourly", Projected = 10, Actual = 8, ExpectedAttrition = 1.5, HiringNeed = 3.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
                 new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4, ExpectedAttrition = 0.5, HiringNeed = 0.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
                 new() { Year = 2026, Month = 2, Store = "1 | A", Job = "Crew", Projected = 11, Actual = null },
             }
@@ -378,7 +490,7 @@ public class WorkforcePlanningReportTests
         Assert.Contains("Data", names);
         Assert.Contains(names, n => n.StartsWith("By Store"));
         Assert.Contains(names, n => n.StartsWith("By Job"));
-        Assert.Equal(4, names.Count(n => n.StartsWith("Pivot")));
+        Assert.Equal(5, names.Count(n => n.StartsWith("Pivot")));
         Assert.Equal(4, reopened.Worksheet("Data").LastRowUsed()!.RowNumber()); // header + 3 rows
 
         // Hiring need columns: Data sheet, month summary and per-store breakdown.
@@ -391,6 +503,9 @@ public class WorkforcePlanningReportTests
         Assert.Equal(4, summary.Cell(10, 8).GetDouble());   // hiring need 3.5 + 0.5 -> 4
         Assert.Equal(-2, dataWs.Cell(2, 8).GetDouble());   // Data gap = actual − projected (8 − 10)
         Assert.Equal("Shortage", dataWs.Cell(1, 16).GetString());
+        Assert.Equal("Payroll Group", dataWs.Cell(1, 17).GetString());
+        Assert.Equal("Hourly", dataWs.Cell(2, 17).GetString());
+        Assert.Equal("Unassigned", dataWs.Cell(3, 17).GetString()); // a job with no known group
         Assert.Equal(2, dataWs.Cell(2, 16).GetDouble());
         // By Consultant & Manager: four stacked tables; Amy covers 1 store, 14 projected, 12 actual.
         var groups = reopened.Worksheet("By Consultant & Manager");
@@ -412,7 +527,7 @@ public class WorkforcePlanningReportTests
         // …and the raw package must really contain pivot table parts.
         ms.Position = 0;
         using var zip = new System.IO.Compression.ZipArchive(ms);
-        Assert.Equal(4, zip.Entries.Count(e => e.FullName.StartsWith("xl/pivotTables/pivotTable")));
+        Assert.Equal(5, zip.Entries.Count(e => e.FullName.StartsWith("xl/pivotTables/pivotTable")));
         Assert.Contains(zip.Entries, e => e.FullName.EndsWith("pivotCache/pivotCacheDefinition1.xml"));
     }
 
