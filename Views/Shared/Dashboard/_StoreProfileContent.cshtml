@@ -253,6 +253,24 @@
         </tr>`).join('');
         return `<div class="sp-rate-table-wrap"><table class="sp-rate-table"><thead><tr>${headers}</tr></thead><tbody>${body}</tbody></table></div>`;
     }
+    // Projected vs actual headcount for the selected month, by job, plus the next few months.
+    function renderStaffingPlan(plan) {
+        if (!plan || !plan.hasData) return `<div class="sp-empty">${esc('@L["SP_PlanNoData"]')}</div>`;
+        const has = plan.hasActual;
+        const gapCell = g => has ? `<td class="text-end" style="color:${g > 0 ? 'oklch(0.6 0.22 22)' : g < 0 ? 'oklch(0.5 0.15 155)' : 'inherit'}">${g > 0 ? '+' : ''}${fmt(g)}</td>` : '<td class="text-end">—</td>';
+        const jobs = arr(plan.byJob).filter(r => r.projected > 0 || r.actual > 0);
+        const jobRows = jobs.map(r => `<tr><td>${esc(r.name)}</td><td class="text-end">${fmt(r.projected)}</td><td class="text-end">${has ? fmt(r.actual) : '—'}</td>${gapCell(r.gap)}</tr>`).join('');
+        const k = plan.kpis || {};
+        const totalRow = `<tr style="font-weight:700"><td>${esc('@L["Common_Total"]')}</td><td class="text-end">${fmt(k.projected)}</td><td class="text-end">${has ? fmt(k.actual) : '—'}</td>${gapCell(k.gap || 0)}</tr>`;
+        const head = `<thead><tr><th>${esc('@L["WP_ColJob"]')}</th><th class="text-end">${esc('@L["WP_ColProjected"]')}</th><th class="text-end">${esc('@L["WP_ColActual"]')}</th><th class="text-end">${esc('@L["WP_ColGap"]')}</th></tr></thead>`;
+        const monthLabel = m => new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' });
+        const upcoming = arr(plan.upcoming);
+        const upcomingHtml = upcoming.length > 1 ? `<div class="mt-3" style="font-size:12px;color:var(--text-3)">${esc('@L["SP_PlanUpcoming"]')}</div>
+            <div class="sp-rate-table-wrap"><table class="sp-rate-table"><thead><tr><th>${esc('@L["WP_Month"]')}</th><th class="text-end">${esc('@L["WP_ColProjected"]')}</th><th class="text-end">${esc('@L["WP_ColActual"]')}</th></tr></thead><tbody>${
+                upcoming.map(u => `<tr><td>${esc(monthLabel(u.month))} ${esc(plan.year)}</td><td class="text-end">${fmt(u.projected)}</td><td class="text-end">${u.actual == null ? '—' : fmt(u.actual)}</td></tr>`).join('')
+            }</tbody></table></div>` : '';
+        return `<div class="sp-rate-table-wrap"><table class="sp-rate-table">${head}<tbody>${jobRows}${totalRow}</tbody></table></div>${upcomingHtml}`;
+    }
     function renderLeaderTracking(rows) {
         if (!rows.length) return `<div class="sp-card"><div class="sp-empty">${esc('@L["SP_NoLeaderHistory"]')}</div></div>`;
         const body = rows.map((r, index) => `<tr>
@@ -489,11 +507,13 @@
         target.innerHTML = `<div class="sp-card"><div class="sp-empty">${esc(d.loading)}</div></div>`;
         let html = '';
         if (panel === 'workforce') {
-            const [jobs, payroll, tenure, gender] = await Promise.all([
+            const [jobs, payroll, tenure, gender, plan] = await Promise.all([
                 get(`/api/dashboard/headcount-by-job-title?${q}`, []), get(`/api/dashboard/headcount-by-payroll-group?${q}`, []),
-                get(`/api/dashboard/headcount-by-tenure?${q}`, []), get(`/api/dashboard/gender-breakdown?${q}`, [])
+                get(`/api/dashboard/headcount-by-tenure?${q}`, []), get(`/api/dashboard/gender-breakdown?${q}`, []),
+                toPeriod ? get(`/api/workforce-planning/store-plan?store=${encodeURIComponent(store)}&year=${toPeriod.year}&month=${toPeriod.month}`, null) : Promise.resolve(null)
             ]);
-            html = renderCards([card('@L["SP_ByJobTitle"]','bi-person-badge',renderBars(jobs,d.employees)),card('@L["SP_ByPayroll"]','bi-wallet2',renderBars(payroll,d.employees)),card('@L["SP_ByTenure"]','bi-hourglass-split',renderBars(tenure,d.employees)),card('@L["SP_ByGender"]','bi-gender-ambiguous',renderBars(gender,d.employees))]);
+            html = renderCards([card('@L["SP_ByJobTitle"]','bi-person-badge',renderBars(jobs,d.employees)),
+                card('@L["SP_StaffingPlan"]','bi-diagram-3-fill',renderStaffingPlan(plan)),card('@L["SP_ByPayroll"]','bi-wallet2',renderBars(payroll,d.employees)),card('@L["SP_ByTenure"]','bi-hourglass-split',renderBars(tenure,d.employees)),card('@L["SP_ByGender"]','bi-gender-ambiguous',renderBars(gender,d.employees))]);
         } else if (panel === 'turnover') {
             const [jobs, tenure, payroll, reasons, periodData] = await Promise.all([
                 get(`/api/dashboard/turnover-by-job-title?${q}`, []), get(`/api/dashboard/turnover-by-tenure?${q}`, []),

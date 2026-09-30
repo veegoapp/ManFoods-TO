@@ -1907,4 +1907,9 @@
   <data name="Rep_Title_WorkforcePlanning" xml:space="preserve"><value>تخطيط القوى العاملة</value></data>
   <data name="Rep_Desc_WorkforcePlanning" xml:space="preserve"><value>العدد المتوقّع مقابل الفعلي حسب الوظيفة والفرع — ملخص، وحسب الشهر والفرع والوظيفة، وورقة البيانات الكاملة وجداول Pivot جاهزة في Excel.</value></data>
   <data name="Rep_AllJobs" xml:space="preserve"><value>كل الوظائف</value></data>
+  <data name="ST_PlanFill" xml:space="preserve"><value>الاكتمال</value></data>
+  <data name="ST_PlanOf" xml:space="preserve"><value>من</value></data>
+  <data name="SP_StaffingPlan" xml:space="preserve"><value>خطة التوظيف</value></data>
+  <data name="SP_PlanNoData" xml:space="preserve"><value>لا توجد توقعات لهذا الفرع في الشهر المختار.</value></data>
+  <data name="SP_PlanUpcoming" xml:space="preserve"><value>العدد المتوقّع للشهور القادمة</value></data>
 </root>

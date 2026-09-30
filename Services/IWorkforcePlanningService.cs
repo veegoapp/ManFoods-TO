@@ -10,6 +10,14 @@ public interface IWorkforcePlanningService
     /// default to the current period when it has projection data, else the latest.</summary>
     Task<WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName);
 
+    /// <summary>Per-store fill for one exact year/month (empty when that month has no
+    /// projection — it never falls back to another period), optionally narrowed to jobs.</summary>
+    Task<List<StoreFillDto>> GetStoreFillAsync(int year, int month, string? jobs, string role, string? assignedName);
+
+    /// <summary>One store's plan for an exact year/month: by job, plus this and the next
+    /// three projected months. <c>HasData</c> is false when the store has no projection then.</summary>
+    Task<StorePlanDto> GetStorePlanAsync(string store, int year, int month, string role, string? assignedName);
+
     /// <summary>Flat projected-vs-actual rows (one per store, job and month) for the
     /// chosen year, optionally narrowed to <paramref name="months"/> (1-12),
     /// comma-separated store and job filters, and the caller's store access.</summary>

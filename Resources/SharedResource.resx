@@ -1901,4 +1901,9 @@
   <data name="Rep_Title_WorkforcePlanning" xml:space="preserve"><value>Workforce Planning</value></data>
   <data name="Rep_Desc_WorkforcePlanning" xml:space="preserve"><value>Projected vs actual headcount by job and store — summary, by month, by store, by job, the full data sheet and ready-made Excel pivot tables.</value></data>
   <data name="Rep_AllJobs" xml:space="preserve"><value>All job titles</value></data>
+  <data name="ST_PlanFill" xml:space="preserve"><value>Staffing</value></data>
+  <data name="ST_PlanOf" xml:space="preserve"><value>of</value></data>
+  <data name="SP_StaffingPlan" xml:space="preserve"><value>Staffing Plan</value></data>
+  <data name="SP_PlanNoData" xml:space="preserve"><value>No projection for this store in the selected month.</value></data>
+  <data name="SP_PlanUpcoming" xml:space="preserve"><value>Projected headcount for the coming months</value></data>
 </root>

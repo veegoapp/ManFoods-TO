@@ -64,3 +64,28 @@ public class PlanningDetailRow
     /// <summary>Null when the month has no uploaded active-employee roster.</summary>
     public int? Actual { get; set; }
 }
+
+/// <summary>A store's staffing fill for one month — drives the badge on the Stores page cards.</summary>
+public class StoreFillDto
+{
+    public string Store { get; set; } = "";
+    public int Projected { get; set; }
+    /// <summary>Null when the month has no uploaded active-employee roster.</summary>
+    public int? Actual { get; set; }
+    public double FillPercent { get; set; }
+    /// <summary>"ok" | "watch" | "critical" | "none".</summary>
+    public string Status { get; set; } = "none";
+}
+
+/// <summary>One store's staffing plan: projected vs actual by job for the month,
+/// plus the projected totals for that month and the months after it.</summary>
+public class StorePlanDto
+{
+    public bool HasData { get; set; }
+    public int Year { get; set; }
+    public int Month { get; set; }
+    public bool HasActual { get; set; }
+    public PlanningKpiDto Kpis { get; set; } = new();
+    public List<PlanningRowDto> ByJob { get; set; } = new();
+    public List<PlanningTrendPointDto> Upcoming { get; set; } = new();
+}

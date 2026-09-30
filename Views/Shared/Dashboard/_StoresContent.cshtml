@@ -156,7 +156,8 @@
      data-ac-severity-high="@L["AC_SeverityHigh"]"
      data-ac-severity-medium="@L["AC_SeverityMedium"]"
      data-ac-severity-low="@L["AC_SeverityLow"]"
-     data-high-risk-suffix="@L["ST_HighRiskSuffix"]">
+     data-high-risk-suffix="@L["ST_HighRiskSuffix"]"
+     data-plan-fill="@L["ST_PlanFill"]" data-plan-of="@L["ST_PlanOf"]">
     <div class="col-12 text-center py-5 text-muted">
         <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>@L["Common_Loading"]
     </div>
@@ -176,6 +177,7 @@ let stStoreData = [];
 let stPrevByStore = {};
 let stAcByStore = {};
 let stHighRiskByStore = {};
+let stPlanByStore = {};   // staffing fill (actual vs projected) per store, lower-cased store name
 let stSort = 'turnover_desc';
 
 const stContainerEl = document.getElementById('storeCardsContainer');
@@ -285,6 +287,17 @@ function stRenderCards() {
             flags.push(`<span class="st-badge" style="background:oklch(0.6 0.22 22 / .1);color:${ChartColors.SEMANTIC.BAD}"><i class="bi bi-exclamation-triangle-fill"></i> ${highRisk} ${sapEscape(ST_D.highRiskSuffix)}</span>`);
         }
 
+        // Staffing fill (actual ÷ projected headcount); hidden when the store has no
+        // projection for this month or the month has no roster.
+        const plan = stPlanByStore[(r.storeName || '').toLowerCase()];
+        let planHtml = '';
+        if (plan && plan.actual !== null && plan.actual !== undefined) {
+            const planTone = { ok: 'success', watch: 'warning', critical: 'danger' }[plan.status] || 'none';
+            planHtml = `<div style="font-size:11.5px;margin-bottom:12px"><span style="color:var(--text-3)">${sapEscape(ST_D.planFill)}:</span>
+                <span class="fw-semibold" style="color:${toneVar[planTone]}">${plan.fillPercent}%</span>
+                <span style="color:var(--text-3)">(${plan.actual} ${sapEscape(ST_D.planOf)} ${plan.projected})</span></div>`;
+        }
+
         return `<div class="col-sm-6 col-lg-4 col-xl-3">
             <div class="card-dark h-100">
                 <a href="${__AREA_PREFIX}/dashboard/storeprofile?store=${encodeURIComponent(r.storeName)}" class="d-block" style="text-decoration:none;color:inherit">
@@ -300,6 +313,7 @@ function stRenderCards() {
                         ${trendHtml}
                     </div>
                     <div style="font-size:11px;color:var(--text-3);margin-bottom:12px">${sapEscape(ST_D.turnoverRate)}</div>
+                    ${planHtml}
                     <div style="border-top:1px solid var(--card-border);padding-top:10px;display:flex;justify-content:space-between;font-size:11.5px">
                         <div>
                             <div style="color:var(--text-3)">${sapEscape(ST_D.ocOm)}</div>
@@ -428,14 +442,21 @@ async function stLoadStores() {
     if (odFilter) q.set('od', odFilter);
     if (jobFilter.length) q.set('jobs', jobFilter.join(','));
 
-    const [current, acStores, watchlist, prevPeriod] = await Promise.all([
+    const planQ = new URLSearchParams({ year: periodYear, month: periodMonth });
+    if (jobFilter.length) planQ.set('jobs', jobFilter.join(','));
+
+    const [current, acStores, watchlist, prevPeriod, planFill] = await Promise.all([
         fetchJson(`/api/dashboard/store-comparison?${q.toString()}`),
         sapFetchJson('/api/store-action-plan/action-center/stores'),
         sapFetchJson('/api/early-warning/watchlist'),
         stLoadPreviousPeriod(),
+        fetchJson(`/api/workforce-planning/store-fill?${planQ.toString()}`),
     ]);
 
     stStoreData = current || [];
+
+    stPlanByStore = {};
+    (Array.isArray(planFill) ? planFill : []).forEach(f => { stPlanByStore[(f.store || '').toLowerCase()] = f; });
 
     stAcByStore = {};
     (acStores || []).forEach(s => { stAcByStore[s.storeName] = s; });
