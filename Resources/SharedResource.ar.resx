@@ -1997,4 +1997,7 @@
   <data name="HF_KpiNextDesc" xml:space="preserve"><value>التعيينات المطلوبة في الأشهر الثلاثة القادمة</value></data>
   <data name="HF_KpiStore" xml:space="preserve"><value>الفرع الأكثر احتياجًا</value></data>
   <data name="HF_KpiStoreDesc" xml:space="preserve"><value>أعلى إجمالي على مدار السنة</value></data>
+  <data name="HF_ChartTitle" xml:space="preserve"><value>التعيينات المطلوبة في كل شهر</value></data>
+  <data name="HF_ChartSub" xml:space="preserve"><value>الأعمدة الداكنة من قائمة الموظفين المرفوعة، والفاتحة تقدير</value></data>
+  <data name="HF_ChartLabel" xml:space="preserve"><value>التعيينات المطلوبة</value></data>
 </root>

@@ -1991,4 +1991,7 @@
   <data name="HF_KpiNextDesc" xml:space="preserve"><value>Hires needed in the coming three months</value></data>
   <data name="HF_KpiStore" xml:space="preserve"><value>Store with most hires</value></data>
   <data name="HF_KpiStoreDesc" xml:space="preserve"><value>Highest total over the year</value></data>
+  <data name="HF_ChartTitle" xml:space="preserve"><value>Hires needed per month</value></data>
+  <data name="HF_ChartSub" xml:space="preserve"><value>Dark bars use the uploaded employee list; light bars are forecast</value></data>
+  <data name="HF_ChartLabel" xml:space="preserve"><value>Hires needed</value></data>
 </root>
