@@ -1853,4 +1853,7 @@
   <data name="Msg_JobProjNewJobs" xml:space="preserve"><value>{0} job title(s) not found in the portal data were still imported: {1}.</value></data>
   <data name="Msg_JobProjBadCells" xml:space="preserve"><value>{0} cell(s) were skipped because they were not whole non-negative numbers.</value></data>
   <data name="Msg_JobProjUploadFailed" xml:space="preserve"><value>Job projection upload failed: {0}</value></data>
+  <data name="DM_TabMonthly" xml:space="preserve"><value>Monthly Workforce Data</value></data>
+  <data name="DM_TabExit" xml:space="preserve"><value>Exit Interviews</value></data>
+  <data name="DM_TabJobProj" xml:space="preserve"><value>Job Projection</value></data>
 </root>

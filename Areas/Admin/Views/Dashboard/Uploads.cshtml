@@ -6,10 +6,11 @@
     var totalCount = (int)(ViewBag.TotalCount ?? 0);
     var currentSort = (string)(ViewBag.Sort ?? "date");
     var currentDir = (string)(ViewBag.Dir ?? "desc");
+    var currentTab = (string)(ViewBag.Tab ?? "monthly");
     Func<string, string> sortUrl = col =>
     {
         var nextDir = (currentSort == col && currentDir == "asc") ? "desc" : "asc";
-        return $"?page=1&sort={col}&dir={nextDir}";
+        return $"?tab={currentTab}&page=1&sort={col}&dir={nextDir}";
     };
     var existingPeriods = ((List<(int Month, int Year)>)(ViewBag.ExistingPeriods ?? new List<(int Month, int Year)>()))
         .Select(p => new { month = p.Month, year = p.Year }).ToList();
@@ -73,6 +74,14 @@
     font-weight:700; font-size:13.5px; padding:11px 20px; cursor:pointer; transition:background .15s;
 }
 .dm-btn-submit:hover { background:oklch(0.45 0.18 25); }
+
+.dm-tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:18px; border-bottom:1px solid var(--card-border); }
+.dm-tab {
+    display:inline-flex; align-items:center; gap:7px; padding:10px 16px; font-size:13.5px; font-weight:600;
+    color:var(--text-2); text-decoration:none; border-bottom:3px solid transparent; margin-bottom:-1px;
+}
+.dm-tab:hover { color:var(--text); }
+.dm-tab.active { color:oklch(0.5 0.18 25); border-bottom-color:oklch(0.5 0.18 25); }
 
 .dm-history-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:12px; }
 .dm-history-badge.period { background:oklch(0.55 0.19 25 / .12); color:oklch(0.5 0.18 25); }
@@ -204,6 +213,13 @@
     </div>
 </div>
 
+<div class="dm-tabs">
+    <a class="dm-tab @(currentTab == "monthly" ? "active" : "")" href="?tab=monthly"><i class="bi bi-people-fill"></i>@L["DM_TabMonthly"]</a>
+    <a class="dm-tab @(currentTab == "exit" ? "active" : "")" href="?tab=exit"><i class="bi bi-chat-square-text-fill"></i>@L["DM_TabExit"]</a>
+    <a class="dm-tab @(currentTab == "jobproj" ? "active" : "")" href="?tab=jobproj"><i class="bi bi-graph-up-arrow"></i>@L["DM_TabJobProj"]</a>
+</div>
+
+<div class="@(currentTab == "monthly" ? "" : "d-none")" id="dmPaneMonthly">
 <div class="chart-card mb-4">
     <div class="chart-header">
         <h6>@L["DM_MonthlyData"]</h6>
@@ -265,6 +281,9 @@
     </form>
 </div>
 
+</div>
+
+<div class="@(currentTab == "exit" ? "" : "d-none")" id="dmPaneExit">
 <div class="chart-card mb-4">
     <div class="chart-header">
         <h6>@L["UL_ExitInterviews"]</h6>
@@ -288,6 +307,9 @@
     </form>
 </div>
 
+</div>
+
+<div class="@(currentTab == "jobproj" ? "" : "d-none")" id="dmPaneJobProj">
 <div class="chart-card mb-4">
     <div class="chart-header d-flex justify-content-between align-items-start flex-wrap gap-2">
         <div>
@@ -321,6 +343,8 @@
         </div>
         <button type="submit" class="dm-btn-submit"><i class="bi bi-cloud-upload me-1"></i>@L["DM_UploadJobProjectionsButton"]</button>
     </form>
+</div>
+
 </div>
 
 <div class="chart-card p-0" style="overflow:hidden">
@@ -393,6 +417,7 @@
                                           onsubmit="return confirm('@(isPeriod ? L["DM_DeleteConfirmPeriod"].Value : isJobProj ? L["DM_DeleteConfirmJobProj"].Value : L["DM_DeleteConfirmExit"].Value)')">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.PrimaryLogId"/>
+                                        <input type="hidden" name="tab" value="@currentTab"/>
                                         <button type="submit" class="dm-action-btn delete"><i class="bi bi-trash3"></i>@L["DM_Delete"]</button>
                                     </form>
                                 </div>
@@ -411,15 +436,15 @@
                     <ul class="pagination pagination-sm mb-0" style="gap:4px">
                         @if (currentPage > 1)
                         {
-                            <li class="page-item"><a class="page-link page-link-dm" href="?page=@(currentPage - 1)&sort=@currentSort&dir=@currentDir"><i class="bi bi-chevron-left"></i></a></li>
+                            <li class="page-item"><a class="page-link page-link-dm" href="?tab=@currentTab&page=@(currentPage - 1)&sort=@currentSort&dir=@currentDir"><i class="bi bi-chevron-left"></i></a></li>
                         }
                         @for (int p = Math.Max(1, currentPage - 2); p <= Math.Min(totalPages, currentPage + 2); p++)
                         {
-                            <li class="page-item @(p == currentPage ? "active" : "")"><a class="page-link page-link-dm" href="?page=@p&sort=@currentSort&dir=@currentDir">@p</a></li>
+                            <li class="page-item @(p == currentPage ? "active" : "")"><a class="page-link page-link-dm" href="?tab=@currentTab&page=@p&sort=@currentSort&dir=@currentDir">@p</a></li>
                         }
                         @if (currentPage < totalPages)
                         {
-                            <li class="page-item"><a class="page-link page-link-dm" href="?page=@(currentPage + 1)&sort=@currentSort&dir=@currentDir"><i class="bi bi-chevron-right"></i></a></li>
+                            <li class="page-item"><a class="page-link page-link-dm" href="?tab=@currentTab&page=@(currentPage + 1)&sort=@currentSort&dir=@currentDir"><i class="bi bi-chevron-right"></i></a></li>
                         }
                     </ul>
                 </nav>

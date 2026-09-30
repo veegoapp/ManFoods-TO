@@ -189,18 +189,20 @@ public class DashboardController : Controller
     }
 
     [RequireAdminAuth]
-    public async Task<IActionResult> Uploads(int page = 1, string sort = "date", string dir = "desc", string? success = null, string? error = null, string? warning = null)
+    public async Task<IActionResult> Uploads(int page = 1, string sort = "date", string dir = "desc", string? success = null, string? error = null, string? warning = null, string tab = UploadTabs.Monthly)
     {
         if (success != null) ViewData["Success"] = success;
         if (error != null) ViewData["Error"] = error;
         if (warning != null) ViewData["Warning"] = warning;
-        return await UploadsViewAsync(page, sort, dir);
+        return await UploadsViewAsync(page, sort, dir, tab);
     }
 
-    private async Task<IActionResult> UploadsViewAsync(int page = 1, string sort = "date", string dir = "desc")
+    private async Task<IActionResult> UploadsViewAsync(int page = 1, string sort = "date", string dir = "desc", string tab = UploadTabs.Monthly)
     {
         const int pageSize = 10;
-        var (items, total) = await _uploads.GetHistoryPagedAsync(page, pageSize, sort, dir);
+        tab = UploadTabs.Normalize(tab);
+        var (items, total) = await _uploads.GetHistoryPagedAsync(page, pageSize, sort, dir, UploadTabs.KindOf(tab));
+        ViewBag.Tab = tab;
         ViewBag.Sort = sort;
         ViewBag.Dir = dir;
         ViewBag.CurrentPage = page;
@@ -218,8 +220,8 @@ public class DashboardController : Controller
     // no visible error before (see the earlier direct-render fix); a query
     // parameter has no such dependency. This app has a single admin user, so
     // the exact exception message is shown as-is rather than a generic one.
-    private IActionResult RedirectToUploads(string? success = null, string? error = null, string? warning = null) =>
-        RedirectToAction("Uploads", new { success, error, warning });
+    private IActionResult RedirectToUploads(string? success = null, string? error = null, string? warning = null, string tab = UploadTabs.Monthly) =>
+        RedirectToAction("Uploads", new { success, error, warning, tab });
 
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> UploadPeriodData(MvcApp.Models.ViewModels.PeriodUploadViewModel vm)
@@ -265,34 +267,34 @@ public class DashboardController : Controller
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> UploadExitInterviews(MvcApp.Models.ViewModels.ExitInterviewUploadViewModel vm)
     {
-        if (!ModelState.IsValid || vm.File == null) return RedirectToUploads(error: _L["Msg_SelectFile"].Value);
+        if (!ModelState.IsValid || vm.File == null) return RedirectToUploads(error: _L["Msg_SelectFile"].Value, tab: UploadTabs.Exit);
         try
         {
             var email = HttpContext.Session.GetEmail();
             var (_, msg, _) = await _uploads.UploadExitInterviewsAsync(vm.File, email);
-            return RedirectToUploads(success: msg);
+            return RedirectToUploads(success: msg, tab: UploadTabs.Exit);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exit interviews upload failed");
-            return RedirectToUploads(error: string.Format(_L["Msg_ExitUploadFailed"].Value, ex.Message));
+            return RedirectToUploads(error: string.Format(_L["Msg_ExitUploadFailed"].Value, ex.Message), tab: UploadTabs.Exit);
         }
     }
 
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> UploadJobProjections(MvcApp.Models.ViewModels.JobProjectionUploadViewModel vm)
     {
-        if (!ModelState.IsValid || vm.File == null) return RedirectToUploads(error: _L["Msg_SelectFile"].Value);
+        if (!ModelState.IsValid || vm.File == null) return RedirectToUploads(error: _L["Msg_SelectFile"].Value, tab: UploadTabs.JobProjections);
         try
         {
             var email = HttpContext.Session.GetEmail();
             var (_, msg, _, warning) = await _uploads.UploadJobProjectionsAsync(vm.File, vm.Year, email);
-            return RedirectToUploads(success: msg, warning: warning);
+            return RedirectToUploads(success: msg, warning: warning, tab: UploadTabs.JobProjections);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Job projection upload failed for {Year}", vm.Year);
-            return RedirectToUploads(error: string.Format(_L["Msg_JobProjUploadFailed"].Value, ex.Message));
+            return RedirectToUploads(error: string.Format(_L["Msg_JobProjUploadFailed"].Value, ex.Message), tab: UploadTabs.JobProjections);
         }
     }
 
@@ -536,11 +538,11 @@ public class DashboardController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
-    public async Task<IActionResult> DeleteUploadLog(int id)
+    public async Task<IActionResult> DeleteUploadLog(int id, string tab = UploadTabs.Monthly)
     {
         await _uploads.DeleteLogAsync(id);
         TempData["Success"] = _L["Msg_UploadLogDeleted"].Value;
-        return RedirectToAction("Uploads");
+        return RedirectToAction("Uploads", new { tab = UploadTabs.Normalize(tab) });
     }
 
     [RequireAdminAuth]

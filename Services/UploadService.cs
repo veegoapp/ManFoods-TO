@@ -763,7 +763,7 @@ public class UploadService : IUploadService
         return (true, message, totalRows, warnings.Count > 0 ? string.Join(" ", warnings) : null);
     }
 
-    public async Task<(List<UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize, string sort = "date", string dir = "desc")
+    public async Task<(List<UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize, string sort = "date", string dir = "desc", string? kind = null)
     {
         var logs = await _db.UploadLogs.OrderByDescending(l => l.UploadDate)
             .Select(l => new { l.Id, l.FileType, l.FileName, l.Month, l.Year, l.UploadDate, l.UploadedBy, HasFile = l.FileContent != null })
@@ -810,8 +810,10 @@ public class UploadService : IUploadService
             });
         }
 
-        bool asc = dir == "asc";
-        IOrderedEnumerable<UploadHistoryItem> sorted = sort switch
+        // Optional per-tab filter: "period" | "exit_interviews" | "job_projections".
+        if (!string.IsNullOrEmpty(kind)) items = items.Where(i => i.Kind == kind).ToList();
+
+\1 = sort switch
         {
             "type" => asc ? items.OrderBy(i => i.Kind) : items.OrderByDescending(i => i.Kind),
             "name" => asc
