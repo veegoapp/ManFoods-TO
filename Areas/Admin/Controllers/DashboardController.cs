@@ -188,7 +188,7 @@ public class DashboardController : Controller
                 var planYear = year > 0 ? year : (await _planning.GetProjectionPeriodsAsync()).Select(p => p.Year).DefaultIfEmpty(0).Max();
                 if (planYear == 0) return NotFound();
                 return await DownloadWorkbookAsync(
-                    await _reports.BuildWorkforcePlanningReportAsync(planYear, months, store, jobs, role, assignedName),
+                    await _reports.BuildWorkforcePlanningReportAsync(planYear, months, store, jobs, role, assignedName, om, oc, soc, od),
                     $"Workforce_Planning_{planYear}.xlsx");
             }
             case "workforce":

@@ -20,7 +20,8 @@ public interface IReportService
     Task<XLWorkbook> BuildWorkforceReportAsync(int month, int year, string role, string? assignedName, string? store = null, string? om = null, string? oc = null, string? soc = null, string? od = null, int? sinceYear = null);
     /// <summary>Projected vs actual headcount by job and store for a year: Summary, By Month,
     /// By Store, By Job, a flat Data sheet and real Excel pivot tables built on it.</summary>
-    Task<XLWorkbook> BuildWorkforcePlanningReportAsync(int year, string? months, string? store, string? jobs, string role, string? assignedName);
+    Task<XLWorkbook> BuildWorkforcePlanningReportAsync(int year, string? months, string? store, string? jobs, string role, string? assignedName,
+        string? om = null, string? oc = null, string? soc = null, string? od = null);
     Task<XLWorkbook> BuildOcOmComparisonReportAsync(int month, int year, string role, string? assignedName, int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null);
     /// <summary>Period A vs Period B comparison — mirrors the Comparisons dashboard
     /// page's own two-sided filter shape (independent year/months/store/OM/OC/SOC/OD

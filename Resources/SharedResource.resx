@@ -1899,7 +1899,7 @@
   <data name="Set_Access_Area_workforce_planning" xml:space="preserve"><value>Workforce Planning</value></data>
   <data name="Set_Access_Desc_workforce_planning" xml:space="preserve"><value>The Workforce Planning page (projected vs actual headcount).</value></data>
   <data name="Rep_Title_WorkforcePlanning" xml:space="preserve"><value>Workforce Planning</value></data>
-  <data name="Rep_Desc_WorkforcePlanning" xml:space="preserve"><value>Projected vs actual headcount by job and store — summary, by month, by store, by job, the full data sheet and ready-made Excel pivot tables.</value></data>
+  <data name="Rep_Desc_WorkforcePlanning" xml:space="preserve"><value>Projected vs actual headcount by job and store — summary, by store, by job, by consultant &amp; manager, the full data sheet and ready-made Excel pivot tables.</value></data>
   <data name="Rep_AllJobs" xml:space="preserve"><value>All job titles</value></data>
   <data name="ST_PlanFill" xml:space="preserve"><value>Staffing</value></data>
   <data name="ST_PlanOf" xml:space="preserve"><value>of</value></data>
@@ -1917,9 +1917,40 @@
   <data name="Guide_WP_Kpis" xml:space="preserve"><value>Projected — the planned headcount for the month. Actual — active employees in the same stores that month. Gap — projected minus actual (positive = shortage, negative = surplus). Fill Rate — actual as a percentage of projected. Hiring Need — the estimated hires required. Months that have no uploaded roster yet (future months) show the projection only.</value></data>
   <data name="Guide_WP_ByJob" xml:space="preserve"><value>Planned and actual headcount side by side for each job title, with the numbers on the bars. Hover a bar to see the gap, fill rate and hiring need for that job.</value></data>
   <data name="Guide_WP_Trend" xml:space="preserve"><value>Projected headcount for every month of the selected year (dashed line) and actual headcount for the months that already have an uploaded roster (solid line), so you can see how reality compares with the plan as the year unfolds.</value></data>
-  <data name="Guide_WP_Stores" xml:space="preserve"><value>Every store with a projection for the month, largest shortage first. Status: On track (95% filled or more), Watch (85–95%), Understaffed (below 85%). Use the search box to find a store.</value></data>
+  <data name="Guide_WP_Stores" xml:space="preserve"><value>Every store with a projection for the month, largest shortage first. Status: On track (95% filled or more), Watch (85–95%), Understaffed (below 85%). Use the search box to find a store. Each store shows its Operation Consultant; click any column header to sort by it (click again to reverse). The search box also matches the consultant's name.</value></data>
   <data name="Guide_WP_HiringTitle" xml:space="preserve"><value>How Hiring Need Is Estimated</value></data>
   <data name="Guide_WP_HiringBody" xml:space="preserve"><value>For each store and job: hiring need = projected − actual + expected resignations, never below zero, then summed. Expected resignations are the average monthly resignations of the last 6 roster months for that store and job, taken from the uploaded Resignations files. A surplus in one job does not offset a shortage in another. If there is no resignation history yet, the hiring need equals the shortage. It is an estimate, not a guarantee.</value></data>
-  <data name="Guide_WP_FilterNote" xml:space="preserve"><value>Year and Month pick the period (only months that have a projection are listed). Store and Job title narrow every number, chart and table on the page. You only see the stores you have access to; the Workforce Planning row in Settings → Access decides whether that is your own stores or all of them.</value></data>
+  <data name="Guide_WP_FilterNote" xml:space="preserve"><value>Year and Month pick the period (only months that have a projection are listed). Store, Job title and the Operation Consultant / Manager / Senior Consultant / Director selectors narrow every number, chart and table on the page. You only see the stores you have access to; the Workforce Planning row in Settings → Access decides whether that is your own stores or all of them.</value></data>
   <data name="Guide_StoreProfile_StaffingPlan" xml:space="preserve"><value>The Staffing Plan card on the Workforce tab compares the store's projected headcount with its actual headcount, by job title, for the end of the selected period, and lists the projected headcount for the coming months. It appears only when a job projection has been uploaded for this store.</value></data>
+  <data name="WP_GrpSubOc" xml:space="preserve"><value>Projected vs actual headcount by consultant</value></data>
+  <data name="WP_GrpSubOd" xml:space="preserve"><value>Projected vs actual headcount by director</value></data>
+  <data name="WP_GrpSubOm" xml:space="preserve"><value>Projected vs actual headcount by manager</value></data>
+  <data name="WP_GrpSubSoc" xml:space="preserve"><value>Projected vs actual headcount by senior consultant</value></data>
+  <data name="Guide_WP_Groups" xml:space="preserve"><value>The same figures rolled up by the people responsible for the stores — Operation Consultants, Directors, Managers and Senior Consultants (taken from the Store Reference file). Each row shows how many stores it covers, their projected and actual headcount, the gap, the hiring need and a bar filled to the fill rate (green 95% or more, amber 85–95%, red below 85%). Click any header to sort. Only stores that are compared in the selected month are counted, and the page's store and job filters apply.</value></data>
+  <data name="WP_AllSoc" xml:space="preserve"><value>All Senior Operation Consultants</value></data>
+  <data name="WP_AllOd" xml:space="preserve"><value>All Operation Directors</value></data>
+  <data name="WP_In_OverallOk_T" xml:space="preserve"><value>Well staffed</value></data>
+  <data name="WP_In_OverallWatch_T" xml:space="preserve"><value>Slightly below plan</value></data>
+  <data name="WP_In_OverallLow_T" xml:space="preserve"><value>Understaffed</value></data>
+  <data name="WP_In_Overall_D" xml:space="preserve"><value>{0}% of the planned headcount is in place ({1} of {2}, gap {3}).</value></data>
+  <data name="WP_In_WorstStore_T" xml:space="preserve"><value>Most understaffed store</value></data>
+  <data name="WP_In_WorstStore_D" xml:space="preserve"><value>{0} — {1}% staffed, {2} short.</value></data>
+  <data name="WP_In_StoresBelow_T" xml:space="preserve"><value>Stores below plan</value></data>
+  <data name="WP_In_StoresBelow_D" xml:space="preserve"><value>{0} store(s) are below 85% and {1} are between 85% and 95% of their projection.</value></data>
+  <data name="WP_In_StoresOk_T" xml:space="preserve"><value>Every store is on track</value></data>
+  <data name="WP_In_StoresOk_D" xml:space="preserve"><value>All compared stores are at 95% or more of their projection.</value></data>
+  <data name="WP_In_WorstJob_T" xml:space="preserve"><value>Biggest shortage by job</value></data>
+  <data name="WP_In_WorstJob_D" xml:space="preserve"><value>{0} — {1} short ({2}% filled).</value></data>
+  <data name="WP_In_Hiring_T" xml:space="preserve"><value>Estimated hiring need</value></data>
+  <data name="WP_In_Hiring_D" xml:space="preserve"><value>About {0} hires are needed: {1} to close the shortage plus roughly {2} expected resignations a month (an estimate).</value></data>
+  <data name="WP_In_NoHiring_T" xml:space="preserve"><value>No hiring needed</value></data>
+  <data name="WP_In_NoHiring_D" xml:space="preserve"><value>Current staffing covers the projection and the expected resignations.</value></data>
+  <data name="WP_In_WorstOc_T" xml:space="preserve"><value>Consultant with the biggest shortage</value></data>
+  <data name="WP_In_WorstOc_D" xml:space="preserve"><value>{0}'s {1} store(s) are {2}% staffed ({3} short).</value></data>
+  <data name="WP_In_Surplus_T" xml:space="preserve"><value>Stores above projection</value></data>
+  <data name="WP_In_Surplus_D" xml:space="preserve"><value>{0} store(s) are more than 10% above their projection.</value></data>
+  <data name="WP_In_Outlook_T" xml:space="preserve"><value>Next month's plan</value></data>
+  <data name="WP_In_Outlook_D" xml:space="preserve"><value>Plan for {0}: {1} people ({2} compared with now).</value></data>
+  <data name="WP_In_NoData" xml:space="preserve"><value>No insights for the selected filters.</value></data>
+  <data name="Guide_WP_Insights" xml:space="preserve"><value>Automatic takeaways computed from the numbers on this page for the current filters: overall staffing, the most understaffed store, the biggest shortage by job, how many stores are below plan, the estimated hiring need, the consultant with the biggest shortage, stores above projection and next month's plan. They update whenever you change a filter.</value></data>
 </root>

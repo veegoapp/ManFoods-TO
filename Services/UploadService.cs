@@ -929,6 +929,7 @@ public class UploadService : IUploadService
                 await _db.SaveChangesAsync();
                 await tx.CommitAsync();
                 StoreAccessService.InvalidateCache();
+                WorkforcePlanningService.InvalidateCache(); // the consultant shown per store comes from this file
                 FireAndForgetDetection(month, year, string.Format(_L["Msg_JobStoreReference"].Value, new DateTime(year, month, 1).ToString("MMMM yyyy")));
                 var storeWarning = await BuildUnmatchedRoleEmailWarningAsync(storeRecords);
                 return (true, string.Format(_L["Msg_UpdatedStoreReference"].Value, new DateTime(year, month, 1).ToString("MMMM yyyy"), storeRecords.Count), storeWarning);

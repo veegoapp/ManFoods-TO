@@ -60,6 +60,47 @@ public class WorkforcePlanningService : IWorkforcePlanningService
     private static string Norm(string? s) => Regex.Replace((s ?? "").Trim(), @"\s+", " ").ToLowerInvariant();
     private static string AttrKey(string store, string job) => Norm(store) + "\u001f" + Norm(job);
 
+    // The people responsible for each store, from the Store Reference file: the entry for the
+    // planned period if there is one, else the latest earlier entry, else the latest overall.
+    private sealed record Leaders(string Oc, string Om, string Soc, string Od);
+
+    private async Task<Dictionary<string, Leaders>> GetLeadershipAsync(int year, int month)
+    {
+        var key = $"planning:leaders:{year}:{month}";
+        if (_cache.TryGetValue(key, out Dictionary<string, Leaders>? cached) && cached != null) return cached;
+
+        var map = new Dictionary<string, Leaders>(StringComparer.OrdinalIgnoreCase);
+        var target = year * 100 + month;
+        var rows = await _db.StoreReferences.AsNoTracking()
+            .Select(s => new { s.StoreName, s.OperationConsultant, s.OperationManager, s.SeniorOperationConsultant, s.OperationDirector, Period = s.Year * 100 + s.Month })
+            .ToListAsync();
+        foreach (var g in rows.GroupBy(r => r.StoreName.Trim(), StringComparer.OrdinalIgnoreCase))
+        {
+            var pick = g.Where(r => r.Period == target).FirstOrDefault()
+                    ?? g.Where(r => r.Period < target).OrderByDescending(r => r.Period).FirstOrDefault()
+                    ?? g.OrderByDescending(r => r.Period).First();
+            map[g.Key] = new Leaders((pick.OperationConsultant ?? "").Trim(), (pick.OperationManager ?? "").Trim(),
+                (pick.SeniorOperationConsultant ?? "").Trim(), (pick.OperationDirector ?? "").Trim());
+        }
+        _cache.Set(key, map, CacheOptions());
+        return map;
+    }
+
+    // Comma-separated leadership filters -> case-insensitive sets (null = not filtering on that role).
+    private static HashSet<string>? LeaderSet(string? csv)
+    {
+        var list = MultiValueFilter.Split(csv);
+        return list == null ? null : new HashSet<string>(list, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static bool LeadersMatch(Leaders? l, HashSet<string>? om, HashSet<string>? oc, HashSet<string>? soc, HashSet<string>? od)
+    {
+        if (om == null && oc == null && soc == null && od == null) return true;
+        if (l == null) return false; // a store with no Store Reference entry can't match a leadership filter
+        return (om == null || om.Contains(l.Om)) && (oc == null || oc.Contains(l.Oc))
+            && (soc == null || soc.Contains(l.Soc)) && (od == null || od.Contains(l.Od));
+    }
+
     private async Task<List<int>> GetRosterPeriodKeysAsync()
     {
         const string key = "planning:roster-periods";
@@ -132,12 +173,14 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         return data;
     }
 
-    public Task<WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName) =>
-        BuildAsync(year, month, stores, jobs, role, assignedName, strict: false, includeTrend: true, includeHiring: true);
+    public Task<WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName,
+        string? om = null, string? oc = null, string? soc = null, string? od = null) =>
+        BuildAsync(year, month, stores, jobs, role, assignedName, strict: false, includeTrend: true, includeHiring: true, om: om, oc: oc, soc: soc, od: od);
 
     // strict: use exactly the requested year/month or return "no data" (the page itself
     // falls back to a sensible default period instead).
-    private async Task<WorkforcePlanningDto> BuildAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName, bool strict, bool includeTrend, bool includeHiring = false)
+    private async Task<WorkforcePlanningDto> BuildAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName, bool strict, bool includeTrend, bool includeHiring = false,
+        string? om = null, string? oc = null, string? soc = null, string? od = null)
     {
         var dto = new WorkforcePlanningDto();
         var years = await GetYearsAsync();
@@ -159,9 +202,12 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         var jobFilter = MultiValueFilter.Split(jobs);
         var jobFilterSet = jobFilter == null ? null : new HashSet<string>(jobFilter, StringComparer.OrdinalIgnoreCase);
 
+        var omSet = LeaderSet(om); var ocSet = LeaderSet(oc); var socSet = LeaderSet(soc); var odSet = LeaderSet(od);
+        var leaders = new Dictionary<string, Leaders>(StringComparer.OrdinalIgnoreCase); // filled once the month is known
         bool StoreOk(int i) =>
             (accessibleSet == null || accessibleSet.Contains(data.Stores[i])) &&
-            (storeFilterSet == null || storeFilterSet.Contains(data.Stores[i]));
+            (storeFilterSet == null || storeFilterSet.Contains(data.Stores[i])) &&
+            LeadersMatch(leaders.TryGetValue(data.Stores[i].Trim(), out var lead) ? lead : null, omSet, ocSet, socSet, odSet);
         bool JobOk(int j) => jobFilterSet == null || jobFilterSet.Contains(data.Jobs[j]);
 
         // Filter dropdown options: only what the caller can see in this year's projection.
@@ -178,6 +224,19 @@ public class WorkforcePlanningService : IWorkforcePlanningService
               : actualMonths.Intersect(projMonths).DefaultIfEmpty(projMonths.Count > 0 ? projMonths[^1] : 1).Max();
         dto.Month = m;
         dto.HasActual = actualMonths.Contains(m);
+
+        // The people responsible for each store this month: drives the leadership filters, their
+        // dropdown options and the roll-up tables below.
+        leaders = await GetLeadershipAsync(y, m);
+        var visibleLeaders = data.Projected.Select(c => c.Store).Distinct()
+            .Where(i => accessibleSet == null || accessibleSet.Contains(data.Stores[i]))
+            .Select(i => leaders.TryGetValue(data.Stores[i].Trim(), out var vl) ? vl : null).Where(vl => vl != null).Select(vl => vl!).ToList();
+        List<string> Options(Func<Leaders, string> pick) => visibleLeaders.Select(pick).Where(n => !string.IsNullOrWhiteSpace(n))
+            .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
+        dto.OperationConsultants = Options(l => l.Oc);
+        dto.OperationManagers = Options(l => l.Om);
+        dto.SeniorOperationConsultants = Options(l => l.Soc);
+        dto.OperationDirectors = Options(l => l.Od);
 
         // For a month, only stores that actually have projection rows are compared,
         // so a store nobody planned for never shows up as a "surplus".
@@ -213,6 +272,8 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         dto.ByJob = sel.ByJob.Select(kv => Row(data.Jobs[kv.Key], kv.Value, dto.HasActual))
             .OrderByDescending(r => r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
 
+        foreach (var r in dto.ByStore) r.OperationConsultant = leaders.TryGetValue(r.Name.Trim(), out var l) ? l.Oc : "";
+
         var actualTotal = sel.Actual ?? 0;
         dto.Kpis = new PlanningKpiDto
         {
@@ -226,6 +287,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
 
         // Hiring need: per store+job the shortage plus expected resignations, never below
         // zero (a surplus in one job can't cover another), summed and rounded for display.
+        Dictionary<string, double[]>? storeNeed = null; // store -> [need, expected resignations], unrounded
         if (includeHiring && dto.HasActual)
         {
             var attrition = await GetAttritionAsync(y, m);
@@ -245,6 +307,40 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             foreach (var r in dto.ByJob) if (byJobNeed.TryGetValue(r.Name, out var v)) { r.HiringNeed = RoundNeed(v[0]); r.ExpectedAttrition = Math.Round(v[1], 1); }
             dto.Kpis.HiringNeed = RoundNeed(totalNeed);
             dto.Kpis.ExpectedAttrition = Math.Round(totalAttr, 1);
+            storeNeed = byStoreNeed;
+        }
+
+        // Roll the compared stores up by the people responsible for them. Figures are summed from
+        // the stores (hiring need from the unrounded per-store values), so each table adds up.
+        if (includeHiring)
+        {
+            List<PlanningRowDto> RollUp(Func<Leaders, string> pick)
+            {
+                var acc = new Dictionary<string, (int Stores, int P, int A, double Need, double Attr)>(StringComparer.OrdinalIgnoreCase);
+                foreach (var r in dto.ByStore)
+                {
+                    if (!leaders.TryGetValue(r.Name.Trim(), out var l)) continue;
+                    var name = pick(l);
+                    if (string.IsNullOrWhiteSpace(name)) continue;
+                    acc.TryGetValue(name, out var a);
+                    double need = 0, attr = 0;
+                    if (storeNeed != null && storeNeed.TryGetValue(r.Name, out var sn)) { need = sn[0]; attr = sn[1]; }
+                    acc[name] = (a.Stores + 1, a.P + r.Projected, a.A + (dto.HasActual ? r.Actual : 0), a.Need + need, a.Attr + attr);
+                }
+                return acc.Select(kv =>
+                    {
+                        var row = Row(kv.Key, new[] { kv.Value.P, kv.Value.A }, dto.HasActual);
+                        row.StoreCount = kv.Value.Stores;
+                        row.HiringNeed = RoundNeed(kv.Value.Need);
+                        row.ExpectedAttrition = Math.Round(kv.Value.Attr, 1);
+                        return row;
+                    })
+                    .OrderByDescending(r => dto.HasActual ? r.Gap : r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            }
+            dto.ByOperationConsultant = RollUp(l => l.Oc);
+            dto.ByOperationDirector = RollUp(l => l.Od);
+            dto.ByOperationManager = RollUp(l => l.Om);
+            dto.BySeniorOperationConsultant = RollUp(l => l.Soc);
         }
 
         foreach (var mon in includeTrend ? projMonths : new List<int>())
@@ -280,7 +376,8 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         return plan;
     }
 
-    public async Task<List<PlanningDetailRow>> GetDetailAsync(int year, IReadOnlyCollection<int>? months, string? stores, string? jobs, string role, string? assignedName)
+    public async Task<List<PlanningDetailRow>> GetDetailAsync(int year, IReadOnlyCollection<int>? months, string? stores, string? jobs, string role, string? assignedName,
+        string? om = null, string? oc = null, string? soc = null, string? od = null)
     {
         var rows = new List<PlanningDetailRow>();
         if (!(await GetYearsAsync()).Contains(year)) return rows;
@@ -292,14 +389,20 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         var storeSet = storeFilter == null ? null : new HashSet<string>(storeFilter, StringComparer.OrdinalIgnoreCase);
         var jobFilter = MultiValueFilter.Split(jobs);
         var jobSet = jobFilter == null ? null : new HashSet<string>(jobFilter, StringComparer.OrdinalIgnoreCase);
-        bool StoreOk(int i) => (accessibleSet == null || accessibleSet.Contains(data.Stores[i])) && (storeSet == null || storeSet.Contains(data.Stores[i]));
+        var omSet = LeaderSet(om); var ocSet = LeaderSet(oc); var socSet = LeaderSet(soc); var odSet = LeaderSet(od);
+        var leadersByMonth = new Dictionary<int, Dictionary<string, Leaders>>();
+        foreach (var mon in data.Projected.Select(c => c.Month).Distinct())
+            leadersByMonth[mon] = await GetLeadershipAsync(year, mon);
+        bool StoreOk(int i, int mon) =>
+            (accessibleSet == null || accessibleSet.Contains(data.Stores[i])) && (storeSet == null || storeSet.Contains(data.Stores[i])) &&
+            LeadersMatch(leadersByMonth.TryGetValue(mon, out var lm) && lm.TryGetValue(data.Stores[i].Trim(), out var lead) ? lead : null, omSet, ocSet, socSet, odSet);
         bool JobOk(int j) => jobSet == null || jobSet.Contains(data.Jobs[j]);
 
         var actualMonths = data.Actual.Select(c => c.Month).Distinct().ToHashSet();
         var wanted = months is { Count: > 0 } ? months.ToHashSet() : null;
 
         // Only stores planned for a month are compared in that month (same rule as the page).
-        var planned = data.Projected.Where(c => (wanted == null || wanted.Contains(c.Month)) && StoreOk(c.Store))
+        var planned = data.Projected.Where(c => (wanted == null || wanted.Contains(c.Month)) && StoreOk(c.Store, c.Month))
             .Select(c => (c.Month, c.Store)).ToHashSet();
         var cells = new Dictionary<(int Month, int Store, int Job), int[]>(); // [projected, actual]
         foreach (var c in data.Projected)
@@ -320,6 +423,12 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                 Year = year, Month = kv.Key.Month, Store = data.Stores[kv.Key.Store], Job = data.Jobs[kv.Key.Job],
                 Projected = kv.Value[0], Actual = actualMonths.Contains(kv.Key.Month) ? kv.Value[1] : null,
             });
+            if (leadersByMonth.TryGetValue(kv.Key.Month, out var lm) && lm.TryGetValue(data.Stores[kv.Key.Store].Trim(), out var lead))
+            {
+                var row = rows[^1];
+                row.OperationConsultant = lead.Oc; row.OperationManager = lead.Om;
+                row.SeniorOperationConsultant = lead.Soc; row.OperationDirector = lead.Od;
+            }
         }
         // Expected resignations and hiring need for months that have a roster.
         foreach (var month in rows.Where(r => r.Actual.HasValue).Select(r => r.Month).Distinct().ToList())

@@ -1905,7 +1905,7 @@
   <data name="Set_Access_Area_workforce_planning" xml:space="preserve"><value>تخطيط القوى العاملة</value></data>
   <data name="Set_Access_Desc_workforce_planning" xml:space="preserve"><value>صفحة تخطيط القوى العاملة (المتوقّع مقابل الفعلي).</value></data>
   <data name="Rep_Title_WorkforcePlanning" xml:space="preserve"><value>تخطيط القوى العاملة</value></data>
-  <data name="Rep_Desc_WorkforcePlanning" xml:space="preserve"><value>العدد المتوقّع مقابل الفعلي حسب الوظيفة والفرع — ملخص، وحسب الشهر والفرع والوظيفة، وورقة البيانات الكاملة وجداول Pivot جاهزة في Excel.</value></data>
+  <data name="Rep_Desc_WorkforcePlanning" xml:space="preserve"><value>العدد المتوقّع مقابل الفعلي حسب الوظيفة والفرع — ملخص، وحسب الفرع والوظيفة والاستشاري والمدير، وورقة البيانات الكاملة وجداول Pivot جاهزة في Excel.</value></data>
   <data name="Rep_AllJobs" xml:space="preserve"><value>كل الوظائف</value></data>
   <data name="ST_PlanFill" xml:space="preserve"><value>الاكتمال</value></data>
   <data name="ST_PlanOf" xml:space="preserve"><value>من</value></data>
@@ -1923,9 +1923,40 @@
   <data name="Guide_WP_Kpis" xml:space="preserve"><value>المتوقّع — العدد المخطّط للشهر. الفعلي — الموظفون النشطون في الفروع نفسها في ذلك الشهر. الفجوة — المتوقّع ناقص الفعلي (الموجب = عجز، والسالب = زيادة). نسبة الاكتمال — الفعلي كنسبة مئوية من المتوقّع. احتياج التعيين — عدد التعيينات التقديري المطلوب. الأشهر التي لم تُرفع لها بيانات موظفين بعد (الأشهر المستقبلية) يظهر فيها التوقّع فقط.</value></data>
   <data name="Guide_WP_ByJob" xml:space="preserve"><value>العدد المخطّط والعدد الفعلي جنبًا إلى جنب لكل مسمى وظيفي، مع الأرقام على الأعمدة. مرّر المؤشر فوق عمود لترى الفجوة ونسبة الاكتمال واحتياج التعيين لتلك الوظيفة.</value></data>
   <data name="Guide_WP_Trend" xml:space="preserve"><value>العدد المتوقّع لكل شهر من السنة المختارة (الخط المتقطع) والعدد الفعلي للأشهر التي لها بيانات موظفين مرفوعة (الخط المتصل)، لترى كيف يقارن الواقع بالخطة مع مرور السنة.</value></data>
-  <data name="Guide_WP_Stores" xml:space="preserve"><value>كل فرع له توقّع في الشهر، مرتبة من الأكبر عجزًا. الحالة: في المسار (اكتمال 95% فأكثر)، تحت المراقبة (85–95%)، نقص حاد (أقل من 85%). استخدم مربع البحث للوصول إلى فرع.</value></data>
+  <data name="Guide_WP_Stores" xml:space="preserve"><value>كل فرع له توقّع في الشهر، مرتبة من الأكبر عجزًا. الحالة: في المسار (اكتمال 95% فأكثر)، تحت المراقبة (85–95%)، نقص حاد (أقل من 85%). استخدم مربع البحث للوصول إلى فرع. يظهر بجانب كل فرع استشاري العمليات الخاص به؛ انقر على عنوان أي عمود للترتيب حسبه (وانقر مرة أخرى لعكس الاتجاه). ويطابق مربع البحث اسم الاستشاري أيضًا.</value></data>
   <data name="Guide_WP_HiringTitle" xml:space="preserve"><value>كيف يُقدَّر احتياج التعيين</value></data>
   <data name="Guide_WP_HiringBody" xml:space="preserve"><value>لكل فرع ووظيفة: احتياج التعيين = المتوقّع − الفعلي + الاستقالات المتوقّعة، ولا يقل عن صفر، ثم تُجمع القيم. الاستقالات المتوقّعة هي متوسط الاستقالات الشهرية لآخر 6 أشهر من بيانات الموظفين لذلك الفرع وتلك الوظيفة، مأخوذة من ملفات الاستقالات المرفوعة. الزيادة في وظيفة لا تغطي العجز في وظيفة أخرى. وإذا لم يوجد سجل استقالات بعد، يساوي الاحتياج العجز. هذا تقدير وليس ضمانًا.</value></data>
-  <data name="Guide_WP_FilterNote" xml:space="preserve"><value>تحدد السنة والشهر الفترة (تُعرض فقط الأشهر التي لها توقّع). يضيّق الفرع والمسمى الوظيفي كل رقم ورسم وجدول في الصفحة. ترى فقط الفروع المتاحة لك؛ وصف «تخطيط القوى العاملة» في الإعدادات ← الوصول يحدد هل هي فروعك فقط أم كلها.</value></data>
+  <data name="Guide_WP_FilterNote" xml:space="preserve"><value>تحدد السنة والشهر الفترة (تُعرض فقط الأشهر التي لها توقّع). يضيّق الفرع والمسمى الوظيفي واستشاري العمليات والمدير والاستشاري الأول ومدير أول التشغيل كل رقم ورسم وجدول في الصفحة. ترى فقط الفروع المتاحة لك؛ وصف «تخطيط القوى العاملة» في الإعدادات ← الوصول يحدد هل هي فروعك فقط أم كلها.</value></data>
   <data name="Guide_StoreProfile_StaffingPlan" xml:space="preserve"><value>تقارن بطاقة خطة التوظيف في تبويب القوى العاملة بين العدد المتوقّع للفرع وعدده الفعلي حسب المسمى الوظيفي في نهاية الفترة المختارة، وتعرض العدد المتوقّع للأشهر القادمة. تظهر فقط عند رفع توقّعات وظائف لهذا الفرع.</value></data>
+  <data name="WP_GrpSubOc" xml:space="preserve"><value>المتوقّع مقابل الفعلي حسب الاستشاري</value></data>
+  <data name="WP_GrpSubOd" xml:space="preserve"><value>المتوقّع مقابل الفعلي حسب المدير الأول</value></data>
+  <data name="WP_GrpSubOm" xml:space="preserve"><value>المتوقّع مقابل الفعلي حسب المدير</value></data>
+  <data name="WP_GrpSubSoc" xml:space="preserve"><value>المتوقّع مقابل الفعلي حسب الاستشاري الأول</value></data>
+  <data name="Guide_WP_Groups" xml:space="preserve"><value>الأرقام نفسها مجمّعة حسب المسؤولين عن الفروع — استشاريو العمليات والمديرون ومديرو الإدارة والاستشاريون الأوائل (من ملف الفروع). يعرض كل صف عدد الفروع التي يغطيها، والعدد المتوقّع والفعلي لها، والفجوة، واحتياج التعيين، وشريطًا ممتلئًا بنسبة الاكتمال (أخضر 95% فأكثر، كهرماني 85–95%، أحمر أقل من 85%). انقر على أي عنوان للترتيب. تُحتسب فقط الفروع المقارَنة في الشهر المحدد، وتنطبق فلاتر الفرع والوظيفة في الصفحة.</value></data>
+  <data name="WP_AllSoc" xml:space="preserve"><value>كل استشاريي أول العمليات</value></data>
+  <data name="WP_AllOd" xml:space="preserve"><value>كل مديري أول التشغيل</value></data>
+  <data name="WP_In_OverallOk_T" xml:space="preserve"><value>التوظيف جيد</value></data>
+  <data name="WP_In_OverallWatch_T" xml:space="preserve"><value>أقل قليلًا من الخطة</value></data>
+  <data name="WP_In_OverallLow_T" xml:space="preserve"><value>نقص في التوظيف</value></data>
+  <data name="WP_In_Overall_D" xml:space="preserve"><value>{0}% من العدد المخطّط متوفر ({1} من {2}، الفجوة {3}).</value></data>
+  <data name="WP_In_WorstStore_T" xml:space="preserve"><value>أكثر فرع نقصًا</value></data>
+  <data name="WP_In_WorstStore_D" xml:space="preserve"><value>{0} — مكتمل {1}%، ناقص {2}.</value></data>
+  <data name="WP_In_StoresBelow_T" xml:space="preserve"><value>فروع أقل من الخطة</value></data>
+  <data name="WP_In_StoresBelow_D" xml:space="preserve"><value>{0} فرع أقل من 85%، و{1} فرع بين 85% و95% من المتوقّع.</value></data>
+  <data name="WP_In_StoresOk_T" xml:space="preserve"><value>كل الفروع في المسار</value></data>
+  <data name="WP_In_StoresOk_D" xml:space="preserve"><value>كل الفروع المقارَنة عند 95% أو أكثر من المتوقّع.</value></data>
+  <data name="WP_In_WorstJob_T" xml:space="preserve"><value>أكبر نقص حسب الوظيفة</value></data>
+  <data name="WP_In_WorstJob_D" xml:space="preserve"><value>{0} — ناقص {1} (مكتمل {2}%).</value></data>
+  <data name="WP_In_Hiring_T" xml:space="preserve"><value>احتياج التعيين التقديري</value></data>
+  <data name="WP_In_Hiring_D" xml:space="preserve"><value>المطلوب تقريبًا {0} تعيين: {1} لسد النقص، وحوالي {2} استقالة متوقعة في الشهر (تقدير).</value></data>
+  <data name="WP_In_NoHiring_T" xml:space="preserve"><value>لا حاجة لتعيين</value></data>
+  <data name="WP_In_NoHiring_D" xml:space="preserve"><value>العدد الحالي يغطي المتوقّع والاستقالات المتوقعة.</value></data>
+  <data name="WP_In_WorstOc_T" xml:space="preserve"><value>الاستشاري الأكثر نقصًا</value></data>
+  <data name="WP_In_WorstOc_D" xml:space="preserve"><value>فروع {0} ({1} فرع) مكتملة {2}% (ناقص {3}).</value></data>
+  <data name="WP_In_Surplus_T" xml:space="preserve"><value>فروع فوق المتوقّع</value></data>
+  <data name="WP_In_Surplus_D" xml:space="preserve"><value>{0} فرع أعلى من المتوقّع بأكثر من 10%.</value></data>
+  <data name="WP_In_Outlook_T" xml:space="preserve"><value>خطة الشهر القادم</value></data>
+  <data name="WP_In_Outlook_D" xml:space="preserve"><value>خطة {0}: {1} موظف ({2} مقارنة بالحالي).</value></data>
+  <data name="WP_In_NoData" xml:space="preserve"><value>لا توجد تحليلات للفلاتر المحددة.</value></data>
+  <data name="Guide_WP_Insights" xml:space="preserve"><value>استنتاجات تلقائية محسوبة من أرقام هذه الصفحة وفق الفلاتر الحالية: التوظيف بوجه عام، وأكثر فرع نقصًا، وأكبر نقص حسب الوظيفة، وعدد الفروع الأقل من الخطة، واحتياج التعيين التقديري، والاستشاري الأكثر نقصًا، والفروع الأعلى من المتوقّع، وخطة الشهر القادم. وتتحدّث عند تغيير أي فلتر.</value></data>
 </root>

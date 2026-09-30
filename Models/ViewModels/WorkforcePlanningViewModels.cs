@@ -14,6 +14,12 @@ public class WorkforcePlanningDto
     public int Month { get; set; }
     public List<string> Stores { get; set; } = new();
     public List<string> Jobs { get; set; } = new();
+    /// <summary>Filter options: the people responsible for the stores the caller can see
+    /// that have a projection this year (from the Store Reference file).</summary>
+    public List<string> OperationConsultants { get; set; } = new();
+    public List<string> OperationManagers { get; set; } = new();
+    public List<string> SeniorOperationConsultants { get; set; } = new();
+    public List<string> OperationDirectors { get; set; } = new();
     /// <summary>Whether the selected month has an uploaded active-employee roster
     /// (future months only have a projection).</summary>
     public bool HasActual { get; set; }
@@ -23,6 +29,12 @@ public class WorkforcePlanningDto
     public PlanningKpiDto Kpis { get; set; } = new();
     public List<PlanningRowDto> ByJob { get; set; } = new();
     public List<PlanningRowDto> ByStore { get; set; } = new();
+    /// <summary>The same projected-vs-actual figures rolled up by the people responsible for the stores
+    /// (from the Store Reference file), for the compared stores only.</summary>
+    public List<PlanningRowDto> ByOperationConsultant { get; set; } = new();
+    public List<PlanningRowDto> ByOperationDirector { get; set; } = new();
+    public List<PlanningRowDto> ByOperationManager { get; set; } = new();
+    public List<PlanningRowDto> BySeniorOperationConsultant { get; set; } = new();
     public List<PlanningTrendPointDto> Trend { get; set; } = new();
 }
 
@@ -53,6 +65,10 @@ public class PlanningRowDto
     public string Status { get; set; } = "none";
     public int HiringNeed { get; set; }
     public double ExpectedAttrition { get; set; }
+    /// <summary>Operation Consultant of the store (only filled for store rows).</summary>
+    public string OperationConsultant { get; set; } = "";
+    /// <summary>Number of stores rolled up into the row (only for the consultant/manager tables).</summary>
+    public int StoreCount { get; set; }
 }
 
 public class PlanningTrendPointDto
@@ -77,6 +93,11 @@ public class PlanningDetailRow
     public double? ExpectedAttrition { get; set; }
     /// <summary>max(0, projected − actual + expected resignations); null without a roster.</summary>
     public double? HiringNeed { get; set; }
+    /// <summary>The people responsible for the store that month (Store Reference file).</summary>
+    public string OperationConsultant { get; set; } = "";
+    public string OperationManager { get; set; } = "";
+    public string SeniorOperationConsultant { get; set; } = "";
+    public string OperationDirector { get; set; } = "";
 }
 
 /// <summary>A store's staffing fill for one month — drives the badge on the Stores page cards.</summary>

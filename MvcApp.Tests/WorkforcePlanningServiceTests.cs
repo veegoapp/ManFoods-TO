@@ -182,6 +182,107 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task StoreRows_CarryTheOperationConsultant_PreferringThePlannedPeriod()
+    {
+        var db = NewDb();
+        Proj(db, 3, "1 | A", "Crew", 10); Proj(db, 3, "2 | B", "Crew", 10); Proj(db, 3, "3 | C", "Crew", 10);
+        db.StoreReferences.Add(new StoreReference { Year = 2026, Month = 2, StoreName = "1 | A", OperationConsultant = "Old OC" });
+        db.StoreReferences.Add(new StoreReference { Year = 2026, Month = 3, StoreName = "1 | A", OperationConsultant = "March OC" });
+        db.StoreReferences.Add(new StoreReference { Year = 2026, Month = 2, StoreName = "2 | B", OperationConsultant = "Feb OC" }); // no March entry -> latest before
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 3, null, null, "Admin", null);
+
+        Assert.Equal("March OC", dto.ByStore.Single(r => r.Name == "1 | A").OperationConsultant);
+        Assert.Equal("Feb OC", dto.ByStore.Single(r => r.Name == "2 | B").OperationConsultant);
+        Assert.Equal("", dto.ByStore.Single(r => r.Name == "3 | C").OperationConsultant);
+    }
+
+    [Fact]
+    public async Task RollUps_SumTheStoresUnderEachConsultantManagerAndDirector()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "2 | B", "Crew", 20); Proj(db, 1, "3 | C", "Crew", 6); Proj(db, 1, "4 | D", "Crew", 5);
+        Active(db, 1, "1 | A", "Crew", 8); Active(db, 1, "2 | B", "Crew", 20); Active(db, 1, "3 | C", "Crew", 3); Active(db, 1, "4 | D", "Crew", 5);
+        db.StoreReferences.AddRange(
+            new StoreReference { Year = 2026, Month = 1, StoreName = "1 | A", OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+            new StoreReference { Year = 2026, Month = 1, StoreName = "2 | B", OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+            new StoreReference { Year = 2026, Month = 1, StoreName = "3 | C", OperationConsultant = "Bob", OperationManager = "Mona", OperationDirector = "Eve", SeniorOperationConsultant = "Sam" });
+        // store 4 has no Store Reference entry at all -> left out of every roll-up
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        var amy = Assert.Single(dto.ByOperationConsultant, r => r.Name == "Amy");
+        Assert.Equal(2, amy.StoreCount); Assert.Equal(30, amy.Projected); Assert.Equal(28, amy.Actual); Assert.Equal(2, amy.Gap);
+        Assert.Equal(2, amy.HiringNeed);                 // store 2 is at plan (0), store 1 short by 2
+        var bob = Assert.Single(dto.ByOperationConsultant, r => r.Name == "Bob");
+        Assert.Equal(3, bob.Gap); Assert.Equal("critical", bob.Status); // 3 of 6 = 50%
+
+        var mona = Assert.Single(dto.ByOperationManager);
+        Assert.Equal(3, mona.StoreCount); Assert.Equal(36, mona.Projected); Assert.Equal(31, mona.Actual);
+        Assert.Equal(2, dto.ByOperationDirector.Count);
+        Assert.Equal("Eve", dto.ByOperationDirector[0].Name);              // shortage 3 beats Dan's 2: largest shortage first
+    }
+
+    private static async Task<AppDbContext> LeadershipDb()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "2 | B", "Crew", 20); Proj(db, 1, "3 | C", "Crew", 6); Proj(db, 1, "4 | D", "Crew", 5);
+        Active(db, 1, "1 | A", "Crew", 8); Active(db, 1, "2 | B", "Crew", 20); Active(db, 1, "3 | C", "Crew", 3); Active(db, 1, "4 | D", "Crew", 5);
+        db.StoreReferences.AddRange(
+            new StoreReference { Year = 2026, Month = 1, StoreName = "1 | A", OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+            new StoreReference { Year = 2026, Month = 1, StoreName = "2 | B", OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+            new StoreReference { Year = 2026, Month = 1, StoreName = "3 | C", OperationConsultant = "Bob", OperationManager = "Mona", OperationDirector = "Eve", SeniorOperationConsultant = "Sue" });
+        await db.SaveChangesAsync();
+        return db;
+    }
+
+    [Fact]
+    public async Task LeadershipFilters_NarrowEveryFigure_AndListTheirOptions()
+    {
+        var db = await LeadershipDb();
+        var svc = NewService(db);
+
+        var all = await svc.GetAsync(2026, 1, null, null, "Admin", null);
+        Assert.Equal(new[] { "Amy", "Bob" }, all.OperationConsultants);
+        Assert.Equal(new[] { "Mona" }, all.OperationManagers);
+        Assert.Equal(new[] { "Sam", "Sue" }, all.SeniorOperationConsultants);
+        Assert.Equal(new[] { "Dan", "Eve" }, all.OperationDirectors);
+
+        var amy = await svc.GetAsync(2026, 1, null, null, "Admin", null, oc: "Amy");
+        Assert.Equal(30, amy.Kpis.Projected);
+        Assert.Equal(new[] { "1 | A", "2 | B" }, amy.ByStore.Select(r => r.Name).OrderBy(n => n));
+        Assert.Equal(30, amy.Trend.Single(t => t.Month == 1).Projected);
+        Assert.Equal("Amy", Assert.Single(amy.ByOperationConsultant).Name);
+
+        // Filters combine (AND), and a comma list means "any of".
+        Assert.Empty((await svc.GetAsync(2026, 1, null, null, "Admin", null, oc: "Amy", od: "Eve")).ByStore);
+        Assert.Equal(3, (await svc.GetAsync(2026, 1, null, null, "Admin", null, oc: "Amy,Bob")).ByStore.Count);
+        Assert.Equal(2, (await svc.GetAsync(2026, 1, null, null, "Admin", null, soc: "Sam")).ByStore.Count);
+    }
+
+    [Fact]
+    public async Task LeadershipFilter_ExcludesStoresWithoutAStoreReferenceEntry()
+    {
+        var db = await LeadershipDb();
+        var withFilter = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null, om: "Mona");
+        Assert.DoesNotContain(withFilter.ByStore, r => r.Name == "4 | D");   // store 4 has no Store Reference entry
+        Assert.Contains((await NewService(db).GetAsync(2026, 1, null, null, "Admin", null)).ByStore, r => r.Name == "4 | D");
+    }
+
+    [Fact]
+    public async Task DetailRows_HonourTheLeadershipFilters()
+    {
+        var db = await LeadershipDb();
+        var rows = await NewService(db).GetDetailAsync(2026, null, null, null, "Admin", null, oc: "Bob");
+        var row = Assert.Single(rows);
+        Assert.Equal("3 | C", row.Store);
+        Assert.Equal("Bob", row.OperationConsultant); Assert.Equal("Mona", row.OperationManager);
+        Assert.Equal("Sue", row.SeniorOperationConsultant); Assert.Equal("Eve", row.OperationDirector);
+    }
+
+    [Fact]
     public async Task StoreAndJobFilters_NarrowTheResult()
     {
         var db = NewDb();
@@ -200,8 +301,8 @@ public class WorkforcePlanningReportTests
     private sealed class FakePlanning : IWorkforcePlanningService
     {
         public List<MvcApp.Models.ViewModels.PlanningDetailRow> Rows { get; set; } = new();
-        public Task<MvcApp.Models.ViewModels.WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName) => throw new NotSupportedException();
-        public Task<List<MvcApp.Models.ViewModels.PlanningDetailRow>> GetDetailAsync(int year, IReadOnlyCollection<int>? months, string? stores, string? jobs, string role, string? assignedName) => Task.FromResult(Rows);
+        public Task<MvcApp.Models.ViewModels.WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null) => throw new NotSupportedException();
+        public Task<List<MvcApp.Models.ViewModels.PlanningDetailRow>> GetDetailAsync(int year, IReadOnlyCollection<int>? months, string? stores, string? jobs, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null) => Task.FromResult(Rows);
         public Task<List<MvcApp.Models.ViewModels.StoreFillDto>> GetStoreFillAsync(int year, int month, string? jobs, string role, string? assignedName) => throw new NotSupportedException();
         public Task<MvcApp.Models.ViewModels.StorePlanDto> GetStorePlanAsync(string store, int year, int month, string role, string? assignedName) => throw new NotSupportedException();
         public Task<List<MvcApp.Models.ViewModels.PeriodItem>> GetProjectionPeriodsAsync() => Task.FromResult(new List<MvcApp.Models.ViewModels.PeriodItem>());
@@ -218,8 +319,8 @@ public class WorkforcePlanningReportTests
         {
             Rows =
             {
-                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", Projected = 10, Actual = 8, ExpectedAttrition = 1.5, HiringNeed = 3.5 },
-                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4, ExpectedAttrition = 0.5, HiringNeed = 0.5 },
+                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", Projected = 10, Actual = 8, ExpectedAttrition = 1.5, HiringNeed = 3.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4, ExpectedAttrition = 0.5, HiringNeed = 0.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
                 new() { Year = 2026, Month = 2, Store = "1 | A", Job = "Crew", Projected = 11, Actual = null },
             }
         };
@@ -236,14 +337,24 @@ public class WorkforcePlanningReportTests
         Assert.Contains("Data", names);
         Assert.Contains(names, n => n.StartsWith("By Store"));
         Assert.Contains(names, n => n.StartsWith("By Job"));
-        Assert.Equal(3, names.Count(n => n.StartsWith("Pivot")));
+        Assert.Equal(4, names.Count(n => n.StartsWith("Pivot")));
         Assert.Equal(4, reopened.Worksheet("Data").LastRowUsed()!.RowNumber()); // header + 3 rows
 
         // Hiring need columns: Data sheet, month summary and per-store breakdown.
         var dataWs = reopened.Worksheet("Data");
         Assert.Equal("Hiring Need", dataWs.Cell(1, 11).GetString());
         Assert.Equal(3.5, dataWs.Cell(2, 11).GetDouble());
-        Assert.Equal(4, reopened.Worksheet("Summary").Cell(9, 6).GetDouble()); // Jan: 3.5 + 0.5 -> 4
+        Assert.Equal(4, reopened.Worksheet("Summary").Cell(10, 6).GetDouble()); // Jan: 3.5 + 0.5 -> 4
+        // By Consultant & Manager: four stacked tables; Amy covers 1 store, 14 projected, 12 actual.
+        var groups = reopened.Worksheet("By Consultant & Manager");
+        var cells = groups.CellsUsed().Select(c => c.GetString()).ToList();
+        Assert.Contains("Operation Consultants", cells); Assert.Contains("Operation Directors", cells);
+        Assert.Contains("Operation Managers", cells); Assert.Contains("Senior Operation Consultants", cells);
+        var amyRow = groups.RowsUsed().First(r => r.Cell(1).GetString() == "Amy");
+        Assert.Equal(1, amyRow.Cell(2).GetDouble()); Assert.Equal(14, amyRow.Cell(3).GetDouble()); Assert.Equal(12, amyRow.Cell(4).GetDouble());
+        Assert.Equal(4, amyRow.Cell(8).GetDouble()); // hiring need 3.5 + 0.5
+        Assert.Equal("Operation Consultant", dataWs.Cell(1, 12).GetString());
+        Assert.Equal("Amy", dataWs.Cell(2, 12).GetString());
         var byStore = reopened.Worksheets.First(w => w.Name.StartsWith("By Store"));
         Assert.Equal("Hiring need (est.)", byStore.Cell(1, 7).GetString());
         Assert.Equal(4, byStore.Cell(2, 7).GetDouble());
@@ -251,7 +362,7 @@ public class WorkforcePlanningReportTests
         // …and the raw package must really contain pivot table parts.
         ms.Position = 0;
         using var zip = new System.IO.Compression.ZipArchive(ms);
-        Assert.Equal(3, zip.Entries.Count(e => e.FullName.StartsWith("xl/pivotTables/pivotTable")));
+        Assert.Equal(4, zip.Entries.Count(e => e.FullName.StartsWith("xl/pivotTables/pivotTable")));
         Assert.Contains(zip.Entries, e => e.FullName.EndsWith("pivotCache/pivotCacheDefinition1.xml"));
     }
 
