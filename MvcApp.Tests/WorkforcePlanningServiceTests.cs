@@ -33,7 +33,7 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
-    public async Task GapAndFillRate_AreProjectedMinusActual()
+    public async Task GapAndFillRate_AreActualMinusProjected()
     {
         var db = NewDb();
         Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "1 | A", "GEM", 4);
@@ -47,10 +47,10 @@ public class WorkforcePlanningServiceTests
         Assert.True(dto.HasActual);
         Assert.Equal(24, dto.Kpis.Projected);
         Assert.Equal(22, dto.Kpis.Actual);
-        Assert.Equal(2, dto.Kpis.Gap);
+        Assert.Equal(-2, dto.Kpis.Gap); // shortage is negative, surplus positive
         Assert.Equal(91.7, dto.Kpis.FillPercent);
         var crew = Assert.Single(dto.ByJob, r => r.Name == "Crew");
-        Assert.Equal(20, crew.Projected); Assert.Equal(18, crew.Actual); Assert.Equal(2, crew.Gap);
+        Assert.Equal(20, crew.Projected); Assert.Equal(18, crew.Actual); Assert.Equal(-2, crew.Gap);
         var a = Assert.Single(dto.ByStore, r => r.Name == "1 | A");
         Assert.Equal("watch", a.Status); // 12 / 14 = 85.7%
         Assert.Equal("ok", Assert.Single(dto.ByStore, r => r.Name == "2 | B").Status);
@@ -120,7 +120,7 @@ public class WorkforcePlanningServiceTests
         Assert.True(plan.HasData);
         Assert.Equal(12, plan.Kpis.Projected);
         var crew = Assert.Single(plan.ByJob);
-        Assert.Equal(3, crew.Gap);
+        Assert.Equal(-3, crew.Gap);
         Assert.Equal(new[] { 2, 3, 4, 5 }, plan.Upcoming.Select(u => u.Month)); // this month + next three
         Assert.Equal(new[] { 12, 13, 14, 15 }, plan.Upcoming.Select(u => u.Projected)); // only this store
 
@@ -214,10 +214,10 @@ public class WorkforcePlanningServiceTests
         var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
 
         var amy = Assert.Single(dto.ByOperationConsultant, r => r.Name == "Amy");
-        Assert.Equal(2, amy.StoreCount); Assert.Equal(30, amy.Projected); Assert.Equal(28, amy.Actual); Assert.Equal(2, amy.Gap);
+        Assert.Equal(2, amy.StoreCount); Assert.Equal(30, amy.Projected); Assert.Equal(28, amy.Actual); Assert.Equal(-2, amy.Gap);
         Assert.Equal(2, amy.HiringNeed);                 // store 2 is at plan (0), store 1 short by 2
         var bob = Assert.Single(dto.ByOperationConsultant, r => r.Name == "Bob");
-        Assert.Equal(3, bob.Gap); Assert.Equal("critical", bob.Status); // 3 of 6 = 50%
+        Assert.Equal(-3, bob.Gap); Assert.Equal("critical", bob.Status); // 3 of 6 = 50%
 
         var mona = Assert.Single(dto.ByOperationManager);
         Assert.Equal(3, mona.StoreCount); Assert.Equal(36, mona.Projected); Assert.Equal(31, mona.Actual);
@@ -283,6 +283,47 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task Surplus_IsPositive_AndAbove100PercentIsOverstaffed()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "2 | B", "Crew", 10); Proj(db, 1, "3 | C", "Crew", 10); Proj(db, 1, "4 | D", "Crew", 10);
+        Active(db, 1, "1 | A", "Crew", 12);  // over plan
+        Active(db, 1, "2 | B", "Crew", 10);  // exactly on plan
+        Active(db, 1, "3 | C", "Crew", 9);   // 90% -> watch
+        Active(db, 1, "4 | D", "Crew", 8);   // 80% -> critical
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        var a = dto.ByStore.Single(r => r.Name == "1 | A");
+        Assert.Equal(2, a.Gap); Assert.Equal("over", a.Status);
+        Assert.Equal("ok", dto.ByStore.Single(r => r.Name == "2 | B").Status);      // up to and including 100%
+        Assert.Equal("watch", dto.ByStore.Single(r => r.Name == "3 | C").Status);
+        Assert.Equal("critical", dto.ByStore.Single(r => r.Name == "4 | D").Status);
+        Assert.Equal("4 | D", dto.ByStore[0].Name);                                 // largest shortage first
+        Assert.Equal("1 | A", dto.ByStore[^1].Name);                                // biggest surplus last
+    }
+
+    [Fact]
+    public async Task Shortage_SumsOnlyTheRealShortages_AndExplainsTheHiringNeed()
+    {
+        var db = NewDb();
+        // One store: Crew is 4 short, Crew Trainer is 6 over -> the gap nets to +2 but the shortage is still 4.
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "1 | A", "Crew Trainer", 3);
+        Active(db, 1, "1 | A", "Crew", 6); Active(db, 1, "1 | A", "Crew Trainer", 9);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        Assert.Equal(2, dto.Kpis.Gap);                 // 15 actual vs 13 projected
+        Assert.Equal(4, dto.Kpis.Shortage);            // only Crew is short
+        Assert.Equal(4, dto.Kpis.HiringNeed);          // no resignation history -> need = shortage
+        Assert.Equal(4, dto.ByStore.Single().Shortage);
+        Assert.Equal(4, dto.ByJob.Single(r => r.Name == "Crew").Shortage);
+        Assert.Equal(0, dto.ByJob.Single(r => r.Name == "Crew Trainer").Shortage);
+    }
+
+    [Fact]
     public async Task StoreAndJobFilters_NarrowTheResult()
     {
         var db = NewDb();
@@ -344,7 +385,13 @@ public class WorkforcePlanningReportTests
         var dataWs = reopened.Worksheet("Data");
         Assert.Equal("Hiring Need", dataWs.Cell(1, 11).GetString());
         Assert.Equal(3.5, dataWs.Cell(2, 11).GetDouble());
-        Assert.Equal(4, reopened.Worksheet("Summary").Cell(10, 6).GetDouble()); // Jan: 3.5 + 0.5 -> 4
+        var summary = reopened.Worksheet("Summary");
+        Assert.Equal(2, summary.Cell(10, 6).GetDouble());   // Jan shortage: Crew is 2 short, GEM is at plan
+        Assert.Equal(2, summary.Cell(10, 7).GetDouble());   // expected resignations 1.5 + 0.5
+        Assert.Equal(4, summary.Cell(10, 8).GetDouble());   // hiring need 3.5 + 0.5 -> 4
+        Assert.Equal(-2, dataWs.Cell(2, 8).GetDouble());   // Data gap = actual − projected (8 − 10)
+        Assert.Equal("Shortage", dataWs.Cell(1, 16).GetString());
+        Assert.Equal(2, dataWs.Cell(2, 16).GetDouble());
         // By Consultant & Manager: four stacked tables; Amy covers 1 store, 14 projected, 12 actual.
         var groups = reopened.Worksheet("By Consultant & Manager");
         var cells = groups.CellsUsed().Select(c => c.GetString()).ToList();
@@ -352,12 +399,15 @@ public class WorkforcePlanningReportTests
         Assert.Contains("Operation Managers", cells); Assert.Contains("Senior Operation Consultants", cells);
         var amyRow = groups.RowsUsed().First(r => r.Cell(1).GetString() == "Amy");
         Assert.Equal(1, amyRow.Cell(2).GetDouble()); Assert.Equal(14, amyRow.Cell(3).GetDouble()); Assert.Equal(12, amyRow.Cell(4).GetDouble());
-        Assert.Equal(4, amyRow.Cell(8).GetDouble()); // hiring need 3.5 + 0.5
+        Assert.Equal(2, amyRow.Cell(7).GetDouble()); // shortage
+        Assert.Equal(4, amyRow.Cell(9).GetDouble()); // hiring need 3.5 + 0.5
         Assert.Equal("Operation Consultant", dataWs.Cell(1, 12).GetString());
         Assert.Equal("Amy", dataWs.Cell(2, 12).GetString());
         var byStore = reopened.Worksheets.First(w => w.Name.StartsWith("By Store"));
-        Assert.Equal("Hiring need (est.)", byStore.Cell(1, 7).GetString());
-        Assert.Equal(4, byStore.Cell(2, 7).GetDouble());
+        Assert.Equal("Shortage", byStore.Cell(1, 6).GetString());
+        Assert.Equal(2, byStore.Cell(2, 6).GetDouble());
+        Assert.Equal("Hiring need (est.)", byStore.Cell(1, 8).GetString());
+        Assert.Equal(4, byStore.Cell(2, 8).GetDouble());
 
         // …and the raw package must really contain pivot table parts.
         ms.Position = 0;

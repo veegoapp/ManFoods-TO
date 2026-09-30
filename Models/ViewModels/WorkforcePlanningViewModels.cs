@@ -42,11 +42,14 @@ public class PlanningKpiDto
 {
     public int Projected { get; set; }
     public int Actual { get; set; }
-    /// <summary>Projected - actual. Positive = shortage, negative = surplus.</summary>
+    /// <summary>Actual − projected. Positive = surplus (over plan), negative = shortage.</summary>
     public int Gap { get; set; }
     public double FillPercent { get; set; }
     public int StoresCount { get; set; }
     public int StoresShort { get; set; }
+    /// <summary>Sum of the real shortages: for each store and job, projected − actual where actual
+    /// is below projected (a surplus in one job never offsets a shortage in another).</summary>
+    public int Shortage { get; set; }
     /// <summary>Estimated hires needed: per store and job, the shortage plus expected
     /// resignations (never below zero), summed.</summary>
     public int HiringNeed { get; set; }
@@ -61,10 +64,12 @@ public class PlanningRowDto
     public int Actual { get; set; }
     public int Gap { get; set; }
     public double FillPercent { get; set; }
-    /// <summary>"ok" | "watch" | "critical" | "none" (no actual roster for the month).</summary>
+    /// <summary>"ok" (95–100%) | "watch" (85–95%) | "critical" (<85%) | "over" (above 100%) | "none" (no roster).</summary>
     public string Status { get; set; } = "none";
     public int HiringNeed { get; set; }
     public double ExpectedAttrition { get; set; }
+    /// <summary>Sum of the store/job shortages in the row (see <see cref="PlanningKpiDto.Shortage"/>).</summary>
+    public int Shortage { get; set; }
     /// <summary>Operation Consultant of the store (only filled for store rows).</summary>
     public string OperationConsultant { get; set; } = "";
     /// <summary>Number of stores rolled up into the row (only for the consultant/manager tables).</summary>
@@ -108,7 +113,7 @@ public class StoreFillDto
     /// <summary>Null when the month has no uploaded active-employee roster.</summary>
     public int? Actual { get; set; }
     public double FillPercent { get; set; }
-    /// <summary>"ok" | "watch" | "critical" | "none".</summary>
+    /// <summary>"ok" | "watch" | "critical" | "over" | "none".</summary>
     public string Status { get; set; } = "none";
 }
 
