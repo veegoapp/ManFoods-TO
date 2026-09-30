@@ -1469,7 +1469,7 @@
   <data name="APG_Pillar_Retention_Long" xml:space="preserve"><value>معدل الاحتفاظ عند 6 أشهر، بوزن 16% — نسبة فريق الفرع الذي لا يزال يعمل بعد علامة الـ 6 أشهر، مقارنةً بمتوسط الشركة. على عكس محاور المعدلات الأخرى، القيمة المنخفضة هنا هي الأسوأ.</value></data>
   <data name="APG_Pillar_Engagement_Long" xml:space="preserve"><value>الاندماج الوظيفي، بوزن 18% — مبني من ردود الفرع في مقابلات الخروج عبر عشرة محاور محددة (العدالة، ضغط العمل، التواصل، التدريب، وغيرها — راجع "تحليل السبب الجذري" أدناه)، وليس رقم رضا مجمّع واحد.</value></data>
   <data name="APG_Pillar_Leadership_Long" xml:space="preserve"><value>استقرار القيادة، بوزن 10% — عدد قادة الفرع المختلفين المسجّلين للفرع خلال آخر 6 أشهر. قائد واحد يعني استقرارًا؛ كل تغيير إضافي يصعّد خطورة المحور.</value></data>
-  <data name="APG_Pillar_Workforce_Long" xml:space="preserve"><value>توقّعات القوى العاملة، بوزن 12% — تجمع بين عدد الموظفين المصنّفين كمخاطرة عالية حاليًا في الإنذار المبكر وفجوة التوظيف المتوقّعة للفرع (بمجرد رفع بيانات توقّعات القوى العاملة لذلك الفرع — راجع "توقّعات القوى العاملة" أدناه).</value></data>
+  <data name="APG_Pillar_Workforce_Long" xml:space="preserve"><value>توقّعات القوى العاملة، بوزن 12% — عدد الموظفين المصنّفين كمخاطرة عالية حاليًا في الإنذار المبكر، نسبةً إلى حجم الفرع.</value></data>
 
   <data name="APG_HealthCalc_Title" xml:space="preserve"><value>كيف تُحسب درجة الصحة</value></data>
 
@@ -1486,8 +1486,8 @@
   <data name="APG_Engagement_Body2" xml:space="preserve"><value>لكل محور، تُقارَن نسبة الردود السلبية للفرع بمتوسط الشركة لنفس المحور. خطورة المحور تتحدد من أسوأ محورين، والمحرّكات الضعيفة المحددة تظهر بالاسم في صفحة تفاصيل الفرع وفي خطة الإجراء المرجّحة — فالتشخيص يسمّي دائمًا الشيء الفعلي الذي أشار إليه الموظفون المغادرون (مثل "التعامل مع الشكاوى" أو "ضغط العمل/الظروف")، بالنسب الحقيقية وراءه، وليس تسمية عامة.</value></data>
 
   <data name="APG_Outlook_Title" xml:space="preserve"><value>توقّعات القوى العاملة</value></data>
-  <data name="APG_Outlook_Body1" xml:space="preserve"><value>هذا هو المحور الاستباقي الوحيد — كل محور آخر استعادي، يصف ما حدث بالفعل. يجمع بين شيئين: عدد الموظفين المصنّفين كمخاطرة عالية حاليًا في الإنذار المبكر، وبمجرد رفع بيانات توقّعات القوى العاملة، الفجوة بين عدد الفرع الحالي وعدده المتوقّع/المطلوب للفترة القادمة.</value></data>
-  <data name="APG_Outlook_Body2" xml:space="preserve"><value>توقّعات القوى العاملة مصدر بيانات اختياري يُرفع بشكل مستقل (الأدمن ← الرفع). إلى أن تتوفر بيانات التوقّع لفرع ما، يُقيَّم هذا المحور فقط على مكوّن الموظفين المعرّضين للخطر، وتظهر توقّعات فجوة التوظيف في صفحة تفاصيل الفرع كحالة انتظار — الفرع لا يُعاقَب أبدًا لعدم توفر بيانات توقّع لم تُرفع له بعد.</value></data>
+  <data name="APG_Outlook_Body1" xml:space="preserve"><value>يعتمد هذا المحور على عدد الموظفين المصنّفين كمخاطرة عالية حاليًا في الإنذار المبكر، نسبةً إلى حجم الفرع، ومقارنته بتوزيع الشركة.</value></data>
+  <data name="APG_Outlook_Body2" xml:space="preserve"><value>يعتمد على بيانات موجودة بالفعل في البوابة، فلا حاجة لرفع ملف منفصل.</value></data>
 
   <data name="APG_WeightedPlan_Title" xml:space="preserve"><value>خطة الإجراء المرجّحة</value></data>
   <data name="APG_WeightedPlan_Body1" xml:space="preserve"><value>عناصر الإجراء لكل فرع تُولَّد من محاوره المقيَّمة فعليًا، وليس من قالب ثابت. كل محور يسجّل درجة أعلى من السليمة يساهم بإجراء واحد أو أكثر، موسوم بالمحور وبالدليل الدقيق الذي أطلقه (مثلًا معدل دوران هذا الفرع مقابل متوسط الشركة، أو المحرّك الضعيف المحدد في الاندماج).</value></data>
@@ -1540,7 +1540,7 @@
   <data name="APG_S7_Title" xml:space="preserve"><value>داخل صفحة تفاصيل مركز إجراءات الفرع</value></data>
   <data name="APG_Inside_Health" xml:space="preserve"><value>مؤشّر صحة الفرع — درجة الصحة الإجمالية وفئتها، يليها تفصيل المحاور الستة الكامل: درجة خطورة كل محور من 0 إلى 100، وانحرافه عن متوسط الشركة معروضًا كأرقام دليل، وبالنسبة للاندماج — المحرّكات الضعيفة المحددة بالاسم.</value></data>
   <data name="APG_Inside_WeightedPlan" xml:space="preserve"><value>خطة الإجراء المرجّحة — عناصر الإجراء الملموسة للفرع، مرتبة حسب وزن الأثر وموسومة بالمحور والدليل وراء كل واحد؛ العناصر المرتبطة بسجل خطة رسمي قابلة للتحديد هنا.</value></data>
-  <data name="APG_Inside_Outlook" xml:space="preserve"><value>توقّعات القوى العاملة — العدد الحالي مقابل العدد المتوقّع/المطلوب، وفجوة التوظيف الناتجة، وأي تعيينات مخطّطة (بمجرد رفع بيانات التوقّع للفرع).</value></data>
+  <data name="APG_Inside_Outlook" xml:space="preserve"><value>توقّعات القوى العاملة — عدد الموظفين المصنّفين كمخاطرة عالية حاليًا في الإنذار المبكر للفرع.</value></data>
   <data name="APG_Inside_Kpi" xml:space="preserve"><value>المؤشرات / القيمة الأساسية مقابل الأحدث — معدل الدوران، ومعدل المغادرة المبكرة (90 يومًا)، ومعدل الاستبقاء للفرع كما كانت عند فتح الخطة الرسمية، مقارنة بأحدث القيم المسجلة، لإظهار التقدّم بسهولة.</value></data>
   <data name="APG_Inside_Monthly" xml:space="preserve"><value>الأداء الشهري — كل لقطة شهرية مسجّلة منذ فتح الخطة الرسمية، تعرض معدل الدوران، ومعدل المغادرة المبكرة، ومعدل الاستبقاء، وعدد الإشارات، والتغير في معدل الدوران مقارنة بالشهر السابق.</value></data>
   <data name="APG_Inside_Signals" xml:space="preserve"><value>سجل الإشارات — إشارات الكشف التي ظهرت في كل فترة رفع فيها الفرع بيانات، وما إذا كانت أيٌّ منها قد أصبحت مستمرة.</value></data>
@@ -1739,7 +1739,6 @@
   <data name="ACH_NoData" xml:space="preserve"><value>لا توجد بيانات</value></data>
   <data name="ACH_Vs" xml:space="preserve"><value>مقابل</value></data>
   <data name="ACH_StoresSuffix" xml:space="preserve"><value>فرع</value></data>
-  <data name="ACH_ProjectionPending" xml:space="preserve"><value>لم يتم رفع توقّعات القوى العاملة بعد — سيتم تفعيل مؤشر فجوة التوظيف بمجرد توفير بيانات التوقّع.</value></data>
   <data name="ACH_Sev_Critical" xml:space="preserve"><value>حرجة</value></data>
   <data name="ACH_Sev_High" xml:space="preserve"><value>عالية</value></data>
   <data name="ACH_Sev_Medium" xml:space="preserve"><value>متوسطة</value></data>
@@ -1756,7 +1755,7 @@
   <data name="ACH_PillarDesc_retention" xml:space="preserve"><value>نسبة الفريق الذي تجاوز 6 أشهر مقابل المتوسط</value></data>
   <data name="ACH_PillarDesc_engagement" xml:space="preserve"><value>محاور مقابلات الخروج مقابل خط أساس الشركة</value></data>
   <data name="ACH_PillarDesc_leadership" xml:space="preserve"><value>تغيّرات قائد الفرع خلال الفترة الأخيرة</value></data>
-  <data name="ACH_PillarDesc_workforce" xml:space="preserve"><value>الموظفون المعرّضون للخطر وفجوة التوظيف المتوقّعة</value></data>
+  <data name="ACH_PillarDesc_workforce" xml:space="preserve"><value>الموظفون المعرّضون للخطر</value></data>
   <data name="ACH_Driver_fair_treatment" xml:space="preserve"><value>العدالة في المعاملة</value></data>
   <data name="ACH_Driver_complaints_handling" xml:space="preserve"><value>التعامل مع الشكاوى</value></data>
   <data name="ACH_Driver_benefits_match" xml:space="preserve"><value>ملاءمة المزايا</value></data>
@@ -1777,21 +1776,11 @@
   <data name="ACH_Insight_DriverDesc" xml:space="preserve"><value>{0}% من ردود الخروج على هذا المحور كانت سلبية على مستوى الشركة.</value></data>
   <data name="ACH_Insight_StalledTitle" xml:space="preserve"><value>خطط متعثرة</value></data>
   <data name="ACH_Insight_StalledDesc" xml:space="preserve"><value>خطط لم يُنجَز فيها أي مهمة منذ 45+ يومًا.</value></data>
-  <data name="ACH_Insight_ProjectionTitle" xml:space="preserve"><value>فعّل توقّعات القوى العاملة</value></data>
-  <data name="ACH_Insight_ProjectionDesc" xml:space="preserve"><value>ارفع توقّعات القوى العاملة لتفعيل محور فجوة التوظيف الاستباقي.</value></data>
   <data name="ACH_HealthTitle" xml:space="preserve"><value>مؤشّر صحة الفرع</value></data>
   <data name="ACH_HealthSub" xml:space="preserve"><value>مركّب مرجّح من ستة محاور، كل منها محسوب مقابل توزيع الشركة.</value></data>
   <data name="ACH_PillarBreakdownTitle" xml:space="preserve"><value>تفصيل المحاور</value></data>
   <data name="ACH_WeightedPlanTitle" xml:space="preserve"><value>خطة إجراء مرجّحة</value></data>
   <data name="ACH_WeightedPlanSub" xml:space="preserve"><value>إجراءات مرتّبة حسب وزن الأثر، كل منها مربوط بالمحور والدليل الذي أطلقه.</value></data>
-  <data name="ACH_OutlookTitle" xml:space="preserve"><value>توقّعات القوى العاملة</value></data>
-  <data name="ACH_OutlookCurrent" xml:space="preserve"><value>العدد الحالي</value></data>
-  <data name="ACH_OutlookProjected" xml:space="preserve"><value>الاحتياج المتوقّع</value></data>
-  <data name="ACH_OutlookPlannedHires" xml:space="preserve"><value>التعيينات المخطّطة</value></data>
-  <data name="ACH_OutlookGap" xml:space="preserve"><value>الفجوة</value></data>
-  <data name="ACH_OutlookShortfall" xml:space="preserve"><value>عجز</value></data>
-  <data name="ACH_OutlookSurplus" xml:space="preserve"><value>فائض</value></data>
-  <data name="ACH_OutlookBalanced" xml:space="preserve"><value>متوازن</value></data>
   <data name="ACH_Weight" xml:space="preserve"><value>وزن الأثر</value></data>
   <data name="ACH_NoActions" xml:space="preserve"><value>لا توجد إجراءات — هذا الفرع ضمن النطاق السليم.</value></data>
   <data name="ACH_PriorityHigh" xml:space="preserve"><value>عالية</value></data>
@@ -1815,14 +1804,7 @@
   <data name="Action_Engagement_Growth" xml:space="preserve"><value>امنح الموظفين مجالًا لاستخدام قدراتهم الشخصية وتطويرها في العمل.</value></data>
   <data name="Action_Engagement_Generic" xml:space="preserve"><value>راجع تغذية مقابلات الخروج للفرع واستهدف أضعف محاور الاندماج.</value></data>
   <data name="Action_Leadership_Stability" xml:space="preserve"><value>ثبّت قيادة الفرع: اضمن الاستمرارية والتوجيه وإشراف مدير الإدارة خلال التغييرات.</value></data>
-  <data name="Action_Workforce_Staffing" xml:space="preserve"><value>سُدّ فجوة التوظيف المتوقّعة: سرّع التعيين والإعداد قبل حدوث العجز.</value></data>
   <data name="Action_Workforce_AtRisk" xml:space="preserve"><value>تواصل استباقيًا مع الموظفين المصنّفين كمخاطرة عالية في قائمة الإنذار المبكر.</value></data>
-  <data name="Msg_WorkforceProjectionProcessed" xml:space="preserve"><value>تمت معالجة {0} صفًا من توقّعات القوى العاملة.</value></data>
-  <data name="Msg_WorkforceProjectionSkipped" xml:space="preserve"><value>تم تخطّي {0} صف (فرع أو فترة أو عدد متوقّع مفقود).</value></data>
-  <data name="Msg_WorkforceUploadFailed" xml:space="preserve"><value>فشل رفع توقّعات القوى العاملة: {0}</value></data>
-  <data name="Upload_WorkforceTitle" xml:space="preserve"><value>توقّعات القوى العاملة</value></data>
-  <data name="Upload_WorkforceDesc" xml:space="preserve"><value>العدد المخطّط/المطلوب لكل فرع لكل فترة — يشغّل توقّعات القوى العاملة في مركز الإجراءات. مستقلّ عن ملفات الفترة الشهرية.</value></data>
-  <data name="Upload_WorkforceKind" xml:space="preserve"><value>توقّعات القوى العاملة</value></data>
   <!-- ── Action Center · Store Health · Page Guide ─────────────────────── -->
   <data name="Guide_ACH_Overview" xml:space="preserve"><value>هذه الصفحة تقيّم كل فرع يمكنك الوصول إليه عبر مؤشّر صحة الفرع — درجة واحدة من 0 إلى 100 (100 = سليم) مبنية على ستة محاور مرجّحة: معدل الدوران الكلي، الترك المبكر (90 يومًا)، الاحتفاظ عند 6 أشهر، الاندماج، استقرار القيادة، وتوقّعات القوى العاملة. كل محور يُحسب بمدى انحراف الفرع عن متوسط الشركة لذلك المؤشر — مقياس نسبي يعاير نفسه مع تغيّر البيانات، وليس حدًّا ثابتًا — ثم تُجمع بالوزن لتكوّن درجة الصحة، وفئة خطورة (حرجة ← سليمة)، وأولوية تأخذ في الاعتبار أيضًا عدد الموظفين المتأثرين. الفروع مرتبة حسب الأولوية الأسوأ أولًا. أعمدة دورة حياة الخطة (حالة الخطة، المسؤول، التقدّم) تعكس خطة الإجراء القائمة للفرع عند وجودها.</value></data>
   <data name="Guide_ACH_Section_Health" xml:space="preserve"><value>درجة الصحة الإجمالية لكل فرع (0-100) وفئة الخطورة، وشريط المحاور الستة الذي يوضّح أي المحاور تدفع المخاطرة — مرّر المؤشر على أي قطعة لرؤية محورها ودرجتها.</value></data>
@@ -1830,12 +1812,11 @@
   <data name="Guide_ACH_Section_RootCause" xml:space="preserve"><value>تحليل السبب الجذري — نسبة الردود السلبية على مستوى الشركة لكل محور من مقابلات الخروج (العدالة، ضغط العمل، التواصل، التدريب…). هذا ما يحلّ محل تسمية «الثقافة» الغامضة بالمحرّك المحدد الذي أشار إليه الموظفون فعلًا.</value></data>
   <data name="Guide_ACH_Section_Scorecard" xml:space="preserve"><value>بطاقة صحة الفروع: درجة الصحة، الفئة، المحور الأبرز، شريط المحاور، الأولوية المرجّحة بالأثر، عدد الموظفين، حالة الخطة، المسؤول، وتقدّم المهام. اضغط على عنوان أي عمود للفرز؛ افتح فرعًا لعرض التفصيل الكامل.</value></data>
   <data name="Guide_ACH_HowTitle" xml:space="preserve"><value>كيف تُحسب درجة الصحة</value></data>
-  <data name="Guide_ACH_HowBody" xml:space="preserve"><value>لكل محور، تُقارن قيمة الفرع بتوزيع كل الفروع: كلما ابتعدت فوق (أو تحت، في حالة الاحتفاظ) متوسط الشركة — مقيسة بالانحرافات المعيارية — ارتفعت درجة خطورة المحور من 0 إلى 100. أوزان المحاور: معدل الدوران الكلي 24%، الترك المبكر 20%، الاندماج 18%، الاحتفاظ عند 6 أشهر 16%، توقّعات القوى العاملة 12%، استقرار القيادة 10%. تُجمع الدرجات المرجّحة في درجة مخاطرة (تُعاد معايرة الأوزان على المحاور التي لها بيانات فقط، حتى يُقيَّم الفرع بعدل على ما لديه)؛ ودرجة الصحة هي 100 ناقص ذلك. الفئات: حرجة، عالية، متوسطة، منخفضة، سليمة. الأولوية تضرب المخاطرة في حجم الفرع بحيث يتقدّم الفرع الكبير المتعثّر على فرع صغير بنفس المخاطرة. محور الاندماج يقرأ محاور مقابلات الخروج الحقيقية ويُظهر المحرّكات الضعيفة المحددة. محور توقّعات القوى العاملة يقارن العدد المتوقّع/المطلوب بالعدد الحالي بمجرد رفع بيانات التوقّع؛ حتى ذلك الحين يبقى غير مفعّل بدل معاقبة الفرع. محرّك خطة الإجراء القائم (الكشف، تواريخ الاستهداف، الإغلاق التلقائي، الملاحظات) لم يتغيّر ولا يزال يشغّل أعمدة الخطة.</value></data>
+  <data name="Guide_ACH_HowBody" xml:space="preserve"><value>لكل محور، تُقارن قيمة الفرع بتوزيع كل الفروع: كلما ابتعدت فوق (أو تحت، في حالة الاحتفاظ) متوسط الشركة — مقيسة بالانحرافات المعيارية — ارتفعت درجة خطورة المحور من 0 إلى 100. أوزان المحاور: معدل الدوران الكلي 24%، الترك المبكر 20%، الاندماج 18%، الاحتفاظ عند 6 أشهر 16%، توقّعات القوى العاملة 12%، استقرار القيادة 10%. تُجمع الدرجات المرجّحة في درجة مخاطرة (تُعاد معايرة الأوزان على المحاور التي لها بيانات فقط، حتى يُقيَّم الفرع بعدل على ما لديه)؛ ودرجة الصحة هي 100 ناقص ذلك. الفئات: حرجة، عالية، متوسطة، منخفضة، سليمة. الأولوية تضرب المخاطرة في حجم الفرع بحيث يتقدّم الفرع الكبير المتعثّر على فرع صغير بنفس المخاطرة. محور الاندماج يقرأ محاور مقابلات الخروج الحقيقية ويُظهر المحرّكات الضعيفة المحددة. محور توقّعات القوى العاملة يقيّم عدد الموظفين المصنّفين كمخاطرة عالية حاليًا في الإنذار المبكر. محرّك خطة الإجراء القائم (الكشف، تواريخ الاستهداف، الإغلاق التلقائي، الملاحظات) لم يتغيّر ولا يزال يشغّل أعمدة الخطة.</value></data>
   <data name="Guide_ACH_FilterNote" xml:space="preserve"><value>استخدم مربع البحث لتصفية البطاقة حسب الفرع أو اسم المسؤول. الصحة والفئة والأولوية تُحسب تلقائيًا من بيانات كل فرع مقابل خط أساس الشركة — لا يوجد فلتر يدوي لها هنا.</value></data>
-  <data name="Guide_ACH_Detail_Overview" xml:space="preserve"><value>التفصيل على مستوى الفرع الواحد: مؤشّر صحة هذا الفرع وتفصيل المحاور الستة مع الدليل وراء كل مؤشر، وخطة إجراء مرجّحة مرتبة حسب الأثر، وتوقّعات القوى العاملة المستقبلية، و— عند وجود خطة إجراء مفتوحة — مؤشراتها وتوصياتها وسجل الإشارات والملاحظات وأدوات الإغلاق. راجع دليل صفحة مركز الإجراءات لمعرفة كيفية حساب درجة الصحة.</value></data>
+  <data name="Guide_ACH_Detail_Overview" xml:space="preserve"><value>التفصيل على مستوى الفرع الواحد: مؤشّر صحة هذا الفرع وتفصيل المحاور الستة مع الدليل وراء كل مؤشر، وخطة إجراء مرجّحة مرتبة حسب الأثر، و— عند وجود خطة إجراء مفتوحة — مؤشراتها وتوصياتها وسجل الإشارات والملاحظات وأدوات الإغلاق. راجع دليل صفحة مركز الإجراءات لمعرفة كيفية حساب درجة الصحة.</value></data>
   <data name="Guide_ACH_Detail_Health" xml:space="preserve"><value>درجة الصحة الإجمالية للفرع وخطورته، ثم كل محور بدرجته من 0 إلى 100، ومؤشرات الانحراف، وأرقام الدليل (مثل معدل دوران هذا الفرع مقابل متوسط الشركة). محور الاندماج يعرض محرّكات مقابلات الخروج الأسوأ تحديدًا.</value></data>
   <data name="Guide_ACH_Detail_Plan" xml:space="preserve"><value>خطة الإجراء المرجّحة — إجراءات ملموسة مرتبة حسب وزن الأثر، كل منها مربوط بالمحور والدليل الذي أطلقه. حيث توجد خطة مفتوحة، تكون الإجراءات المطابقة قابلة للتحديد وتبقى متزامنة مع توصياتها.</value></data>
-  <data name="Guide_ACH_Detail_Outlook" xml:space="preserve"><value>توقّعات القوى العاملة — العدد الحالي مقابل العدد المتوقّع/المطلوب للفرع، وفجوة التوظيف الناتجة، وأي تعيينات مخطّطة. يعرض حالة انتظار حتى تُرفع بيانات توقّعات القوى العاملة.</value></data>
   <data name="Guide_ACH_PlanCriteria" xml:space="preserve"><value>درجة الصحة بالأعلى تقيّم كل فرع باستمرار؛ أما خطة الإجراء الرسمية فهي سجل منفصل يُفتح تلقائيًا أول مرة تُطلَق فيها أي من إشارات الكشف التالية لفرع ليس لديه خطة مفتوحة، باستخدام بيانات تلك الفترة: (1) دوران كلي مرتفع — عدد موظفين 5 فأكثر ومعدل دوران 15% فأكثر؛ (2) ترك مبكر (90 يومًا) — 3 تعيينات فأكثر في فترة غير مؤقتة ومعدل ترك مبكر 30% فأكثر؛ (3) انخفاض الاحتفاظ عند 6 أشهر — 3 تعيينات فأكثر واحتفاظ أقل من 70%؛ (4) عدم استقرار القيادة — قائدا فرع مختلفان فأكثر خلال آخر 6 أشهر؛ (5) انخفاض رضا الخروج — مقابلتا خروج فأكثر برضا إيجابي أقل من 50%؛ (6) تركّز الأسباب — ردّا سبب فأكثر يمثّل فيهما سبب واحد 50% فأكثر؛ (7) قائمة الإنذار المبكر — موظفان نشطان فأكثر مصنّفان كمخاطرة عالية. أي إشارة جديدة تُطلَق أثناء وجود خطة مفتوحة تُدمج في نفس الخطة — لكل فرع خطة نشطة واحدة فقط في أي وقت. عند فتح الخطة تحصل على تاريخ استهداف تلقائيًا (90 يومًا، أو 30 يومًا إن كانت حرجة)، يمكن للمسؤول تعديله يدويًا، وتُغلق تلقائيًا بمجرد خلوّ الفرع من الإشارات لفترتين متتاليتين مُقيَّمتين. ملاحظة: فئة الخطورة المعروضة في هذه الصفحة أصبحت الآن فئة الصحة المرجّحة، وليست عدد الإشارات؛ هذه الإشارات تحدد فقط ما إذا كان هناك سجل خطة إجراء وتشغّل أعمدة الخطة/المسؤول/التقدّم.</value></data>
   <!-- ── Settings · Access matrix ──────────────────────────────────────── -->
   <data name="Set_Tab_Access" xml:space="preserve"><value>الصلاحيات</value></data>
@@ -1863,4 +1844,19 @@
   <data name="Set_Access_Desc_scorecard" xml:space="preserve"><value>صفحة بطاقة الأداء.</value></data>
   <data name="Set_Access_Desc_action_center" xml:space="preserve"><value>مركز الإجراءات. فتحه يوسّع العرض فقط — إضافة الملاحظات وتحديد التوصيات تظل محصورة في مطاعم المستخدم دايمًا.</value></data>
   <data name="Set_Access_Desc_reports" xml:space="preserve"><value>صفحة التقارير وملفات الإكسل المصدّرة منها.</value></data>
+  <data name="UL_JobProjections" xml:space="preserve"><value>توقّعات عدد الموظفين لكل وظيفة</value></data>
+  <data name="UL_JobProjectionsSub" xml:space="preserve"><value>العدد المتوقّع للموظفين لكل وظيفة في كل فرع، لكل شهر في السنة.</value></data>
+  <data name="UL_JobProjectionsNote" xml:space="preserve"><value>ملف Excel واحد لكل سنة فيه شيت لكل شهر، اسمه January … December. العمود الأول Store (مثال: 1480001 | Merghany) وباقي الأعمدة أسماء الوظائف. إعادة الرفع بتستبدل السنة المختارة كلها.</value></data>
+  <data name="UL_JobProjectionsTemplate" xml:space="preserve"><value>قالب توقّعات الوظائف</value></data>
+  <data name="DM_UploadJobProjectionsButton" xml:space="preserve"><value>رفع توقّعات الوظائف</value></data>
+  <data name="DM_JobProjectionsBadge" xml:space="preserve"><value>توقّعات وظائف</value></data>
+  <data name="DM_DeleteConfirmJobProj" xml:space="preserve"><value>حذف رفع توقّعات الوظائف ده؟ كل بيانات التوقّعات للسنة دي هتتمسح.</value></data>
+  <data name="Msg_JobProjInvalidYear" xml:space="preserve"><value>من فضلك اختار سنة صحيحة.</value></data>
+  <data name="Msg_JobProjNoMonthSheets" xml:space="preserve"><value>مفيش أي شيت اسمه شهر (January … December) وفيه بيانات في الملف.</value></data>
+  <data name="Msg_JobProjProcessed" xml:space="preserve"><value>تمت معالجة {0} قيمة توقّع وظائف على {1} شهر لسنة {2}.</value></data>
+  <data name="Msg_JobProjSkippedSheets" xml:space="preserve"><value>تم تجاهل شيتات اسمها مش اسم شهر: {0}.</value></data>
+  <data name="Msg_JobProjUnknownStores" xml:space="preserve"><value>{0} فرع مش موجود في بيانات البوابة اتقبلوا برضه: {1}.</value></data>
+  <data name="Msg_JobProjNewJobs" xml:space="preserve"><value>{0} وظيفة مش موجودة في بيانات البوابة اتقبلت برضه: {1}.</value></data>
+  <data name="Msg_JobProjBadCells" xml:space="preserve"><value>تم تخطّي {0} خلية لأنها مش أرقام صحيحة غير سالبة.</value></data>
+  <data name="Msg_JobProjUploadFailed" xml:space="preserve"><value>فشل رفع توقّعات الوظائف: {0}</value></data>
 </root>

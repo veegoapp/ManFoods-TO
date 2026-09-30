@@ -76,6 +76,7 @@
 
 .dm-history-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:12px; }
 .dm-history-badge.period { background:oklch(0.55 0.19 25 / .12); color:oklch(0.5 0.18 25); }
+.dm-history-badge.jobproj { background:oklch(0.62 0.15 155 / .12); color:oklch(0.5 0.15 155); }
 .dm-history-badge.exit { background:oklch(0.65 0.15 190 / .12); color:oklch(0.5 0.15 190); }
 
 .dm-file-chip {
@@ -290,22 +291,35 @@
 <div class="chart-card mb-4">
     <div class="chart-header d-flex justify-content-between align-items-start flex-wrap gap-2">
         <div>
-            <h6>@L["Upload_WorkforceTitle"]</h6>
-            <p>@L["Upload_WorkforceDesc"]</p>
+            <h6>@L["UL_JobProjections"]</h6>
+            <p>@L["UL_JobProjectionsSub"]</p>
         </div>
-        <a href="/admin/dashboard/download-template?type=workforce_projections" class="dm-template-btn"><i class="bi bi-file-earmark-arrow-down"></i>@L["Upload_WorkforceTitle"]</a>
+        <a href="/admin/dashboard/download-template?type=job_projections" class="dm-template-btn"><i class="bi bi-file-earmark-arrow-down"></i>@L["UL_JobProjectionsTemplate"]</a>
     </div>
-    <form id="dmWorkforceForm" asp-area="Admin" asp-controller="Dashboard" asp-action="UploadWorkforceProjections" method="post" enctype="multipart/form-data" data-change-label="@L["DM_ChangeFile"]">
+    <div class="dm-requirement-banner">
+        <i class="bi bi-info-circle-fill"></i>
+        <span>@L["UL_JobProjectionsNote"]</span>
+    </div>
+    <form id="dmJobProjForm" asp-area="Admin" asp-controller="Dashboard" asp-action="UploadJobProjections" method="post" enctype="multipart/form-data" data-change-label="@L["DM_ChangeFile"]">
         @Html.AntiForgeryToken()
+        <div class="d-flex gap-2 mb-3">
+            <div class="dm-select-wrap">
+                <select name="Year" class="dm-select" required>
+                    <option value="">@L["Common_Year"]</option>
+                    @for (int y = DateTime.Now.Year + 1; y >= 2022; y--) { <option value="@y">@y</option> }
+                </select>
+                <i class="bi bi-chevron-down"></i>
+            </div>
+        </div>
         <div class="dm-dropzone-grid" style="grid-template-columns:1fr;max-width:360px">
-            <div class="dm-dropzone" id="dmZoneWorkforce" data-title="@L["Upload_WorkforceTitle"]">
+            <div class="dm-dropzone" id="dmZoneJobProj" data-title="@L["UL_JobProjections"]">
                 <i class="bi bi-graph-up-arrow dm-dropzone-icon"></i>
-                <div class="dm-dropzone-title">@L["Upload_WorkforceTitle"]</div>
+                <div class="dm-dropzone-title">@L["UL_JobProjections"]</div>
                 <div class="dm-dropzone-hint" data-role="hint">@L["DM_DropzoneHint"]</div>
                 <input type="file" name="File" accept=".xlsx,.xls" required>
             </div>
         </div>
-        <button type="submit" class="dm-btn-submit"><i class="bi bi-cloud-upload me-1"></i>@L["Upload_WorkforceTitle"]</button>
+        <button type="submit" class="dm-btn-submit"><i class="bi bi-cloud-upload me-1"></i>@L["DM_UploadJobProjectionsButton"]</button>
     </form>
 </div>
 
@@ -336,10 +350,10 @@
                     @foreach (var item in Model)
                     {
                         var isPeriod = item.Kind == "period";
-                        var isWorkforce = item.Kind == "workforce_projections";
+                        var isJobProj = item.Kind == "job_projections";
                         <tr>
                             <td class="px-3 py-2">
-                                <span class="dm-history-badge @(isPeriod ? "period" : isWorkforce ? "workforce" : "exit")">@(isPeriod ? L["DM_MonthlyDataBadge"] : isWorkforce ? L["Upload_WorkforceKind"] : L["DM_ExitInterviewsBadge"])</span>
+                                <span class="dm-history-badge @(isPeriod ? "period" : isJobProj ? "jobproj" : "exit")">@(isPeriod ? L["DM_MonthlyDataBadge"] : isJobProj ? L["DM_JobProjectionsBadge"] : L["DM_ExitInterviewsBadge"])</span>
                             </td>
                             <td class="px-3 py-2">
                                 @foreach (var f in item.Files)
@@ -362,7 +376,7 @@
                                 }
                             </td>
                             <td class="px-3 py-2 text-muted-custom">
-                                @(isPeriod ? new DateTime(item.Year!.Value, item.Month!.Value, 1).ToString("MMMM yyyy") : "—")
+                                @(isPeriod ? new DateTime(item.Year!.Value, item.Month!.Value, 1).ToString("MMMM yyyy") : isJobProj ? item.Year!.Value.ToString() : "—")
                             </td>
                             <td class="px-3 py-2 text-muted-custom">@item.UploadedBy</td>
                             <td class="px-3 py-2 text-muted-custom small">@item.UploadDate.ToString("MMM dd, yyyy HH:mm")</td>
@@ -376,7 +390,7 @@
                                         </button>
                                     }
                                     <form asp-area="Admin" asp-controller="Dashboard" asp-action="DeleteUploadLog" method="post"
-                                          onsubmit="return confirm('@(isPeriod ? L["DM_DeleteConfirmPeriod"].Value : L["DM_DeleteConfirmExit"].Value)')">
+                                          onsubmit="return confirm('@(isPeriod ? L["DM_DeleteConfirmPeriod"].Value : isJobProj ? L["DM_DeleteConfirmJobProj"].Value : L["DM_DeleteConfirmExit"].Value)')">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.PrimaryLogId"/>
                                         <button type="submit" class="dm-action-btn delete"><i class="bi bi-trash3"></i>@L["DM_Delete"]</button>
@@ -518,7 +532,7 @@ function dmSetupDropzone(zoneId) {
     });
 }
 
-['dmZone1', 'dmZone2', 'dmZone3', 'dmZoneExit'].forEach(dmSetupDropzone);
+['dmZone1', 'dmZone2', 'dmZone3', 'dmZoneExit', 'dmZoneJobProj'].forEach(dmSetupDropzone);
 
 /* Month/year combos that already have data — re-uploading one deletes and
    replaces its rows (and the old Excel files themselves) with no other undo,
@@ -598,6 +612,7 @@ function dmLockSubmit(form, btn, busyLabel) {
 }
 dmLockSubmit(document.getElementById('dmPeriodForm'), document.querySelector('#dmPeriodForm .dm-btn-submit'), '@L["DM_Uploading"]');
 dmLockSubmit(document.getElementById('dmExitForm'), document.querySelector('#dmExitForm .dm-btn-submit'), '@L["DM_Uploading"]');
+dmLockSubmit(document.getElementById('dmJobProjForm'), document.querySelector('#dmJobProjForm .dm-btn-submit'), '@L["DM_Uploading"]');
 dmLockSubmit(document.getElementById('dmUpdateForm'), dmUpdateSubmitBtn, '@L["DM_Uploading"]');
 
 /* ── Background-jobs status panel ───────────────────── */

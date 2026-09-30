@@ -43,7 +43,6 @@
             ["noData"] = L["ACH_NoMatchingStores"].Value,
             ["vs"] = L["ACH_Vs"].Value,
             ["storesSuffix"] = L["ACH_StoresSuffix"].Value,
-            ["projectionPending"] = L["ACH_ProjectionPending"].Value,
             ["noData2"] = L["ACH_NoData"].Value,
             ["statusActive"] = L["SAP_StatusActive"].Value,
             ["statusResolved"] = L["SAP_StatusResolved"].Value,
@@ -62,8 +61,6 @@
             ["driverDesc"] = L["ACH_Insight_DriverDesc"].Value,
             ["stalledTitle"] = L["ACH_Insight_StalledTitle"].Value,
             ["stalledDesc"] = L["ACH_Insight_StalledDesc"].Value,
-            ["projectionTitle"] = L["ACH_Insight_ProjectionTitle"].Value,
-            ["projectionDesc"] = L["ACH_Insight_ProjectionDesc"].Value,
         },
     };
 }
@@ -291,7 +288,6 @@ function achRenderInsights(s) {
         if (drv && drv.negativePercent > 0) items.push({ icon:'bi-chat-left-dots-fill', color:'info', title:I.driverTitle,
             desc:`${achLabel('driver', drv.key)} — ${I.driverDesc.replace('{0}', drv.negativePercent)}` });
         if (s.stalledCount > 0) items.push({ icon:'bi-hourglass-bottom', color:'warning', title:I.stalledTitle, desc:`${s.stalledCount} ${I.stalledDesc}` });
-        if (!s.hasProjectionData) items.push({ icon:'bi-graph-up', color:'info', title:I.projectionTitle, desc:I.projectionDesc });
     }
     el.innerHTML = '<div class="row g-3">' + items.map(it => {
         const c = colorMap[it.color] || colorMap.info;

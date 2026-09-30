@@ -280,19 +280,19 @@ public class DashboardController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
-    public async Task<IActionResult> UploadWorkforceProjections(MvcApp.Models.ViewModels.WorkforceProjectionUploadViewModel vm)
+    public async Task<IActionResult> UploadJobProjections(MvcApp.Models.ViewModels.JobProjectionUploadViewModel vm)
     {
         if (!ModelState.IsValid || vm.File == null) return RedirectToUploads(error: _L["Msg_SelectFile"].Value);
         try
         {
             var email = HttpContext.Session.GetEmail();
-            var (_, msg, _) = await _uploads.UploadWorkforceProjectionsAsync(vm.File, email);
-            return RedirectToUploads(success: msg);
+            var (_, msg, _, warning) = await _uploads.UploadJobProjectionsAsync(vm.File, vm.Year, email);
+            return RedirectToUploads(success: msg, warning: warning);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Workforce projection upload failed");
-            return RedirectToUploads(error: string.Format(_L["Msg_WorkforceUploadFailed"].Value, ex.Message));
+            _logger.LogError(ex, "Job projection upload failed for {Year}", vm.Year);
+            return RedirectToUploads(error: string.Format(_L["Msg_JobProjUploadFailed"].Value, ex.Message));
         }
     }
 
@@ -481,25 +481,28 @@ public class DashboardController : Controller
 
             ws.Columns().AdjustToContents();
         }
-        else if (type == "workforce_projections")
+        else if (type == "job_projections")
         {
-            fileName = "Template_Workforce_Projections.xlsx";
-            var ws = wb.AddWorksheet("Workforce Projections");
-            var headers = new[] { "Store", "Month", "Year", "Projected Headcount", "Planned Hires" };
-            for (int i = 0; i < headers.Length; i++)
+            fileName = "Template_Job_Projections.xlsx";
+            var jobs = new[] { "Crew", "Crew Trainer", "McAcademy", "Gem (Guest Experience Manager)", "MDS" };
+            var stores = new[] { "1480001 | Merghany", "1480002 | Tahrir 1" };
+            foreach (var monthName in System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames.Take(12))
             {
-                var cell = ws.Cell(1, i + 1);
-                cell.Value = headers[i];
-                cell.Style.Font.Bold = true;
-                cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#C8102E");
-                cell.Style.Font.FontColor = XLColor.White;
-                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                var ws = wb.AddWorksheet(monthName);
+                ws.Cell(1, 1).Value = "Store";
+                for (int i = 0; i < jobs.Length; i++) ws.Cell(1, i + 2).Value = jobs[i];
+                var header = ws.Range(1, 1, 1, jobs.Length + 1);
+                header.Style.Font.Bold = true;
+                header.Style.Fill.BackgroundColor = XLColor.FromHtml("#C8102E");
+                header.Style.Font.FontColor = XLColor.White;
+                header.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                for (int r = 0; r < stores.Length; r++)
+                {
+                    ws.Cell(r + 2, 1).Value = stores[r];
+                    for (int i = 0; i < jobs.Length; i++) ws.Cell(r + 2, i + 2).Value = 0;
+                }
+                ws.Columns().AdjustToContents();
             }
-            ws.Cell(2, 1).Value = "Store 1"; ws.Cell(2, 2).Value = 1; ws.Cell(2, 3).Value = 2026;
-            ws.Cell(2, 4).Value = 42; ws.Cell(2, 5).Value = 6;
-            ws.Cell(3, 1).Value = "Store 2"; ws.Cell(3, 2).Value = 1; ws.Cell(3, 3).Value = 2026;
-            ws.Cell(3, 4).Value = 30; ws.Cell(3, 5).Value = 2;
-            ws.Columns().AdjustToContents();
         }
         else
         {

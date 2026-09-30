@@ -16,7 +16,7 @@ public class UploadFileRef
 /// </summary>
 public class UploadHistoryItem
 {
-    public string Kind { get; set; } = ""; // "period" | "exit_interviews"
+    public string Kind { get; set; } = ""; // "period" | "exit_interviews" | "job_projections"
     public int? Month { get; set; }
     public int? Year { get; set; }
     public DateTime UploadDate { get; set; }

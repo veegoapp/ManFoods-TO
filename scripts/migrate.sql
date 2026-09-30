@@ -550,28 +550,29 @@ IF COL_LENGTH('dbo.login_history', 'portal') IS NULL
 IF COL_LENGTH('dbo.login_history', 'failure_reason') IS NULL
     ALTER TABLE dbo.login_history ADD failure_reason NVARCHAR(200) NULL;
 
--- ── workforce_projections ────────────────────────────────────────────────
--- Forward-looking planned/required headcount per store per period, uploaded
--- independently of the three period files (like exit_interviews). Optional:
--- the Store Health engine reads the gap vs. current active headcount for its
--- Workforce Outlook pillar, and a store with no row simply contributes no
--- outlook signal instead of being penalised. One row per store/period — a
--- re-upload for the same period replaces rather than duplicates.
-IF OBJECT_ID('dbo.workforce_projections', 'U') IS NULL
+-- ── workforce_projections (removed) ──────────────────────────────────────
+-- The old demo projection feature was never used; the table is dropped.
+IF OBJECT_ID('dbo.workforce_projections', 'U') IS NOT NULL
+    DROP TABLE dbo.workforce_projections;
+
+-- ── job_headcount_projections ────────────────────────────────────────────
+-- Projected headcount per job title per store per month, uploaded as one
+-- yearly workbook (a sheet per month). A re-upload replaces the whole year.
+IF OBJECT_ID('dbo.job_headcount_projections', 'U') IS NULL
 BEGIN
-    CREATE TABLE dbo.workforce_projections (
+    CREATE TABLE dbo.job_headcount_projections (
         id INT IDENTITY(1,1) PRIMARY KEY,
-        month INT NOT NULL DEFAULT 0,
         year INT NOT NULL DEFAULT 0,
+        month INT NOT NULL DEFAULT 0,
         store_name NVARCHAR(450) NOT NULL DEFAULT '',
+        job_title NVARCHAR(200) NOT NULL DEFAULT '',
         projected_headcount INT NOT NULL DEFAULT 0,
-        planned_hires INT NOT NULL DEFAULT 0,
         created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
     );
 END
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_workforce_projections_store_period' AND object_id = OBJECT_ID('dbo.workforce_projections'))
-    CREATE UNIQUE INDEX ux_workforce_projections_store_period
-        ON dbo.workforce_projections (store_name, year, month);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_job_headcount_projections_period_store_job' AND object_id = OBJECT_ID('dbo.job_headcount_projections'))
+    CREATE UNIQUE INDEX ux_job_headcount_projections_period_store_job
+        ON dbo.job_headcount_projections (year, month, store_name, job_title);
 
 -- ── page_access_config ────────────────────────────────────────────────────
 -- Admin-configurable per-area access. One row per access area (see

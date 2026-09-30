@@ -149,9 +149,6 @@ public class StoreHealthSummaryDto
 
     public List<ActionCenterTrendPointDto> MonthlyTrend { get; set; } = new();
 
-    /// <summary>Whether any workforce projection data exists at all — the UI
-    /// shows the outlook pillar as "pending upload" when false.</summary>
-    public bool HasProjectionData { get; set; }
 }
 
 public class PillarImpactDto
@@ -164,26 +161,10 @@ public class PillarImpactDto
 }
 
 /// <summary>The per-store detail payload: the row's full health breakdown plus
-/// the ranked weighted action plan and the store's projected workforce outlook.</summary>
+/// the ranked weighted action plan.</summary>
 public class StoreHealthDetailDto
 {
     public StoreHealthRowDto Health { get; set; } = new();
     public List<WeightedActionDto> Actions { get; set; } = new();
-    public WorkforceOutlookDto? Outlook { get; set; }
 }
 
-/// <summary>A store's forward staffing outlook derived from WorkforceProjection.</summary>
-public class WorkforceOutlookDto
-{
-    public bool HasData { get; set; }
-    public int CurrentHeadcount { get; set; }
-    public int ProjectedHeadcount { get; set; }
-    public int PlannedHires { get; set; }
-    /// <summary>Projected - current. Negative = surplus, positive = shortfall.</summary>
-    public int Gap { get; set; }
-    /// <summary>Gap as a share of projected need (%).</summary>
-    public double GapPercent { get; set; }
-    public int Month { get; set; }
-    public int Year { get; set; }
-    public string Label { get; set; } = ""; // "MMM yy"
-}
