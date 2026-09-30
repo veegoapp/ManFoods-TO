@@ -391,9 +391,8 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         var jobSet = jobFilter == null ? null : new HashSet<string>(jobFilter, StringComparer.OrdinalIgnoreCase);
         var omSet = LeaderSet(om); var ocSet = LeaderSet(oc); var socSet = LeaderSet(soc); var odSet = LeaderSet(od);
         var leadersByMonth = new Dictionary<int, Dictionary<string, Leaders>>();
-        if (omSet != null || ocSet != null || socSet != null || odSet != null)
-            foreach (var mon in data.Projected.Select(c => c.Month).Distinct())
-                leadersByMonth[mon] = await GetLeadershipAsync(year, mon);
+        foreach (var mon in data.Projected.Select(c => c.Month).Distinct())
+            leadersByMonth[mon] = await GetLeadershipAsync(year, mon);
         bool StoreOk(int i, int mon) =>
             (accessibleSet == null || accessibleSet.Contains(data.Stores[i])) && (storeSet == null || storeSet.Contains(data.Stores[i])) &&
             LeadersMatch(leadersByMonth.TryGetValue(mon, out var lm) && lm.TryGetValue(data.Stores[i].Trim(), out var lead) ? lead : null, omSet, ocSet, socSet, odSet);
@@ -424,6 +423,12 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                 Year = year, Month = kv.Key.Month, Store = data.Stores[kv.Key.Store], Job = data.Jobs[kv.Key.Job],
                 Projected = kv.Value[0], Actual = actualMonths.Contains(kv.Key.Month) ? kv.Value[1] : null,
             });
+            if (leadersByMonth.TryGetValue(kv.Key.Month, out var lm) && lm.TryGetValue(data.Stores[kv.Key.Store].Trim(), out var lead))
+            {
+                var row = rows[^1];
+                row.OperationConsultant = lead.Oc; row.OperationManager = lead.Om;
+                row.SeniorOperationConsultant = lead.Soc; row.OperationDirector = lead.Od;
+            }
         }
         // Expected resignations and hiring need for months that have a roster.
         foreach (var month in rows.Where(r => r.Actual.HasValue).Select(r => r.Month).Distinct().ToList())

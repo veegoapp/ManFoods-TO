@@ -93,6 +93,11 @@ public class PlanningDetailRow
     public double? ExpectedAttrition { get; set; }
     /// <summary>max(0, projected − actual + expected resignations); null without a roster.</summary>
     public double? HiringNeed { get; set; }
+    /// <summary>The people responsible for the store that month (Store Reference file).</summary>
+    public string OperationConsultant { get; set; } = "";
+    public string OperationManager { get; set; } = "";
+    public string SeniorOperationConsultant { get; set; } = "";
+    public string OperationDirector { get; set; } = "";
 }
 
 /// <summary>A store's staffing fill for one month — drives the badge on the Stores page cards.</summary>

@@ -1899,7 +1899,7 @@
   <data name="Set_Access_Area_workforce_planning" xml:space="preserve"><value>Workforce Planning</value></data>
   <data name="Set_Access_Desc_workforce_planning" xml:space="preserve"><value>The Workforce Planning page (projected vs actual headcount).</value></data>
   <data name="Rep_Title_WorkforcePlanning" xml:space="preserve"><value>Workforce Planning</value></data>
-  <data name="Rep_Desc_WorkforcePlanning" xml:space="preserve"><value>Projected vs actual headcount by job and store — summary, by month, by store, by job, the full data sheet and ready-made Excel pivot tables.</value></data>
+  <data name="Rep_Desc_WorkforcePlanning" xml:space="preserve"><value>Projected vs actual headcount by job and store — summary, by store, by job, by consultant &amp; manager, the full data sheet and ready-made Excel pivot tables.</value></data>
   <data name="Rep_AllJobs" xml:space="preserve"><value>All job titles</value></data>
   <data name="ST_PlanFill" xml:space="preserve"><value>Staffing</value></data>
   <data name="ST_PlanOf" xml:space="preserve"><value>of</value></data>

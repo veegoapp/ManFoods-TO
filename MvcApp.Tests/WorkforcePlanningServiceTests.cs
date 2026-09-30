@@ -278,6 +278,8 @@ public class WorkforcePlanningServiceTests
         var rows = await NewService(db).GetDetailAsync(2026, null, null, null, "Admin", null, oc: "Bob");
         var row = Assert.Single(rows);
         Assert.Equal("3 | C", row.Store);
+        Assert.Equal("Bob", row.OperationConsultant); Assert.Equal("Mona", row.OperationManager);
+        Assert.Equal("Sue", row.SeniorOperationConsultant); Assert.Equal("Eve", row.OperationDirector);
     }
 
     [Fact]
@@ -317,8 +319,8 @@ public class WorkforcePlanningReportTests
         {
             Rows =
             {
-                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", Projected = 10, Actual = 8, ExpectedAttrition = 1.5, HiringNeed = 3.5 },
-                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4, ExpectedAttrition = 0.5, HiringNeed = 0.5 },
+                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", Projected = 10, Actual = 8, ExpectedAttrition = 1.5, HiringNeed = 3.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4, ExpectedAttrition = 0.5, HiringNeed = 0.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
                 new() { Year = 2026, Month = 2, Store = "1 | A", Job = "Crew", Projected = 11, Actual = null },
             }
         };
@@ -335,7 +337,7 @@ public class WorkforcePlanningReportTests
         Assert.Contains("Data", names);
         Assert.Contains(names, n => n.StartsWith("By Store"));
         Assert.Contains(names, n => n.StartsWith("By Job"));
-        Assert.Equal(3, names.Count(n => n.StartsWith("Pivot")));
+        Assert.Equal(4, names.Count(n => n.StartsWith("Pivot")));
         Assert.Equal(4, reopened.Worksheet("Data").LastRowUsed()!.RowNumber()); // header + 3 rows
 
         // Hiring need columns: Data sheet, month summary and per-store breakdown.
@@ -343,6 +345,16 @@ public class WorkforcePlanningReportTests
         Assert.Equal("Hiring Need", dataWs.Cell(1, 11).GetString());
         Assert.Equal(3.5, dataWs.Cell(2, 11).GetDouble());
         Assert.Equal(4, reopened.Worksheet("Summary").Cell(10, 6).GetDouble()); // Jan: 3.5 + 0.5 -> 4
+        // By Consultant & Manager: four stacked tables; Amy covers 1 store, 14 projected, 12 actual.
+        var groups = reopened.Worksheet("By Consultant & Manager");
+        var cells = groups.CellsUsed().Select(c => c.GetString()).ToList();
+        Assert.Contains("Operation Consultants", cells); Assert.Contains("Operation Directors", cells);
+        Assert.Contains("Operation Managers", cells); Assert.Contains("Senior Operation Consultants", cells);
+        var amyRow = groups.RowsUsed().First(r => r.Cell(1).GetString() == "Amy");
+        Assert.Equal(1, amyRow.Cell(2).GetDouble()); Assert.Equal(14, amyRow.Cell(3).GetDouble()); Assert.Equal(12, amyRow.Cell(4).GetDouble());
+        Assert.Equal(4, amyRow.Cell(8).GetDouble()); // hiring need 3.5 + 0.5
+        Assert.Equal("Operation Consultant", dataWs.Cell(1, 12).GetString());
+        Assert.Equal("Amy", dataWs.Cell(2, 12).GetString());
         var byStore = reopened.Worksheets.First(w => w.Name.StartsWith("By Store"));
         Assert.Equal("Hiring need (est.)", byStore.Cell(1, 7).GetString());
         Assert.Equal(4, byStore.Cell(2, 7).GetDouble());
@@ -350,7 +362,7 @@ public class WorkforcePlanningReportTests
         // …and the raw package must really contain pivot table parts.
         ms.Position = 0;
         using var zip = new System.IO.Compression.ZipArchive(ms);
-        Assert.Equal(3, zip.Entries.Count(e => e.FullName.StartsWith("xl/pivotTables/pivotTable")));
+        Assert.Equal(4, zip.Entries.Count(e => e.FullName.StartsWith("xl/pivotTables/pivotTable")));
         Assert.Contains(zip.Entries, e => e.FullName.EndsWith("pivotCache/pivotCacheDefinition1.xml"));
     }
 
