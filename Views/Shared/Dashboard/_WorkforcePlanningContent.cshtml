@@ -37,6 +37,7 @@
 .wp-pill.ok { background:oklch(0.62 0.15 155 / .14); color:oklch(0.45 0.15 155); }
 .wp-pill.watch { background:oklch(0.75 0.16 75 / .18); color:oklch(0.5 0.14 75); }
 .wp-pill.critical { background:oklch(0.6 0.22 22 / .14); color:oklch(0.5 0.2 22); }
+.wp-pill.over { background:oklch(0.55 0.15 250 / .14); color:oklch(0.42 0.15 250); }
 .wp-pill.none { background:var(--bg-2); color:var(--text-3); }
 .wp-fill { display:inline-block; width:70px; height:6px; border-radius:3px; background:var(--bg-2); vertical-align:middle; margin-inline-end:8px; overflow:hidden; }
 .wp-fill > span { display:block; height:100%; border-radius:3px; }
@@ -47,6 +48,8 @@
     background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
     border-radius:var(--radius-sm); font-size:13px; height:36px; padding:0 12px; min-width:200px;
 }
+.wp-gap-short { color:oklch(0.55 0.2 22); }
+.wp-gap-over { color:oklch(0.45 0.15 250); }
 .wp-empty { padding:40px 20px; text-align:center; color:var(--text-3); font-size:14px; }
 .wp-empty i { font-size:34px; display:block; margin-bottom:10px; }
 .chart-body canvas { direction:ltr; }
@@ -142,6 +145,8 @@
                     <th class="sortable num" data-sort="projected">@L["WP_ColProjected"]<i class="bi"></i></th>
                     <th class="sortable num" data-sort="actual">@L["WP_ColActual"]<i class="bi"></i></th>
                     <th class="sortable num" data-sort="gap">@L["WP_ColGap"]<i class="bi"></i></th>
+                    <th class="sortable num" data-sort="shortage">@L["WP_ColShortage"]<i class="bi"></i></th>
+                    <th class="sortable num" data-sort="attrition">@L["WP_ColAttrition"]<i class="bi"></i></th>
                     <th class="sortable num" data-sort="hiring">@L["WP_ColHiring"]<i class="bi"></i></th>
                     <th class="sortable" data-sort="fill">@L["WP_ColFill"]<i class="bi"></i></th>
                     <th class="sortable" data-sort="status">@L["WP_ColStatus"]<i class="bi"></i></th>
@@ -166,7 +171,7 @@
      data-kpi-fill="@L["WP_KpiFill"]" data-kpi-fill-desc="@L["WP_KpiFillDesc"]"
      data-projected="@L["WP_Projected"]" data-actual="@L["WP_Actual"]"
      data-ok="@L["WP_StatusOk"]" data-watch="@L["WP_StatusWatch"]" data-critical="@L["WP_StatusCritical"]" data-none="@L["WP_StatusNone"]"
-     data-col-name="@L["Common_Name"]" data-col-stores="@L["Common_Stores"]" data-col-projected="@L["WP_ColProjected"]" data-col-actual="@L["WP_ColActual"]" data-col-gap="@L["WP_ColGap"]" data-col-hiring="@L["WP_ColHiring"]" data-col-fill="@L["WP_ColFill"]" data-col-status="@L["WP_ColStatus"]" data-no-rows="@L["Common_NoData"]" data-oc-title="@L["Common_OperationConsultants"]" data-oc-sub="@L["WP_GrpSubOc"]" data-od-title="@L["Common_OperationDirectors"]" data-od-sub="@L["WP_GrpSubOd"]" data-om-title="@L["Common_OperationManagers"]" data-om-sub="@L["WP_GrpSubOm"]" data-soc-title="@L["Common_SeniorOperationConsultants"]" data-soc-sub="@L["WP_GrpSubSoc"]" data-hiring="@L["WP_ColHiring"]" data-kpi-hiring="@L["WP_KpiHiring"]" data-kpi-hiring-desc="@L["WP_KpiHiringDesc"]" data-attr-note="@L["WP_AttrNote"]" data-no-attr="@L["WP_NoAttrition"]" data-gap="@L["WP_ColGap"]" data-fill="@L["WP_ColFill"]" data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
+     data-col-name="@L["Common_Name"]" data-col-stores="@L["Common_Stores"]" data-col-projected="@L["WP_ColProjected"]" data-col-actual="@L["WP_ColActual"]" data-col-gap="@L["WP_ColGap"]" data-col-hiring="@L["WP_ColHiring"]" data-col-shortage="@L["WP_ColShortage"]" data-col-attrition="@L["WP_ColAttrition"]" data-over="@L["WP_StatusOver"]" data-col-fill="@L["WP_ColFill"]" data-col-status="@L["WP_ColStatus"]" data-no-rows="@L["Common_NoData"]" data-oc-title="@L["Common_OperationConsultants"]" data-oc-sub="@L["WP_GrpSubOc"]" data-od-title="@L["Common_OperationDirectors"]" data-od-sub="@L["WP_GrpSubOd"]" data-om-title="@L["Common_OperationManagers"]" data-om-sub="@L["WP_GrpSubOm"]" data-soc-title="@L["Common_SeniorOperationConsultants"]" data-soc-sub="@L["WP_GrpSubSoc"]" data-hiring="@L["WP_ColHiring"]" data-kpi-hiring="@L["WP_KpiHiring"]" data-kpi-hiring-desc="@L["WP_KpiHiringDesc"]" data-attr-note="@L["WP_AttrNote"]" data-no-attr="@L["WP_NoAttrition"]" data-gap="@L["WP_ColGap"]" data-fill="@L["WP_ColFill"]" data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
      data-error="@L["Common_NoData"]"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -183,6 +188,7 @@ const WP_I = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new Dictionary<
     ["OverallOk_T"] = L["WP_In_OverallOk_T"].Value,
     ["OverallWatch_T"] = L["WP_In_OverallWatch_T"].Value,
     ["OverallLow_T"] = L["WP_In_OverallLow_T"].Value,
+    ["OverallOver_T"] = L["WP_In_OverallOver_T"].Value,
     ["Overall_D"] = L["WP_In_Overall_D"].Value,
     ["WorstStore_T"] = L["WP_In_WorstStore_T"].Value,
     ["WorstStore_D"] = L["WP_In_WorstStore_D"].Value,
@@ -212,7 +218,10 @@ const WP_PROJECTED = 'oklch(0.5 0.06 258)';
 const WP_ACTUAL = 'oklch(0.55 0.19 25)';
 const wpMonthName = (m, style) => new Date(2000, m - 1, 1).toLocaleString('default', { month: style || 'long' });
 const wpPillLabel = s => wpL[s] || '';
-const wpFillColor = s => s === 'critical' ? 'oklch(0.6 0.22 22)' : s === 'watch' ? 'oklch(0.75 0.16 75)' : 'oklch(0.62 0.15 155)';
+// Gap = actual − projected: negative = shortage (red), positive = surplus (blue, shown with a +).
+const wpGapText = g => (g > 0 ? '+' : '') + g;
+const wpGapClass = g => g < 0 ? 'wp-gap-short' : g > 0 ? 'wp-gap-over' : '';
+const wpFillColor = s => s === 'critical' ? 'oklch(0.6 0.22 22)' : s === 'watch' ? 'oklch(0.75 0.16 75)' : s === 'over' ? 'oklch(0.6 0.13 250)' : 'oklch(0.62 0.15 155)';
 
 function wpFillSelect(id, options, value) {
     const el = document.getElementById(id);
@@ -284,29 +293,30 @@ function wpRenderInsights(d) {
     const add = (icon, color, title, description) => items.push({ icon, color, title, description });
 
     if (has && k.projected > 0) {
-        const tone = k.fillPercent >= 95 ? 'success' : k.fillPercent >= 85 ? 'warning' : 'danger';
-        const title = k.fillPercent >= 95 ? WP_I.OverallOk_T : k.fillPercent >= 85 ? WP_I.OverallWatch_T : WP_I.OverallLow_T;
-        add(tone === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill', tone, title, wpFmt(WP_I.Overall_D, k.fillPercent, k.actual, k.projected, wpSigned(k.gap)));
+        const over = k.actual > k.projected;
+        const tone = over ? 'secondary' : k.fillPercent >= 95 ? 'success' : k.fillPercent >= 85 ? 'warning' : 'danger';
+        const title = over ? WP_I.OverallOver_T : k.fillPercent >= 95 ? WP_I.OverallOk_T : k.fillPercent >= 85 ? WP_I.OverallWatch_T : WP_I.OverallLow_T;
+        add(tone === 'success' ? 'bi-check-circle-fill' : over ? 'bi-arrow-up-circle-fill' : 'bi-exclamation-triangle-fill', tone, title, wpFmt(WP_I.Overall_D, k.fillPercent, k.actual, k.projected, wpSigned(k.gap)));
 
         const stores = d.byStore.filter(r => r.projected > 0);
-        const worst = [...stores].filter(r => r.gap > 0).sort((a, b) => a.fillPercent - b.fillPercent || b.gap - a.gap)[0];
-        if (worst) add('bi-shop', worst.status === 'critical' ? 'danger' : 'warning', WP_I.WorstStore_T, wpFmt(WP_I.WorstStore_D, worst.name, worst.fillPercent, worst.gap));
+        const worst = [...stores].filter(r => r.gap < 0).sort((a, b) => a.fillPercent - b.fillPercent || a.gap - b.gap)[0];
+        if (worst) add('bi-shop', worst.status === 'critical' ? 'danger' : 'warning', WP_I.WorstStore_T, wpFmt(WP_I.WorstStore_D, worst.name, worst.fillPercent, Math.abs(worst.gap)));
 
         const critical = stores.filter(r => r.status === 'critical').length, watch = stores.filter(r => r.status === 'watch').length;
         if (critical + watch > 0) add('bi-graph-down-arrow', critical > 0 ? 'danger' : 'warning', WP_I.StoresBelow_T, wpFmt(WP_I.StoresBelow_D, critical, watch));
         else if (stores.length) add('bi-patch-check-fill', 'success', WP_I.StoresOk_T, WP_I.StoresOk_D);
 
-        const job = [...d.byJob].filter(r => r.gap > 0).sort((a, b) => b.gap - a.gap)[0];
-        if (job) add('bi-person-badge', 'warning', WP_I.WorstJob_T, wpFmt(WP_I.WorstJob_D, job.name, job.gap, job.fillPercent));
+        const job = [...d.byJob].filter(r => r.gap < 0).sort((a, b) => a.gap - b.gap)[0];
+        if (job) add('bi-person-badge', 'warning', WP_I.WorstJob_T, wpFmt(WP_I.WorstJob_D, job.name, Math.abs(job.gap), job.fillPercent));
 
-        if (k.hiringNeed > 0) add('bi-person-plus-fill', 'warning', WP_I.Hiring_T, wpFmt(WP_I.Hiring_D, k.hiringNeed, Math.max(0, k.gap), k.expectedAttrition));
+        if (k.hiringNeed > 0) add('bi-person-plus-fill', 'warning', WP_I.Hiring_T, wpFmt(WP_I.Hiring_D, k.hiringNeed, k.shortage, Math.round(k.expectedAttrition)));
         else add('bi-person-check-fill', 'success', WP_I.NoHiring_T, WP_I.NoHiring_D);
 
-        const oc = [...(d.byOperationConsultant || [])].filter(r => r.gap > 0 && r.projected > 0).sort((a, b) => a.fillPercent - b.fillPercent)[0];
-        if (oc && oc.status !== 'ok') add('bi-person-lines-fill', oc.status === 'critical' ? 'danger' : 'warning', WP_I.WorstOc_T, wpFmt(WP_I.WorstOc_D, oc.name, oc.storeCount, oc.fillPercent, oc.gap));
+        const oc = [...(d.byOperationConsultant || [])].filter(r => r.gap < 0 && r.projected > 0).sort((a, b) => a.fillPercent - b.fillPercent)[0];
+        if (oc && oc.status !== 'ok') add('bi-person-lines-fill', oc.status === 'critical' ? 'danger' : 'warning', WP_I.WorstOc_T, wpFmt(WP_I.WorstOc_D, oc.name, oc.storeCount, oc.fillPercent, Math.abs(oc.gap)));
 
-        const over = stores.filter(r => r.fillPercent > 110).length;
-        if (over > 0) add('bi-arrow-up-circle-fill', 'secondary', WP_I.Surplus_T, wpFmt(WP_I.Surplus_D, over));
+        const overStores = stores.filter(r => r.status === 'over').length;
+        if (overStores > 0) add('bi-arrow-up-circle-fill', 'secondary', WP_I.Surplus_T, wpFmt(WP_I.Surplus_D, overStores));
     }
 
     // Next month's plan against where the store base is now (works for future months too).
@@ -332,14 +342,14 @@ function wpRenderInsights(d) {
 function wpRenderKpis(d) {
     const k = d.kpis, has = d.hasActual;
     const dash = '—';
-    const gapColor = !has ? '' : k.gap > 0 ? 'text-danger' : 'text-success';
+    const gapColor = !has ? '' : k.gap < 0 ? 'text-danger' : '';
     const fillColor = !has ? '' : k.fillPercent >= 95 ? 'text-success' : k.fillPercent >= 85 ? '' : 'text-danger';
     const card = (icon, cls, val, label, desc) =>
         `<div class="kpi-card"><div class="kpi-icon ${cls}"><i class="bi ${icon}"></i></div><div class="kpi-value ${cls}">${val}</div><div class="kpi-label">${sapEscape(label)}</div><div class="kpi-desc">${sapEscape(desc)}</div></div>`;
     document.getElementById('wpKpis').innerHTML =
         card('bi-bullseye', '', k.projected, wpL.kpiProjected, wpL.kpiProjectedDesc) +
         card('bi-people-fill', '', has ? k.actual : dash, wpL.kpiActual, wpL.kpiActualDesc) +
-        card('bi-arrow-down-up', gapColor, has ? (k.gap > 0 ? '+' : '') + k.gap : dash, wpL.kpiGap, wpL.kpiGapDesc) +
+        card('bi-arrow-down-up', gapColor, has ? wpGapText(k.gap) : dash, wpL.kpiGap, wpL.kpiGapDesc) +
         card('bi-percent', fillColor, has ? k.fillPercent + '%' : dash, wpL.kpiFill, wpL.kpiFillDesc) +
         card('bi-person-plus-fill', has && k.hiringNeed > 0 ? 'text-danger' : '', has ? k.hiringNeed : dash, wpL.kpiHiring, wpL.kpiHiringDesc);
     const note = document.getElementById('wpAttrNote');
@@ -369,7 +379,7 @@ function wpRenderJobChart(d) {
                         label: c => ` ${c.dataset.label}: ${c.formattedValue}`,
                         afterBody: items => {
                             const r = rows[items[0].dataIndex];
-                            return d.hasActual ? [`${wpL.gap}: ${r.gap > 0 ? '+' : ''}${r.gap}`, `${wpL.fill}: ${r.fillPercent}%`, `${wpL.hiring}: ${r.hiringNeed}`] : [];
+                            return d.hasActual ? [`${wpL.gap}: ${wpGapText(r.gap)}`, `${wpL.fill}: ${r.fillPercent}%`, `${wpL.hiring}: ${r.hiringNeed}`] : [];
                         }
                     }
                 },
@@ -411,10 +421,10 @@ function wpRenderTrend(d) {
 // Click a column header to sort by it; click again to flip the direction. Until a header
 // is clicked the server order (largest shortage first) is kept.
 const wpSort = { key: null, dir: 'asc' };
-const WP_STATUS_ORDER = { critical: 0, watch: 1, ok: 2, none: 3 };
+const WP_STATUS_ORDER = { critical: 0, watch: 1, ok: 2, over: 3, none: 4 };
 const wpSortValue = {
     name: r => r.name, oc: r => r.operationConsultant || '', stores: r => r.storeCount,
-    projected: r => r.projected, actual: r => r.actual, gap: r => r.gap, hiring: r => r.hiringNeed,
+    projected: r => r.projected, actual: r => r.actual, gap: r => r.gap, hiring: r => r.hiringNeed, shortage: r => r.shortage, attrition: r => r.expectedAttrition,
     fill: r => r.fillPercent, status: r => WP_STATUS_ORDER[r.status] ?? 9,
 };
 // Shared by every sortable table on the page; `state` is { key, dir }.
@@ -469,7 +479,7 @@ function wpBuildGroups() {
                 <table class="table table-hover table-sm mb-0" style="font-size:13px">
                     <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1"><tr id="wpGrpHead${g.id}">
                         ${wpTh('name', wpL.colName)}${wpTh('stores', wpL.colStores, 'text-center')}${wpTh('projected', wpL.colProjected, 'text-center')}
-                        ${wpTh('actual', wpL.colActual, 'text-center')}${wpTh('gap', wpL.colGap, 'text-center')}${wpTh('hiring', wpL.colHiring, 'text-center')}
+                        ${wpTh('actual', wpL.colActual, 'text-center')}${wpTh('gap', wpL.colGap, 'text-center')}${wpTh('shortage', wpL.colShortage, 'text-center')}${wpTh('attrition', wpL.colAttrition, 'text-center')}${wpTh('hiring', wpL.colHiring, 'text-center')}
                         ${wpTh('fill', wpL.colFill)}${wpTh('status', wpL.colStatus)}
                     </tr></thead>
                     <tbody id="wpGrpBody${g.id}"></tbody>
@@ -491,10 +501,10 @@ function wpRenderGroup(g) {
     const rows = wpSortRowsBy(wpData[g.key] || [], state);
     wpMarkSorted(document.getElementById('wpGrpHead' + g.id), state);
     const body = document.getElementById('wpGrpBody' + g.id);
-    if (!rows.length) { body.innerHTML = `<tr><td colspan="8" class="text-center py-3 text-muted">${sapEscape(wpL.noRows)}</td></tr>`; return; }
+    if (!rows.length) { body.innerHTML = `<tr><td colspan="10" class="text-center py-3 text-muted">${sapEscape(wpL.noRows)}</td></tr>`; return; }
     body.innerHTML = rows.map(r => {
-        const gapTxt = has ? (r.gap > 0 ? '+' : '') + r.gap : '—';
-        const gapCls = !has ? '' : r.gap > 0 ? 'text-danger' : 'text-success';
+        const gapTxt = has ? wpGapText(r.gap) : '—';
+        const gapCls = !has ? '' : wpGapClass(r.gap);
         const tube = has
             ? `<span class="wp-tube"><span style="width:${Math.min(100, r.fillPercent)}%;background:${wpFillColor(r.status)}"></span></span><b>${r.fillPercent}%</b>`
             : '—';
@@ -504,6 +514,8 @@ function wpRenderGroup(g) {
             <td class="px-3 py-2 text-center">${r.projected}</td>
             <td class="px-3 py-2 text-center">${has ? r.actual : '—'}</td>
             <td class="px-3 py-2 text-center ${gapCls}">${gapTxt}</td>
+            <td class="px-3 py-2 text-center">${has ? r.shortage : '—'}</td>
+            <td class="px-3 py-2 text-center">${has ? Math.round(r.expectedAttrition) : '—'}</td>
             <td class="px-3 py-2 text-center">${has ? r.hiringNeed : '—'}</td>
             <td class="px-3 py-2" style="white-space:nowrap">${tube}</td>
             <td class="px-3 py-2"><span class="wp-pill ${r.status}">${sapEscape(wpPillLabel(r.status))}</span></td>
@@ -522,8 +534,8 @@ function wpRenderStores() {
     const rows = wpSortRows(wpData.byStore.filter(r => !term || r.name.toLowerCase().includes(term) || (r.operationConsultant || '').toLowerCase().includes(term)));
     wpMarkSortedHeader();
     document.getElementById('wpStoreRows').innerHTML = rows.map(r => {
-        const gapTxt = has ? (r.gap > 0 ? '+' : '') + r.gap : '—';
-        const gapCls = !has ? '' : r.gap > 0 ? 'text-danger' : 'text-success';
+        const gapTxt = has ? wpGapText(r.gap) : '—';
+        const gapCls = !has ? '' : wpGapClass(r.gap);
         const fill = has
             ? `<span class="wp-fill"><span style="width:${Math.min(100, r.fillPercent)}%;background:${wpFillColor(r.status)}"></span></span>${r.fillPercent}%`
             : '—';
@@ -533,6 +545,8 @@ function wpRenderStores() {
             <td class="num">${r.projected}</td>
             <td class="num">${has ? r.actual : '—'}</td>
             <td class="num ${gapCls}">${gapTxt}</td>
+            <td class="num">${has ? r.shortage : '—'}</td>
+            <td class="num">${has ? Math.round(r.expectedAttrition) : '—'}</td>
             <td class="num">${has ? r.hiringNeed : '—'}</td>
             <td>${fill}</td>
             <td><span class="wp-pill ${r.status}">${sapEscape(wpPillLabel(r.status))}</span></td>

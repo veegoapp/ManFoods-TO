@@ -977,7 +977,7 @@ public class ReportService : IReportService
         sum.Cell(5, 1).Value = "Responsible filter"; sum.Cell(5, 2).Value = responsible.Length == 0 ? "All" : SafeText(responsible);
         sum.Cell(6, 1).Value = "Generated"; sum.Cell(6, 2).Value = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC";
         sum.Range(2, 1, 6, 1).Style.Font.Bold = true;
-        sum.Cell(7, 1).Value = "Gap = Projected − Actual (positive = shortage). Fill rate = Actual ÷ Projected. Hiring need = shortage + expected resignations (average monthly resignations of the last 6 roster months), never below zero per store and job — an estimate. Only stores with a projection for a month are compared in that month; months without an uploaded roster show the projection only.";
+        sum.Cell(7, 1).Value = "Gap = Actual − Projected (positive = surplus, negative = shortage). Fill rate = Actual ÷ Projected. Shortage = people missing in the jobs that are short (a surplus in one job never offsets another). Hiring need = shortage + expected resignations (average monthly resignations of the last 6 roster months), never below zero per store and job — an estimate. Only stores with a projection for a month are compared in that month; months without an uploaded roster show the projection only.";
         sum.Cell(7, 1).Style.Font.Italic = true;
 
         if (rows.Count == 0)
@@ -989,7 +989,7 @@ public class ReportService : IReportService
 
         // Per-month totals (live formulas for Gap and Fill so the sheet stays editable).
         const int hdr = 9;
-        string[] mh = { "Month", "Projected", "Actual", "Gap", "Fill rate", "Hiring need (est.)" };
+        string[] mh = { "Month", "Projected", "Actual", "Gap", "Fill rate", "Shortage", "Expected resignations / month", "Hiring need (est.)" };
         for (int i = 0; i < mh.Length; i++)
         {
             var c = sum.Cell(hdr, i + 1);
@@ -1003,14 +1003,16 @@ public class ReportService : IReportService
             sum.Cell(rr, 1).Value = monthName[g.Key - 1];
             SetIntCell(sum.Cell(rr, 2), g.Sum(x => x.Projected));
             if (g.All(x => x.Actual.HasValue)) SetIntCell(sum.Cell(rr, 3), g.Sum(x => x.Actual!.Value));
-            sum.Cell(rr, 4).FormulaA1 = $"=IF(C{rr}=\"\",\"\",B{rr}-C{rr})";
+            sum.Cell(rr, 4).FormulaA1 = $"=IF(C{rr}=\"\",\"\",C{rr}-B{rr})";
             sum.Cell(rr, 5).FormulaA1 = $"=IF(OR(C{rr}=\"\",B{rr}=0),\"\",C{rr}/B{rr})";
             sum.Cell(rr, 5).Style.NumberFormat.Format = "0.0%";
-            if (g.All(x => x.HiringNeed.HasValue)) SetIntCell(sum.Cell(rr, 6), (int)Math.Round(g.Sum(x => x.HiringNeed!.Value), MidpointRounding.AwayFromZero));
+            if (g.All(x => x.Actual.HasValue)) SetIntCell(sum.Cell(rr, 6), g.Sum(x => Math.Max(0, x.Projected - x.Actual!.Value)));
+            if (g.All(x => x.ExpectedAttrition.HasValue)) sum.Cell(rr, 7).Value = Math.Round(g.Sum(x => x.ExpectedAttrition!.Value), 1);
+            if (g.All(x => x.HiringNeed.HasValue)) SetIntCell(sum.Cell(rr, 8), (int)Math.Round(g.Sum(x => x.HiringNeed!.Value), MidpointRounding.AwayFromZero));
             rr++;
         }
-        sum.Range(r0, 1, rr - 1, 6).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-        sum.Range(r0, 1, rr - 1, 6).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        sum.Range(r0, 1, rr - 1, 8).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+        sum.Range(r0, 1, rr - 1, 8).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
         sum.Columns().AdjustToContents();
         sum.Column(1).Width = Math.Max(sum.Column(1).Width, 18);
 
@@ -1020,33 +1022,34 @@ public class ReportService : IReportService
         var snap = rows.Where(r => r.Month == snapMonth).ToList();
         bool snapHasActual = snap.Any(r => r.Actual.HasValue);
 
-        void WriteBreakdown(string sheet, string nameHeader, IEnumerable<(string Name, int P, int A, double Attr, double Need)> items)
+        void WriteBreakdown(string sheet, string nameHeader, IEnumerable<(string Name, int P, int A, double Attr, double Need, double Short)> items)
         {
             var ws = AddSheet(wb, sheet);
-            StyleHeader(ws, new[] { nameHeader, "Projected", "Actual", "Gap", "Fill rate", "Expected resignations / month", "Hiring need (est.)", "Status" });
+            StyleHeader(ws, new[] { nameHeader, "Projected", "Actual", "Gap", "Fill rate", "Shortage", "Expected resignations / month", "Hiring need (est.)", "Status" });
             int r = 2;
-            foreach (var it in items.OrderByDescending(i => snapHasActual ? i.P - i.A : i.P).ThenBy(i => i.Name, StringComparer.OrdinalIgnoreCase))
+            foreach (var it in items.OrderBy(i => snapHasActual ? i.A - i.P : -i.P).ThenBy(i => i.Name, StringComparer.OrdinalIgnoreCase))
             {
                 ws.Cell(r, 1).Value = SafeText(it.Name);
                 SetIntCell(ws.Cell(r, 2), it.P);
                 if (snapHasActual)
                 {
                     SetIntCell(ws.Cell(r, 3), it.A);
-                    ws.Cell(r, 4).FormulaA1 = $"=B{r}-C{r}";
+                    ws.Cell(r, 4).FormulaA1 = $"=C{r}-B{r}";
                     ws.Cell(r, 5).FormulaA1 = $"=IF(B{r}=0,\"\",C{r}/B{r})";
                     ws.Cell(r, 5).Style.NumberFormat.Format = "0.0%";
-                    ws.Cell(r, 6).Value = Math.Round(it.Attr, 1);
-                    SetIntCell(ws.Cell(r, 7), (int)Math.Round(it.Need, MidpointRounding.AwayFromZero));
+                    SetIntCell(ws.Cell(r, 6), (int)Math.Round(it.Short, MidpointRounding.AwayFromZero));
+                    ws.Cell(r, 7).Value = Math.Round(it.Attr, 1);
+                    SetIntCell(ws.Cell(r, 8), (int)Math.Round(it.Need, MidpointRounding.AwayFromZero));
                     var fill = it.P > 0 ? it.A * 100.0 / it.P : 100.0;
-                    ws.Cell(r, 8).Value = fill >= 95 ? "On track" : fill >= 85 ? "Watch" : "Understaffed";
+                    ws.Cell(r, 9).Value = it.P > 0 && it.A > it.P ? "Overstaffed" : fill >= 95 ? "On track" : fill >= 85 ? "Watch" : "Understaffed";
                 }
-                else ws.Cell(r, 8).Value = "No actual data";
+                else ws.Cell(r, 9).Value = "No actual data";
                 r++;
             }
             Finalize(ws);
         }
-        WriteBreakdown($"By Store ({monthName[snapMonth - 1]})", "Store", snap.GroupBy(r => r.Store).Select(g => (g.Key, g.Sum(x => x.Projected), g.Sum(x => x.Actual ?? 0), g.Sum(x => x.ExpectedAttrition ?? 0), g.Sum(x => x.HiringNeed ?? 0))));
-        WriteBreakdown($"By Job ({monthName[snapMonth - 1]})", "Job title", snap.GroupBy(r => r.Job).Select(g => (g.Key, g.Sum(x => x.Projected), g.Sum(x => x.Actual ?? 0), g.Sum(x => x.ExpectedAttrition ?? 0), g.Sum(x => x.HiringNeed ?? 0))));
+        WriteBreakdown($"By Store ({monthName[snapMonth - 1]})", "Store", snap.GroupBy(r => r.Store).Select(g => (g.Key, g.Sum(x => x.Projected), g.Sum(x => x.Actual ?? 0), g.Sum(x => x.ExpectedAttrition ?? 0), g.Sum(x => x.HiringNeed ?? 0), g.Sum(x => x.Actual.HasValue ? (double)Math.Max(0, x.Projected - x.Actual.Value) : 0.0))));
+        WriteBreakdown($"By Job ({monthName[snapMonth - 1]})", "Job title", snap.GroupBy(r => r.Job).Select(g => (g.Key, g.Sum(x => x.Projected), g.Sum(x => x.Actual ?? 0), g.Sum(x => x.ExpectedAttrition ?? 0), g.Sum(x => x.HiringNeed ?? 0), g.Sum(x => x.Actual.HasValue ? (double)Math.Max(0, x.Projected - x.Actual.Value) : 0.0))));
 
 
         // ── By Consultant & Manager: the page's four roll-up tables, stacked on one sheet ──
@@ -1057,7 +1060,7 @@ public class ReportService : IReportService
             ws.Cell(1, 1).Style.Font.Bold = true; ws.Cell(1, 1).Style.Font.FontSize = 13;
             ws.Cell(2, 1).Value = "Stores are grouped by the Store Reference entry for the period. Hiring need is an estimate (shortage + expected resignations).";
             ws.Cell(2, 1).Style.Font.Italic = true;
-            string[] gh = { "Name", "Stores", "Projected", "Actual", "Gap", "Fill rate", "Expected resignations / month", "Hiring need (est.)", "Status" };
+            string[] gh = { "Name", "Stores", "Projected", "Actual", "Gap", "Fill rate", "Shortage", "Expected resignations / month", "Hiring need (est.)", "Status" };
             var roles = new (string Title, Func<PlanningDetailRow, string> Pick)[]
             {
                 ("Operation Consultants", x => x.OperationConsultant),
@@ -1086,8 +1089,9 @@ public class ReportService : IReportService
                         Stores = g.Select(x => x.Store).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
                         P = g.Sum(x => x.Projected), A = g.Sum(x => x.Actual ?? 0),
                         Attr = g.Sum(x => x.ExpectedAttrition ?? 0), Need = g.Sum(x => x.HiringNeed ?? 0),
+                        Short = g.Sum(x => x.Actual.HasValue ? (double)Math.Max(0, x.Projected - x.Actual.Value) : 0.0),
                     })
-                    .OrderByDescending(x => snapHasActual ? x.P - x.A : x.P).ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase).ToList();
+                    .OrderBy(x => snapHasActual ? x.A - x.P : -x.P).ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase).ToList();
                 if (people.Count == 0)
                 {
                     ws.Cell(rowNo, 1).Value = "No data"; ws.Cell(rowNo, 1).Style.Font.Italic = true;
@@ -1102,15 +1106,16 @@ public class ReportService : IReportService
                     if (snapHasActual)
                     {
                         SetIntCell(ws.Cell(rowNo, 4), pe.A);
-                        ws.Cell(rowNo, 5).FormulaA1 = $"=C{rowNo}-D{rowNo}";
+                        ws.Cell(rowNo, 5).FormulaA1 = $"=D{rowNo}-C{rowNo}";
                         ws.Cell(rowNo, 6).FormulaA1 = $"=IF(C{rowNo}=0,\"\",D{rowNo}/C{rowNo})";
                         ws.Cell(rowNo, 6).Style.NumberFormat.Format = "0.0%";
-                        ws.Cell(rowNo, 7).Value = Math.Round(pe.Attr, 1);
-                        SetIntCell(ws.Cell(rowNo, 8), (int)Math.Round(pe.Need, MidpointRounding.AwayFromZero));
+                        SetIntCell(ws.Cell(rowNo, 7), (int)Math.Round(pe.Short, MidpointRounding.AwayFromZero));
+                        ws.Cell(rowNo, 8).Value = Math.Round(pe.Attr, 1);
+                        SetIntCell(ws.Cell(rowNo, 9), (int)Math.Round(pe.Need, MidpointRounding.AwayFromZero));
                         var fill = pe.P > 0 ? pe.A * 100.0 / pe.P : 100.0;
-                        ws.Cell(rowNo, 9).Value = fill >= 95 ? "On track" : fill >= 85 ? "Watch" : "Understaffed";
+                        ws.Cell(rowNo, 10).Value = pe.P > 0 && pe.A > pe.P ? "Overstaffed" : fill >= 95 ? "On track" : fill >= 85 ? "Watch" : "Understaffed";
                     }
-                    else ws.Cell(rowNo, 9).Value = "No actual data";
+                    else ws.Cell(rowNo, 10).Value = "No actual data";
                     rowNo++;
                 }
                 var block = ws.Range(first - 1, 1, rowNo - 1, gh.Length);
@@ -1127,7 +1132,7 @@ public class ReportService : IReportService
 
         // ── Data: one flat row per store/job/month — the pivot tables' source ──
         var data = AddSheet(wb, "Data");
-        string[] dh = { "Period", "Year", "Month", "Store", "Job Title", "Projected", "Actual", "Gap", "Fill %", "Expected Resignations", "Hiring Need", "Operation Consultant", "Operation Manager", "Senior Operation Consultant", "Operation Director" };
+        string[] dh = { "Period", "Year", "Month", "Store", "Job Title", "Projected", "Actual", "Gap", "Fill %", "Expected Resignations", "Hiring Need", "Operation Consultant", "Operation Manager", "Senior Operation Consultant", "Operation Director", "Shortage" };
         StyleHeader(data, dh);
         int dr = 2;
         foreach (var r in rows)
@@ -1141,7 +1146,8 @@ public class ReportService : IReportService
             if (r.Actual.HasValue)
             {
                 data.Cell(dr, 7).Value = (double)r.Actual.Value;
-                data.Cell(dr, 8).Value = (double)(r.Projected - r.Actual.Value);
+                data.Cell(dr, 8).Value = (double)(r.Actual.Value - r.Projected);
+                data.Cell(dr, 16).Value = (double)Math.Max(0, r.Projected - r.Actual.Value);
                 if (r.Projected > 0) { data.Cell(dr, 9).Value = r.Actual.Value / (double)r.Projected; data.Cell(dr, 9).Style.NumberFormat.Format = "0.0%"; }
                 if (r.ExpectedAttrition.HasValue) data.Cell(dr, 10).Value = r.ExpectedAttrition.Value;
                 if (r.HiringNeed.HasValue) data.Cell(dr, 11).Value = r.HiringNeed.Value;
@@ -1174,8 +1180,8 @@ public class ReportService : IReportService
         }
         AddPivot("Pivot Store x Period", "PivotStorePeriod", "Store", "Period", "Projected");
         AddPivot("Pivot Job x Period", "PivotJobPeriod", "Job Title", "Period", "Projected");
-        AddPivot("Pivot Store Gap", "PivotStoreGap", "Store", null, "Projected", "Actual", "Gap", "Hiring Need");
-        AddPivot("Pivot Consultant Gap", "PivotConsultantGap", "Operation Consultant", null, "Projected", "Actual", "Gap", "Hiring Need");
+        AddPivot("Pivot Store Gap", "PivotStoreGap", "Store", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
+        AddPivot("Pivot Consultant Gap", "PivotConsultantGap", "Operation Consultant", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
         return wb;
     }
 

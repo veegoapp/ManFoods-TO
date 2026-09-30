@@ -259,7 +259,7 @@ function stRenderCards() {
         return;
     }
 
-    const toneVar = { success: 'oklch(0.62 0.15 155)', warning: 'oklch(0.75 0.16 75)', warning_strong: 'oklch(0.68 0.18 55)', danger: 'oklch(0.6 0.22 22)', none: 'var(--text-3)' };
+    const toneVar = { success: 'oklch(0.62 0.15 155)', over: 'oklch(0.5 0.15 250)', warning: 'oklch(0.75 0.16 75)', warning_strong: 'oklch(0.68 0.18 55)', danger: 'oklch(0.6 0.22 22)', none: 'var(--text-3)' };
     const toneBg  = { success: 'oklch(0.62 0.15 155 / .1)', warning: 'oklch(0.75 0.16 75 / .15)', warning_strong: 'oklch(0.68 0.18 55 / .12)', danger: 'oklch(0.6 0.22 22 / .08)', none: 'var(--bg-2)' };
 
     stContainerEl.innerHTML = rows.map(r => {
@@ -292,7 +292,7 @@ function stRenderCards() {
         const plan = stPlanByStore[(r.storeName || '').toLowerCase()];
         let planHtml = '';
         if (plan && plan.actual !== null && plan.actual !== undefined) {
-            const planTone = { ok: 'success', watch: 'warning', critical: 'danger' }[plan.status] || 'none';
+            const planTone = { ok: 'success', watch: 'warning', critical: 'danger', over: 'over' }[plan.status] || 'none';
             planHtml = `<div style="font-size:11.5px;margin-bottom:12px"><span style="color:var(--text-3)">${sapEscape(ST_D.planFill)}:</span>
                 <span class="fw-semibold" style="color:${toneVar[planTone]}">${plan.fillPercent}%</span>
                 <span style="color:var(--text-3)">(${plan.actual} ${sapEscape(ST_D.planOf)} ${plan.projected})</span></div>`;

@@ -258,7 +258,7 @@
     function renderStaffingPlan(plan) {
         if (!plan || !plan.hasData) return `<div class="sp-empty">${esc('@L["SP_PlanNoData"]')}</div>`;
         const has = plan.hasActual;
-        const gapCell = g => has ? `<td class="text-end" style="color:${g > 0 ? 'oklch(0.6 0.22 22)' : g < 0 ? 'oklch(0.5 0.15 155)' : 'inherit'}">${g > 0 ? '+' : ''}${fmt(g)}</td>` : '<td class="text-end">—</td>';
+        const gapCell = g => has ? `<td class="text-end" style="color:${g < 0 ? 'oklch(0.55 0.2 22)' : g > 0 ? 'oklch(0.45 0.15 250)' : 'inherit'}">${g > 0 ? '+' : ''}${fmt(g)}</td>` : '<td class="text-end">—</td>';
         const jobs = arr(plan.byJob).filter(r => r.projected > 0 || r.actual > 0);
         const jobRows = jobs.map(r => `<tr><td>${esc(r.name)}</td><td class="text-end">${fmt(r.projected)}</td><td class="text-end">${has ? fmt(r.actual) : '—'}</td>${gapCell(r.gap)}</tr>`).join('');
         const k = plan.kpis || {};

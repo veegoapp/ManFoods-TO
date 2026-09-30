@@ -268,7 +268,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
 
         var sel = Aggregate(m);
         dto.ByStore = sel.ByStore.Select(kv => Row(data.Stores[kv.Key], kv.Value, dto.HasActual))
-            .OrderByDescending(r => dto.HasActual ? r.Gap : r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            .OrderBy(r => dto.HasActual ? r.Gap : -r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList(); // largest shortage first
         dto.ByJob = sel.ByJob.Select(kv => Row(data.Jobs[kv.Key], kv.Value, dto.HasActual))
             .OrderByDescending(r => r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
 
@@ -279,7 +279,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         {
             Projected = sel.Projected,
             Actual = actualTotal,
-            Gap = sel.Projected - actualTotal,
+            Gap = actualTotal - sel.Projected,
             FillPercent = sel.Projected > 0 ? Math.Round(actualTotal * 100.0 / sel.Projected, 1) : 0,
             StoresCount = dto.ByStore.Count,
             StoresShort = dto.HasActual ? dto.ByStore.Count(r => r.Status is "watch" or "critical") : 0,
@@ -292,21 +292,23 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         {
             var attrition = await GetAttritionAsync(y, m);
             dto.AttritionMonths = attrition.Periods;
-            var byStoreNeed = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase); // [need, attrition]
+            var byStoreNeed = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase); // [need, attrition, shortage]
             var byJobNeed = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase);
-            double totalNeed = 0, totalAttr = 0;
+            double totalNeed = 0, totalAttr = 0, totalShort = 0;
             foreach (var cell in sel.Cells)
             {
                 var store = data.Stores[cell.Key.Store]; var job = data.Jobs[cell.Key.Job];
                 var expected = attrition.PerMonth.TryGetValue(AttrKey(store, job), out var e) ? e : 0;
+                var shortage = Math.Max(0, cell.Value[0] - cell.Value[1]);
                 var need = Math.Max(0, cell.Value[0] - cell.Value[1] + expected);
-                AddNeed(byStoreNeed, store, need, expected); AddNeed(byJobNeed, job, need, expected);
-                totalNeed += need; totalAttr += expected;
+                AddNeed(byStoreNeed, store, need, expected, shortage); AddNeed(byJobNeed, job, need, expected, shortage);
+                totalNeed += need; totalAttr += expected; totalShort += shortage;
             }
-            foreach (var r in dto.ByStore) if (byStoreNeed.TryGetValue(r.Name, out var v)) { r.HiringNeed = RoundNeed(v[0]); r.ExpectedAttrition = Math.Round(v[1], 1); }
-            foreach (var r in dto.ByJob) if (byJobNeed.TryGetValue(r.Name, out var v)) { r.HiringNeed = RoundNeed(v[0]); r.ExpectedAttrition = Math.Round(v[1], 1); }
+            foreach (var r in dto.ByStore) if (byStoreNeed.TryGetValue(r.Name, out var v)) { r.HiringNeed = RoundNeed(v[0]); r.ExpectedAttrition = Math.Round(v[1], 1); r.Shortage = RoundNeed(v[2]); }
+            foreach (var r in dto.ByJob) if (byJobNeed.TryGetValue(r.Name, out var v)) { r.HiringNeed = RoundNeed(v[0]); r.ExpectedAttrition = Math.Round(v[1], 1); r.Shortage = RoundNeed(v[2]); }
             dto.Kpis.HiringNeed = RoundNeed(totalNeed);
             dto.Kpis.ExpectedAttrition = Math.Round(totalAttr, 1);
+            dto.Kpis.Shortage = RoundNeed(totalShort);
             storeNeed = byStoreNeed;
         }
 
@@ -316,16 +318,16 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         {
             List<PlanningRowDto> RollUp(Func<Leaders, string> pick)
             {
-                var acc = new Dictionary<string, (int Stores, int P, int A, double Need, double Attr)>(StringComparer.OrdinalIgnoreCase);
+                var acc = new Dictionary<string, (int Stores, int P, int A, double Need, double Attr, double Short)>(StringComparer.OrdinalIgnoreCase);
                 foreach (var r in dto.ByStore)
                 {
                     if (!leaders.TryGetValue(r.Name.Trim(), out var l)) continue;
                     var name = pick(l);
                     if (string.IsNullOrWhiteSpace(name)) continue;
                     acc.TryGetValue(name, out var a);
-                    double need = 0, attr = 0;
-                    if (storeNeed != null && storeNeed.TryGetValue(r.Name, out var sn)) { need = sn[0]; attr = sn[1]; }
-                    acc[name] = (a.Stores + 1, a.P + r.Projected, a.A + (dto.HasActual ? r.Actual : 0), a.Need + need, a.Attr + attr);
+                    double need = 0, attr = 0, shortage = 0;
+                    if (storeNeed != null && storeNeed.TryGetValue(r.Name, out var sn)) { need = sn[0]; attr = sn[1]; shortage = sn[2]; }
+                    acc[name] = (a.Stores + 1, a.P + r.Projected, a.A + (dto.HasActual ? r.Actual : 0), a.Need + need, a.Attr + attr, a.Short + shortage);
                 }
                 return acc.Select(kv =>
                     {
@@ -333,9 +335,10 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                         row.StoreCount = kv.Value.Stores;
                         row.HiringNeed = RoundNeed(kv.Value.Need);
                         row.ExpectedAttrition = Math.Round(kv.Value.Attr, 1);
+                        row.Shortage = RoundNeed(kv.Value.Short);
                         return row;
                     })
-                    .OrderByDescending(r => dto.HasActual ? r.Gap : r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
+                    .OrderBy(r => dto.HasActual ? r.Gap : -r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
             }
             dto.ByOperationConsultant = RollUp(l => l.Oc);
             dto.ByOperationDirector = RollUp(l => l.Od);
@@ -469,10 +472,10 @@ public class WorkforcePlanningService : IWorkforcePlanningService
 
     private static int RoundNeed(double v) => (int)Math.Round(v, MidpointRounding.AwayFromZero);
 
-    private static void AddNeed(Dictionary<string, double[]> map, string key, double need, double attrition)
+    private static void AddNeed(Dictionary<string, double[]> map, string key, double need, double attrition, double shortage)
     {
-        if (!map.TryGetValue(key, out var arr)) map[key] = arr = new double[2];
-        arr[0] += need; arr[1] += attrition;
+        if (!map.TryGetValue(key, out var arr)) map[key] = arr = new double[3];
+        arr[0] += need; arr[1] += attrition; arr[2] += shortage;
     }
 
     private static void Bump<TKey>(Dictionary<TKey, int[]> map, TKey key, int slot, int by) where TKey : notnull
@@ -493,8 +496,8 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         var fill = p > 0 ? Math.Round(a * 100.0 / p, 1) : 0;
         return new PlanningRowDto
         {
-            Name = name, Projected = p, Actual = a, Gap = p - a, FillPercent = fill,
-            Status = !hasActual ? "none" : p == 0 ? "ok" : fill >= OkFill ? "ok" : fill >= WatchFill ? "watch" : "critical",
+            Name = name, Projected = p, Actual = a, Gap = a - p, FillPercent = fill,
+            Status = !hasActual ? "none" : p == 0 ? "ok" : a > p ? "over" : fill >= OkFill ? "ok" : fill >= WatchFill ? "watch" : "critical",
         };
     }
 }
