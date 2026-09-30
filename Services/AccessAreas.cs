@@ -12,6 +12,7 @@ namespace MvcApp.Services;
 public static class AccessAreas
 {
     public const string Analytics       = "analytics";        // Workforce + Turnover + Comparisons (DashboardService)
+    public const string WorkforcePlanning = "workforce_planning"; // Workforce Planning page (projected vs actual headcount)
     public const string Retention       = "retention";
     public const string NinetyDay       = "ninety_day";
     public const string NinetyDayLeavers = "ninety_day_leavers"; // sub: named early-leaver list
@@ -35,7 +36,7 @@ public static class AccessAreas
     /// areas rather than a toggle of its own.</summary>
     public static readonly IReadOnlyList<string> All = new[]
     {
-        Analytics, Retention, NinetyDay, NinetyDayLeavers, ExitInterviews, ExitComments,
+        Analytics, WorkforcePlanning, Retention, NinetyDay, NinetyDayLeavers, ExitInterviews, ExitComments,
         EarlyWarning, Scorecard, ActionCenter, Reports,
     };
 }

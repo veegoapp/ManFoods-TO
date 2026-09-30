@@ -16,6 +16,7 @@
     var ocs         = (ViewBag.OperationConsultants as List<string>) ?? new List<string>();
     var socs        = (ViewBag.SeniorOperationConsultants as List<string>) ?? new List<string>();
     var ods         = (ViewBag.OperationDirectors  as List<string>) ?? new List<string>();
+    var projJobs    = (ViewBag.Jobs                as List<string>) ?? new List<string>();
     var monthNames  = new[] { L["Month_January"].Value, L["Month_February"].Value, L["Month_March"].Value,
                               L["Month_April"].Value, L["Month_May"].Value, L["Month_June"].Value,
                               L["Month_July"].Value, L["Month_August"].Value, L["Month_September"].Value,
@@ -100,7 +101,7 @@
 }
 else
 {
-    var hasAnyFilter = rep.UsesPeriod || rep.UsesYear || rep.UsesStore || rep.UsesOmOc || rep.UsesMonths || rep.UsesComparisonAB;
+    var hasAnyFilter = rep.UsesPeriod || rep.UsesYear || rep.UsesStore || rep.UsesOmOc || rep.UsesMonths || rep.UsesJobs || rep.UsesComparisonAB;
     if (rep.UsesComparisonAB)
     {
     <div class="card-dark mb-4" style="border-left:4px solid @rep.IconColor">
@@ -212,7 +213,7 @@ else
             @if (rep.UsesYear)
             {
                 <div class="col-6 col-sm-4 col-md-2">
-                    <label class="form-label small text-muted-custom mb-1">@(rep.Id == "early-warning" ? L["Common_Year"].Value : L["Common_Year"].Value + " (since)")</label>
+                    <label class="form-label small text-muted-custom mb-1">@(rep.Id == "early-warning" || rep.Id == "workforce-planning" ? L["Common_Year"].Value : L["Common_Year"].Value + " (since)")</label>
                     <select id="rd-since-year" class="form-select form-select-dark form-select-sm" onchange="rdUpdateMonthsMultiselect()">
                         @foreach (var y in years)
                         {
@@ -258,6 +259,30 @@ else
                                 @foreach (var s in stores)
                                 {
                                     <label class="rd-ms-option"><input type="checkbox" value="@s"><span>@s</span></label>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            @if (rep.UsesJobs)
+            {
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small text-muted-custom mb-1">@L["Rep_AllJobs"]</label>
+                    <div class="rd-multiselect" id="rd-job-ms" data-all-label="@L["Rep_AllJobs"]">
+                        <button type="button" class="rd-multiselect-trigger" id="rd-job-trigger">
+                            <span class="rd-multiselect-chips" id="rd-job-chips">@L["Rep_AllJobs"]</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="rd-multiselect-panel" id="rd-job-panel">
+                            <div class="rd-multiselect-actions">
+                                <button type="button" class="rd-ms-action" id="rd-job-selectall">@L["Common_SelectAll"]</button>
+                                <button type="button" class="rd-ms-action" id="rd-job-clearall">@L["Common_ClearAll"]</button>
+                            </div>
+                            <div id="rd-job-options">
+                                @foreach (var j in projJobs)
+                                {
+                                    <label class="rd-ms-option"><input type="checkbox" value="@j"><span>@j</span></label>
                                 }
                             </div>
                         </div>
@@ -424,6 +449,7 @@ const rdOcMs     = rdCreateMultiselect('oc');
 const rdSocMs    = rdCreateMultiselect('soc');
 const rdOdMs     = rdCreateMultiselect('od');
 const rdMonthsMs = rdCreateMultiselect('months');
+const rdJobMs    = rdCreateMultiselect('job');
 
 const RD_MONTH_NAMES = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthNames));
 
@@ -445,7 +471,7 @@ function rdResetFilters() {
     if (yearEl) { yearEl.selectedIndex = 0; rdUpdateMonths(); }
     const sinceYearEl = document.getElementById('rd-since-year');
     if (sinceYearEl) { sinceYearEl.selectedIndex = 0; rdUpdateMonthsMultiselect(); }
-    ['months', 'store', 'om', 'oc', 'soc', 'od'].forEach(p => document.getElementById(`rd-${p}-clearall`)?.click());
+    ['months', 'store', 'job', 'om', 'oc', 'soc', 'od'].forEach(p => document.getElementById(`rd-${p}-clearall`)?.click());
     if (RD_REPORT_ID === 'comparisons') rdInitComparisonSides();
 }
 
@@ -525,6 +551,9 @@ function rdDownload() {
 
     const selectedMonths = rdMonthsMs.getSelected();
     if (selectedMonths.length) p.set('months', selectedMonths.join(','));
+
+    const selectedJobs = rdJobMs.getSelected();
+    if (selectedJobs.length) p.set('jobs', selectedJobs.join(','));
 
     window.location.href = __AREA_PREFIX + '/dashboard/export?' + p.toString();
 }

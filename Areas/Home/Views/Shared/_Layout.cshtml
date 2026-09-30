@@ -76,10 +76,16 @@
         <!-- Navigation -->
         <nav class="sidebar-nav" style="flex:1; padding: 8px 0; overflow-y:auto;">
             <div class="nav-section-label">@L["Nav_MyWorkspace"]</div>
-            <a href="/home/dashboard/workforce" class="nav-item @(IsActive("Workforce") ? "active" : "")">
+            <a href="/home/dashboard/workforce" class="nav-item @(IsActive("Workforce") && !IsActive("WorkforcePlanning") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-people-fill"></i></span>
                     <span class="nav-item-label">@L["Nav_Workforce"]</span>
+                </span>
+            </a>
+            <a href="/home/dashboard/workforceplanning" class="nav-item @(IsActive("WorkforcePlanning") ? "active" : "")">
+                <span class="nav-item-inner">
+                    <span class="nav-icon-wrap"><i class="bi bi-diagram-3-fill"></i></span>
+                    <span class="nav-item-label">@L["Nav_WorkforcePlanning"]</span>
                 </span>
             </a>
             <a href="/home/dashboard/turnover" class="nav-item @(IsActive("Turnover") ? "active" : "")">

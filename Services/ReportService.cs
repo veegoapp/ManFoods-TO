@@ -50,6 +50,7 @@ public class ReportService : IReportService
     private readonly IStoreActionPlanService _actionPlans;
     private readonly IStoreService _stores;
     private readonly IAccessAreaContext _areaContext;
+    private readonly IWorkforcePlanningService _planning;
 
     public ReportService(
         IDashboardService dashboard,
@@ -60,7 +61,8 @@ public class ReportService : IReportService
         IEarlyWarningService earlyWarning,
         IStoreActionPlanService actionPlans,
         IStoreService stores,
-        IAccessAreaContext areaContext)
+        IAccessAreaContext areaContext,
+        IWorkforcePlanningService planning)
     {
         _dashboard = dashboard;
         _ninetyDay = ninetyDay;
@@ -71,6 +73,7 @@ public class ReportService : IReportService
         _actionPlans = actionPlans;
         _stores = stores;
         _areaContext = areaContext;
+        _planning = planning;
     }
 
     /// <summary>Runs a fetch under a specific access area instead of whatever the
@@ -941,6 +944,142 @@ public class ReportService : IReportService
     {
         var wb = new XLWorkbook();
         await AddWorkforceSheetsAsync(wb, month, year, role, assignedName, store, om, oc, soc, od, sinceYear);
+        return wb;
+    }
+
+    // ── Workforce Planning (projected vs actual) ─────────────
+    public async Task<XLWorkbook> BuildWorkforcePlanningReportAsync(int year, string? months, string? store, string? jobs, string role, string? assignedName)
+    {
+        var monthList = string.IsNullOrWhiteSpace(months)
+            ? null
+            : months.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(m => int.TryParse(m, out var n) ? n : 0).Where(n => n is >= 1 and <= 12).Distinct().ToList();
+        var rows = await _planning.GetDetailAsync(year, monthList, store, jobs, role, assignedName);
+
+        var wb = new XLWorkbook();
+        var monthName = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames;
+
+        // ── Summary ──
+        var sum = AddSheet(wb, "Summary");
+        sum.Cell(1, 1).Value = $"Workforce Planning — Projected vs Actual Headcount ({year})";
+        sum.Cell(1, 1).Style.Font.Bold = true; sum.Cell(1, 1).Style.Font.FontSize = 14;
+        sum.Cell(2, 1).Value = "Store filter"; sum.Cell(2, 2).Value = string.IsNullOrWhiteSpace(store) ? "All accessible stores" : SafeText(store);
+        sum.Cell(3, 1).Value = "Job filter"; sum.Cell(3, 2).Value = string.IsNullOrWhiteSpace(jobs) ? "All job titles" : SafeText(jobs);
+        sum.Cell(4, 1).Value = "Months"; sum.Cell(4, 2).Value = monthList is { Count: > 0 } ? string.Join(", ", monthList.OrderBy(m => m).Select(m => monthName[m - 1])) : "All months in the projection";
+        sum.Cell(5, 1).Value = "Generated"; sum.Cell(5, 2).Value = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC";
+        sum.Range(2, 1, 5, 1).Style.Font.Bold = true;
+        sum.Cell(6, 1).Value = "Gap = Projected − Actual (positive = shortage). Fill rate = Actual ÷ Projected. Only stores with a projection for a month are compared in that month; months without an uploaded roster show the projection only.";
+        sum.Cell(6, 1).Style.Font.Italic = true;
+
+        if (rows.Count == 0)
+        {
+            sum.Cell(8, 1).Value = "No projection data matches the selected filters.";
+            sum.Columns().AdjustToContents();
+            return wb;
+        }
+
+        // Per-month totals (live formulas for Gap and Fill so the sheet stays editable).
+        const int hdr = 8;
+        string[] mh = { "Month", "Projected", "Actual", "Gap", "Fill rate" };
+        for (int i = 0; i < mh.Length; i++)
+        {
+            var c = sum.Cell(hdr, i + 1);
+            c.Value = mh[i]; c.Style.Font.Bold = true; c.Style.Fill.BackgroundColor = XLColor.FromHtml(BrandRed);
+            c.Style.Font.FontColor = XLColor.White; c.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        }
+        var byMonth = rows.GroupBy(r => r.Month).OrderBy(g => g.Key).ToList();
+        int r0 = hdr + 1, rr = r0;
+        foreach (var g in byMonth)
+        {
+            sum.Cell(rr, 1).Value = monthName[g.Key - 1];
+            SetIntCell(sum.Cell(rr, 2), g.Sum(x => x.Projected));
+            if (g.All(x => x.Actual.HasValue)) SetIntCell(sum.Cell(rr, 3), g.Sum(x => x.Actual!.Value));
+            sum.Cell(rr, 4).FormulaA1 = $"=IF(C{rr}=\"\",\"\",B{rr}-C{rr})";
+            sum.Cell(rr, 5).FormulaA1 = $"=IF(OR(C{rr}=\"\",B{rr}=0),\"\",C{rr}/B{rr})";
+            sum.Cell(rr, 5).Style.NumberFormat.Format = "0.0%";
+            rr++;
+        }
+        sum.Range(r0, 1, rr - 1, 5).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+        sum.Range(r0, 1, rr - 1, 5).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        sum.Columns().AdjustToContents();
+        sum.Column(1).Width = Math.Max(sum.Column(1).Width, 18);
+
+        // Snapshot month for the By Store / By Job sheets: the latest selected month
+        // with an uploaded roster, else the latest selected month.
+        var snapMonth = rows.Where(r => r.Actual.HasValue).Select(r => r.Month).DefaultIfEmpty(rows.Max(r => r.Month)).Max();
+        var snap = rows.Where(r => r.Month == snapMonth).ToList();
+        bool snapHasActual = snap.Any(r => r.Actual.HasValue);
+
+        void WriteBreakdown(string sheet, string nameHeader, IEnumerable<(string Name, int P, int A)> items)
+        {
+            var ws = AddSheet(wb, sheet);
+            StyleHeader(ws, new[] { nameHeader, "Projected", "Actual", "Gap", "Fill rate", "Status" });
+            int r = 2;
+            foreach (var it in items.OrderByDescending(i => snapHasActual ? i.P - i.A : i.P).ThenBy(i => i.Name, StringComparer.OrdinalIgnoreCase))
+            {
+                ws.Cell(r, 1).Value = SafeText(it.Name);
+                SetIntCell(ws.Cell(r, 2), it.P);
+                if (snapHasActual)
+                {
+                    SetIntCell(ws.Cell(r, 3), it.A);
+                    ws.Cell(r, 4).FormulaA1 = $"=B{r}-C{r}";
+                    ws.Cell(r, 5).FormulaA1 = $"=IF(B{r}=0,\"\",C{r}/B{r})";
+                    ws.Cell(r, 5).Style.NumberFormat.Format = "0.0%";
+                    var fill = it.P > 0 ? it.A * 100.0 / it.P : 100.0;
+                    ws.Cell(r, 6).Value = fill >= 95 ? "On track" : fill >= 85 ? "Watch" : "Understaffed";
+                }
+                else ws.Cell(r, 6).Value = "No actual data";
+                r++;
+            }
+            Finalize(ws);
+        }
+        WriteBreakdown($"By Store ({monthName[snapMonth - 1]})", "Store", snap.GroupBy(r => r.Store).Select(g => (g.Key, g.Sum(x => x.Projected), g.Sum(x => x.Actual ?? 0))));
+        WriteBreakdown($"By Job ({monthName[snapMonth - 1]})", "Job title", snap.GroupBy(r => r.Job).Select(g => (g.Key, g.Sum(x => x.Projected), g.Sum(x => x.Actual ?? 0))));
+
+        // ── Data: one flat row per store/job/month — the pivot tables' source ──
+        var data = AddSheet(wb, "Data");
+        string[] dh = { "Period", "Year", "Month", "Store", "Job Title", "Projected", "Actual", "Gap", "Fill %" };
+        StyleHeader(data, dh);
+        int dr = 2;
+        foreach (var r in rows)
+        {
+            data.Cell(dr, 1).Value = $"{r.Year}-{r.Month:D2}";
+            data.Cell(dr, 2).Value = (double)r.Year;
+            data.Cell(dr, 3).Value = monthName[r.Month - 1];
+            data.Cell(dr, 4).Value = SafeText(r.Store);
+            data.Cell(dr, 5).Value = SafeText(r.Job);
+            data.Cell(dr, 6).Value = (double)r.Projected;
+            if (r.Actual.HasValue)
+            {
+                data.Cell(dr, 7).Value = (double)r.Actual.Value;
+                data.Cell(dr, 8).Value = (double)(r.Projected - r.Actual.Value);
+                if (r.Projected > 0) { data.Cell(dr, 9).Value = r.Actual.Value / (double)r.Projected; data.Cell(dr, 9).Style.NumberFormat.Format = "0.0%"; }
+            }
+            dr++;
+        }
+        var lastRow = dr - 1;
+        data.SheetView.FreezeRows(1);
+        data.Range(1, 1, lastRow, dh.Length).SetAutoFilter();
+        data.Columns().AdjustToContents();
+
+        // ── Pivot tables (Excel builds them from the Data sheet when the file opens) ──
+        var source = data.Range(1, 1, lastRow, dh.Length);
+        void AddPivot(string sheetName, string pivotName, string rowField, string? colField, params string[] valueFields)
+        {
+            var ws = AddSheet(wb, sheetName);
+            var pt = ws.PivotTables.Add(pivotName, ws.Cell(3, 1), source);
+            pt.RowLabels.Add(rowField);
+            if (colField != null) pt.ColumnLabels.Add(colField);
+            foreach (var v in valueFields)
+                pt.Values.Add(v, $"Sum of {v}").SetSummaryFormula(XLPivotSummary.Sum);
+            pt.ShowGrandTotalsRows = true;
+            pt.ShowGrandTotalsColumns = true;
+            ws.Cell(1, 1).Value = $"{sheetName} — refreshes when opened in Excel";
+            ws.Cell(1, 1).Style.Font.Bold = true;
+        }
+        AddPivot("Pivot Store x Period", "PivotStorePeriod", "Store", "Period", "Projected");
+        AddPivot("Pivot Job x Period", "PivotJobPeriod", "Job Title", "Period", "Projected");
+        AddPivot("Pivot Store Gap", "PivotStoreGap", "Store", null, "Projected", "Actual", "Gap");
         return wb;
     }
 
