@@ -72,7 +72,8 @@
 <div id="wpBody" hidden>
     <div id="wpNoActual" class="wp-note" hidden><i class="bi bi-info-circle-fill"></i><span>@L["WP_NoActual"]</span></div>
 
-    <div id="wpKpis" class="kpi-grid mb-4"></div>
+    <div id="wpKpis" class="kpi-grid mb-2"></div>
+    <div id="wpAttrNote" class="text-muted-custom small mb-4" hidden></div>
 
     <div class="row g-3 mb-4">
         <div class="col-12 col-xl-7">
@@ -101,6 +102,7 @@
                     <th class="num">@L["WP_ColProjected"]</th>
                     <th class="num">@L["WP_ColActual"]</th>
                     <th class="num">@L["WP_ColGap"]</th>
+                    <th class="num">@L["WP_ColHiring"]</th>
                     <th>@L["WP_ColFill"]</th>
                     <th>@L["WP_ColStatus"]</th>
                 </tr></thead>
@@ -118,7 +120,7 @@
      data-kpi-fill="@L["WP_KpiFill"]" data-kpi-fill-desc="@L["WP_KpiFillDesc"]"
      data-projected="@L["WP_Projected"]" data-actual="@L["WP_Actual"]"
      data-ok="@L["WP_StatusOk"]" data-watch="@L["WP_StatusWatch"]" data-critical="@L["WP_StatusCritical"]" data-none="@L["WP_StatusNone"]"
-     data-gap="@L["WP_ColGap"]" data-fill="@L["WP_ColFill"]" data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
+     data-hiring="@L["WP_ColHiring"]" data-kpi-hiring="@L["WP_KpiHiring"]" data-kpi-hiring-desc="@L["WP_KpiHiringDesc"]" data-attr-note="@L["WP_AttrNote"]" data-no-attr="@L["WP_NoAttrition"]" data-gap="@L["WP_ColGap"]" data-fill="@L["WP_ColFill"]" data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
      data-error="@L["Common_NoData"]"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -198,7 +200,11 @@ function wpRenderKpis(d) {
         card('bi-bullseye', '', k.projected, wpL.kpiProjected, wpL.kpiProjectedDesc) +
         card('bi-people-fill', '', has ? k.actual : dash, wpL.kpiActual, wpL.kpiActualDesc) +
         card('bi-arrow-down-up', gapColor, has ? (k.gap > 0 ? '+' : '') + k.gap : dash, wpL.kpiGap, wpL.kpiGapDesc) +
-        card('bi-percent', fillColor, has ? k.fillPercent + '%' : dash, wpL.kpiFill, wpL.kpiFillDesc);
+        card('bi-percent', fillColor, has ? k.fillPercent + '%' : dash, wpL.kpiFill, wpL.kpiFillDesc) +
+        card('bi-person-plus-fill', has && k.hiringNeed > 0 ? 'text-danger' : '', has ? k.hiringNeed : dash, wpL.kpiHiring, wpL.kpiHiringDesc);
+    const note = document.getElementById('wpAttrNote');
+    note.hidden = !has;
+    note.textContent = !has ? '' : d.attritionMonths > 0 ? wpL.attrNote.replace('{0}', d.attritionMonths) : wpL.noAttr;
 }
 
 function wpRenderJobChart(d) {
@@ -223,7 +229,7 @@ function wpRenderJobChart(d) {
                         label: c => ` ${c.dataset.label}: ${c.formattedValue}`,
                         afterBody: items => {
                             const r = rows[items[0].dataIndex];
-                            return d.hasActual ? [`${wpL.gap}: ${r.gap > 0 ? '+' : ''}${r.gap}`, `${wpL.fill}: ${r.fillPercent}%`] : [];
+                            return d.hasActual ? [`${wpL.gap}: ${r.gap > 0 ? '+' : ''}${r.gap}`, `${wpL.fill}: ${r.fillPercent}%`, `${wpL.hiring}: ${r.hiringNeed}`] : [];
                         }
                     }
                 },
@@ -277,6 +283,7 @@ function wpRenderStores() {
             <td class="num">${r.projected}</td>
             <td class="num">${has ? r.actual : '—'}</td>
             <td class="num ${gapCls}">${gapTxt}</td>
+            <td class="num">${has ? r.hiringNeed : '—'}</td>
             <td>${fill}</td>
             <td><span class="wp-pill ${r.status}">${sapEscape(wpPillLabel(r.status))}</span></td>
         </tr>`;

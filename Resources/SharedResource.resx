@@ -1906,4 +1906,9 @@
   <data name="SP_StaffingPlan" xml:space="preserve"><value>Staffing Plan</value></data>
   <data name="SP_PlanNoData" xml:space="preserve"><value>No projection for this store in the selected month.</value></data>
   <data name="SP_PlanUpcoming" xml:space="preserve"><value>Projected headcount for the coming months</value></data>
+  <data name="WP_KpiHiring" xml:space="preserve"><value>Hiring Need (est.)</value></data>
+  <data name="WP_KpiHiringDesc" xml:space="preserve"><value>Shortage plus expected resignations</value></data>
+  <data name="WP_ColHiring" xml:space="preserve"><value>Hiring need</value></data>
+  <data name="WP_AttrNote" xml:space="preserve"><value>Hiring need = shortage + expected resignations, based on the average monthly resignations of the last {0} months. It is an estimate.</value></data>
+  <data name="WP_NoAttrition" xml:space="preserve"><value>There is no resignation history yet, so the hiring need equals the shortage.</value></data>
 </root>

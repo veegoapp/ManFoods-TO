@@ -17,6 +17,9 @@ public class WorkforcePlanningDto
     /// <summary>Whether the selected month has an uploaded active-employee roster
     /// (future months only have a projection).</summary>
     public bool HasActual { get; set; }
+    /// <summary>How many recent roster months the expected-resignations average is based on
+    /// (0 = no history, so hiring need equals the shortage).</summary>
+    public int AttritionMonths { get; set; }
     public PlanningKpiDto Kpis { get; set; } = new();
     public List<PlanningRowDto> ByJob { get; set; } = new();
     public List<PlanningRowDto> ByStore { get; set; } = new();
@@ -32,6 +35,11 @@ public class PlanningKpiDto
     public double FillPercent { get; set; }
     public int StoresCount { get; set; }
     public int StoresShort { get; set; }
+    /// <summary>Estimated hires needed: per store and job, the shortage plus expected
+    /// resignations (never below zero), summed.</summary>
+    public int HiringNeed { get; set; }
+    /// <summary>Expected resignations per month (recent average) in the compared stores/jobs.</summary>
+    public double ExpectedAttrition { get; set; }
 }
 
 public class PlanningRowDto
@@ -43,6 +51,8 @@ public class PlanningRowDto
     public double FillPercent { get; set; }
     /// <summary>"ok" | "watch" | "critical" | "none" (no actual roster for the month).</summary>
     public string Status { get; set; } = "none";
+    public int HiringNeed { get; set; }
+    public double ExpectedAttrition { get; set; }
 }
 
 public class PlanningTrendPointDto
@@ -63,6 +73,10 @@ public class PlanningDetailRow
     public int Projected { get; set; }
     /// <summary>Null when the month has no uploaded active-employee roster.</summary>
     public int? Actual { get; set; }
+    /// <summary>Expected resignations per month for this store/job (null without a roster).</summary>
+    public double? ExpectedAttrition { get; set; }
+    /// <summary>max(0, projected − actual + expected resignations); null without a roster.</summary>
+    public double? HiringNeed { get; set; }
 }
 
 /// <summary>A store's staffing fill for one month — drives the badge on the Stores page cards.</summary>

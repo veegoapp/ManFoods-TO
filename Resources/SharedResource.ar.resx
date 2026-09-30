@@ -1912,4 +1912,9 @@
   <data name="SP_StaffingPlan" xml:space="preserve"><value>خطة التوظيف</value></data>
   <data name="SP_PlanNoData" xml:space="preserve"><value>لا توجد توقعات لهذا الفرع في الشهر المختار.</value></data>
   <data name="SP_PlanUpcoming" xml:space="preserve"><value>العدد المتوقّع للشهور القادمة</value></data>
+  <data name="WP_KpiHiring" xml:space="preserve"><value>احتياج التعيين (تقديري)</value></data>
+  <data name="WP_KpiHiringDesc" xml:space="preserve"><value>العجز زائد الاستقالات المتوقّعة</value></data>
+  <data name="WP_ColHiring" xml:space="preserve"><value>احتياج التعيين</value></data>
+  <data name="WP_AttrNote" xml:space="preserve"><value>احتياج التعيين = العجز + الاستقالات المتوقّعة، بناءً على متوسط الاستقالات الشهرية لآخر {0} شهور. ده تقدير.</value></data>
+  <data name="WP_NoAttrition" xml:space="preserve"><value>مفيش سجل استقالات لسه، فاحتياج التعيين بيساوي العجز.</value></data>
 </root>
