@@ -614,6 +614,124 @@ public class UploadService : IUploadService
         return (true, message, parsed.Count);
     }
 
+    private static string CollapseSpaces(string s) => Regex.Replace(s ?? "", @"\s+", " ").Trim();
+
+    // "1480001|Merghany" and "1480001  |  Merghany" both become "1480001 | Merghany".
+    private static string NormalizeStoreLabel(string s) =>
+        Regex.Replace(CollapseSpaces(s), @"\s*\|\s*", " | ");
+
+    private static string Fold(string s) => s.ToLowerInvariant();
+
+    public async Task<(bool, string, int, string?)> UploadJobProjectionsAsync(IFormFile file, int year, string uploadedBy)
+    {
+        await ValidateFileAsync(file);
+        if (year < 2000 || year > 2100) throw new InvalidOperationException(_L["Msg_JobProjInvalidYear"].Value);
+        var fileBytes = await ReadBytesAsync(file);
+        using var ms = new MemoryStream(fileBytes);
+        using var wb = new XLWorkbook(ms);
+
+        var monthNames = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames;
+
+        // Names already known to the portal, so the sheet's spelling is stored
+        // the way the rest of the data spells it, and unknown ones can be flagged.
+        var knownStores = new Dictionary<string, string>();
+        var storeNames = await _db.ActiveEmployees.Select(e => e.Store).Distinct().ToListAsync();
+        storeNames.AddRange(await _db.StoreReferences.Select(r => r.StoreName).Distinct().ToListAsync());
+        foreach (var n in storeNames)
+        {
+            if (string.IsNullOrWhiteSpace(n)) continue;
+            knownStores.TryAdd(Fold(NormalizeStoreLabel(n)), n.Trim());
+        }
+        var knownJobs = new Dictionary<string, string>();
+        foreach (var n in await _db.ActiveEmployees.Select(e => e.JobTitle).Distinct().ToListAsync())
+        {
+            if (string.IsNullOrWhiteSpace(n)) continue;
+            knownJobs.TryAdd(Fold(CollapseSpaces(n)), CollapseSpaces(n));
+        }
+
+        var rows = new Dictionary<(int Month, string Store, string Job), int>();
+        var monthsSeen = new SortedSet<int>();
+        var skippedSheets = new List<string>();
+        var unknownStores = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+        var newJobs = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+        int badCells = 0;
+
+        foreach (var ws in wb.Worksheets)
+        {
+            var idx = Array.FindIndex(monthNames, n => n.Length > 0 && string.Equals(n, ws.Name.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (idx < 0) { skippedSheets.Add(ws.Name); continue; }
+            int month = idx + 1;
+
+            var lastCol = ws.LastColumnUsed()?.ColumnNumber() ?? 0;
+            var jobCols = new List<(int Col, string Job)>();
+            for (int c = 2; c <= lastCol; c++)
+            {
+                var raw = CollapseSpaces(ws.Cell(1, c).GetString());
+                if (raw.Length == 0) continue;
+                var job = knownJobs.TryGetValue(Fold(raw), out var kj) ? kj : raw;
+                if (knownJobs.Count > 0 && !knownJobs.ContainsKey(Fold(raw))) newJobs.Add(raw);
+                jobCols.Add((c, job));
+            }
+
+            foreach (var row in ws.RowsUsed().Skip(1))
+            {
+                var storeRaw = row.Cell(1).GetString();
+                if (string.IsNullOrWhiteSpace(storeRaw)) continue;
+                var storeNorm = NormalizeStoreLabel(storeRaw);
+                string store;
+                if (knownStores.TryGetValue(Fold(storeNorm), out var ks)) store = ks;
+                else
+                {
+                    store = storeNorm;
+                    if (knownStores.Count > 0) unknownStores.Add(storeNorm);
+                }
+
+                foreach (var (col, job) in jobCols)
+                {
+                    var cell = row.Cell(col);
+                    var text = cell.GetString().Trim();
+                    if (text.Length == 0) continue;
+                    if (!double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d)
+                        || d < 0 || d != Math.Floor(d) || d > int.MaxValue)
+                    {
+                        badCells++;
+                        continue;
+                    }
+                    rows[(month, store, job)] = (int)d;
+                    monthsSeen.Add(month);
+                }
+            }
+        }
+
+        if (monthsSeen.Count == 0)
+            throw new InvalidOperationException(_L["Msg_JobProjNoMonthSheets"].Value);
+
+        var entities = rows.Select(kv => new JobHeadcountProjection
+        {
+            Year = year, Month = kv.Key.Month, StoreName = kv.Key.Store,
+            JobTitle = kv.Key.Job, ProjectedHeadcount = kv.Value,
+        }).ToList();
+
+        await using var tx = await _db.Database.BeginTransactionAsync();
+        // Whole-year replace: the workbook is the complete projection for the year.
+        await _db.JobHeadcountProjections.Where(j => j.Year == year).ExecuteDeleteAsync();
+        await _db.UploadLogs.Where(l => l.FileType == "job_projections" && l.Year == year).ExecuteDeleteAsync();
+        await _db.JobHeadcountProjections.AddRangeAsync(entities);
+        _db.UploadLogs.Add(new UploadLog { FileType = "job_projections", FileName = file.FileName, Month = 0, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
+        await _db.SaveChangesAsync();
+        await tx.CommitAsync();
+
+        var message = string.Format(_L["Msg_JobProjProcessed"].Value, entities.Count, monthsSeen.Count, year);
+
+        var warnings = new List<string>();
+        static string Cap(IEnumerable<string> items) { var l = items.ToList(); return string.Join(", ", l.Take(10)) + (l.Count > 10 ? $" (+{l.Count - 10})" : ""); }
+        if (skippedSheets.Count > 0) warnings.Add(string.Format(_L["Msg_JobProjSkippedSheets"].Value, Cap(skippedSheets)));
+        if (unknownStores.Count > 0) warnings.Add(string.Format(_L["Msg_JobProjUnknownStores"].Value, unknownStores.Count, Cap(unknownStores)));
+        if (newJobs.Count > 0) warnings.Add(string.Format(_L["Msg_JobProjNewJobs"].Value, newJobs.Count, Cap(newJobs)));
+        if (badCells > 0) warnings.Add(string.Format(_L["Msg_JobProjBadCells"].Value, badCells));
+        return (true, message, entities.Count, warnings.Count > 0 ? string.Join(" ", warnings) : null);
+    }
+
     public async Task<(List<UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize, string sort = "date", string dir = "desc")
     {
         var logs = await _db.UploadLogs.OrderByDescending(l => l.UploadDate)
@@ -641,6 +759,19 @@ public class UploadService : IUploadService
             items.Add(new UploadHistoryItem
             {
                 Kind = "exit_interviews",
+                UploadDate = l.UploadDate,
+                UploadedBy = l.UploadedBy,
+                PrimaryLogId = l.Id,
+                Files = new List<UploadFileRef> { new() { LogId = l.Id, FileType = l.FileType, FileName = l.FileName, HasFile = l.HasFile } },
+            });
+        }
+
+        foreach (var l in logs.Where(l => l.FileType == "job_projections"))
+        {
+            items.Add(new UploadHistoryItem
+            {
+                Kind = "job_projections",
+                Year = l.Year,
                 UploadDate = l.UploadDate,
                 UploadedBy = l.UploadedBy,
                 PrimaryLogId = l.Id,
@@ -777,6 +908,17 @@ public class UploadService : IUploadService
             await _db.StoreReferences.Where(s => s.Month == log.Month && s.Year == log.Year).ExecuteDeleteAsync();
             await _db.UploadLogs.Where(l => PeriodFileTypes.Contains(l.FileType) && l.Month == log.Month && l.Year == log.Year).ExecuteDeleteAsync();
             InvalidateScorecardHistoricalCache();
+            return;
+        }
+
+        if (log.FileType == "job_projections")
+        {
+            // A job-projection upload is a whole-year snapshot, so removing its
+            // log removes that year's projection rows too.
+            await using var jtx = await _db.Database.BeginTransactionAsync();
+            await _db.JobHeadcountProjections.Where(j => j.Year == log.Year).ExecuteDeleteAsync();
+            await _db.UploadLogs.Where(l => l.FileType == "job_projections" && l.Year == log.Year).ExecuteDeleteAsync();
+            await jtx.CommitAsync();
             return;
         }
 

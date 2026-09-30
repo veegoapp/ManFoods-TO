@@ -17,6 +17,12 @@ public interface IUploadService
 
     Task<(bool success, string message, int rows)> UploadExitInterviewsAsync(IFormFile file, string uploadedBy);
 
+    /// <summary>Uploads a yearly job-level headcount projection workbook: one sheet
+    /// per month (named January…December), stores as rows, job titles as columns.
+    /// Replaces every projection row for the chosen year. Unknown stores or job
+    /// titles are accepted and reported in the returned warning.</summary>
+    Task<(bool success, string message, int rows, string? warning)> UploadJobProjectionsAsync(IFormFile file, int year, string uploadedBy);
+
     /// <summary>
     /// Upload history grouped so the three period-tied files show as one row.
     /// Deleting any file in a period group (via <see cref="DeleteLogAsync"/>)

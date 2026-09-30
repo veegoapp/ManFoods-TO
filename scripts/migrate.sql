@@ -555,6 +555,25 @@ IF COL_LENGTH('dbo.login_history', 'failure_reason') IS NULL
 IF OBJECT_ID('dbo.workforce_projections', 'U') IS NOT NULL
     DROP TABLE dbo.workforce_projections;
 
+-- ── job_headcount_projections ────────────────────────────────────────────
+-- Projected headcount per job title per store per month, uploaded as one
+-- yearly workbook (a sheet per month). A re-upload replaces the whole year.
+IF OBJECT_ID('dbo.job_headcount_projections', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.job_headcount_projections (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        year INT NOT NULL DEFAULT 0,
+        month INT NOT NULL DEFAULT 0,
+        store_name NVARCHAR(450) NOT NULL DEFAULT '',
+        job_title NVARCHAR(200) NOT NULL DEFAULT '',
+        projected_headcount INT NOT NULL DEFAULT 0,
+        created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+    );
+END
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_job_headcount_projections_period_store_job' AND object_id = OBJECT_ID('dbo.job_headcount_projections'))
+    CREATE UNIQUE INDEX ux_job_headcount_projections_period_store_job
+        ON dbo.job_headcount_projections (year, month, store_name, job_title);
+
 -- ── page_access_config ────────────────────────────────────────────────────
 -- Admin-configurable per-area access. One row per access area (see
 -- Services/AccessAreas). is_restricted = 1 means restricted roles (OC/OM/Head

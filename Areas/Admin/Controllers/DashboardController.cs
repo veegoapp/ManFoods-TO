@@ -279,6 +279,23 @@ public class DashboardController : Controller
         }
     }
 
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
+    public async Task<IActionResult> UploadJobProjections(MvcApp.Models.ViewModels.JobProjectionUploadViewModel vm)
+    {
+        if (!ModelState.IsValid || vm.File == null) return RedirectToUploads(error: _L["Msg_SelectFile"].Value);
+        try
+        {
+            var email = HttpContext.Session.GetEmail();
+            var (_, msg, _, warning) = await _uploads.UploadJobProjectionsAsync(vm.File, vm.Year, email);
+            return RedirectToUploads(success: msg, warning: warning);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Job projection upload failed for {Year}", vm.Year);
+            return RedirectToUploads(error: string.Format(_L["Msg_JobProjUploadFailed"].Value, ex.Message));
+        }
+    }
+
     [HttpGet("admin/dashboard/download-template")]
     [RequireAdminAuth]
     public IActionResult DownloadTemplate([FromQuery] string type)
@@ -463,6 +480,29 @@ public class DashboardController : Controller
             roleValidation.ErrorMessage = "Please choose a Role from the dropdown list.";
 
             ws.Columns().AdjustToContents();
+        }
+        else if (type == "job_projections")
+        {
+            fileName = "Template_Job_Projections.xlsx";
+            var jobs = new[] { "Crew", "Crew Trainer", "McAcademy", "Gem (Guest Experience Manager)", "MDS" };
+            var stores = new[] { "1480001 | Merghany", "1480002 | Tahrir 1" };
+            foreach (var monthName in System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames.Take(12))
+            {
+                var ws = wb.AddWorksheet(monthName);
+                ws.Cell(1, 1).Value = "Store";
+                for (int i = 0; i < jobs.Length; i++) ws.Cell(1, i + 2).Value = jobs[i];
+                var header = ws.Range(1, 1, 1, jobs.Length + 1);
+                header.Style.Font.Bold = true;
+                header.Style.Fill.BackgroundColor = XLColor.FromHtml("#C8102E");
+                header.Style.Font.FontColor = XLColor.White;
+                header.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                for (int r = 0; r < stores.Length; r++)
+                {
+                    ws.Cell(r + 2, 1).Value = stores[r];
+                    for (int i = 0; i < jobs.Length; i++) ws.Cell(r + 2, i + 2).Value = 0;
+                }
+                ws.Columns().AdjustToContents();
+            }
         }
         else
         {

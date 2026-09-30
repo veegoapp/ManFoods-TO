@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<StoreReference> StoreReferences { get; set; }
     public DbSet<UploadLog> UploadLogs { get; set; }
     public DbSet<ExitInterview> ExitInterviews { get; set; }
+    public DbSet<JobHeadcountProjection> JobHeadcountProjections { get; set; }
     public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
     public DbSet<AppSetting> AppSettings { get; set; }
     public DbSet<StoreActionPlan> StoreActionPlans { get; set; }
@@ -61,6 +62,15 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<LoginHistory>()
             .HasIndex(l => new { l.UserId, l.LoggedInAt })
             .HasDatabaseName("ix_login_history_user_logged_in_at");
+
+        // One projection row per year/month/store/job — a re-upload replaces the
+        // whole year (same fresh-DB caveat as above).
+        modelBuilder.Entity<JobHeadcountProjection>()
+            .HasIndex(j => new { j.Year, j.Month, j.StoreName, j.JobTitle })
+            .IsUnique()
+            .HasDatabaseName("ux_job_headcount_projections_period_store_job");
+        modelBuilder.Entity<JobHeadcountProjection>().Property(j => j.StoreName).HasMaxLength(450);
+        modelBuilder.Entity<JobHeadcountProjection>().Property(j => j.JobTitle).HasMaxLength(200);
 
         // Per-area access configuration — one row per area, keyed by the area
         // string (same fresh-DB caveat as above).

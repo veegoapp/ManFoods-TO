@@ -32,6 +32,15 @@ public class ExitInterviewUploadViewModel
     public IFormFile? File { get; set; }
 }
 
+public class JobProjectionUploadViewModel
+{
+    [Required]
+    public IFormFile? File { get; set; }
+
+    [Required, Range(2000, 2100)]
+    public int Year { get; set; }
+}
+
 public class BulkUserUploadViewModel
 {
     [Required]

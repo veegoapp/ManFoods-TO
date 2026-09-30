@@ -1844,4 +1844,19 @@
   <data name="Set_Access_Desc_scorecard" xml:space="preserve"><value>صفحة بطاقة الأداء.</value></data>
   <data name="Set_Access_Desc_action_center" xml:space="preserve"><value>مركز الإجراءات. فتحه يوسّع العرض فقط — إضافة الملاحظات وتحديد التوصيات تظل محصورة في مطاعم المستخدم دايمًا.</value></data>
   <data name="Set_Access_Desc_reports" xml:space="preserve"><value>صفحة التقارير وملفات الإكسل المصدّرة منها.</value></data>
+  <data name="UL_JobProjections" xml:space="preserve"><value>توقّعات عدد الموظفين لكل وظيفة</value></data>
+  <data name="UL_JobProjectionsSub" xml:space="preserve"><value>العدد المتوقّع للموظفين لكل وظيفة في كل فرع، لكل شهر في السنة.</value></data>
+  <data name="UL_JobProjectionsNote" xml:space="preserve"><value>ملف Excel واحد لكل سنة فيه شيت لكل شهر، اسمه January … December. العمود الأول Store (مثال: 1480001 | Merghany) وباقي الأعمدة أسماء الوظائف. إعادة الرفع بتستبدل السنة المختارة كلها.</value></data>
+  <data name="UL_JobProjectionsTemplate" xml:space="preserve"><value>قالب توقّعات الوظائف</value></data>
+  <data name="DM_UploadJobProjectionsButton" xml:space="preserve"><value>رفع توقّعات الوظائف</value></data>
+  <data name="DM_JobProjectionsBadge" xml:space="preserve"><value>توقّعات وظائف</value></data>
+  <data name="DM_DeleteConfirmJobProj" xml:space="preserve"><value>حذف رفع توقّعات الوظائف ده؟ كل بيانات التوقّعات للسنة دي هتتمسح.</value></data>
+  <data name="Msg_JobProjInvalidYear" xml:space="preserve"><value>من فضلك اختار سنة صحيحة.</value></data>
+  <data name="Msg_JobProjNoMonthSheets" xml:space="preserve"><value>مفيش أي شيت اسمه شهر (January … December) وفيه بيانات في الملف.</value></data>
+  <data name="Msg_JobProjProcessed" xml:space="preserve"><value>تمت معالجة {0} قيمة توقّع وظائف على {1} شهر لسنة {2}.</value></data>
+  <data name="Msg_JobProjSkippedSheets" xml:space="preserve"><value>تم تجاهل شيتات اسمها مش اسم شهر: {0}.</value></data>
+  <data name="Msg_JobProjUnknownStores" xml:space="preserve"><value>{0} فرع مش موجود في بيانات البوابة اتقبلوا برضه: {1}.</value></data>
+  <data name="Msg_JobProjNewJobs" xml:space="preserve"><value>{0} وظيفة مش موجودة في بيانات البوابة اتقبلت برضه: {1}.</value></data>
+  <data name="Msg_JobProjBadCells" xml:space="preserve"><value>تم تخطّي {0} خلية لأنها مش أرقام صحيحة غير سالبة.</value></data>
+  <data name="Msg_JobProjUploadFailed" xml:space="preserve"><value>فشل رفع توقّعات الوظائف: {0}</value></data>
 </root>

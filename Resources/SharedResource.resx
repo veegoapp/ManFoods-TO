@@ -1838,4 +1838,19 @@
   <data name="Set_Access_Desc_scorecard" xml:space="preserve"><value>The Scorecard page.</value></data>
   <data name="Set_Access_Desc_action_center" xml:space="preserve"><value>The Action Center. Opening it widens the view only — adding notes and ticking recommendations always stays limited to a user's own stores.</value></data>
   <data name="Set_Access_Desc_reports" xml:space="preserve"><value>The Reports page and its Excel exports.</value></data>
+  <data name="UL_JobProjections" xml:space="preserve"><value>Job Headcount Projection</value></data>
+  <data name="UL_JobProjectionsSub" xml:space="preserve"><value>Projected number of employees per job title, per store, for every month of a year.</value></data>
+  <data name="UL_JobProjectionsNote" xml:space="preserve"><value>One Excel file per year with a sheet for each month, named January … December. Column A is Store (e.g. 1480001 | Merghany), the other columns are job titles. Re-uploading replaces the whole selected year.</value></data>
+  <data name="UL_JobProjectionsTemplate" xml:space="preserve"><value>Job Projection Template</value></data>
+  <data name="DM_UploadJobProjectionsButton" xml:space="preserve"><value>Upload Job Projection</value></data>
+  <data name="DM_JobProjectionsBadge" xml:space="preserve"><value>Job Projection</value></data>
+  <data name="DM_DeleteConfirmJobProj" xml:space="preserve"><value>Delete this job projection upload? All projection data for that year will be removed.</value></data>
+  <data name="Msg_JobProjInvalidYear" xml:space="preserve"><value>Please choose a valid year.</value></data>
+  <data name="Msg_JobProjNoMonthSheets" xml:space="preserve"><value>No sheet named after a month (January … December) with data was found in the file.</value></data>
+  <data name="Msg_JobProjProcessed" xml:space="preserve"><value>Processed {0} job projection values across {1} month(s) for {2}.</value></data>
+  <data name="Msg_JobProjSkippedSheets" xml:space="preserve"><value>Ignored sheets that are not named after a month: {0}.</value></data>
+  <data name="Msg_JobProjUnknownStores" xml:space="preserve"><value>{0} store(s) not found in the portal data were still imported: {1}.</value></data>
+  <data name="Msg_JobProjNewJobs" xml:space="preserve"><value>{0} job title(s) not found in the portal data were still imported: {1}.</value></data>
+  <data name="Msg_JobProjBadCells" xml:space="preserve"><value>{0} cell(s) were skipped because they were not whole non-negative numbers.</value></data>
+  <data name="Msg_JobProjUploadFailed" xml:space="preserve"><value>Job projection upload failed: {0}</value></data>
 </root>
