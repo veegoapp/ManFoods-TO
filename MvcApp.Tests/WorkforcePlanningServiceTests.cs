@@ -182,6 +182,23 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task StoreRows_CarryTheOperationConsultant_PreferringThePlannedPeriod()
+    {
+        var db = NewDb();
+        Proj(db, 3, "1 | A", "Crew", 10); Proj(db, 3, "2 | B", "Crew", 10); Proj(db, 3, "3 | C", "Crew", 10);
+        db.StoreReferences.Add(new StoreReference { Year = 2026, Month = 2, StoreName = "1 | A", OperationConsultant = "Old OC" });
+        db.StoreReferences.Add(new StoreReference { Year = 2026, Month = 3, StoreName = "1 | A", OperationConsultant = "March OC" });
+        db.StoreReferences.Add(new StoreReference { Year = 2026, Month = 2, StoreName = "2 | B", OperationConsultant = "Feb OC" }); // no March entry -> latest before
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 3, null, null, "Admin", null);
+
+        Assert.Equal("March OC", dto.ByStore.Single(r => r.Name == "1 | A").OperationConsultant);
+        Assert.Equal("Feb OC", dto.ByStore.Single(r => r.Name == "2 | B").OperationConsultant);
+        Assert.Equal("", dto.ByStore.Single(r => r.Name == "3 | C").OperationConsultant);
+    }
+
+    [Fact]
     public async Task StoreAndJobFilters_NarrowTheResult()
     {
         var db = NewDb();

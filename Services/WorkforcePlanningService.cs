@@ -60,6 +60,31 @@ public class WorkforcePlanningService : IWorkforcePlanningService
     private static string Norm(string? s) => Regex.Replace((s ?? "").Trim(), @"\s+", " ").ToLowerInvariant();
     private static string AttrKey(string store, string job) => Norm(store) + "\u001f" + Norm(job);
 
+    // Operation Consultant per store for the planned period, from the Store Reference file;
+    // a store missing from that period falls back to its most recent entry.
+    private async Task<Dictionary<string, string>> GetOperationConsultantsAsync(int year, int month)
+    {
+        var key = $"planning:oc:{year}:{month}";
+        if (_cache.TryGetValue(key, out Dictionary<string, string>? cached) && cached != null) return cached;
+
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var target = year * 100 + month;
+        var rows = await _db.StoreReferences.AsNoTracking()
+            .Where(s => s.OperationConsultant != "")
+            .Select(s => new { s.StoreName, s.OperationConsultant, Period = s.Year * 100 + s.Month })
+            .ToListAsync();
+        foreach (var g in rows.GroupBy(r => r.StoreName.Trim(), StringComparer.OrdinalIgnoreCase))
+        {
+            // Prefer the planned period, else the latest period at or before it, else the latest overall.
+            var pick = g.Where(r => r.Period == target).FirstOrDefault()
+                    ?? g.Where(r => r.Period < target).OrderByDescending(r => r.Period).FirstOrDefault()
+                    ?? g.OrderByDescending(r => r.Period).First();
+            map[g.Key] = pick.OperationConsultant.Trim();
+        }
+        _cache.Set(key, map, CacheOptions());
+        return map;
+    }
+
     private async Task<List<int>> GetRosterPeriodKeysAsync()
     {
         const string key = "planning:roster-periods";
@@ -212,6 +237,9 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             .OrderByDescending(r => dto.HasActual ? r.Gap : r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
         dto.ByJob = sel.ByJob.Select(kv => Row(data.Jobs[kv.Key], kv.Value, dto.HasActual))
             .OrderByDescending(r => r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
+
+        var consultants = await GetOperationConsultantsAsync(y, m);
+        foreach (var r in dto.ByStore) r.OperationConsultant = consultants.TryGetValue(r.Name.Trim(), out var oc) ? oc : "";
 
         var actualTotal = sel.Actual ?? 0;
         dto.Kpis = new PlanningKpiDto

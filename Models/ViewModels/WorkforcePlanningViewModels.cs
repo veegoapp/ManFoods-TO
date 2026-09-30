@@ -53,6 +53,8 @@ public class PlanningRowDto
     public string Status { get; set; } = "none";
     public int HiringNeed { get; set; }
     public double ExpectedAttrition { get; set; }
+    /// <summary>Operation Consultant of the store (only filled for store rows).</summary>
+    public string OperationConsultant { get; set; } = "";
 }
 
 public class PlanningTrendPointDto

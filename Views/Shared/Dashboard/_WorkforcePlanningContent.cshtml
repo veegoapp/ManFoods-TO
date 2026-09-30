@@ -29,6 +29,10 @@
 .wp-table th { position:sticky; top:0; background:var(--bg-2); color:var(--text); font-weight:700; }
 .wp-table td.num, .wp-table th.num { text-align:end; font-variant-numeric:tabular-nums; }
 .wp-table tbody tr:hover { background:var(--bg-2); }
+.wp-table th.sortable { cursor:pointer; user-select:none; }
+.wp-table th.sortable:hover { color:var(--red); }
+.wp-table th.sortable i { font-size:10px; margin-inline-start:5px; opacity:.35; }
+.wp-table th.sortable.sorted i { opacity:1; color:var(--red); }
 .wp-pill { font-size:11px; font-weight:700; padding:3px 10px; border-radius:12px; display:inline-block; }
 .wp-pill.ok { background:oklch(0.62 0.15 155 / .14); color:oklch(0.45 0.15 155); }
 .wp-pill.watch { background:oklch(0.75 0.16 75 / .18); color:oklch(0.5 0.14 75); }
@@ -115,14 +119,15 @@
         </div>
         <div class="wp-table-wrap">
             <table class="wp-table">
-                <thead><tr>
-                    <th>@L["WP_ColStore"]</th>
-                    <th class="num">@L["WP_ColProjected"]</th>
-                    <th class="num">@L["WP_ColActual"]</th>
-                    <th class="num">@L["WP_ColGap"]</th>
-                    <th class="num">@L["WP_ColHiring"]</th>
-                    <th>@L["WP_ColFill"]</th>
-                    <th>@L["WP_ColStatus"]</th>
+                <thead><tr id="wpStoreHead">
+                    <th class="sortable" data-sort="name">@L["WP_ColStore"]<i class="bi"></i></th>
+                    <th class="sortable" data-sort="oc">@L["Common_OperationConsultant"]<i class="bi"></i></th>
+                    <th class="sortable num" data-sort="projected">@L["WP_ColProjected"]<i class="bi"></i></th>
+                    <th class="sortable num" data-sort="actual">@L["WP_ColActual"]<i class="bi"></i></th>
+                    <th class="sortable num" data-sort="gap">@L["WP_ColGap"]<i class="bi"></i></th>
+                    <th class="sortable num" data-sort="hiring">@L["WP_ColHiring"]<i class="bi"></i></th>
+                    <th class="sortable" data-sort="fill">@L["WP_ColFill"]<i class="bi"></i></th>
+                    <th class="sortable" data-sort="status">@L["WP_ColStatus"]<i class="bi"></i></th>
                 </tr></thead>
                 <tbody id="wpStoreRows"></tbody>
             </table>
@@ -286,10 +291,39 @@ function wpRenderTrend(d) {
     });
 }
 
+// Click a column header to sort by it; click again to flip the direction. Until a header
+// is clicked the server order (largest shortage first) is kept.
+const wpSort = { key: null, dir: 'asc' };
+const WP_STATUS_ORDER = { critical: 0, watch: 1, ok: 2, none: 3 };
+const wpSortValue = {
+    name: r => r.name, oc: r => r.operationConsultant || '',
+    projected: r => r.projected, actual: r => r.actual, gap: r => r.gap, hiring: r => r.hiringNeed,
+    fill: r => r.fillPercent, status: r => WP_STATUS_ORDER[r.status] ?? 9,
+};
+function wpSortRows(rows) {
+    if (!wpSort.key) return rows;
+    const val = wpSortValue[wpSort.key], sign = wpSort.dir === 'asc' ? 1 : -1;
+    return [...rows].sort((a, b) => {
+        const x = val(a), y = val(b);
+        // Stores with no consultant always sink to the bottom, whatever the direction.
+        if (wpSort.key === 'oc' && (!x || !y) && x !== y) return !x ? 1 : -1;
+        const c = typeof x === 'string' ? x.localeCompare(y, undefined, { sensitivity: 'base', numeric: true }) : x - y;
+        return (c || a.name.localeCompare(b.name)) * sign;
+    });
+}
+function wpMarkSortedHeader() {
+    document.querySelectorAll('#wpStoreHead th.sortable').forEach(th => {
+        const on = th.dataset.sort === wpSort.key;
+        th.classList.toggle('sorted', on);
+        th.querySelector('i').className = 'bi ' + (on ? (wpSort.dir === 'asc' ? 'bi-caret-up-fill' : 'bi-caret-down-fill') : 'bi-caret-down-fill');
+    });
+}
+
 function wpRenderStores() {
     const term = (document.getElementById('wpSearch').value || '').trim().toLowerCase();
     const has = wpData.hasActual;
-    const rows = wpData.byStore.filter(r => !term || r.name.toLowerCase().includes(term));
+    const rows = wpSortRows(wpData.byStore.filter(r => !term || r.name.toLowerCase().includes(term) || (r.operationConsultant || '').toLowerCase().includes(term)));
+    wpMarkSortedHeader();
     document.getElementById('wpStoreRows').innerHTML = rows.map(r => {
         const gapTxt = has ? (r.gap > 0 ? '+' : '') + r.gap : '—';
         const gapCls = !has ? '' : r.gap > 0 ? 'text-danger' : 'text-success';
@@ -298,6 +332,7 @@ function wpRenderStores() {
             : '—';
         return `<tr>
             <td>${sapEscape(r.name)}</td>
+            <td>${r.operationConsultant ? sapEscape(r.operationConsultant) : '—'}</td>
             <td class="num">${r.projected}</td>
             <td class="num">${has ? r.actual : '—'}</td>
             <td class="num ${gapCls}">${gapTxt}</td>
@@ -313,5 +348,11 @@ document.getElementById('wpMonth').addEventListener('change', e => { wpState.mon
 document.getElementById('wpStore').addEventListener('change', e => { wpState.store = e.target.value; wpLoad(); });
 document.getElementById('wpJob').addEventListener('change', e => { wpState.job = e.target.value; wpLoad(); });
 document.getElementById('wpSearch').addEventListener('input', wpRenderStores);
+document.querySelectorAll('#wpStoreHead th.sortable').forEach(th => th.addEventListener('click', () => {
+    const key = th.dataset.sort;
+    wpSort.dir = wpSort.key === key && wpSort.dir === 'asc' ? 'desc' : 'asc';
+    wpSort.key = key;
+    wpRenderStores();
+}));
 wpLoad();
 </script>
