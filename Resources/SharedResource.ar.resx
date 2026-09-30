@@ -1970,4 +1970,23 @@
   <data name="WP_Unassigned" xml:space="preserve"><value>غير محدد</value></data>
   <data name="WP_In_WorstPg_T" xml:space="preserve"><value>مجموعة الرواتب الأكثر نقصًا</value></data>
   <data name="Guide_WP_Payroll" xml:space="preserve"><value>العدد المخطّط والفعلي لكل مجموعة رواتب، مع الأرقام نفسها في جدول قابل للترتيب. تُرفع التوقّعات لكل مسمى وظيفي، وكل وظيفة تتبع مجموعة رواتب واحدة (من ملف الموظفين النشطين)، فيُضاف توقّع كل وظيفة إلى مجموعتها. والوظيفة التي لا يعمل بها أحد بعد ليس لها مجموعة معروفة وتظهر ضمن «غير محدد». وتنطبق فلاتر الصفحة.</value></data>
+  <data name="Nav_HiringForecast" xml:space="preserve"><value>توقعات التعيين</value></data>
+  <data name="Page_HiringForecast" xml:space="preserve"><value>توقعات التعيين</value></data>
+  <data name="Page_HiringForecastSub" xml:space="preserve"><value>كم شخصًا يحتاج كل فرع لتعيينه، شهرًا بشهر</value></data>
+  <data name="HF_Title" xml:space="preserve"><value>التعيينات المطلوبة لكل فرع</value></data>
+  <data name="HF_Sub" xml:space="preserve"><value>كل خلية هي عدد من يجب تعيينهم في هذا الشهر للوصول إلى التوقّع</value></data>
+  <data name="HF_Legend" xml:space="preserve"><value>كلما زاد احمرار الخلية زاد عدد التعيينات. أشهر «قائمة فعلية» تعتمد على قائمة الموظفين المرفوعة، وأشهر «تقدير» محسوبة من آخر قائمة. تقدير وليس التزامًا.</value></data>
+  <data name="HF_Total" xml:space="preserve"><value>الإجمالي</value></data>
+  <data name="HF_Forecast" xml:space="preserve"><value>تقدير</value></data>
+  <data name="HF_Roster" xml:space="preserve"><value>قائمة فعلية</value></data>
+  <data name="HF_Note" xml:space="preserve"><value>يبدأ التقدير من قائمة الموظفين لشهر {0}. يغادر كل شهر المستقيلون المتوقعون (متوسط آخر {2} أشهر من القوائم) ثم تسدّ التعيينات الفرق حتى التوقّع. وتُزاد التعيينات بنسبة {1}٪ وهي نسبة من يغادرون خلال 90 يومًا من الموظفين الجدد على مستوى الشركة.</value></data>
+  <data name="HF_NoteNoRoster" xml:space="preserve"><value>لم يتم رفع قائمة الموظفين الحاليين بعد، فلا توجد نقطة بداية للتقدير.</value></data>
+  <data name="Guide_HF_Overview" xml:space="preserve"><value>جدول يوضح كم شخصًا يحتاج كل فرع لتعيينه في كل شهر من السنة، لتخطيط التوظيف مبكرًا.</value></data>
+  <data name="Guide_HF_FilterNote" xml:space="preserve"><value>تضيّق السنة والفرع والمسمى الوظيفي واستشاري العمليات والمدير والاستشاري الأول ومدير أول التشغيل الجدول وإجمالياته. ترى فقط الفروع المتاحة لك (الإعدادات ← الوصول، صف تخطيط القوى العاملة).</value></data>
+  <data name="Guide_HF_MatrixTitle" xml:space="preserve"><value>كيف تقرأ الجدول</value></data>
+  <data name="Guide_HF_Matrix" xml:space="preserve"><value>صف لكل فرع مع استشاري العمليات، وعمود لكل شهر وإجمالي في النهاية، وآخر صف يجمع كل الفروع. اضغط على عنوان العمود للترتيب. كلما زاد احمرار الخلية زادت التعيينات المطلوبة. الشرطة تعني أن التوقّع لا يحتوي بيانات لهذا الشهر.</value></data>
+  <data name="Guide_HF_MethodTitle" xml:space="preserve"><value>طريقة الحساب</value></data>
+  <data name="Guide_HF_Method" xml:space="preserve"><value>الأشهر التي لها قائمة موظفين مرفوعة: التعيينات = المتوقّع − الفعلي + الاستقالات المتوقعة (لا تقل عن صفر لكل فرع ووظيفة). الأشهر اللاحقة تُحاكى من آخر قائمة: يغادر المستقيلون المتوقعون ثم تسدّ التعيينات الفرق حتى توقّع ذلك الشهر. وأخيرًا تُزاد التعيينات بنسبة مغادرة الـ 90 يومًا على مستوى الشركة لأن بعض الموظفين الجدد يغادرون سريعًا ويجب تعويضهم.</value></data>
+  <data name="Guide_HF_LimitsTitle" xml:space="preserve"><value>من المهم معرفته</value></data>
+  <data name="Guide_HF_Limits" xml:space="preserve"><value>هذا تقدير مبني على الاستقالات السابقة والتوقّع، ويتغير مع رفع قوائم وتوقّعات جديدة. وليس أمر توظيف.</value></data>
 </root>

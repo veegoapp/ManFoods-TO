@@ -1964,4 +1964,23 @@
   <data name="WP_Unassigned" xml:space="preserve"><value>Unassigned</value></data>
   <data name="WP_In_WorstPg_T" xml:space="preserve"><value>Payroll group with the biggest shortage</value></data>
   <data name="Guide_WP_Payroll" xml:space="preserve"><value>Planned and actual headcount for each payroll group, with the same numbers in a sortable table. The projection is uploaded per job title, and every job belongs to a single payroll group (taken from the active-employee roster), so each job's projection is added to its group. A job that nobody works in yet has no known group and is listed as Unassigned. The filters on the page apply.</value></data>
+  <data name="Nav_HiringForecast" xml:space="preserve"><value>Hiring Forecast</value></data>
+  <data name="Page_HiringForecast" xml:space="preserve"><value>Hiring Forecast</value></data>
+  <data name="Page_HiringForecastSub" xml:space="preserve"><value>How many people each store needs to hire, month by month</value></data>
+  <data name="HF_Title" xml:space="preserve"><value>Hires needed per store</value></data>
+  <data name="HF_Sub" xml:space="preserve"><value>Each cell is the number of people to hire in that month to reach the projection</value></data>
+  <data name="HF_Legend" xml:space="preserve"><value>Darker red = more hires. "Roster" months use the uploaded employee list; "Forecast" months are estimated from the latest roster. An estimate, not a commitment.</value></data>
+  <data name="HF_Total" xml:space="preserve"><value>Total</value></data>
+  <data name="HF_Forecast" xml:space="preserve"><value>Forecast</value></data>
+  <data name="HF_Roster" xml:space="preserve"><value>Roster</value></data>
+  <data name="HF_Note" xml:space="preserve"><value>The forecast starts from the {0} employee list. Expected resignations (average of the last {2} roster months) leave each month, and hires fill the gap up to the projection. Hires are increased by {1}% — the share of new hires who leave within 90 days company-wide.</value></data>
+  <data name="HF_NoteNoRoster" xml:space="preserve"><value>No employee list (active employees) has been uploaded yet, so there is nothing to start the forecast from.</value></data>
+  <data name="Guide_HF_Overview" xml:space="preserve"><value>A table of how many people each store needs to hire in each month of the year, so hiring can be planned ahead.</value></data>
+  <data name="Guide_HF_FilterNote" xml:space="preserve"><value>Year, Store, Job title and the Operation Consultant / Manager / Senior Consultant / Director selectors narrow the table and its totals. You only see the stores you have access to (Settings → Access, Workforce Planning row).</value></data>
+  <data name="Guide_HF_MatrixTitle" xml:space="preserve"><value>Reading the table</value></data>
+  <data name="Guide_HF_Matrix" xml:space="preserve"><value>One row per store with its Operation Consultant, one column per month and a Total at the end; the last row adds up every store. Click a column title to sort. The darker the red, the more hires that store needs that month. A dash means the projection has no data for that month.</value></data>
+  <data name="Guide_HF_MethodTitle" xml:space="preserve"><value>How it is calculated</value></data>
+  <data name="Guide_HF_Method" xml:space="preserve"><value>Months that already have an uploaded employee list: hires = projected − actual + expected resignations (never below zero, per store and job). Later months are simulated from the latest list: people expected to resign leave, then hires fill up to that month's projection. Finally hires are increased by the company-wide 90-day early-leaver rate, because some new hires leave quickly and must be replaced.</value></data>
+  <data name="Guide_HF_LimitsTitle" xml:space="preserve"><value>Good to know</value></data>
+  <data name="Guide_HF_Limits" xml:space="preserve"><value>This is an estimate based on past resignations and the projection; it changes as new employee lists and projections are uploaded. It is not a hiring order.</value></data>
 </root>

@@ -378,6 +378,56 @@ public class WorkforcePlanningServiceTests
         Assert.Equal(10, dto.Kpis.Projected);
         Assert.Single(dto.ByStore);
     }
+
+    [Fact]
+    public async Task HiringForecast_PastMonthUsesNeedFormula_FutureMonthsAreSimulated()
+    {
+        var db = NewDb();
+        // Jan: target 10, have 8. Feb: target 10. Mar: target 12.
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 2, "1 | A", "Crew", 10); Proj(db, 3, "1 | A", "Crew", 12);
+        Active(db, 1, "1 | A", "Crew", 8);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null);
+
+        Assert.True(dto.HasRoster);
+        var row = Assert.Single(dto.Rows);
+        Assert.Equal(2, row.Months[0]);          // Jan (roster): 10 - 8, no resignations history
+        Assert.Equal(2, row.Months[1]);          // Feb: still 8 people, need 2 to reach 10
+        Assert.Equal(2, row.Months[2]);          // Mar: 10 people after Feb, need 2 more to reach 12
+        Assert.Equal(6, row.Total);
+        Assert.Equal(6, dto.GrandTotal);
+        Assert.Equal("actual", dto.MonthModes[0]);
+        Assert.Equal("forecast", dto.MonthModes[1]);
+        Assert.Equal("none", dto.MonthModes[5]);
+    }
+
+    [Fact]
+    public async Task HiringForecast_EarlyLeaverRate_GrossesHiresUp()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10);
+        Active(db, 1, "1 | A", "Crew", 5);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null, earlyLeaverPercent: 50);
+
+        Assert.Equal(10, Assert.Single(dto.Rows).Months[0]); // 5 net hires / (1 - 0.5)
+    }
+
+    [Fact]
+    public async Task HiringForecast_NoRoster_HasNoRows()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null);
+
+        Assert.True(dto.HasData);
+        Assert.False(dto.HasRoster);
+        Assert.Empty(dto.Rows);
+    }
 }
 
 public class WorkforcePlanningReportTests
@@ -391,6 +441,7 @@ public class WorkforcePlanningReportTests
         public Task<MvcApp.Models.ViewModels.StorePlanDto> GetStorePlanAsync(string store, int year, int month, string role, string? assignedName) => throw new NotSupportedException();
         public Task<List<MvcApp.Models.ViewModels.PeriodItem>> GetProjectionPeriodsAsync() => Task.FromResult(new List<MvcApp.Models.ViewModels.PeriodItem>());
         public Task<List<string>> GetProjectionJobsAsync() => Task.FromResult(new List<string>());
+        public Task<MvcApp.Models.ViewModels.HiringForecastDto> GetHiringForecastAsync(int? year, string? stores, string? jobs, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0) => Task.FromResult(new MvcApp.Models.ViewModels.HiringForecastDto());
     }
 
     private static ReportService NewReports(IWorkforcePlanningService planning) =>

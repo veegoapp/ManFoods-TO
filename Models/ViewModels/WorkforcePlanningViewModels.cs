@@ -135,3 +135,41 @@ public class StorePlanDto
     public List<PlanningRowDto> ByJob { get; set; } = new();
     public List<PlanningTrendPointDto> Upcoming { get; set; } = new();
 }
+
+/// <summary>One store's hires needed per month for the Hiring Forecast matrix.</summary>
+public class HiringForecastRowDto
+{
+    public string Store { get; set; } = "";
+    public string OperationConsultant { get; set; } = "";
+    /// <summary>Hires needed in each month, January first (12 values; 0 when the month has no projection).</summary>
+    public int[] Months { get; set; } = new int[12];
+    public int Total { get; set; }
+}
+
+/// <summary>The Hiring Forecast: hires needed per store per month for a year.</summary>
+public class HiringForecastDto
+{
+    public bool HasData { get; set; }
+    public int Year { get; set; }
+    public List<int> Years { get; set; } = new();
+    public List<string> Stores { get; set; } = new();
+    public List<string> Jobs { get; set; } = new();
+    public List<string> OperationConsultants { get; set; } = new();
+    public List<string> OperationManagers { get; set; } = new();
+    public List<string> SeniorOperationConsultants { get; set; } = new();
+    public List<string> OperationDirectors { get; set; } = new();
+    /// <summary>False when no active-employee roster exists to start the forecast from.</summary>
+    public bool HasRoster { get; set; }
+    /// <summary>Latest roster the forecast starts from (0 when none).</summary>
+    public int BaselineYear { get; set; }
+    public int BaselineMonth { get; set; }
+    /// <summary>Roster months used for the expected-resignation average.</summary>
+    public int AttritionMonths { get; set; }
+    /// <summary>Company-wide share (%) of hires who leave within 90 days, used to gross hiring up.</summary>
+    public double EarlyLeaverRate { get; set; }
+    /// <summary>Per month (January first): "actual" (roster exists), "forecast" (simulated) or "none" (no projection).</summary>
+    public string[] MonthModes { get; set; } = Enumerable.Repeat("none", 12).ToArray();
+    public List<HiringForecastRowDto> Rows { get; set; } = new();
+    public int[] MonthTotals { get; set; } = new int[12];
+    public int GrandTotal { get; set; }
+}
