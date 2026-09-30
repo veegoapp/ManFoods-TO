@@ -158,3 +158,26 @@ public class WorkforcePlanningReportTests
         Assert.Single(wb.Worksheets);
     }
 }
+
+public class StoreAccessCacheTests
+{
+    [Fact]
+    public async Task OwnStores_AreCached_UntilInvalidated()
+    {
+        var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        db.StoreReferences.Add(new StoreReference { Month = 1, Year = 2026, StoreName = "1 | A", OperationManagerEmail = "om@x.com" });
+        await db.SaveChangesAsync();
+        var access = new StoreAccessService(db, null, null, new MemoryCache(new MemoryCacheOptions()));
+
+        var first = await access.GetOwnStoreNamesAsync("Operation_Manager", "OM@x.com");
+        Assert.Equal(new[] { "1 | A" }, first);
+
+        // The database changes, but the cached answer is served until invalidated.
+        db.StoreReferences.Add(new StoreReference { Month = 1, Year = 2026, StoreName = "2 | B", OperationManagerEmail = "om@x.com" });
+        await db.SaveChangesAsync();
+        Assert.Equal(new[] { "1 | A" }, await access.GetOwnStoreNamesAsync("Operation_Manager", "om@x.com"));
+
+        StoreAccessService.InvalidateCache();
+        Assert.Equal(new[] { "1 | A", "2 | B" }, (await access.GetOwnStoreNamesAsync("Operation_Manager", "om@x.com"))!.OrderBy(s => s));
+    }
+}

@@ -118,11 +118,13 @@
      data-kpi-fill="@L["WP_KpiFill"]" data-kpi-fill-desc="@L["WP_KpiFillDesc"]"
      data-projected="@L["WP_Projected"]" data-actual="@L["WP_Actual"]"
      data-ok="@L["WP_StatusOk"]" data-watch="@L["WP_StatusWatch"]" data-critical="@L["WP_StatusCritical"]" data-none="@L["WP_StatusNone"]"
-     data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
+     data-gap="@L["WP_ColGap"]" data-fill="@L["WP_ColFill"]" data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
      data-error="@L["Common_NoData"]"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="~/js/chart-colors.js" asp-append-version="true"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>Chart.register(ChartDataLabels);</script>
 <script>
 /* Workforce Planning — projected vs actual headcount. One endpoint
    (/api/workforce-planning/summary) returns the filter options, KPIs, per-job
@@ -132,6 +134,9 @@ const wpL = document.getElementById('wpL').dataset;
 const wpState = { year: '', month: '', store: '', job: '' };
 let wpJobChart, wpTrendChart, wpData;
 
+// Bar colours: dark enough for the white value labels drawn on the bars.
+const WP_PROJECTED = 'oklch(0.5 0.06 258)';
+const WP_ACTUAL = 'oklch(0.55 0.19 25)';
 const wpMonthName = (m, style) => new Date(2000, m - 1, 1).toLocaleString('default', { month: style || 'long' });
 const wpPillLabel = s => wpL[s] || '';
 const wpFillColor = s => s === 'critical' ? 'oklch(0.6 0.22 22)' : s === 'watch' ? 'oklch(0.75 0.16 75)' : 'oklch(0.62 0.15 155)';
@@ -200,15 +205,30 @@ function wpRenderJobChart(d) {
     const rows = d.byJob.filter(r => r.projected > 0 || r.actual > 0);
     const wrap = document.getElementById('wpJobWrap');
     wrap.style.height = Math.max(260, rows.length * 30 + 60) + 'px';
-    const datasets = [{ label: wpL.projected, data: rows.map(r => r.projected), backgroundColor: 'oklch(0.72 0.05 258)', borderRadius: 3 }];
-    if (d.hasActual) datasets.push({ label: wpL.actual, data: rows.map(r => r.actual), backgroundColor: 'oklch(0.55 0.19 25)', borderRadius: 3 });
+    const datasets = [{ label: wpL.projected, data: rows.map(r => r.projected), backgroundColor: WP_PROJECTED, borderRadius: 3 }];
+    if (d.hasActual) datasets.push({ label: wpL.actual, data: rows.map(r => r.actual), backgroundColor: WP_ACTUAL, borderRadius: 3 });
     if (wpJobChart) wpJobChart.destroy();
     wpJobChart = new Chart(document.getElementById('wpJobChart'), {
         type: 'bar',
         data: { labels: rows.map(r => r.name), datasets },
         options: {
             indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } },
+            // Tooltip/hit-testing follow the global chart-colors.js defaults
+            // (index mode, intersect:true) so the popup only appears over a bar.
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        label: c => ` ${c.dataset.label}: ${c.formattedValue}`,
+                        afterBody: items => {
+                            const r = rows[items[0].dataIndex];
+                            return d.hasActual ? [`${wpL.gap}: ${r.gap > 0 ? '+' : ''}${r.gap}`, `${wpL.fill}: ${r.fillPercent}%`] : [];
+                        }
+                    }
+                },
+                datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 11, weight: 'bold' }, formatter: v => v > 0 ? v : '' }
+            },
             scales: { x: { beginAtZero: true, grid: { color: 'rgba(128,128,128,.12)' } }, y: { grid: { display: false } } }
         }
     });
@@ -221,15 +241,23 @@ function wpRenderTrend(d) {
         data: {
             labels: d.trend.map(t => wpMonthName(t.month, 'short')),
             datasets: [
-                { label: wpL.projected, data: d.trend.map(t => t.projected), borderColor: 'oklch(0.6 0.05 258)', backgroundColor: 'oklch(0.6 0.05 258)', borderDash: [6, 4], tension: .25, pointRadius: 3 },
-                { label: wpL.actual, data: d.trend.map(t => t.actual), borderColor: 'oklch(0.55 0.19 25)', backgroundColor: 'oklch(0.55 0.19 25)', tension: .25, pointRadius: 3, spanGaps: false }
+                { label: wpL.projected, data: d.trend.map(t => t.projected), borderColor: WP_PROJECTED, backgroundColor: WP_PROJECTED, borderDash: [6, 4], tension: .25, pointRadius: 3,
+                  datalabels: { align: 'top', anchor: 'end', offset: 4, color: WP_PROJECTED } },
+                { label: wpL.actual, data: d.trend.map(t => t.actual), borderColor: WP_ACTUAL, backgroundColor: WP_ACTUAL, tension: .25, pointRadius: 3, spanGaps: false,
+                  datalabels: { align: 'bottom', anchor: 'start', offset: 4, color: WP_ACTUAL } }
             ]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
+            // Line charts opt back into crosshair-anywhere hover (see chart-colors.js).
             interaction: { mode: 'index', intersect: false },
-            plugins: { legend: { position: 'bottom' } },
-            scales: { y: { beginAtZero: false, grid: { color: 'rgba(128,128,128,.12)' } }, x: { grid: { display: false } } }
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true } },
+                tooltip: { enabled: true, intersect: false, callbacks: { label: c => c.parsed.y == null ? '' : ` ${c.dataset.label}: ${c.formattedValue}` } },
+                datalabels: { font: { size: 10, weight: 'bold' }, formatter: v => v == null ? null : v }
+            },
+            // grace leaves room above/below the line for the value labels.
+            scales: { y: { beginAtZero: false, grace: '12%', grid: { color: 'rgba(128,128,128,.12)' } }, x: { grid: { display: false } } }
         }
     });
 }

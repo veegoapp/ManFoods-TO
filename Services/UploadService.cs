@@ -45,6 +45,7 @@ public class UploadService : IUploadService
     private void InvalidateScorecardHistoricalCache()
     {
         WorkforcePlanningService.InvalidateCache(); // planning compares projected vs active employees
+        StoreAccessService.InvalidateCache(); // store ownership comes from the Store Reference file
         _cache.Remove(ScorecardService.HistoricalRecordsCacheKey);
         _cache.Remove(NinetyDayTurnoverService.ActiveHiresCacheKey);
         _cache.Remove(NinetyDayTurnoverService.ResignationTenuresCacheKey);
@@ -927,6 +928,7 @@ public class UploadService : IUploadService
                 _db.UploadLogs.Add(new UploadLog { FileType = "store_reference", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
                 await _db.SaveChangesAsync();
                 await tx.CommitAsync();
+                StoreAccessService.InvalidateCache();
                 FireAndForgetDetection(month, year, string.Format(_L["Msg_JobStoreReference"].Value, new DateTime(year, month, 1).ToString("MMMM yyyy")));
                 var storeWarning = await BuildUnmatchedRoleEmailWarningAsync(storeRecords);
                 return (true, string.Format(_L["Msg_UpdatedStoreReference"].Value, new DateTime(year, month, 1).ToString("MMMM yyyy"), storeRecords.Count), storeWarning);
