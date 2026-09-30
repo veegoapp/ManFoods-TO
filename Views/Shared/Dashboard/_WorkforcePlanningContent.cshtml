@@ -58,6 +58,24 @@
     </div>
 </div>
 
+@{
+    var workforcePlanningGuide = new PageGuideViewModel
+    {
+        PageKey = "workforceplanning",
+        Overview = L["Guide_WP_Overview"],
+        FilterNote = L["Guide_WP_FilterNote"],
+        Sections = new List<PageGuideSection>
+        {
+            new() { Icon = "bi-speedometer2", Title = L["Guide_WP_KpisTitle"], Body = L["Guide_WP_Kpis"] },
+            new() { Icon = "bi-bar-chart-line-fill", Title = L["WP_ChartByJob"], Body = L["Guide_WP_ByJob"] },
+            new() { Icon = "bi-graph-up-arrow", Title = L["WP_ChartTrend"], Body = L["Guide_WP_Trend"] },
+            new() { Icon = "bi-shop", Title = L["WP_StoresTable"], Body = L["Guide_WP_Stores"] },
+            new() { Icon = "bi-calculator", Title = L["Guide_WP_HiringTitle"], Body = L["Guide_WP_HiringBody"] },
+        }
+    };
+}
+@await Html.PartialAsync("~/Views/Shared/Dashboard/_PageGuide.cshtml", workforcePlanningGuide)
+
 <div id="wpEmpty" class="chart-card" hidden>
     <div class="wp-empty">
         <i class="bi bi-graph-up-arrow"></i>
