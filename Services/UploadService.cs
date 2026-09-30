@@ -813,7 +813,8 @@ public class UploadService : IUploadService
         // Optional per-tab filter: "period" | "exit_interviews" | "job_projections".
         if (!string.IsNullOrEmpty(kind)) items = items.Where(i => i.Kind == kind).ToList();
 
-\1 = sort switch
+        bool asc = dir == "asc";
+        IOrderedEnumerable<UploadHistoryItem> sorted = sort switch
         {
             "type" => asc ? items.OrderBy(i => i.Kind) : items.OrderByDescending(i => i.Kind),
             "name" => asc
