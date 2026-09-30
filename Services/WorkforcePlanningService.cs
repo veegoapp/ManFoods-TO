@@ -175,6 +175,79 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         return dto;
     }
 
+    public async Task<List<PlanningDetailRow>> GetDetailAsync(int year, IReadOnlyCollection<int>? months, string? stores, string? jobs, string role, string? assignedName)
+    {
+        var rows = new List<PlanningDetailRow>();
+        if (!(await GetYearsAsync()).Contains(year)) return rows;
+        var data = await GetYearDataAsync(year);
+
+        var accessible = await _storeAccess.GetAccessibleStoreNamesAsync(role, assignedName);
+        var accessibleSet = accessible == null ? null : new HashSet<string>(accessible.Select(s => s.Trim()), StringComparer.OrdinalIgnoreCase);
+        var storeFilter = MultiValueFilter.Split(stores);
+        var storeSet = storeFilter == null ? null : new HashSet<string>(storeFilter, StringComparer.OrdinalIgnoreCase);
+        var jobFilter = MultiValueFilter.Split(jobs);
+        var jobSet = jobFilter == null ? null : new HashSet<string>(jobFilter, StringComparer.OrdinalIgnoreCase);
+        bool StoreOk(int i) => (accessibleSet == null || accessibleSet.Contains(data.Stores[i])) && (storeSet == null || storeSet.Contains(data.Stores[i]));
+        bool JobOk(int j) => jobSet == null || jobSet.Contains(data.Jobs[j]);
+
+        var actualMonths = data.Actual.Select(c => c.Month).Distinct().ToHashSet();
+        var wanted = months is { Count: > 0 } ? months.ToHashSet() : null;
+
+        // Only stores planned for a month are compared in that month (same rule as the page).
+        var planned = data.Projected.Where(c => (wanted == null || wanted.Contains(c.Month)) && StoreOk(c.Store))
+            .Select(c => (c.Month, c.Store)).ToHashSet();
+        var cells = new Dictionary<(int Month, int Store, int Job), int[]>(); // [projected, actual]
+        foreach (var c in data.Projected)
+        {
+            if (!planned.Contains((c.Month, c.Store)) || !JobOk(c.Job)) continue;
+            Bump(cells, (c.Month, c.Store, c.Job), 0, c.Count);
+        }
+        foreach (var c in data.Actual)
+        {
+            if (!planned.Contains((c.Month, c.Store)) || !JobOk(c.Job)) continue;
+            Bump(cells, (c.Month, c.Store, c.Job), 1, c.Count);
+        }
+        foreach (var kv in cells.OrderBy(k => k.Key.Month).ThenBy(k => data.Stores[k.Key.Store], StringComparer.OrdinalIgnoreCase).ThenBy(k => data.Jobs[k.Key.Job], StringComparer.OrdinalIgnoreCase))
+        {
+            if (kv.Value[0] == 0 && kv.Value[1] == 0) continue;
+            rows.Add(new PlanningDetailRow
+            {
+                Year = year, Month = kv.Key.Month, Store = data.Stores[kv.Key.Store], Job = data.Jobs[kv.Key.Job],
+                Projected = kv.Value[0], Actual = actualMonths.Contains(kv.Key.Month) ? kv.Value[1] : null,
+            });
+        }
+        return rows;
+    }
+
+    public async Task<List<PeriodItem>> GetProjectionPeriodsAsync()
+    {
+        var result = new List<PeriodItem>();
+        foreach (var y in await GetYearsAsync())
+        {
+            var data = await GetYearDataAsync(y);
+            foreach (var m in data.Projected.Select(c => c.Month).Distinct().OrderBy(m => m))
+                result.Add(new PeriodItem { Year = y, Month = m });
+        }
+        return result;
+    }
+
+    public async Task<List<string>> GetProjectionJobsAsync()
+    {
+        var jobs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var y in await GetYearsAsync())
+        {
+            var data = await GetYearDataAsync(y);
+            foreach (var j in data.Projected.Select(c => c.Job).Distinct()) jobs.Add(data.Jobs[j]);
+        }
+        return jobs.OrderBy(j => j, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    private static void Bump<TKey>(Dictionary<TKey, int[]> map, TKey key, int slot, int by) where TKey : notnull
+    {
+        if (!map.TryGetValue(key, out var arr)) map[key] = arr = new int[2];
+        arr[slot] += by;
+    }
+
     private static void Bump(Dictionary<int, int[]> map, int key, int slot, int by)
     {
         if (!map.TryGetValue(key, out var arr)) map[key] = arr = new int[2];

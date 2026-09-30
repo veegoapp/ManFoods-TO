@@ -101,3 +101,60 @@ public class WorkforcePlanningServiceTests
         Assert.Single(dto.ByStore);
     }
 }
+
+public class WorkforcePlanningReportTests
+{
+    private sealed class FakePlanning : IWorkforcePlanningService
+    {
+        public List<MvcApp.Models.ViewModels.PlanningDetailRow> Rows { get; set; } = new();
+        public Task<MvcApp.Models.ViewModels.WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName) => throw new NotSupportedException();
+        public Task<List<MvcApp.Models.ViewModels.PlanningDetailRow>> GetDetailAsync(int year, IReadOnlyCollection<int>? months, string? stores, string? jobs, string role, string? assignedName) => Task.FromResult(Rows);
+        public Task<List<MvcApp.Models.ViewModels.PeriodItem>> GetProjectionPeriodsAsync() => Task.FromResult(new List<MvcApp.Models.ViewModels.PeriodItem>());
+        public Task<List<string>> GetProjectionJobsAsync() => Task.FromResult(new List<string>());
+    }
+
+    private static ReportService NewReports(IWorkforcePlanningService planning) =>
+        new(null!, null!, null!, null!, null!, null!, null!, null!, new AccessAreaContext(), planning);
+
+    [Fact]
+    public async Task Report_HasSummaryBreakdownsDataAndPivotTables()
+    {
+        var fake = new FakePlanning
+        {
+            Rows =
+            {
+                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", Projected = 10, Actual = 8 },
+                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4 },
+                new() { Year = 2026, Month = 2, Store = "1 | A", Job = "Crew", Projected = 11, Actual = null },
+            }
+        };
+        using var wb = await NewReports(fake).BuildWorkforcePlanningReportAsync(2026, null, null, null, "Admin", null);
+
+        using var ms = new MemoryStream();
+        wb.SaveAs(ms);
+        ms.Position = 0;
+
+        // Re-open the saved file: it must be a valid workbook with the expected sheets…
+        using var reopened = new ClosedXML.Excel.XLWorkbook(ms);
+        var names = reopened.Worksheets.Select(w => w.Name).ToList();
+        Assert.Contains("Summary", names);
+        Assert.Contains("Data", names);
+        Assert.Contains(names, n => n.StartsWith("By Store"));
+        Assert.Contains(names, n => n.StartsWith("By Job"));
+        Assert.Equal(3, names.Count(n => n.StartsWith("Pivot")));
+        Assert.Equal(4, reopened.Worksheet("Data").LastRowUsed()!.RowNumber()); // header + 3 rows
+
+        // …and the raw package must really contain pivot table parts.
+        ms.Position = 0;
+        using var zip = new System.IO.Compression.ZipArchive(ms);
+        Assert.Equal(3, zip.Entries.Count(e => e.FullName.StartsWith("xl/pivotTables/pivotTable")));
+        Assert.Contains(zip.Entries, e => e.FullName.EndsWith("pivotCache/pivotCacheDefinition1.xml"));
+    }
+
+    [Fact]
+    public async Task Report_WithNoRows_IsJustASummaryNote()
+    {
+        using var wb = await NewReports(new FakePlanning()).BuildWorkforcePlanningReportAsync(2026, null, null, null, "Admin", null);
+        Assert.Single(wb.Worksheets);
+    }
+}

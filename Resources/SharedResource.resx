@@ -1898,4 +1898,7 @@
   <data name="WP_NoActual" xml:space="preserve"><value>There is no active-employee roster for this month yet (it is a future month), so only the projection is shown.</value></data>
   <data name="Set_Access_Area_workforce_planning" xml:space="preserve"><value>Workforce Planning</value></data>
   <data name="Set_Access_Desc_workforce_planning" xml:space="preserve"><value>The Workforce Planning page (projected vs actual headcount).</value></data>
+  <data name="Rep_Title_WorkforcePlanning" xml:space="preserve"><value>Workforce Planning</value></data>
+  <data name="Rep_Desc_WorkforcePlanning" xml:space="preserve"><value>Projected vs actual headcount by job and store — summary, by month, by store, by job, the full data sheet and ready-made Excel pivot tables.</value></data>
+  <data name="Rep_AllJobs" xml:space="preserve"><value>All job titles</value></data>
 </root>

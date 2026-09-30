@@ -1904,4 +1904,7 @@
   <data name="WP_NoActual" xml:space="preserve"><value>مفيش بيانات موظفين فعلية للشهر ده لسه (شهر مستقبلي)، فالمعروض التوقّع بس.</value></data>
   <data name="Set_Access_Area_workforce_planning" xml:space="preserve"><value>تخطيط القوى العاملة</value></data>
   <data name="Set_Access_Desc_workforce_planning" xml:space="preserve"><value>صفحة تخطيط القوى العاملة (المتوقّع مقابل الفعلي).</value></data>
+  <data name="Rep_Title_WorkforcePlanning" xml:space="preserve"><value>تخطيط القوى العاملة</value></data>
+  <data name="Rep_Desc_WorkforcePlanning" xml:space="preserve"><value>العدد المتوقّع مقابل الفعلي حسب الوظيفة والفرع — ملخص، وحسب الشهر والفرع والوظيفة، وورقة البيانات الكاملة وجداول Pivot جاهزة في Excel.</value></data>
+  <data name="Rep_AllJobs" xml:space="preserve"><value>كل الوظائف</value></data>
 </root>

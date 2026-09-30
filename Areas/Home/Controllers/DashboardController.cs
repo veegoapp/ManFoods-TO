@@ -13,12 +13,14 @@ public class DashboardController : Controller
     private readonly IDashboardService _dashboard;
     private readonly IStoreService _stores;
     private readonly IReportService _reports;
+    private readonly IWorkforcePlanningService _planning;
 
-    public DashboardController(IDashboardService dashboard, IStoreService stores, IReportService reports)
+    public DashboardController(IDashboardService dashboard, IStoreService stores, IReportService reports, IWorkforcePlanningService planning)
     {
         _dashboard = dashboard;
         _stores = stores;
         _reports = reports;
+        _planning = planning;
     }
 
     public IActionResult Index() => RedirectToAction("Workforce");
@@ -67,7 +69,10 @@ public class DashboardController : Controller
 
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetEmail();
-        var periods = await _dashboard.GetAvailablePeriodsAsync();
+        var periods = reportType == "workforce-planning"
+            ? await _planning.GetProjectionPeriodsAsync() // this report's Year/Months filters come from the projection, not the uploaded rosters
+            : await _dashboard.GetAvailablePeriodsAsync();
+        if (reportType == "workforce-planning") ViewBag.Jobs = await _planning.GetProjectionJobsAsync();
         var stores = await _stores.GetStoresAsync(null, null, role, assignedName);
         ViewBag.Stores = stores.Select(s => s.StoreName).Distinct().OrderBy(s => s).ToList();
         ViewBag.OperationManagers = await _dashboard.GetOperationManagersAsync(null, null, role, assignedName);
@@ -97,7 +102,7 @@ public class DashboardController : Controller
     [AccessArea(AccessAreas.Reports)]
     public async Task<IActionResult> Export(int month, int year, string reportType = "stores-overview",
         string? store = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null,
-        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null)
+        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null, string? jobs = null)
     {
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetEmail();
@@ -113,6 +118,7 @@ public class DashboardController : Controller
         socB = string.IsNullOrWhiteSpace(socB) ? null : socB;
         odB = string.IsNullOrWhiteSpace(odB) ? null : odB;
         monthsB = string.IsNullOrWhiteSpace(monthsB) ? null : monthsB;
+        jobs = string.IsNullOrWhiteSpace(jobs) ? null : jobs;
 
         switch (reportType)
         {
@@ -154,6 +160,14 @@ public class DashboardController : Controller
                 return await DownloadWorkbookAsync(
                     await _reports.BuildStoresOverviewReportAsync(month, year, role, assignedName, om, oc, soc, od),
                     $"Stores_Overview_{year}_{month:D2}.xlsx");
+            case "workforce-planning":
+            {
+                var planYear = year > 0 ? year : (await _planning.GetProjectionPeriodsAsync()).Select(p => p.Year).DefaultIfEmpty(0).Max();
+                if (planYear == 0) return NotFound();
+                return await DownloadWorkbookAsync(
+                    await _reports.BuildWorkforcePlanningReportAsync(planYear, months, store, jobs, role, assignedName),
+                    $"Workforce_Planning_{planYear}.xlsx");
+            }
             case "workforce":
                 return await DownloadWorkbookAsync(
                     await _reports.BuildWorkforceReportAsync(month, year, role, assignedName, store, om, oc, soc, od),

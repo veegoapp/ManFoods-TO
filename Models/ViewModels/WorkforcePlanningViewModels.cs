@@ -52,3 +52,15 @@ public class PlanningTrendPointDto
     /// <summary>Null for months without an uploaded roster.</summary>
     public int? Actual { get; set; }
 }
+
+/// <summary>One flat row of the Workforce Planning report: a job in a store in a month.</summary>
+public class PlanningDetailRow
+{
+    public int Year { get; set; }
+    public int Month { get; set; }
+    public string Store { get; set; } = "";
+    public string Job { get; set; } = "";
+    public int Projected { get; set; }
+    /// <summary>Null when the month has no uploaded active-employee roster.</summary>
+    public int? Actual { get; set; }
+}
