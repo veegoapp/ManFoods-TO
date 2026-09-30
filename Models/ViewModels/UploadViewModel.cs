@@ -32,12 +32,6 @@ public class ExitInterviewUploadViewModel
     public IFormFile? File { get; set; }
 }
 
-public class WorkforceProjectionUploadViewModel
-{
-    [Required]
-    public IFormFile? File { get; set; }
-}
-
 public class BulkUserUploadViewModel
 {
     [Required]

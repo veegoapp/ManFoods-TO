@@ -26,13 +26,12 @@ public class StoreHealthService : IStoreHealthService
     private readonly IRetentionService _retention;
     private readonly IEarlyWarningService _earlyWarning;
     private readonly IExitInterviewService _exitInterview;
-    private readonly IWorkforceProjectionService _projection;
 
     private const string SystemRole = "Admin"; // company-wide baselines ignore the viewer's store scope
 
     // ── Pillar weights (sum = 1.0). Effective weights are renormalised per store
     //    over only the pillars that have data, so a store missing (say) exit
-    //    interviews or a projection is scored fairly on what it does have. ──
+    //    interviews is scored fairly on what it does have. ──
     private const double WTurnover   = 0.24;
     private const double WEarly      = 0.20;
     private const double WRetention  = 0.16;
@@ -63,8 +62,7 @@ public class StoreHealthService : IStoreHealthService
         INinetyDayTurnoverService ninetyDay,
         IRetentionService retention,
         IEarlyWarningService earlyWarning,
-        IExitInterviewService exitInterview,
-        IWorkforceProjectionService projection)
+        IExitInterviewService exitInterview)
     {
         _db = db;
         _stores = stores;
@@ -74,7 +72,6 @@ public class StoreHealthService : IStoreHealthService
         _retention = retention;
         _earlyWarning = earlyWarning;
         _exitInterview = exitInterview;
-        _projection = projection;
     }
 
     // ───────────────────────────── Public API ─────────────────────────────
@@ -91,7 +88,6 @@ public class StoreHealthService : IStoreHealthService
     {
         var summary = new StoreHealthSummaryDto();
         var accessible = await AccessibleStoreNamesAsync(role, email);
-        summary.HasProjectionData = await _projection.HasAnyAsync();
         if (accessible.Count == 0) return summary;
 
         var comp = await ComputeAsync(accessible);
@@ -158,7 +154,6 @@ public class StoreHealthService : IStoreHealthService
 
         var detail = new StoreHealthDetailDto { Health = row };
         detail.Actions = await BuildWeightedActionsAsync(row);
-        detail.Outlook = await BuildOutlookAsync(match, row.Headcount);
         return detail;
     }
 
@@ -205,8 +200,6 @@ public class StoreHealthService : IStoreHealthService
         var highRiskByStore = watchlist.Where(w => w.Stars >= 4)
             .GroupBy(w => w.Store, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
-
-        var projections = await _projection.GetLatestByStoreAsync(stores);
 
         // ── Company distributions (across every store with enough data) ──
         var turnoverDist = Dist(turnover.Values.Where(r => r.Headcount >= MinHeadcountForRate).Select(r => r.TurnoverRate), StdFloorTurnover);
@@ -276,8 +269,8 @@ public class StoreHealthService : IStoreHealthService
             // 5 ── Leadership stability
             pillars.Add(LeadershipPillar(leaderCounts.TryGetValue(store, out var lc) ? lc : 1));
 
-            // 6 ── Workforce outlook (at-risk employees + projected staffing gap)
-            pillars.Add(WorkforcePillar(store, headcount, highRiskByStore, atRiskDist, projections));
+            // 6 ── Workforce outlook (at-risk employees)
+            pillars.Add(WorkforcePillar(store, headcount, highRiskByStore, atRiskDist));
 
             // ── Weighted composite over pillars that have data ──
             var withData = pillars.Where(p => p.HasData).ToList();
@@ -399,8 +392,7 @@ public class StoreHealthService : IStoreHealthService
     }
 
     private static HealthPillarDto WorkforcePillar(string store, int headcount,
-        Dictionary<string, int> highRiskByStore, (double Mean, double Std) atRiskDist,
-        Dictionary<string, WorkforceProjectionSnapshot> projections)
+        Dictionary<string, int> highRiskByStore, (double Mean, double Std) atRiskDist)
     {
         double atRiskSub = 0; int atRiskPoints = 0;
         int highRisk = highRiskByStore.TryGetValue(store, out var c) ? c : 0;
@@ -414,36 +406,11 @@ public class StoreHealthService : IStoreHealthService
             atRiskPoints = PointsOf(z);
         }
 
-        // Projected staffing gap (forward-looking). Only a shortfall is risk.
-        double gapSub = 0; int gapPoints = 0; bool hasGap = false;
-        if (projections.TryGetValue(store, out var proj) && proj.ProjectedHeadcount > 0)
-        {
-            hasGap = true;
-            int gap = proj.ProjectedHeadcount - headcount;
-            double gapPct = gap > 0 ? gap * 100.0 / proj.ProjectedHeadcount : 0;
-            gapSub = Math.Clamp(gapPct, 0, 25) / 25.0 * 100.0;
-            gapPoints = gapPct >= 20 ? 3 : gapPct >= 12 ? 2 : gapPct >= 5 ? 1 : 0;
-            evidence["gap"] = gap.ToString();
-            evidence["projected"] = proj.ProjectedHeadcount.ToString();
-            evidence["gapPct"] = gapPct.ToString("F0");
-        }
-
-        bool hasData = hasAtRisk || hasGap;
-        // Blend the two components when both exist (gap weighted a touch higher as
-        // the only forward signal); otherwise take whichever is present.
-        double sub = (hasAtRisk, hasGap) switch
-        {
-            (true, true) => atRiskSub * 0.45 + gapSub * 0.55,
-            (true, false) => atRiskSub,
-            (false, true) => gapSub,
-            _ => 0,
-        };
-
         return new HealthPillarDto
         {
-            Key = HealthKeys.PillarWorkforce, Weight = WWorkforce, HasData = hasData,
-            RawValue = highRisk, Points = Math.Max(atRiskPoints, gapPoints),
-            SubScore = sub, Status = hasData ? StatusOf(sub) : "no_data", Evidence = evidence,
+            Key = HealthKeys.PillarWorkforce, Weight = WWorkforce, HasData = hasAtRisk,
+            RawValue = highRisk, Points = atRiskPoints,
+            SubScore = atRiskSub, Status = hasAtRisk ? StatusOf(atRiskSub) : "no_data", Evidence = evidence,
         };
     }
 
@@ -493,27 +460,6 @@ public class StoreHealthService : IStoreHealthService
             }
         }
         return actions.OrderByDescending(a => a.Weight).ToList();
-    }
-
-    private async Task<WorkforceOutlookDto> BuildOutlookAsync(string store, int currentHeadcount)
-    {
-        var map = await _projection.GetLatestByStoreAsync(new[] { store });
-        if (!map.TryGetValue(store, out var proj) || proj.ProjectedHeadcount <= 0)
-            return new WorkforceOutlookDto { HasData = false, CurrentHeadcount = currentHeadcount };
-
-        int gap = proj.ProjectedHeadcount - currentHeadcount;
-        return new WorkforceOutlookDto
-        {
-            HasData = true,
-            CurrentHeadcount = currentHeadcount,
-            ProjectedHeadcount = proj.ProjectedHeadcount,
-            PlannedHires = proj.PlannedHires,
-            Gap = gap,
-            GapPercent = proj.ProjectedHeadcount > 0 ? Math.Round(gap * 100.0 / proj.ProjectedHeadcount, 1) : 0,
-            Month = proj.Month,
-            Year = proj.Year,
-            Label = MonthLabel(proj.Month, proj.Year),
-        };
     }
 
     // ─────────────────────────────── Helpers ───────────────────────────────
@@ -641,7 +587,6 @@ public class StoreHealthService : IStoreHealthService
                 yield return "Action_Leadership_Stability";
                 break;
             case HealthKeys.PillarWorkforce:
-                if (pillar.Evidence.ContainsKey("gap")) yield return "Action_Workforce_Staffing";
                 yield return "Action_Workforce_AtRisk";
                 break;
         }
@@ -654,7 +599,7 @@ public class StoreHealthService : IStoreHealthService
         HealthKeys.PillarRetention => $"{p.Evidence.GetValueOrDefault("value")}% vs {p.Evidence.GetValueOrDefault("baseline")}%",
         HealthKeys.PillarEngagement => $"{p.Evidence.GetValueOrDefault("value")}% vs {p.Evidence.GetValueOrDefault("baseline")}%",
         HealthKeys.PillarLeadership => $"{p.Evidence.GetValueOrDefault("leaders")} / {p.Evidence.GetValueOrDefault("months")}m",
-        HealthKeys.PillarWorkforce => p.Evidence.ContainsKey("gap") ? $"{p.Evidence.GetValueOrDefault("gap")} ({p.Evidence.GetValueOrDefault("gapPct")}%)" : $"{p.Evidence.GetValueOrDefault("atRisk")}",
+        HealthKeys.PillarWorkforce => $"{p.Evidence.GetValueOrDefault("atRisk")}",
         _ => "",
     };
 

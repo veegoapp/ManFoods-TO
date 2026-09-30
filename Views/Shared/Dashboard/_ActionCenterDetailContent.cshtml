@@ -61,15 +61,6 @@
             ["pillarTitle"] = L["ACH_PillarBreakdownTitle"].Value,
             ["planTitle"] = L["ACH_WeightedPlanTitle"].Value,
             ["planSub"] = L["ACH_WeightedPlanSub"].Value,
-            ["outlookTitle"] = L["ACH_OutlookTitle"].Value,
-            ["current"] = L["ACH_OutlookCurrent"].Value,
-            ["projected"] = L["ACH_OutlookProjected"].Value,
-            ["plannedHires"] = L["ACH_OutlookPlannedHires"].Value,
-            ["gap"] = L["ACH_OutlookGap"].Value,
-            ["shortfall"] = L["ACH_OutlookShortfall"].Value,
-            ["surplus"] = L["ACH_OutlookSurplus"].Value,
-            ["balanced"] = L["ACH_OutlookBalanced"].Value,
-            ["projectionPending"] = L["ACH_ProjectionPending"].Value,
             ["vs"] = L["ACH_Vs"].Value,
             ["weight"] = L["ACH_Weight"].Value,
             ["noActions"] = L["ACH_NoActions"].Value,
@@ -137,9 +128,6 @@
 .ach-act.done { opacity:0.65; border-left-color:oklch(0.62 0.15 155); }
 .ach-act-pri { font-size:9.5px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; padding:2px 7px; border-radius:5px; white-space:nowrap; }
 .ach-act-weight { font-size:11px; color:var(--text-3); font-variant-numeric:tabular-nums; }
-.ach-out-grid { display:flex; gap:22px; flex-wrap:wrap; align-items:flex-end; }
-.ach-out-num { font-size:24px; font-weight:800; line-height:1; }
-.ach-out-lbl { font-size:11px; color:var(--text-3); margin-top:3px; }
 </style>
 
 <a class="acd-back-btn" href="@(__areaPrefix)/dashboard/actioncenter">
@@ -163,7 +151,6 @@
         {
             new() { Icon = "bi-heart-pulse", Title = L["ACH_HealthTitle"], Body = L["Guide_ACH_Detail_Health"] },
             new() { Icon = "bi-list-check", Title = L["ACH_WeightedPlanTitle"], Body = L["Guide_ACH_Detail_Plan"] },
-            new() { Icon = "bi-graph-up-arrow", Title = L["ACH_OutlookTitle"], Body = L["Guide_ACH_Detail_Outlook"] },
             new() { Icon = "bi-speedometer2", Title = L["AC_ProgressTitle"], Body = L["Guide_ActionCenterDetail_Chart_Kpis"] },
             new() { Icon = "bi-graph-up-arrow", Title = L["AC_MetricTrendTitle"], Body = L["Guide_ActionCenterDetail_Chart_Trend"] },
             new() { Icon = "bi-graph-down-arrow", Title = L["AC_MonthlyTurnoverTitle"], Body = L["Guide_ActionCenterDetail_Chart_MonthlyTurnover"] },
@@ -386,23 +373,6 @@ function acdHealthHtml(detail) {
     }
     html += `</div>`;
 
-    // Workforce outlook
-    const o = detail.outlook;
-    html += `<div class="card-dark mb-4"><h6 class="fw-bold mb-3">${sapEscape(u.outlookTitle)}</h6>`;
-    if (!o || !o.hasData) {
-        html += `<p class="text-muted-custom mb-0"><i class="bi bi-info-circle me-1"></i>${sapEscape(u.projectionPending)}</p>`;
-    } else {
-        const gapColor = o.gap > 0 ? ChartColors.SEMANTIC.BAD : o.gap < 0 ? 'oklch(0.6 0.14 75)' : 'oklch(0.5 0.15 155)';
-        const gapWord = o.gap > 0 ? u.shortfall : o.gap < 0 ? u.surplus : u.balanced;
-        html += `<div class="ach-out-grid">
-            <div><div class="ach-out-num">${o.currentHeadcount}</div><div class="ach-out-lbl">${sapEscape(u.current)}</div></div>
-            <div style="color:var(--text-3);font-size:20px;padding-bottom:6px">→</div>
-            <div><div class="ach-out-num">${o.projectedHeadcount}</div><div class="ach-out-lbl">${sapEscape(u.projected)} · ${sapEscape(o.label)}</div></div>
-            <div><div class="ach-out-num" style="color:${gapColor}">${o.gap > 0 ? '+' : ''}${o.gap}</div><div class="ach-out-lbl">${sapEscape(u.gap)} — ${sapEscape(gapWord)}${o.gap !== 0 ? ` (${Math.abs(o.gapPercent)}%)` : ''}</div></div>
-            ${o.plannedHires ? `<div><div class="ach-out-num" style="color:oklch(0.5 0.15 155)">${o.plannedHires}</div><div class="ach-out-lbl">${sapEscape(u.plannedHires)}</div></div>` : ''}
-        </div>`;
-    }
-    html += `</div>`;
     return html;
 }
 

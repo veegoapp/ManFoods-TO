@@ -25,7 +25,6 @@ public class AppDbContext : DbContext
     public DbSet<ActionPlanSeverityBandHistory> ActionPlanSeverityBandHistories { get; set; }
     public DbSet<SignalOccurrence> SignalOccurrences { get; set; }
     public DbSet<LoginHistory> LoginHistories { get; set; }
-    public DbSet<WorkforceProjection> WorkforceProjections { get; set; }
     public DbSet<PageAccessConfig> PageAccessConfigs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -62,13 +61,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<LoginHistory>()
             .HasIndex(l => new { l.UserId, l.LoggedInAt })
             .HasDatabaseName("ix_login_history_user_logged_in_at");
-
-        // One workforce projection row per store/period — a re-upload for the
-        // same period replaces rather than duplicates (same fresh-DB caveat).
-        modelBuilder.Entity<WorkforceProjection>()
-            .HasIndex(w => new { w.StoreName, w.Year, w.Month })
-            .IsUnique()
-            .HasDatabaseName("ux_workforce_projections_store_period");
 
         // Per-area access configuration — one row per area, keyed by the area
         // string (same fresh-DB caveat as above).
