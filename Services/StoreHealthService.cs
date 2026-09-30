@@ -26,6 +26,7 @@ public class StoreHealthService : IStoreHealthService
     private readonly IRetentionService _retention;
     private readonly IEarlyWarningService _earlyWarning;
     private readonly IExitInterviewService _exitInterview;
+    private readonly IWorkforcePlanningService _planning;
 
     private const string SystemRole = "Admin"; // company-wide baselines ignore the viewer's store scope
 
@@ -62,7 +63,8 @@ public class StoreHealthService : IStoreHealthService
         INinetyDayTurnoverService ninetyDay,
         IRetentionService retention,
         IEarlyWarningService earlyWarning,
-        IExitInterviewService exitInterview)
+        IExitInterviewService exitInterview,
+        IWorkforcePlanningService planning)
     {
         _db = db;
         _stores = stores;
@@ -72,6 +74,7 @@ public class StoreHealthService : IStoreHealthService
         _retention = retention;
         _earlyWarning = earlyWarning;
         _exitInterview = exitInterview;
+        _planning = planning;
     }
 
     // ───────────────────────────── Public API ─────────────────────────────
@@ -201,6 +204,13 @@ public class StoreHealthService : IStoreHealthService
             .GroupBy(w => w.Store, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
 
+        // Staffing fill per store (actual ÷ projected headcount) for the anchor period, from the
+        // job projection. Only stores with a projection AND an uploaded roster that month take
+        // part; the rest are scored on the at-risk component alone, as before.
+        var staffing = (await _planning.GetStoreFillAsync(year, month, null, SystemRole, null))
+            .Where(f => f.Actual.HasValue && f.Projected > 0)
+            .ToDictionary(f => f.Store, f => f, StringComparer.OrdinalIgnoreCase);
+
         // ── Company distributions (across every store with enough data) ──
         var turnoverDist = Dist(turnover.Values.Where(r => r.Headcount >= MinHeadcountForRate).Select(r => r.TurnoverRate), StdFloorTurnover);
         var earlyDist    = Dist(ninety.Values.Where(r => r.TotalHires >= MinHeadcountForRate).Select(r => r.Rate), StdFloorEarly);
@@ -269,8 +279,8 @@ public class StoreHealthService : IStoreHealthService
             // 5 ── Leadership stability
             pillars.Add(LeadershipPillar(leaderCounts.TryGetValue(store, out var lc) ? lc : 1));
 
-            // 6 ── Workforce outlook (at-risk employees)
-            pillars.Add(WorkforcePillar(store, headcount, highRiskByStore, atRiskDist));
+            // 6 ── Workforce outlook (at-risk employees + staffing shortfall vs projection)
+            pillars.Add(WorkforcePillar(store, headcount, highRiskByStore, atRiskDist, staffing));
 
             // ── Weighted composite over pillars that have data ──
             var withData = pillars.Where(p => p.HasData).ToList();
@@ -391,8 +401,15 @@ public class StoreHealthService : IStoreHealthService
         };
     }
 
-    private static HealthPillarDto WorkforcePillar(string store, int headcount,
-        Dictionary<string, int> highRiskByStore, (double Mean, double Std) atRiskDist)
+    // Workforce Outlook blends two parts: how many current employees are at risk of leaving
+    // (Early Warning) and how far the store is below its projected headcount. This is the
+    // share the at-risk part gets; the staffing shortfall gets the rest. A store with only
+    // one of the two is scored on that one alone.
+    internal const double AtRiskShare = 0.6;
+
+    internal static HealthPillarDto WorkforcePillar(string store, int headcount,
+        Dictionary<string, int> highRiskByStore, (double Mean, double Std) atRiskDist,
+        Dictionary<string, StoreFillDto> staffing)
     {
         double atRiskSub = 0; int atRiskPoints = 0;
         int highRisk = highRiskByStore.TryGetValue(store, out var c) ? c : 0;
@@ -406,11 +423,33 @@ public class StoreHealthService : IStoreHealthService
             atRiskPoints = PointsOf(z);
         }
 
+        // Staffing shortfall (forward-looking). Only being below the projection is risk.
+        double gapSub = 0; int gapPoints = 0; bool hasGap = false;
+        if (staffing.TryGetValue(store, out var fill) && fill.Actual.HasValue && fill.Projected > 0)
+        {
+            hasGap = true;
+            double gapPct = Math.Max(0, 100.0 - fill.Actual.Value * 100.0 / fill.Projected);
+            gapSub = Math.Clamp(gapPct, 0, 25) / 25.0 * 100.0;
+            gapPoints = gapPct >= 20 ? 3 : gapPct >= 12 ? 2 : gapPct >= 5 ? 1 : 0;
+            evidence["gap"] = (fill.Projected - fill.Actual.Value).ToString();
+            evidence["projected"] = fill.Projected.ToString();
+            evidence["gapPct"] = gapPct.ToString("F0");
+        }
+
+        bool hasData = hasAtRisk || hasGap;
+        double sub = (hasAtRisk, hasGap) switch
+        {
+            (true, true) => Math.Round(atRiskSub * AtRiskShare + gapSub * (1 - AtRiskShare), 1),
+            (true, false) => atRiskSub,
+            (false, true) => Math.Round(gapSub, 1),
+            _ => 0,
+        };
+
         return new HealthPillarDto
         {
-            Key = HealthKeys.PillarWorkforce, Weight = WWorkforce, HasData = hasAtRisk,
-            RawValue = highRisk, Points = atRiskPoints,
-            SubScore = atRiskSub, Status = hasAtRisk ? StatusOf(atRiskSub) : "no_data", Evidence = evidence,
+            Key = HealthKeys.PillarWorkforce, Weight = WWorkforce, HasData = hasData,
+            RawValue = highRisk, Points = Math.Max(atRiskPoints, gapPoints),
+            SubScore = sub, Status = hasData ? StatusOf(sub) : "no_data", Evidence = evidence,
         };
     }
 
@@ -587,6 +626,7 @@ public class StoreHealthService : IStoreHealthService
                 yield return "Action_Leadership_Stability";
                 break;
             case HealthKeys.PillarWorkforce:
+                if (pillar.Evidence.ContainsKey("gap")) yield return "Action_Workforce_Staffing";
                 yield return "Action_Workforce_AtRisk";
                 break;
         }
@@ -599,7 +639,7 @@ public class StoreHealthService : IStoreHealthService
         HealthKeys.PillarRetention => $"{p.Evidence.GetValueOrDefault("value")}% vs {p.Evidence.GetValueOrDefault("baseline")}%",
         HealthKeys.PillarEngagement => $"{p.Evidence.GetValueOrDefault("value")}% vs {p.Evidence.GetValueOrDefault("baseline")}%",
         HealthKeys.PillarLeadership => $"{p.Evidence.GetValueOrDefault("leaders")} / {p.Evidence.GetValueOrDefault("months")}m",
-        HealthKeys.PillarWorkforce => $"{p.Evidence.GetValueOrDefault("atRisk")}",
+        HealthKeys.PillarWorkforce => p.Evidence.ContainsKey("gap") ? $"{p.Evidence.GetValueOrDefault("gap")} ({p.Evidence.GetValueOrDefault("gapPct")}%)" : $"{p.Evidence.GetValueOrDefault("atRisk")}",
         _ => "",
     };
 

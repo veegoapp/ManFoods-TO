@@ -285,3 +285,61 @@ public class StoreAccessCacheTests
         Assert.Equal(new[] { "1 | A", "2 | B" }, (await access.GetOwnStoreNamesAsync("Operation_Manager", "om@x.com"))!.OrderBy(s => s));
     }
 }
+
+public class StoreHealthStaffingPillarTests
+{
+    private static readonly (double Mean, double Std) Dist = (5.0, 5.0);
+    private static Dictionary<string, int> NoRisk() => new();
+
+    private static Dictionary<string, MvcApp.Models.ViewModels.StoreFillDto> Fill(string store, int projected, int actual) =>
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            [store] = new() { Store = store, Projected = projected, Actual = actual, FillPercent = Math.Round(actual * 100.0 / projected, 1) }
+        };
+
+    [Fact]
+    public void NoProjection_ScoresOnAtRiskAlone()
+    {
+        var withoutPlan = StoreHealthService.WorkforcePillar("A", 40, new() { ["A"] = 10 }, Dist, new());
+        Assert.True(withoutPlan.HasData);
+        Assert.DoesNotContain("gap", withoutPlan.Evidence.Keys);
+    }
+
+    [Fact]
+    public void Shortfall_RaisesTheScore_AndBlendsSixtyForty()
+    {
+        // 40 people, 10 high-risk -> ratio 25% vs mean 5 / std 5 -> z = 4 -> capped sub-score 100.
+        var risk = new Dictionary<string, int> { ["A"] = 10 };
+        var atRiskOnly = StoreHealthService.WorkforcePillar("A", 40, risk, Dist, new());
+        // 30 of 40 projected -> 25% short -> gap sub-score 100 (capped at 25%).
+        var blended = StoreHealthService.WorkforcePillar("A", 40, risk, Dist, Fill("A", 40, 30));
+        Assert.Equal(100, atRiskOnly.SubScore);
+        Assert.Equal(100, blended.SubScore);
+        Assert.Equal("10", blended.Evidence["gap"]);
+        Assert.Equal("25", blended.Evidence["gapPct"]);
+
+        // No at-risk staff at all: the shortfall alone now moves the score (40% weight).
+        var calm = StoreHealthService.WorkforcePillar("A", 40, NoRisk(), Dist, new());
+        var calmButShort = StoreHealthService.WorkforcePillar("A", 40, NoRisk(), Dist, Fill("A", 40, 30));
+        Assert.True(calmButShort.SubScore > calm.SubScore);
+        Assert.Equal(40, calmButShort.SubScore); // 0 * 0.6 + 100 * 0.4
+    }
+
+    [Fact]
+    public void AtOrAboveProjection_IsNotRisk()
+    {
+        var calm = StoreHealthService.WorkforcePillar("A", 40, NoRisk(), Dist, new());
+        var over = StoreHealthService.WorkforcePillar("A", 40, NoRisk(), Dist, Fill("A", 40, 44));
+        Assert.Equal(calm.SubScore, over.SubScore);
+        Assert.Equal("0", over.Evidence["gapPct"]);
+    }
+
+    [Fact]
+    public void SmallStore_WithProjection_IsScoredOnTheShortfallAlone()
+    {
+        // Below the minimum headcount for a rate the at-risk part is skipped, the gap still counts.
+        var pillar = StoreHealthService.WorkforcePillar("A", 2, NoRisk(), Dist, Fill("A", 10, 5));
+        Assert.True(pillar.HasData);
+        Assert.Equal(100, pillar.SubScore);
+    }
+}
