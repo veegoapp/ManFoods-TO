@@ -31,6 +31,9 @@ public class UploadHistoryItem
 public class UploadFilePreview
 {
     public string FileName { get; set; } = "";
+    /// <summary>All sheet names in the workbook, and the one being shown.</summary>
+    public List<string> SheetNames { get; set; } = new();
+    public string Sheet { get; set; } = "";
     public List<string> Headers { get; set; } = new();
     public List<List<string>> Rows { get; set; } = new();
     public int TotalRows { get; set; }

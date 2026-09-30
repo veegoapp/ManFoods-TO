@@ -36,7 +36,7 @@ public interface IUploadService
 
     /// <summary>Reads a single uploaded file's raw bytes and returns its first
     /// sheet as a header row + capped data rows, for an in-portal preview.</summary>
-    Task<MvcApp.Models.ViewModels.UploadFilePreview?> PreviewFileAsync(int logId, int maxRows = 300);
+    Task<MvcApp.Models.ViewModels.UploadFilePreview?> PreviewFileAsync(int logId, int maxRows = 300, string? sheet = null);
 
     /// <summary>
     /// Replaces a single file type (active_employees, resignations, or

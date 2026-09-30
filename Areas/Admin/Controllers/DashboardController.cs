@@ -528,9 +528,9 @@ public class DashboardController : Controller
 
     [HttpGet("admin/dashboard/preview-upload-file")]
     [RequireAdminAuth]
-    public async Task<IActionResult> PreviewUploadFile([FromQuery] int id)
+    public async Task<IActionResult> PreviewUploadFile([FromQuery] int id, [FromQuery] string? sheet = null)
     {
-        var preview = await _uploads.PreviewFileAsync(id);
+        var preview = await _uploads.PreviewFileAsync(id, 300, sheet);
         if (preview == null) return NotFound();
         return Json(preview);
     }

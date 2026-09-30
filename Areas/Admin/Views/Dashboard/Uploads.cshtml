@@ -708,15 +708,19 @@ function dmOpenUpdateModal(month, year, periodLabel) {
 
 /* ── File preview modal ─────────────────────────────── */
 async function dmOpenPreview(logId, fileName) {
-    const titleEl = document.getElementById('dmPreviewTitle');
-    const bodyEl  = document.getElementById('dmPreviewBody');
-    titleEl.textContent = fileName;
-    bodyEl.innerHTML = `<div class="dm-preview-empty"><span class="spinner-border spinner-border-sm me-2"></span>@L["DM_Loading"]</div>`;
+    document.getElementById('dmPreviewTitle').textContent = fileName;
     new bootstrap.Modal(document.getElementById('dmPreviewModal')).show();
+    await dmLoadPreview(logId, null);
+}
+
+async function dmLoadPreview(logId, sheet) {
+    const bodyEl  = document.getElementById('dmPreviewBody');
+    bodyEl.innerHTML = `<div class="dm-preview-empty"><span class="spinner-border spinner-border-sm me-2"></span>@L["DM_Loading"]</div>`;
 
     let data;
     try {
-        const res = await fetch(`/admin/dashboard/preview-upload-file?id=${logId}`);
+        const url = `/admin/dashboard/preview-upload-file?id=${logId}` + (sheet ? `&sheet=${encodeURIComponent(sheet)}` : '');
+        const res = await fetch(url);
         if (!res.ok) throw new Error();
         data = await res.json();
     } catch {
@@ -724,26 +728,36 @@ async function dmOpenPreview(logId, fileName) {
         return;
     }
 
-    if (!data.headers || data.headers.length === 0 || !data.rows || data.rows.length === 0) {
-        bodyEl.innerHTML = `<div class="dm-preview-empty">@L["DM_PreviewEmpty"]</div>`;
-        return;
+    // One tab per sheet when the workbook has several (e.g. 12 months).
+    let tabsHtml = '';
+    if (data.sheetNames && data.sheetNames.length > 1) {
+        tabsHtml = `<div class="d-flex flex-wrap gap-1 mb-2">` + data.sheetNames.map(n =>
+            `<button type="button" class="btn btn-sm ${n === data.sheet ? 'btn-danger' : 'btn-outline-secondary'} dm-sheet-tab" data-sheet="${dmEsc(n)}">${dmEsc(n)}</button>`
+        ).join('') + `</div>`;
     }
 
-    const headHtml = data.headers.map(h => `<th>${dmEsc(h)}</th>`).join('');
-    const rowsHtml = data.rows.map(r => `<tr>${r.map(c => `<td>${dmEsc(c)}</td>`).join('')}</tr>`).join('');
-    const shownNote = data.totalRows > data.rows.length
-        ? `<p class="text-muted-custom small mt-2 mb-0">${String(data.rows.length)} / ${String(data.totalRows)} @L["DM_PreviewRowsShown"]</p>`
-        : '';
+    let contentHtml;
+    if (!data.headers || data.headers.length === 0 || !data.rows || data.rows.length === 0) {
+        contentHtml = `<div class="dm-preview-empty">@L["DM_PreviewEmpty"]</div>`;
+    } else {
+        const headHtml = data.headers.map(h => `<th>${dmEsc(h)}</th>`).join('');
+        const rowsHtml = data.rows.map(r => `<tr>${r.map(c => `<td>${dmEsc(c)}</td>`).join('')}</tr>`).join('');
+        const shownNote = data.totalRows > data.rows.length
+            ? `<p class="text-muted-custom small mt-2 mb-0">${String(data.rows.length)} / ${String(data.totalRows)} @L["DM_PreviewRowsShown"]</p>`
+            : '';
+        contentHtml = `
+            <div class="dm-preview-table-wrap">
+                <table class="dm-preview-table">
+                    <thead><tr>${headHtml}</tr></thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+            </div>
+            ${shownNote}`;
+    }
 
-    bodyEl.innerHTML = `
-        <div class="dm-preview-table-wrap">
-            <table class="dm-preview-table">
-                <thead><tr>${headHtml}</tr></thead>
-                <tbody>${rowsHtml}</tbody>
-            </table>
-        </div>
-        ${shownNote}
-    `;
+    bodyEl.innerHTML = tabsHtml + contentHtml;
+    bodyEl.querySelectorAll('.dm-sheet-tab').forEach(btn =>
+        btn.addEventListener('click', () => dmLoadPreview(logId, btn.dataset.sheet)));
 }
 </script>
 }
