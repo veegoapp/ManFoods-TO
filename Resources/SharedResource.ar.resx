@@ -1989,4 +1989,12 @@
   <data name="Guide_HF_Method" xml:space="preserve"><value>الأشهر التي لها قائمة موظفين مرفوعة: التعيينات = المتوقّع − الفعلي + الاستقالات المتوقعة (لا تقل عن صفر لكل فرع ووظيفة). الأشهر اللاحقة تُحاكى من آخر قائمة: يغادر المستقيلون المتوقعون ثم تسدّ التعيينات الفرق حتى توقّع ذلك الشهر. وأخيرًا تُزاد التعيينات بنسبة مغادرة الـ 90 يومًا على مستوى الشركة لأن بعض الموظفين الجدد يغادرون سريعًا ويجب تعويضهم.</value></data>
   <data name="Guide_HF_LimitsTitle" xml:space="preserve"><value>من المهم معرفته</value></data>
   <data name="Guide_HF_Limits" xml:space="preserve"><value>هذا تقدير مبني على الاستقالات السابقة والتوقّع، ويتغير مع رفع قوائم وتوقّعات جديدة. وليس أمر توظيف.</value></data>
+  <data name="HF_KpiYear" xml:space="preserve"><value>التعيينات المطلوبة في السنة</value></data>
+  <data name="HF_KpiYearDesc" xml:space="preserve"><value>إجمالي كل الفروع والأشهر المعروضة</value></data>
+  <data name="HF_KpiPeak" xml:space="preserve"><value>أكثر شهر ضغطًا</value></data>
+  <data name="HF_KpiPeakDesc" xml:space="preserve"><value>الشهر الذي فيه أكبر عدد تعيينات</value></data>
+  <data name="HF_KpiNext" xml:space="preserve"><value>الأشهر الثلاثة القادمة</value></data>
+  <data name="HF_KpiNextDesc" xml:space="preserve"><value>التعيينات المطلوبة في الأشهر الثلاثة القادمة</value></data>
+  <data name="HF_KpiStore" xml:space="preserve"><value>الفرع الأكثر احتياجًا</value></data>
+  <data name="HF_KpiStoreDesc" xml:space="preserve"><value>أعلى إجمالي على مدار السنة</value></data>
 </root>

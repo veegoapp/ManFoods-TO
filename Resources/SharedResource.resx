@@ -1983,4 +1983,12 @@
   <data name="Guide_HF_Method" xml:space="preserve"><value>Months that already have an uploaded employee list: hires = projected − actual + expected resignations (never below zero, per store and job). Later months are simulated from the latest list: people expected to resign leave, then hires fill up to that month's projection. Finally hires are increased by the company-wide 90-day early-leaver rate, because some new hires leave quickly and must be replaced.</value></data>
   <data name="Guide_HF_LimitsTitle" xml:space="preserve"><value>Good to know</value></data>
   <data name="Guide_HF_Limits" xml:space="preserve"><value>This is an estimate based on past resignations and the projection; it changes as new employee lists and projections are uploaded. It is not a hiring order.</value></data>
+  <data name="HF_KpiYear" xml:space="preserve"><value>Hires needed in the year</value></data>
+  <data name="HF_KpiYearDesc" xml:space="preserve"><value>Total of all stores and months shown</value></data>
+  <data name="HF_KpiPeak" xml:space="preserve"><value>Busiest month</value></data>
+  <data name="HF_KpiPeakDesc" xml:space="preserve"><value>The month with the most hires</value></data>
+  <data name="HF_KpiNext" xml:space="preserve"><value>Next 3 months</value></data>
+  <data name="HF_KpiNextDesc" xml:space="preserve"><value>Hires needed in the coming three months</value></data>
+  <data name="HF_KpiStore" xml:space="preserve"><value>Store with most hires</value></data>
+  <data name="HF_KpiStoreDesc" xml:space="preserve"><value>Highest total over the year</value></data>
 </root>

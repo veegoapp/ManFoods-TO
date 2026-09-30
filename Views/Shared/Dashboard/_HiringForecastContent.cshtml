@@ -88,6 +88,7 @@
 </div>
 
 <div id="hfBody" hidden>
+    <div id="hfKpis" class="kpi-grid mb-3"></div>
     <div id="hfNote" class="hf-note"><i class="bi bi-info-circle-fill"></i><span id="hfNoteText"></span></div>
     <div class="chart-card">
         <div class="chart-header d-flex flex-wrap align-items-center justify-content-between gap-2">
@@ -107,6 +108,7 @@
 
 <div id="hfL" hidden
      data-all-oc="@L["Common_AllOperationConsultants"]" data-all-om="@L["Common_AllOperationManagers"]" data-all-soc="@L["WP_AllSoc"]" data-all-od="@L["WP_AllOd"]" data-all-stores="@L["WP_AllStores"]" data-all-jobs="@L["WP_AllJobs"]"
+     data-kpi-year="@L["HF_KpiYear"]" data-kpi-year-d="@L["HF_KpiYearDesc"]" data-kpi-peak="@L["HF_KpiPeak"]" data-kpi-peak-d="@L["HF_KpiPeakDesc"]" data-kpi-next="@L["HF_KpiNext"]" data-kpi-next-d="@L["HF_KpiNextDesc"]" data-kpi-store="@L["HF_KpiStore"]" data-kpi-store-d="@L["HF_KpiStoreDesc"]"
      data-store="@L["WP_ColStore"]" data-oc="@L["Common_OperationConsultant"]" data-total="@L["HF_Total"]" data-forecast="@L["HF_Forecast"]" data-roster="@L["HF_Roster"]"
      data-note="@L["HF_Note"]" data-note-none="@L["HF_NoteNoRoster"]" data-no-rows="@L["Common_NoData"]"></div>
 
@@ -162,7 +164,27 @@ async function hfLoad() {
     document.getElementById('hfNoteText').textContent = hfL.note
         .replace('{0}', hfMonthName(d.baselineMonth) + ' ' + d.baselineYear)
         .replace('{1}', d.earlyLeaverRate).replace('{2}', d.attritionMonths);
+    hfRenderKpis(d);
     hfRender();
+}
+
+// Headline numbers, all derived from the matrix the server already returned.
+function hfRenderKpis(d) {
+    const idx = [...Array(12).keys()].filter(i => d.monthModes[i] !== 'none');
+    const card = (icon, cls, val, label, desc) =>
+        `<div class="kpi-card"><div class="kpi-icon ${cls}"><i class="bi ${icon}"></i></div><div class="kpi-value ${cls}">${val}</div><div class="kpi-label">${sapEscape(label)}</div><div class="kpi-desc">${sapEscape(desc)}</div></div>`;
+    let peak = null;
+    idx.forEach(i => { if (!peak || d.monthTotals[i] > d.monthTotals[peak.i]) peak = { i }; });
+    // "Next 3 months": from this month on when viewing the current year, else the first three months of the plan.
+    const now = new Date();
+    const upcoming = (d.year === now.getFullYear() ? idx.filter(i => i >= now.getMonth()) : idx).slice(0, 3);
+    const next3 = upcoming.reduce((a, i) => a + d.monthTotals[i], 0);
+    const top = d.rows.reduce((b, r) => (!b || r.total > b.total) ? r : b, null);
+    document.getElementById('hfKpis').innerHTML =
+        card('bi-person-plus-fill', d.grandTotal > 0 ? 'text-danger' : '', d.grandTotal, hfL.kpiYear, hfL.kpiYearD) +
+        card('bi-calendar-event', '', peak && d.monthTotals[peak.i] > 0 ? `${hfMonthName(peak.i + 1)} (${d.monthTotals[peak.i]})` : '—', hfL.kpiPeak, hfL.kpiPeakD) +
+        card('bi-calendar-range', '', upcoming.length ? next3 : '—', hfL.kpiNext, hfL.kpiNextD) +
+        card('bi-shop', '', top && top.total > 0 ? `${sapEscape(top.store)} (${top.total})` : '—', hfL.kpiStore, hfL.kpiStoreD);
 }
 
 const hfVal = {
