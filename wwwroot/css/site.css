@@ -350,35 +350,31 @@ html, body {
     top: calc(var(--global-header-h, var(--header-h)) + 14px);
     inset-inline-end: 28px;
     z-index: 900;
-    display: flex; align-items: center; gap: 8px;
-    height: 40px; padding: 0 14px 0 12px;
-    border: none; border-radius: 999px;
-    background: linear-gradient(135deg, var(--red) 0%, var(--gold) 100%);
-    color: #1C1C27; font-size: 13px; font-weight: 700;
-    box-shadow: 0 4px 14px rgba(0,0,0,.22);
-    cursor: pointer; overflow: hidden;
-    transition: box-shadow .2s, transform .2s;
+    display: flex; align-items: center; justify-content: center;
+    width: 42px; height: 42px; padding: 0;
+    border: none; border-radius: 50%;
+    background: #DA291C; /* McDonald's red */
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(218,41,28,.4);
+    cursor: pointer;
+    transition: box-shadow .2s, transform .2s, filter .2s;
 }
-.page-guide-orb:hover { transform: translateY(1px); box-shadow: 0 2px 8px rgba(0,0,0,.28); }
-.page-guide-orb i { font-size: 16px; animation: page-guide-compass-spin 5s linear infinite; }
+.page-guide-orb:hover { transform: translateY(1px); filter: brightness(1.08); box-shadow: 0 2px 8px rgba(218,41,28,.45); }
+.page-guide-orb i { font-size: 19px; line-height: 1; }
 .page-guide-orb-ring {
-    position: absolute; inset: -3px;
-    border-radius: inherit;
-    border: 2px solid var(--gold);
+    position: absolute; inset: -4px;
+    border-radius: 50%;
+    border: 2px solid #DA291C;
     opacity: 0; animation: page-guide-pulse 2.6s ease-out infinite;
 }
-.page-guide-orb-label { white-space: nowrap; }
+/* The word "Guide" is the tooltip (title attribute); the button itself is icon-only. */
+.page-guide-orb-label { display: none; }
 @@keyframes page-guide-pulse {
     0%   { opacity: .55; transform: scale(1); }
     100% { opacity: 0; transform: scale(1.35); }
 }
-@@keyframes page-guide-compass-spin {
-    0%, 85%, 100% { transform: rotate(0deg); }
-    92% { transform: rotate(-18deg); }
-}
 @@media (max-width: 760px) {
-    .page-guide-orb { top: 10px; inset-inline-end: 14px; padding: 0; width: 40px; justify-content: center; }
-    .page-guide-orb-label { display: none; }
+    .page-guide-orb { top: 10px; inset-inline-end: 14px; width: 40px; height: 40px; }
 }
 
 .page-guide-panel {
