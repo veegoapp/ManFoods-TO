@@ -434,6 +434,23 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task TrainerJobs_AreMergedIntoOneCrewTrainerJob()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew Trainer", 2); Proj(db, 1, "1 | A", "Hourly Paid Crew Trainer", 3);
+        Proj(db, 1, "2 | B", "hourly paid crew trainer", 1); Proj(db, 1, "1 | A", "Crew", 10);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        Assert.Equal(16, dto.Kpis.Projected);
+        var trainer = Assert.Single(dto.ByJob, r => r.Name == "Crew Trainer");
+        Assert.Equal(6, trainer.Projected);
+        Assert.DoesNotContain(dto.ByJob, r => r.Name.Contains("Hourly", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains("Crew Trainer", dto.Jobs);
+    }
+
+    [Fact]
     public async Task HiringForecast_NoRoster_HasNoRows()
     {
         var db = NewDb();

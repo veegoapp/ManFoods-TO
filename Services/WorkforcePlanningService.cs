@@ -57,6 +57,11 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         public int Periods { get; set; }
     }
 
+    // The projection plans trainers as two jobs, but the roster has no such job titles (trainers are
+    // Crew who get an allowance). They are planned and shown as one job: "Crew Trainer".
+    public const string CrewTrainerJob = "Crew Trainer";
+    private static readonly HashSet<string> CrewTrainerAliases = new() { "crew trainer", "hourly paid crew trainer" };
+
     private static string Norm(string? s) => Regex.Replace((s ?? "").Trim(), @"\s+", " ").ToLowerInvariant();
     private static string AttrKey(string store, string job) => Norm(store) + "\u001f" + Norm(job);
 
@@ -186,7 +191,12 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             .Where(j => j.Year == year)
             .Select(j => new { j.Month, j.StoreName, j.JobTitle, j.ProjectedHeadcount })
             .ToListAsync();
-        data.Projected = proj.Select(p => new Cell(p.Month, Store(p.StoreName), Job(p.JobTitle), p.ProjectedHeadcount)).ToArray();
+        // Both trainer jobs become "Crew Trainer", added up per store and month.
+        data.Projected = proj
+            .Select(p => new { p.Month, p.StoreName, Job = CrewTrainerAliases.Contains(Norm(p.JobTitle)) ? CrewTrainerJob : p.JobTitle, p.ProjectedHeadcount })
+            .GroupBy(p => new { p.Month, Store = (p.StoreName ?? "").Trim().ToLowerInvariant(), Job = Norm(p.Job) })
+            .Select(g => new Cell(g.Key.Month, Store(g.First().StoreName), Job(g.First().Job), g.Sum(x => x.ProjectedHeadcount)))
+            .ToArray();
 
         var actual = await _db.ActiveEmployees.AsNoTracking()
             .Where(e => e.Year == year)
