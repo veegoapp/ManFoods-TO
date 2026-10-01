@@ -29,6 +29,10 @@ public class CrewTrainerEmployee
     [Column("job_title")]
     public string JobTitle { get; set; } = "";
 
+    /// <summary>The employee's payroll group from the list: decides which trainer job they count as.</summary>
+    [Column("payroll_group")]
+    public string PayrollGroup { get; set; } = "";
+
     [Column("store_name")]
     public string StoreName { get; set; } = "";
 

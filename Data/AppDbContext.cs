@@ -81,6 +81,7 @@ public class AppDbContext : DbContext
             .HasDatabaseName("ux_crew_trainer_employees_period_employee");
         modelBuilder.Entity<CrewTrainerEmployee>().Property(c => c.EmployeeId).HasMaxLength(100);
         modelBuilder.Entity<CrewTrainerEmployee>().Property(c => c.StoreName).HasMaxLength(450);
+        modelBuilder.Entity<CrewTrainerEmployee>().Property(c => c.PayrollGroup).HasMaxLength(200);
 
         // One payroll group per job title (matched case-insensitively by SQL Server's collation).
         modelBuilder.Entity<JobPayrollGroup>()

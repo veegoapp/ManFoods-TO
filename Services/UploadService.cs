@@ -773,6 +773,7 @@ public class UploadService : IUploadService
     private static readonly string[] TrainerNameHeaders = { "Name", "Employee Name", "الاسم" };
     private static readonly string[] TrainerJobHeaders = { "Job Title", "JobTitle", "Job", "Position", "الوظيفة", "الوظيفه" };
     private static readonly string[] TrainerStoreHeaders = { "Store", "Store Name", "Restaurant", "المطعم" };
+    private static readonly string[] TrainerGroupHeaders = { "Payroll Group", "PayrollGroup", "Group", "مجموعة الرواتب", "مجموعه الرواتب" };
 
     private static int FindHeaderColumn(IXLWorksheet ws, string[] names)
     {
@@ -786,7 +787,7 @@ public class UploadService : IUploadService
 
     /// <summary>Reads the first sheet: employee id, name, job title and store (by header). One row per
     /// employee id (the last repeat wins); stores are spelled the way the rest of the portal spells them.</summary>
-    internal static CrewTrainerParse ParseCrewTrainers(byte[] fileBytes, IReadOnlyDictionary<string, string> knownStores, string idMissingMessage, string storeMissingMessage)
+    internal static CrewTrainerParse ParseCrewTrainers(byte[] fileBytes, IReadOnlyDictionary<string, string> knownStores, string idMissingMessage, string storeMissingMessage, string groupMissingMessage)
     {
         using var ms = new MemoryStream(fileBytes);
         using var wb = new XLWorkbook(ms);
@@ -795,6 +796,8 @@ public class UploadService : IUploadService
         var storeCol = FindHeaderColumn(ws, TrainerStoreHeaders);
         if (idCol == 0) throw new InvalidOperationException(idMissingMessage);
         if (storeCol == 0) throw new InvalidOperationException(storeMissingMessage);
+        var groupCol = FindHeaderColumn(ws, TrainerGroupHeaders);
+        if (groupCol == 0) throw new InvalidOperationException(groupMissingMessage);
         var nameCol = FindHeaderColumn(ws, TrainerNameHeaders);
         var jobCol = FindHeaderColumn(ws, TrainerJobHeaders);
 
@@ -820,6 +823,7 @@ public class UploadService : IUploadService
                 EmployeeId = id,
                 Name = nameCol > 0 ? CollapseSpaces(row.Cell(nameCol).GetString()) : "",
                 JobTitle = jobCol > 0 ? CollapseSpaces(row.Cell(jobCol).GetString()) : "",
+                PayrollGroup = CollapseSpaces(row.Cell(groupCol).GetString()),
                 StoreName = store,
             };
         }
@@ -842,7 +846,7 @@ public class UploadService : IUploadService
             knownStores.TryAdd(Fold(NormalizeStoreLabel(n)), n.Trim());
         }
 
-        var parsed = ParseCrewTrainers(fileBytes, knownStores, _L["Msg_CrewTrainerNoIdColumn"].Value, _L["Msg_CrewTrainerNoStoreColumn"].Value);
+        var parsed = ParseCrewTrainers(fileBytes, knownStores, _L["Msg_CrewTrainerNoIdColumn"].Value, _L["Msg_CrewTrainerNoStoreColumn"].Value, _L["Msg_CrewTrainerNoGroupColumn"].Value);
         if (parsed.Rows.Count == 0) throw new InvalidOperationException(_L["Msg_CrewTrainerNoRows"].Value);
         foreach (var r in parsed.Rows) { r.Year = year; r.Month = month; }
 
@@ -855,23 +859,31 @@ public class UploadService : IUploadService
         await tx.CommitAsync();
         WorkforcePlanningService.InvalidateCache();
 
+        // Which trainer job each payroll group counts as (from the reference list): people whose group is none of
+        // them are not counted as trainers.
+        var reference = (await _db.JobPayrollGroups.AsNoTracking().Select(j => new { j.JobTitle, j.PayrollGroup }).ToListAsync())
+            .Where(j => !string.IsNullOrWhiteSpace(j.JobTitle) && !string.IsNullOrWhiteSpace(j.PayrollGroup))
+            .ToDictionary(j => WorkforcePlanningService.Norm(j.JobTitle), j => j.PayrollGroup.Trim());
+        var trainerGroups = WorkforcePlanningService.BuildTrainerJobByGroup(reference);
+        var unknownGroups = parsed.Rows.Where(r => !trainerGroups.ContainsKey(WorkforcePlanningService.Norm(r.PayrollGroup))).ToList();
+
         // Check the list against that month's roster (by employee id): people missing from it are not
-        // counted in Workforce Planning, and a different job is worth a look. Skipped when the month has
-        // no roster yet — the list is counted as soon as it arrives.
+        // counted in Workforce Planning, and a payroll group that differs from the roster's is worth a look.
+        // Skipped when the month has no roster yet — the list is counted as soon as it arrives.
         var ids = parsed.Rows.Select(r => r.EmployeeId).ToList();
         var rosterHasMonth = await _db.ActiveEmployees.AnyAsync(e => e.Year == year && e.Month == month);
         var notInRoster = new List<string>();
-        int jobDiffers = 0;
+        int groupDiffers = 0;
         if (rosterHasMonth)
         {
-            var rosterJobs = (await _db.ActiveEmployees.AsNoTracking().Where(e => e.Year == year && e.Month == month && ids.Contains(e.EmployeeId))
-                .Select(e => new { e.EmployeeId, e.JobTitle }).ToListAsync())
-                .GroupBy(e => e.EmployeeId, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().JobTitle, StringComparer.OrdinalIgnoreCase);
+            var rosterGroups = (await _db.ActiveEmployees.AsNoTracking().Where(e => e.Year == year && e.Month == month && ids.Contains(e.EmployeeId))
+                .Select(e => new { e.EmployeeId, e.PayrollGroup }).ToListAsync())
+                .GroupBy(e => e.EmployeeId, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().PayrollGroup, StringComparer.OrdinalIgnoreCase);
             foreach (var r in parsed.Rows)
             {
-                if (!rosterJobs.TryGetValue(r.EmployeeId, out var rosterJob)) { notInRoster.Add(r.EmployeeId); continue; }
-                var sheetJob = Fold(CollapseSpaces(r.JobTitle));
-                if (sheetJob.Length > 0 && !sheetJob.Contains("trainer") && sheetJob != Fold(CollapseSpaces(rosterJob))) jobDiffers++;
+                if (!rosterGroups.TryGetValue(r.EmployeeId, out var rosterGroup)) { notInRoster.Add(r.EmployeeId); continue; }
+                var listGroup = WorkforcePlanningService.Norm(r.PayrollGroup);
+                if (listGroup.Length > 0 && !string.IsNullOrWhiteSpace(rosterGroup) && listGroup != WorkforcePlanningService.Norm(rosterGroup)) groupDiffers++;
             }
         }
 
@@ -884,7 +896,9 @@ public class UploadService : IUploadService
         if (parsed.UnknownStores.Count > 0) warnings.Add(string.Format(_L["Msg_JobProjUnknownStores"].Value, parsed.UnknownStores.Count, Cap(parsed.UnknownStores)));
         if (!rosterHasMonth) warnings.Add(string.Format(_L["Msg_CrewTrainerNoRoster"].Value, monthName, year));
         if (notInRoster.Count > 0) warnings.Add(string.Format(_L["Msg_CrewTrainerNotInRoster"].Value, notInRoster.Count, Cap(notInRoster)));
-        if (jobDiffers > 0) warnings.Add(string.Format(_L["Msg_CrewTrainerJobDiffers"].Value, jobDiffers));
+        if (unknownGroups.Count > 0) warnings.Add(string.Format(_L["Msg_CrewTrainerGroupUnknown"].Value, unknownGroups.Count,
+            Cap(unknownGroups.Select(r => string.IsNullOrWhiteSpace(r.PayrollGroup) ? "(empty)" : r.PayrollGroup).Distinct(StringComparer.OrdinalIgnoreCase))));
+        if (groupDiffers > 0) warnings.Add(string.Format(_L["Msg_CrewTrainerGroupDiffers"].Value, groupDiffers));
         return (true, message, parsed.Rows.Count, warnings.Count > 0 ? string.Join(" ", warnings) : null);
     }
 

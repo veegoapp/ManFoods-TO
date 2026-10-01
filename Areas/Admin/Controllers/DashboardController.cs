@@ -580,14 +580,14 @@ public class DashboardController : Controller
         {
             fileName = "Template_Crew_Trainers.xlsx";
             var ws = wb.AddWorksheet("Crew Trainers");
-            string[] heads = { "Employee ID", "Name", "Job Title", "Store" };
+            string[] heads = { "Employee ID", "Name", "Job Title", "Payroll Group", "Store" };
             for (int i = 0; i < heads.Length; i++) ws.Cell(1, i + 1).Value = heads[i];
             var header = ws.Range(1, 1, 1, heads.Length);
             header.Style.Font.Bold = true;
             header.Style.Fill.BackgroundColor = XLColor.FromHtml("#C8102E");
             header.Style.Font.FontColor = XLColor.White;
             header.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(2, 1).Value = "100234"; ws.Cell(2, 2).Value = "Ahmed Ali"; ws.Cell(2, 3).Value = "Crew"; ws.Cell(2, 4).Value = "1480001 | Merghany";
+            ws.Cell(2, 1).Value = "100234"; ws.Cell(2, 2).Value = "Ahmed Ali"; ws.Cell(2, 3).Value = "Crew"; ws.Cell(2, 4).Value = "Manfoods Company"; ws.Cell(2, 5).Value = "1480001 | Merghany";
             ws.Columns().AdjustToContents();
         }
         else

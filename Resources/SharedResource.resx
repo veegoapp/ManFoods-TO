@@ -2010,7 +2010,7 @@
   <data name="UL_CrewTrainers" xml:space="preserve"><value>Crew Trainers (monthly)</value></data>
   <data name="UL_CrewTrainersSub" xml:space="preserve"><value>Employees who receive the Crew Trainer allowance in a month</value></data>
   <data name="UL_CrewTrainersTemplate" xml:space="preserve"><value>Download template</value></data>
-  <data name="UL_CrewTrainersNote" xml:space="preserve"><value>One file per month with the columns Employee ID, Name, Job Title and Store (the full store name, as everywhere in the portal). Employees are matched to the active employee list by Employee ID; only those found there are counted. Each store's count is its actual Crew Trainer headcount in Workforce Planning, and their payroll group and resignations come from the same IDs. Uploading again for the same month replaces it.</value></data>
+  <data name="UL_CrewTrainersNote" xml:space="preserve"><value>One file per month with the columns Employee ID, Name, Job Title, Payroll Group and Store (the full store name, as everywhere in the portal). Employees are matched to the active employee list by Employee ID; only those found there are counted. The Payroll Group decides the trainer job: the group of "Crew Trainer" (Manfoods Company) counts as Crew Trainer and the group of "Hourly Paid Crew Trainer" (Hourly Paid) as Hourly Paid Crew Trainer, whatever the employee's own job. They are taken out of their own job in the Workforce Planning comparison only. Uploading again for the same month replaces it.</value></data>
   <data name="DM_UploadCrewTrainersButton" xml:space="preserve"><value>Upload Crew Trainers</value></data>
   <data name="DM_CrewTrainersBadge" xml:space="preserve"><value>Crew Trainers</value></data>
   <data name="DM_DeleteConfirmCrewTrainers" xml:space="preserve"><value>Delete this Crew Trainers upload? The list for that month will be removed.</value></data>
@@ -2085,4 +2085,7 @@
   <data name="Msg_JobGroupUnseen" xml:space="preserve"><value>{0} job(s) on the list are not in any projection or employee list (check the spelling): {1}.</value></data>
   <data name="Msg_JobGroupMissing" xml:space="preserve"><value>{0} job(s) in the projection or employee list are not on this list: {1}.</value></data>
   <data name="Msg_JobGroupUploadFailed" xml:space="preserve"><value>Job Payroll Groups upload failed: {0}</value></data>
+  <data name="Msg_CrewTrainerNoGroupColumn" xml:space="preserve"><value>The file needs a Payroll Group column in the first row.</value></data>
+  <data name="Msg_CrewTrainerGroupUnknown" xml:space="preserve"><value>{0} employee(s) have a payroll group that is not a trainer group (or is empty) and are not counted: {1}.</value></data>
+  <data name="Msg_CrewTrainerGroupDiffers" xml:space="preserve"><value>{0} employee(s) have a different payroll group here than in the active employee list (the list here is used).</value></data>
 </root>

@@ -595,6 +595,10 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_crew_trainer_employees
     CREATE UNIQUE INDEX ux_crew_trainer_employees_period_employee
         ON dbo.crew_trainer_employees (year, month, employee_id);
 
+-- The trainer list also carries each employee's payroll group (decides which trainer job they count as).
+IF COL_LENGTH('dbo.crew_trainer_employees', 'payroll_group') IS NULL
+    ALTER TABLE dbo.crew_trainer_employees ADD payroll_group NVARCHAR(200) NOT NULL CONSTRAINT df_crew_trainer_employees_payroll_group DEFAULT '';
+
 -- ── job_payroll_groups ───────────────────────────────────────────────────
 -- The payroll group of each job title: the reference Workforce Planning uses for payroll groups.
 -- Seeded once when the table is created; afterwards it is replaced by an upload in Data Management.
