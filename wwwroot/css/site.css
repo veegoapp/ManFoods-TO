@@ -350,34 +350,52 @@ html, body {
     top: calc(var(--global-header-h, var(--header-h)) + 14px);
     inset-inline-end: 28px;
     z-index: 900;
-    display: flex; align-items: center; gap: 8px;
-    height: 40px; padding: 0 14px 0 12px;
+    display: flex; align-items: center; justify-content: center;
+    min-width: 42px; height: 42px; padding: 0 11px;
     border: none; border-radius: 999px;
-    background: linear-gradient(135deg, var(--red) 0%, var(--gold) 100%);
-    color: #1C1C27; font-size: 13px; font-weight: 700;
-    box-shadow: 0 4px 14px rgba(0,0,0,.22);
-    cursor: pointer; overflow: hidden;
-    transition: box-shadow .2s, transform .2s;
+    background: #DA291C; /* McDonald's red */
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(218,41,28,.4);
+    cursor: pointer;
+    transition: box-shadow .2s, transform .2s, filter .2s;
 }
-.page-guide-orb:hover { transform: translateY(1px); box-shadow: 0 2px 8px rgba(0,0,0,.28); }
-.page-guide-orb i { font-size: 16px; animation: page-guide-compass-spin 5s linear infinite; }
+.page-guide-orb:hover, .page-guide-orb:focus-visible { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(218,41,28,.5); }
+.page-guide-orb i { font-size: 19px; line-height: 1; transform-origin: 50% 90%; }
+/* Hover: the bulb lights up and wiggles, and the word "Guide" slides out beside it. */
+.page-guide-orb:hover i, .page-guide-orb:focus-visible i {
+    text-shadow: 0 0 10px rgba(255,255,255,.95), 0 0 18px rgba(255,255,255,.6);
+    animation: page-guide-bulb-wiggle .6s ease-in-out;
+}
 .page-guide-orb-ring {
-    position: absolute; inset: -3px;
-    border-radius: inherit;
-    border: 2px solid var(--gold);
+    position: absolute; inset: -4px;
+    border-radius: 50%;
+    border: 2px solid #DA291C;
     opacity: 0; animation: page-guide-pulse 2.6s ease-out infinite;
 }
-.page-guide-orb-label { white-space: nowrap; }
+.page-guide-orb-label {
+    display: inline-block; max-width: 0; overflow: hidden; opacity: 0; white-space: nowrap;
+    font-size: 13px; font-weight: 700; margin-inline-start: 0;
+    transition: max-width .3s ease, opacity .2s ease .05s, margin .3s ease;
+}
+.page-guide-orb:hover .page-guide-orb-label, .page-guide-orb:focus-visible .page-guide-orb-label {
+    max-width: 140px; opacity: 1; margin-inline-start: 8px;
+}
+@@keyframes page-guide-bulb-wiggle {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-16deg); }
+    50% { transform: rotate(12deg); }
+    75% { transform: rotate(-6deg); }
+}
+@@media (prefers-reduced-motion: reduce) {
+    .page-guide-orb:hover i, .page-guide-orb:focus-visible i { animation: none; }
+    .page-guide-orb-ring { animation: none; }
+}
 @@keyframes page-guide-pulse {
     0%   { opacity: .55; transform: scale(1); }
     100% { opacity: 0; transform: scale(1.35); }
 }
-@@keyframes page-guide-compass-spin {
-    0%, 85%, 100% { transform: rotate(0deg); }
-    92% { transform: rotate(-18deg); }
-}
 @@media (max-width: 760px) {
-    .page-guide-orb { top: 10px; inset-inline-end: 14px; padding: 0; width: 40px; justify-content: center; }
+    .page-guide-orb { top: 10px; inset-inline-end: 14px; width: 40px; height: 40px; min-width: 0; padding: 0; }
     .page-guide-orb-label { display: none; }
 }
 
