@@ -457,7 +457,7 @@ public class WorkforcePlanningServiceTests
         db.CrewTrainerEmployees.Add(new CrewTrainerEmployee { Year = 2026, Month = month, EmployeeId = id, StoreName = store });
 
     [Fact]
-    public async Task CrewTrainerActual_CountsOnlyListedPeopleWhoAreOnTheRoster_AndCrewIsUntouched()
+    public async Task CrewTrainerActual_MovesListedRosterPeopleOutOfTheirJob()
     {
         var db = NewDb();
         Proj(db, 1, "1 | A", "Crew Trainer", 2); Proj(db, 1, "1 | A", "Hourly Paid Crew Trainer", 1); Proj(db, 1, "1 | A", "Crew", 10);
@@ -473,7 +473,8 @@ public class WorkforcePlanningServiceTests
         var trainer = Assert.Single(jan.ByJob, r => r.Name == "Crew Trainer");
         Assert.Equal(3, trainer.Projected);
         Assert.Equal(2, trainer.Actual);
-        Assert.Equal(3, Assert.Single(jan.ByJob, r => r.Name == "Crew").Actual); // trainers are not taken out of Crew (yet)
+        Assert.Equal(1, Assert.Single(jan.ByJob, r => r.Name == "Crew").Actual);    // 3 roster Crew - 2 trainers
+        Assert.Equal(3, jan.Kpis.Actual);                                          // total headcount is unchanged
 
         var feb = await NewService(db).GetAsync(2026, 2, null, null, "Admin", null);
         Assert.Equal(0, Assert.Single(feb.ByJob, r => r.Name == "Crew Trainer").Actual); // no list uploaded for February
@@ -498,6 +499,7 @@ public class WorkforcePlanningServiceTests
         Assert.Equal(3, monthly.Projected);   // Crew Trainer goes to the group most trainers are in
         Assert.Equal(3, monthly.Actual);
         Assert.Equal(5, Assert.Single(dto.ByPayrollGroup, r => r.Name == "Hourly").Projected); // Crew stays in its own group
+        Assert.Equal(3, Assert.Single(dto.ByPayrollGroup, r => r.Name == "Hourly").Actual);    // 6 roster Crew - 3 trainers
         Assert.DoesNotContain(dto.ByPayrollGroup, r => r.Name == "");
     }
 
@@ -517,7 +519,7 @@ public class WorkforcePlanningServiceTests
 
         // two roster months (Jan, Feb) -> 1 trainer resignation / 2 months = 0.5 expected per month
         Assert.Equal(0.5, Assert.Single(dto.ByJob, r => r.Name == "Crew Trainer").ExpectedAttrition);
-        Assert.Equal(1.0, Assert.Single(dto.ByJob, r => r.Name == "Crew").ExpectedAttrition);
+        Assert.Equal(0.5, Assert.Single(dto.ByJob, r => r.Name == "Crew").ExpectedAttrition); // the trainer's resignation left Crew
     }
 
     [Fact]
