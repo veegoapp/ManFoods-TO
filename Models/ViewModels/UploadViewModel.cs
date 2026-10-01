@@ -53,6 +53,12 @@ public class CrewTrainerUploadViewModel
     public int Month { get; set; }
 }
 
+public class JobPayrollGroupUploadViewModel
+{
+    [Required]
+    public IFormFile? File { get; set; }
+}
+
 public class BulkUserUploadViewModel
 {
     [Required]

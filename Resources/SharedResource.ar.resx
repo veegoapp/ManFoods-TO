@@ -2075,4 +2075,20 @@
   <data name="CT_StNone" xml:space="preserve"><value>بلا مدربين</value></data>
   <data name="CT_StNoPlan" xml:space="preserve"><value>بلا خطة</value></data>
   <data name="Guide_CT_Cmp" xml:space="preserve"><value>يجمّع الفروع حسب عدد مدربيها مقابل توقّع مدربي الطاقم: كافٍ (الفعلي لا يقل عن المتوقع)، ناقص (لديه مدربون لكن أقل من المخطط)، بلا مدربين (مخطط لكن لا يوجد أحد)، وبلا خطة (لديه مدربون بلا توقّع). تعرض كل مجموعة فروعها والمتوقع والفعلي والفجوة ونسبة التغطية، ويستخدم عمود الحالة في جدول الفروع أدناه المجموعات نفسها.</value></data>
+  <data name="UL_JobGroups" xml:space="preserve"><value>مجموعات رواتب الوظائف</value></data>
+  <data name="UL_JobGroupsSub" xml:space="preserve"><value>مجموعة الرواتب لكل مسمى وظيفي — المرجع لمجموعات الرواتب في تخطيط القوى العاملة</value></data>
+  <data name="UL_JobGroupsTemplate" xml:space="preserve"><value>تحميل القائمة الحالية</value></data>
+  <data name="UL_JobGroupsNote" xml:space="preserve"><value>عمودان: Job Title و Payroll Group. حمّل القائمة الحالية وعدّلها وارفعها: الرفع يستبدل القائمة بالكامل. الوظيفة غير الموجودة في القائمة تأخذ مجموعة الرواتب التي فيها أغلب موظفيها. المطابقة تتجاهل حالة الأحرف والمسافات الزائدة.</value></data>
+  <data name="DM_UploadJobGroupsButton" xml:space="preserve"><value>رفع مجموعات رواتب الوظائف</value></data>
+  <data name="DM_JobGroupsBadge" xml:space="preserve"><value>مجموعات رواتب الوظائف</value></data>
+  <data name="DM_DeleteConfirmJobGroups" xml:space="preserve"><value>حذف قائمة مجموعات رواتب الوظائف؟ ستعود المجموعات لما تُظهره قائمة الموظفين الحاليين حتى ترفع قائمة جديدة.</value></data>
+  <data name="Msg_JobGroupNoJobColumn" xml:space="preserve"><value>يجب أن يحتوي الملف على عمود Job Title في الصف الأول.</value></data>
+  <data name="Msg_JobGroupNoGroupColumn" xml:space="preserve"><value>يجب أن يحتوي الملف على عمود Payroll Group في الصف الأول.</value></data>
+  <data name="Msg_JobGroupNoRows" xml:space="preserve"><value>لم يتم العثور على وظائف في الملف.</value></data>
+  <data name="Msg_JobGroupProcessed" xml:space="preserve"><value>تم حفظ {0} من مجموعات رواتب الوظائف.</value></data>
+  <data name="Msg_JobGroupDuplicates" xml:space="preserve"><value>{0} مسمى وظيفي مكرر: تم الاحتفاظ بالأخير.</value></data>
+  <data name="Msg_JobGroupBlank" xml:space="preserve"><value>تم تخطي {0} صف لأن المسمى الوظيفي أو مجموعة الرواتب فارغ.</value></data>
+  <data name="Msg_JobGroupUnseen" xml:space="preserve"><value>{0} وظيفة في القائمة غير موجودة في أي توقّع أو قائمة موظفين (راجع الإملاء): {1}.</value></data>
+  <data name="Msg_JobGroupMissing" xml:space="preserve"><value>{0} وظيفة في التوقّع أو قائمة الموظفين غير موجودة في هذه القائمة: {1}.</value></data>
+  <data name="Msg_JobGroupUploadFailed" xml:space="preserve"><value>فشل رفع مجموعات رواتب الوظائف: {0}</value></data>
 </root>

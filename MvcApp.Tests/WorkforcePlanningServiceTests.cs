@@ -856,3 +856,46 @@ public class CrewTrainerServiceTests
         Assert.Equal(1, dto.Kpis.Resigned);
     }
 }
+
+/// <summary>Reading the job → payroll group reference list.</summary>
+public class JobPayrollGroupUploadParseTests
+{
+    private static byte[] Book(string[] headers, params string[][] rows)
+    {
+        using var wb = new ClosedXML.Excel.XLWorkbook();
+        var ws = wb.AddWorksheet("Sheet1");
+        for (int c = 0; c < headers.Length; c++) ws.Cell(1, c + 1).Value = headers[c];
+        for (int r = 0; r < rows.Length; r++)
+            for (int c = 0; c < rows[r].Length; c++) ws.Cell(r + 2, c + 1).Value = rows[r][c];
+        using var ms = new MemoryStream();
+        wb.SaveAs(ms);
+        return ms.ToArray();
+    }
+
+    [Fact]
+    public void Reads_ByHeader_KeepsTheLastRepeat_AndSkipsBlanks()
+    {
+        var bytes = Book(new[] { "Payroll Group", "Job Title" },
+            new[] { "Manfoods Company", "Crew" },
+            new[] { "Hourly Paid", "hourly paid crew trainer" },
+            new[] { "Hourly Paid", "  CREW " },        // repeat of Crew (case / spacing ignored): the last one wins
+            new[] { "", "Barista" },                     // no group
+            new[] { "Hourly Paid", "" });                // no job
+
+        var p = UploadService.ParseJobPayrollGroups(bytes, "no job", "no group");
+
+        Assert.Equal(2, p.Rows.Count);
+        Assert.Equal(1, p.Duplicates);
+        Assert.Equal(2, p.Blank);
+        Assert.Equal("Hourly Paid", p.Rows.Single(r => r.JobTitle == "CREW").PayrollGroup);
+    }
+
+    [Fact]
+    public void MissingColumns_AreRejected()
+    {
+        var noGroup = Book(new[] { "Job Title" }, new[] { "Crew" });
+        Assert.Equal("no group", Assert.Throws<InvalidOperationException>(() => UploadService.ParseJobPayrollGroups(noGroup, "no job", "no group")).Message);
+        var noJob = Book(new[] { "Payroll Group" }, new[] { "Hourly Paid" });
+        Assert.Equal("no job", Assert.Throws<InvalidOperationException>(() => UploadService.ParseJobPayrollGroups(noJob, "no job", "no group")).Message);
+    }
+}

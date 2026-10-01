@@ -888,6 +888,82 @@ public class UploadService : IUploadService
         return (true, message, parsed.Rows.Count, warnings.Count > 0 ? string.Join(" ", warnings) : null);
     }
 
+    // ── Job → payroll group reference list ──
+    internal sealed record JobGroupParse(List<JobPayrollGroup> Rows, int Duplicates, int Blank);
+
+    private static readonly string[] JobGroupJobHeaders = { "Job Title", "JobTitle", "Job", "Position", "الوظيفة", "الوظيفه" };
+    private static readonly string[] JobGroupGroupHeaders = { "Payroll Group", "PayrollGroup", "Group", "مجموعة الرواتب", "مجموعه الرواتب" };
+
+    /// <summary>Reads the first sheet by header (job title + payroll group). One row per job (case and
+    /// spacing ignored, the last repeat wins); rows missing either value are skipped and counted.</summary>
+    internal static JobGroupParse ParseJobPayrollGroups(byte[] fileBytes, string jobMissingMessage, string groupMissingMessage)
+    {
+        using var ms = new MemoryStream(fileBytes);
+        using var wb = new XLWorkbook(ms);
+        var ws = wb.Worksheet(1);
+        var jobCol = FindHeaderColumn(ws, JobGroupJobHeaders);
+        var groupCol = FindHeaderColumn(ws, JobGroupGroupHeaders);
+        if (jobCol == 0) throw new InvalidOperationException(jobMissingMessage);
+        if (groupCol == 0) throw new InvalidOperationException(groupMissingMessage);
+
+        var byJob = new Dictionary<string, JobPayrollGroup>();
+        int duplicates = 0, blank = 0;
+        foreach (var row in ws.RowsUsed().Skip(1))
+        {
+            var job = CollapseSpaces(row.Cell(jobCol).GetString());
+            var group = CollapseSpaces(row.Cell(groupCol).GetString());
+            if (job.Length == 0 && group.Length == 0) continue;
+            if (job.Length == 0 || group.Length == 0) { blank++; continue; }
+            var key = Fold(job);
+            if (byJob.ContainsKey(key)) duplicates++;
+            byJob[key] = new JobPayrollGroup { JobTitle = job, PayrollGroup = group };
+        }
+        return new JobGroupParse(byJob.Values.ToList(), duplicates, blank);
+    }
+
+    public async Task<List<(string Job, string Group)>> GetJobPayrollGroupRowsAsync() =>
+        (await _db.JobPayrollGroups.AsNoTracking().OrderBy(j => j.PayrollGroup).ThenBy(j => j.JobTitle).Select(j => new { j.JobTitle, j.PayrollGroup }).ToListAsync())
+            .Select(j => (j.JobTitle, j.PayrollGroup)).ToList();
+
+    public async Task<(bool, string, int, string?)> UploadJobPayrollGroupsAsync(IFormFile file, string uploadedBy)
+    {
+        await ValidateFileAsync(file);
+        var fileBytes = await ReadBytesAsync(file);
+        var parsed = ParseJobPayrollGroups(fileBytes, _L["Msg_JobGroupNoJobColumn"].Value, _L["Msg_JobGroupNoGroupColumn"].Value);
+        if (parsed.Rows.Count == 0) throw new InvalidOperationException(_L["Msg_JobGroupNoRows"].Value);
+
+        await using var tx = await _db.Database.BeginTransactionAsync();
+        await _db.JobPayrollGroups.ExecuteDeleteAsync();
+        await _db.UploadLogs.Where(l => l.FileType == "job_payroll_groups").ExecuteDeleteAsync();
+        _db.JobPayrollGroups.AddRange(parsed.Rows);
+        _db.UploadLogs.Add(new UploadLog { FileType = "job_payroll_groups", FileName = file.FileName, Month = 0, Year = 0, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
+        await _db.SaveChangesAsync();
+        await tx.CommitAsync();
+        WorkforcePlanningService.InvalidateCache();
+
+        var message = string.Format(_L["Msg_JobGroupProcessed"].Value, parsed.Rows.Count);
+        var warnings = new List<string>();
+        static string Cap(IEnumerable<string> items) { var l = items.ToList(); return string.Join(", ", l.Take(10)) + (l.Count > 10 ? $" (+{l.Count - 10})" : ""); }
+        if (parsed.Duplicates > 0) warnings.Add(string.Format(_L["Msg_JobGroupDuplicates"].Value, parsed.Duplicates));
+        if (parsed.Blank > 0) warnings.Add(string.Format(_L["Msg_JobGroupBlank"].Value, parsed.Blank));
+
+        // Cross-check with the jobs the portal knows (projection and roster), so a misspelt title is noticed.
+        var known = new Dictionary<string, string>();
+        foreach (var n in await _db.JobHeadcountProjections.Select(j => j.JobTitle).Distinct().ToListAsync())
+            if (!string.IsNullOrWhiteSpace(n)) known.TryAdd(Fold(CollapseSpaces(n)), CollapseSpaces(n));
+        foreach (var n in await _db.ActiveEmployees.Select(e => e.JobTitle).Distinct().ToListAsync())
+            if (!string.IsNullOrWhiteSpace(n)) known.TryAdd(Fold(CollapseSpaces(n)), CollapseSpaces(n));
+        if (known.Count > 0)
+        {
+            var listed = parsed.Rows.Select(r => Fold(r.JobTitle)).ToHashSet();
+            var unseen = parsed.Rows.Where(r => !known.ContainsKey(Fold(r.JobTitle))).Select(r => r.JobTitle).ToList();
+            var missing = known.Where(k => !listed.Contains(k.Key)).Select(k => k.Value).ToList();
+            if (unseen.Count > 0) warnings.Add(string.Format(_L["Msg_JobGroupUnseen"].Value, unseen.Count, Cap(unseen)));
+            if (missing.Count > 0) warnings.Add(string.Format(_L["Msg_JobGroupMissing"].Value, missing.Count, Cap(missing)));
+        }
+        return (true, message, parsed.Rows.Count, warnings.Count > 0 ? string.Join(" ", warnings) : null);
+    }
+
     public async Task<(List<UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize, string sort = "date", string dir = "desc", string? kind = null)
     {
         var logs = await _db.UploadLogs.OrderByDescending(l => l.UploadDate)
@@ -942,6 +1018,18 @@ public class UploadService : IUploadService
                 Kind = "crew_trainers",
                 Month = l.Month,
                 Year = l.Year,
+                UploadDate = l.UploadDate,
+                UploadedBy = l.UploadedBy,
+                PrimaryLogId = l.Id,
+                Files = new List<UploadFileRef> { new() { LogId = l.Id, FileType = l.FileType, FileName = l.FileName, HasFile = l.HasFile } },
+            });
+        }
+
+        foreach (var l in logs.Where(l => l.FileType == "job_payroll_groups"))
+        {
+            items.Add(new UploadHistoryItem
+            {
+                Kind = "job_payroll_groups",
                 UploadDate = l.UploadDate,
                 UploadedBy = l.UploadedBy,
                 PrimaryLogId = l.Id,
@@ -1106,6 +1194,17 @@ public class UploadService : IUploadService
             await _db.JobHeadcountProjections.Where(j => j.Year == log.Year).ExecuteDeleteAsync();
             await _db.UploadLogs.Where(l => l.FileType == "job_projections" && l.Year == log.Year).ExecuteDeleteAsync();
             await jtx.CommitAsync();
+            WorkforcePlanningService.InvalidateCache();
+            return;
+        }
+
+        if (log.FileType == "job_payroll_groups")
+        {
+            // Removing the upload removes the list, so payroll groups fall back to the roster until a new list is uploaded.
+            await using var gtx = await _db.Database.BeginTransactionAsync();
+            await _db.JobPayrollGroups.ExecuteDeleteAsync();
+            await _db.UploadLogs.Where(l => l.FileType == "job_payroll_groups").ExecuteDeleteAsync();
+            await gtx.CommitAsync();
             WorkforcePlanningService.InvalidateCache();
             return;
         }

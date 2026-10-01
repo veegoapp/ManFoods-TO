@@ -2069,4 +2069,20 @@
   <data name="CT_StNone" xml:space="preserve"><value>No trainers</value></data>
   <data name="CT_StNoPlan" xml:space="preserve"><value>No plan</value></data>
   <data name="Guide_CT_Cmp" xml:space="preserve"><value>Groups the stores by how many trainers they have against the Crew Trainer projection: Enough (actual is at least the projection), Short (some trainers but fewer than planned), No trainers (planned but none), and No plan (trainers but no projection). Each group shows its stores, projected, actual, gap and fill rate; the Status column in the stores table below uses the same groups.</value></data>
+  <data name="UL_JobGroups" xml:space="preserve"><value>Job Payroll Groups</value></data>
+  <data name="UL_JobGroupsSub" xml:space="preserve"><value>The payroll group of each job title — the reference for payroll groups in Workforce Planning</value></data>
+  <data name="UL_JobGroupsTemplate" xml:space="preserve"><value>Download current list</value></data>
+  <data name="UL_JobGroupsNote" xml:space="preserve"><value>Two columns: Job Title and Payroll Group. Download the current list, edit it and upload it back: the upload replaces the whole list. A job that is not on the list falls back to the payroll group most of its employees are in. Matching ignores capital letters and extra spaces.</value></data>
+  <data name="DM_UploadJobGroupsButton" xml:space="preserve"><value>Upload Job Payroll Groups</value></data>
+  <data name="DM_JobGroupsBadge" xml:space="preserve"><value>Job Payroll Groups</value></data>
+  <data name="DM_DeleteConfirmJobGroups" xml:space="preserve"><value>Delete the Job Payroll Groups list? Payroll groups will fall back to what the active employee list shows until a new list is uploaded.</value></data>
+  <data name="Msg_JobGroupNoJobColumn" xml:space="preserve"><value>The file needs a Job Title column in the first row.</value></data>
+  <data name="Msg_JobGroupNoGroupColumn" xml:space="preserve"><value>The file needs a Payroll Group column in the first row.</value></data>
+  <data name="Msg_JobGroupNoRows" xml:space="preserve"><value>No jobs were found in the file.</value></data>
+  <data name="Msg_JobGroupProcessed" xml:space="preserve"><value>Saved {0} job payroll group(s).</value></data>
+  <data name="Msg_JobGroupDuplicates" xml:space="preserve"><value>{0} repeated job title(s): the last one was kept.</value></data>
+  <data name="Msg_JobGroupBlank" xml:space="preserve"><value>{0} row(s) were skipped because the job title or the payroll group was empty.</value></data>
+  <data name="Msg_JobGroupUnseen" xml:space="preserve"><value>{0} job(s) on the list are not in any projection or employee list (check the spelling): {1}.</value></data>
+  <data name="Msg_JobGroupMissing" xml:space="preserve"><value>{0} job(s) in the projection or employee list are not on this list: {1}.</value></data>
+  <data name="Msg_JobGroupUploadFailed" xml:space="preserve"><value>Job Payroll Groups upload failed: {0}</value></data>
 </root>
