@@ -52,6 +52,16 @@ public class WorkforcePlanningApiController : ControllerBase
         return Ok(new { points, avgTurnover = avg });
     }
 
+    /// <summary>The Crew Trainers page (same access area as Workforce Planning).</summary>
+    [HttpGet("crew-trainers")]
+    public async Task<IActionResult> CrewTrainers([FromServices] ICrewTrainerService trainers, [FromQuery] int? year, [FromQuery] int? month, [FromQuery] string? store,
+        [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? soc, [FromQuery] string? od)
+    {
+        var role = HttpContext.Session.GetRole();
+        var assignedName = HttpContext.Session.GetEmail();
+        return Ok(await trainers.GetAsync(year, month, store, role, assignedName, om, oc, soc, od));
+    }
+
     [HttpGet("hiring-forecast")]
     public async Task<IActionResult> HiringForecast([FromQuery] int? year, [FromQuery] string? store, [FromQuery] string? jobs,
         [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? soc, [FromQuery] string? od, [FromQuery] string? by)

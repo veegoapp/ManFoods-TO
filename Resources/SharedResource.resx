@@ -2025,4 +2025,48 @@
   <data name="Msg_CrewTrainerNoRoster" xml:space="preserve"><value>No active employee list is uploaded for {0} {1} yet, so the trainers could not be checked against it. They are counted once that month's list is uploaded.</value></data>
   <data name="Msg_CrewTrainerNotInRoster" xml:space="preserve"><value>{0} employee ID(s) are not in that month's active employee list and are not counted: {1}.</value></data>
   <data name="Msg_CrewTrainerJobDiffers" xml:space="preserve"><value>{0} employee(s) have a different job here than in the active employee list.</value></data>
+  <data name="Nav_CrewTrainers" xml:space="preserve"><value>Crew Trainers</value></data>
+  <data name="Page_CrewTrainers" xml:space="preserve"><value>Crew Trainers</value></data>
+  <data name="Page_CrewTrainersSub" xml:space="preserve"><value>Trainers against the plan, the new hires they train, and who joined or left the list</value></data>
+  <data name="CT_NoData" xml:space="preserve"><value>No Crew Trainers list has been uploaded yet.</value></data>
+  <data name="CT_NoDataAdmin" xml:space="preserve"><value>Upload a Crew Trainers list in Data Management</value></data>
+  <data name="CT_NoPlan" xml:space="preserve"><value>This month has no Crew Trainer projection, so the plan columns are not shown.</value></data>
+  <data name="CT_ChartTitle" xml:space="preserve"><value>Trainers per month</value></data>
+  <data name="CT_ChartSub" xml:space="preserve"><value>Crew Trainer projection against the trainers found on each month's active employee list</value></data>
+  <data name="CT_StoresTitle" xml:space="preserve"><value>Trainers and new hires by store</value></data>
+  <data name="CT_StoresSub" xml:space="preserve"><value>Stores with the most new hires per trainer come first</value></data>
+  <data name="CT_ColNewHires" xml:space="preserve"><value>New hires (90 days)</value></data>
+  <data name="CT_ColPerTrainer" xml:space="preserve"><value>New hires per trainer</value></data>
+  <data name="CT_NoTrainer" xml:space="preserve"><value>No trainer</value></data>
+  <data name="CT_KTrainers" xml:space="preserve"><value>Trainers</value></data>
+  <data name="CT_KTrainersDesc" xml:space="preserve"><value>Actual / projected Crew Trainers this month</value></data>
+  <data name="CT_KHires" xml:space="preserve"><value>New hires</value></data>
+  <data name="CT_KHiresDesc" xml:space="preserve"><value>Hired in the 90 days up to the end of the month</value></data>
+  <data name="CT_KPer" xml:space="preserve"><value>New hires per trainer</value></data>
+  <data name="CT_KPerDesc" xml:space="preserve"><value>New hires divided by trainers; higher means more training load</value></data>
+  <data name="CT_KResigned" xml:space="preserve"><value>Trainers who resigned</value></data>
+  <data name="CT_KResignedDesc" xml:space="preserve"><value>Trainers who resigned in the last {0} months</value></data>
+  <data name="CT_MovementTitle" xml:space="preserve"><value>Trainer list changes</value></data>
+  <data name="CT_MoveSub" xml:space="preserve"><value>Compared with the {0} list</value></data>
+  <data name="CT_Entered" xml:space="preserve"><value>Joined the list</value></data>
+  <data name="CT_Left" xml:space="preserve"><value>Left the list</value></data>
+  <data name="CT_NoPrevious" xml:space="preserve"><value>There is no earlier list to compare with.</value></data>
+  <data name="CT_NoneMoved" xml:space="preserve"><value>No one.</value></data>
+  <data name="CT_StResigned" xml:space="preserve"><value>Resigned</value></data>
+  <data name="CT_StActive" xml:space="preserve"><value>Still working, off the list</value></data>
+  <data name="CT_StGone" xml:space="preserve"><value>Not on the roster</value></data>
+  <data name="Guide_CT_Overview" xml:space="preserve"><value>Shows the Crew Trainers: how many there are against the plan, how many new hires each store has to train, and who joined or left the trainer list.</value></data>
+  <data name="Guide_CT_FilterNote" xml:space="preserve"><value>Year and Month pick one of the months that have an uploaded trainer list. Store and the Operation Consultant / Manager / Senior Consultant / Director selectors narrow every number and table. You only see the stores you have access to (Settings → Access, Workforce Planning row).</value></data>
+  <data name="Guide_CT_KpisTitle" xml:space="preserve"><value>Summary cards</value></data>
+  <data name="Guide_CT_Kpis" xml:space="preserve"><value>Trainers: actual over projected for the month. New hires: employees hired in the 90 days up to the month end (from the active employee list hire dates). New hires per trainer: new hires divided by trainers, so a higher number means more training load. Trainers who resigned: trainers who were on a list and resigned in the last 6 months.</value></data>
+  <data name="Guide_CT_Chart" xml:space="preserve"><value>Projected against actual Crew Trainers for each month of the year. Actual is the people on the uploaded list who are also on that month's active employee list, so a month without a list or a roster shows 0.</value></data>
+  <data name="Guide_CT_Stores" xml:space="preserve"><value>One row per store with a Crew Trainer projection that month: projected, actual and gap (actual − projected, negative = short of trainers), the new hires of the last 90 days, and new hires per trainer. A store with new hires and no trainer shows "No trainer" and comes first. Click a column title to sort and use the search box to find a store or consultant.</value></data>
+  <data name="Guide_CT_Movement" xml:space="preserve"><value>Who joined and who left the trainer list compared with the previous uploaded list. For people who left: Resigned (they appear in the resignations), Still working, off the list (still on this month's active list, so the allowance was removed or they moved), or Not on the roster.</value></data>
+  <data name="CT_CmpTitle" xml:space="preserve"><value>Stores with enough trainers vs short</value></data>
+  <data name="CT_CmpSub" xml:space="preserve"><value>Stores grouped by actual trainers against the projection</value></data>
+  <data name="CT_StEnough" xml:space="preserve"><value>Enough trainers</value></data>
+  <data name="CT_StShort" xml:space="preserve"><value>Short of trainers</value></data>
+  <data name="CT_StNone" xml:space="preserve"><value>No trainers</value></data>
+  <data name="CT_StNoPlan" xml:space="preserve"><value>No plan</value></data>
+  <data name="Guide_CT_Cmp" xml:space="preserve"><value>Groups the stores by how many trainers they have against the Crew Trainer projection: Enough (actual is at least the projection), Short (some trainers but fewer than planned), No trainers (planned but none), and No plan (trainers but no projection). Each group shows its stores, projected, actual, gap and fill rate; the Status column in the stores table below uses the same groups.</value></data>
 </root>

@@ -175,3 +175,65 @@ public class HiringForecastDto
     public int[] MonthTotals { get; set; } = new int[12];
     public int GrandTotal { get; set; }
 }
+
+/// <summary>One store on the Crew Trainers page: trainers against the plan, and the new hires they train.</summary>
+public class CrewTrainerStoreDto
+{
+    public string Store { get; set; } = "";
+    public string OperationConsultant { get; set; } = "";
+    public int Projected { get; set; }
+    public int Actual { get; set; }
+    /// <summary>Actual − projected (negative = short of trainers).</summary>
+    public int Gap { get; set; }
+    /// <summary>Employees hired in the 90 days up to the end of the month (roster hire dates).</summary>
+    public int NewHires { get; set; }
+    /// <summary>New hires per trainer; null when the store has no trainer.</summary>
+    public double? HiresPerTrainer { get; set; }
+}
+
+/// <summary>A person who joined or left the trainer list compared with the previous list.</summary>
+public class CrewTrainerMoveDto
+{
+    public string EmployeeId { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Store { get; set; } = "";
+    /// <summary>For people who left the list: "resigned" | "active" (still on the roster, off the list) | "gone" (not on the roster).</summary>
+    public string Status { get; set; } = "";
+}
+
+public class CrewTrainerKpiDto
+{
+    public int Projected { get; set; }
+    public int Actual { get; set; }
+    public int Gap { get; set; }
+    public int NewHires { get; set; }
+    public double? HiresPerTrainer { get; set; }
+    /// <summary>Trainers (on a list in the lookback window) who resigned in the lookback window.</summary>
+    public int Resigned { get; set; }
+    public int LookbackMonths { get; set; }
+}
+
+public class CrewTrainerDto
+{
+    public bool HasData { get; set; }
+    public int Year { get; set; }
+    public int Month { get; set; }
+    /// <summary>Year/month pairs that have a trainer list (drives the period filters).</summary>
+    public List<PeriodItem> Periods { get; set; } = new();
+    public List<string> Stores { get; set; } = new();
+    public List<string> OperationConsultants { get; set; } = new();
+    public List<string> OperationManagers { get; set; } = new();
+    public List<string> SeniorOperationConsultants { get; set; } = new();
+    public List<string> OperationDirectors { get; set; } = new();
+    /// <summary>False when the month has no Crew Trainer projection (the plan columns are then 0).</summary>
+    public bool HasProjection { get; set; }
+    public CrewTrainerKpiDto Kpis { get; set; } = new();
+    public List<PlanningTrendPointDto> Trend { get; set; } = new();
+    public List<CrewTrainerStoreDto> ByStore { get; set; } = new();
+    /// <summary>False when there is no earlier list to compare with.</summary>
+    public bool HasPrevious { get; set; }
+    public int PreviousYear { get; set; }
+    public int PreviousMonth { get; set; }
+    public List<CrewTrainerMoveDto> Entered { get; set; } = new();
+    public List<CrewTrainerMoveDto> Left { get; set; } = new();
+}

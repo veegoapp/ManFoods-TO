@@ -1,0 +1,305 @@
+@{
+    var __area = ViewContext.RouteData.Values["area"]?.ToString();
+    var __isAdminArea = !string.Equals(__area, "Home", StringComparison.OrdinalIgnoreCase);
+}
+<style>
+.ct-select-wrap { position:relative; }
+.ct-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13.5px; font-weight:600;
+    height:42px; padding:0 34px 0 14px; min-width:110px; max-width:260px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+}
+.ct-select:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.ct-select-wrap i { position:absolute; top:50%; right:12px; transform:translateY(-50%); font-size:11px; color:var(--text-3); pointer-events:none; }
+[dir="rtl"] .ct-select { padding:0 14px 0 34px; }
+[dir="rtl"] .ct-select-wrap i { right:auto; left:12px; }
+.ct-note {
+    display:flex; align-items:flex-start; gap:10px; margin-bottom:14px; padding:12px 14px; font-size:13px;
+    background:oklch(0.75 0.16 75 / .1); border:1px solid oklch(0.75 0.16 75 / .35);
+    border-radius:var(--radius-sm); color:var(--text-2);
+}
+.ct-note i { color:oklch(0.6 0.14 75); font-size:16px; flex-shrink:0; margin-top:1px; }
+.ct-wrap { max-height:640px; overflow:auto; }
+.ct-table { width:100%; border-collapse:separate; border-spacing:0; font-size:13.5px; }
+.ct-table th, .ct-table td { padding:9px 12px; border-bottom:1px solid var(--card-border); white-space:nowrap; text-align:start; }
+.ct-table thead th { position:sticky; top:0; z-index:2; background:var(--bg-2); color:var(--text); font-weight:700; }
+.ct-table td.num, .ct-table th.num { text-align:center; font-variant-numeric:tabular-nums; min-width:62px; }
+.ct-table th.sortable { cursor:pointer; user-select:none; }
+.ct-table th.sortable:hover { color:var(--red); }
+.ct-table th.sortable i { font-size:10px; margin-inline-start:5px; opacity:.35; }
+.ct-table th.sortable.sorted i { opacity:1; color:var(--red); }
+.ct-table th .ct-tag { display:block; font-size:10px; font-weight:600; color:var(--text-3); }
+.ct-table td.ct-zero { color:var(--text-3); }
+.ct-table td.ct-total, .ct-table th.ct-total { font-weight:700; background:var(--bg-2); }
+.ct-table tfoot td { position:sticky; bottom:0; z-index:2; background:var(--bg-2); font-weight:700; border-top:2px solid var(--card-border); }
+.ct-search {
+    background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
+    border-radius:var(--radius-sm); font-size:13px; height:36px; padding:0 12px; min-width:200px;
+}
+.ct-empty { padding:40px 20px; text-align:center; color:var(--text-3); font-size:14px; }
+.ct-empty i { font-size:34px; display:block; margin-bottom:10px; }
+.chart-body canvas { direction:ltr; }
+.ct-pill { font-size:11px; font-weight:700; padding:3px 10px; border-radius:12px; display:inline-block; }
+.ct-pill.red { background:oklch(0.6 0.22 22 / .14); color:oklch(0.5 0.2 22); }
+.ct-pill.amber { background:oklch(0.75 0.16 75 / .18); color:oklch(0.5 0.14 75); }
+.ct-pill.grey { background:var(--bg-2); color:var(--text-3); }
+.ct-gap-short { color:oklch(0.55 0.2 22); }
+.ct-gap-over { color:oklch(0.45 0.15 250); }
+.ct-pill.green { background:oklch(0.62 0.15 155 / .14); color:oklch(0.45 0.15 155); }
+.ct-legend { font-size:12px; color:var(--text-3); }
+</style>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">@L["Page_CrewTrainers"]</h1>
+        <p class="page-subtitle">@L["Page_CrewTrainersSub"]</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap align-items-end" id="ctFilters" hidden>
+        <div class="ct-select-wrap"><select id="ctYear" class="ct-select" aria-label="@L["WP_Year"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="ct-select-wrap"><select id="ctMonth" class="ct-select" aria-label="@L["WP_Month"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="ct-select-wrap"><select id="ctStore" class="ct-select" aria-label="@L["WP_ColStore"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="ct-select-wrap"><select id="ctOc" class="ct-select" aria-label="@L["Common_OperationConsultant"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="ct-select-wrap"><select id="ctOm" class="ct-select" aria-label="@L["Common_OperationManagers"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="ct-select-wrap"><select id="ctSoc" class="ct-select" aria-label="@L["Common_SeniorOperationConsultants"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="ct-select-wrap"><select id="ctOd" class="ct-select" aria-label="@L["Common_OperationDirectors"]"></select><i class="bi bi-chevron-down"></i></div>
+        <button type="button" class="reset-filters-btn" id="ctReset"><i class="bi bi-arrow-counterclockwise"></i>@L["Common_ResetFilters"]</button>
+    </div>
+</div>
+
+@{
+    var crewTrainersGuide = new PageGuideViewModel
+    {
+        PageKey = "crewtrainers",
+        Overview = L["Guide_CT_Overview"],
+        FilterNote = L["Guide_CT_FilterNote"],
+        Sections = new List<PageGuideSection>
+        {
+            new() { Icon = "bi-speedometer2", Title = L["Guide_CT_KpisTitle"], Body = L["Guide_CT_Kpis"] },
+            new() { Icon = "bi-graph-up-arrow", Title = L["CT_ChartTitle"], Body = L["Guide_CT_Chart"] },
+            new() { Icon = "bi-columns-gap", Title = L["CT_CmpTitle"], Body = L["Guide_CT_Cmp"] },
+            new() { Icon = "bi-shop", Title = L["CT_StoresTitle"], Body = L["Guide_CT_Stores"] },
+            new() { Icon = "bi-arrow-left-right", Title = L["CT_MovementTitle"], Body = L["Guide_CT_Movement"] },
+        }
+    };
+}
+@await Html.PartialAsync("~/Views/Shared/Dashboard/_PageGuide.cshtml", crewTrainersGuide)
+
+<div id="ctEmpty" class="chart-card" hidden>
+    <div class="ct-empty">
+        <i class="bi bi-mortarboard"></i>
+        <div>@L["CT_NoData"]</div>
+        @if (__isAdminArea)
+        {
+            <div class="mt-2"><a href="/admin/dashboard/uploads?tab=jobproj">@L["CT_NoDataAdmin"]</a></div>
+        }
+    </div>
+</div>
+
+<div id="ctBody" hidden>
+    <div id="ctNoPlan" class="ct-note" hidden><i class="bi bi-info-circle-fill"></i><span>@L["CT_NoPlan"]</span></div>
+    <div id="ctKpis" class="kpi-grid mb-3"></div>
+
+    <div class="chart-card mb-3">
+        <div class="chart-header"><h6>@L["CT_ChartTitle"]</h6><p>@L["CT_ChartSub"]</p></div>
+        <div class="chart-body" style="position:relative;height:300px"><canvas id="ctChart"></canvas></div>
+    </div>
+
+    <div class="chart-card mb-3" id="ctCmpCard">
+        <div class="chart-header"><h6>@L["CT_CmpTitle"]</h6><p>@L["CT_CmpSub"]</p></div>
+        <div class="ct-wrap" style="max-height:none">
+            <table class="ct-table">
+                <thead><tr id="ctCmpHead"></tr></thead>
+                <tbody id="ctCmpRows"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="chart-card mb-3">
+        <div class="chart-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div><h6>@L["CT_StoresTitle"]</h6><p>@L["CT_StoresSub"]</p></div>
+            <input type="search" id="ctSearch" class="ct-search" placeholder="@L["WP_Search"]">
+        </div>
+        <div class="ct-wrap">
+            <table class="ct-table">
+                <thead><tr id="ctHead"></tr></thead>
+                <tbody id="ctRows"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["CT_MovementTitle"]</h6><p id="ctMoveSub"></p></div>
+        <div class="row g-3" id="ctMove"></div>
+    </div>
+</div>
+
+<div id="ctL" hidden
+     data-all-oc="@L["Common_AllOperationConsultants"]" data-all-om="@L["Common_AllOperationManagers"]" data-all-soc="@L["WP_AllSoc"]" data-all-od="@L["WP_AllOd"]" data-all-stores="@L["WP_AllStores"]"
+     data-col-stores="@L["Common_Stores"]" data-col-fill="@L["WP_ColFill"]" data-col-status="@L["WP_ColStatus"]" data-st-enough="@L["CT_StEnough"]" data-st-short="@L["CT_StShort"]" data-st-none="@L["CT_StNone"]" data-st-noplan="@L["CT_StNoPlan"]" data-total="@L["HF_Total"]"
+     data-store="@L["WP_ColStore"]" data-oc="@L["Common_OperationConsultant"]" data-projected="@L["WP_ColProjected"]" data-actual="@L["WP_ColActual"]" data-gap="@L["WP_ColGap"]"
+     data-new-hires="@L["CT_ColNewHires"]" data-per="@L["CT_ColPerTrainer"]" data-no-trainer="@L["CT_NoTrainer"]" data-no-rows="@L["Common_NoData"]"
+     data-k-trainers="@L["CT_KTrainers"]" data-k-trainers-d="@L["CT_KTrainersDesc"]" data-k-hires="@L["CT_KHires"]" data-k-hires-d="@L["CT_KHiresDesc"]"
+     data-k-per="@L["CT_KPer"]" data-k-per-d="@L["CT_KPerDesc"]" data-k-res="@L["CT_KResigned"]" data-k-res-d="@L["CT_KResignedDesc"]"
+     data-entered="@L["CT_Entered"]" data-left="@L["CT_Left"]" data-move-sub="@L["CT_MoveSub"]" data-no-prev="@L["CT_NoPrevious"]" data-none="@L["CT_NoneMoved"]"
+     data-resigned="@L["CT_StResigned"]" data-active="@L["CT_StActive"]" data-gone="@L["CT_StGone"]" data-name="@L["Common_Name"]"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="~/js/chart-colors.js" asp-append-version="true"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>Chart.register(ChartDataLabels);</script>
+<script>
+/* Crew Trainers — trainers against the Crew Trainer plan, the new hires they train, and who joined/left the list.
+   One endpoint (/api/workforce-planning/crew-trainers); the server caches the reads. */
+const ctL = document.getElementById('ctL').dataset;
+const ctState = { year: '', month: '', store: '', oc: '', om: '', soc: '', od: '' };
+const ctSort = { key: 'perTrainer', dir: 'desc' };
+let ctData, ctChart;
+const ctMonthName = (m, s) => new Date(2000, m - 1, 1).toLocaleString('default', { month: s || 'long' });
+// Staffing status of a store's trainers against its plan.
+const ctStatus = r => r.projected <= 0 ? 'noplan' : r.actual <= 0 ? 'none' : r.actual >= r.projected ? 'enough' : 'short';
+const CT_ST_ORDER = { enough: 0, short: 1, none: 2, noplan: 3 };
+const CT_ST_PILL = { enough: 'green', short: 'amber', none: 'red', noplan: 'grey' };
+const ctStLabel = st => ({ enough: ctL.stEnough, short: ctL.stShort, none: ctL.stNone, noplan: ctL.stNoplan }[st]);
+const ctGapText = g => (g > 0 ? '+' : '') + g;
+const ctGapClass = g => g < 0 ? 'ct-gap-short' : g > 0 ? 'ct-gap-over' : '';
+
+function ctFillSelect(id, options, value) {
+    const el = document.getElementById(id);
+    el.innerHTML = options.map(o => `<option value="${sapEscape(o.value)}">${sapEscape(o.label)}</option>`).join('');
+    el.value = String(value ?? '');
+}
+
+async function ctLoad() {
+    const q = new URLSearchParams();
+    if (ctState.year) q.set('year', ctState.year);
+    if (ctState.month) q.set('month', ctState.month);
+    if (ctState.store) q.set('store', ctState.store);
+    ['oc', 'om', 'soc', 'od'].forEach(k => { if (ctState[k]) q.set(k, ctState[k]); });
+    let d;
+    try {
+        const r = await fetch('/api/workforce-planning/crew-trainers?' + q);
+        if (!r.ok) throw new Error();
+        d = await r.json();
+    } catch { document.getElementById('ctEmpty').hidden = false; return; }
+    ctData = d;
+    document.getElementById('ctEmpty').hidden = d.hasData;
+    document.getElementById('ctBody').hidden = !d.hasData;
+    document.getElementById('ctFilters').hidden = !d.hasData;
+    if (!d.hasData) return;
+
+    ctState.year = d.year; ctState.month = d.month;
+    const years = [...new Set(d.periods.map(p => p.year))];
+    ctFillSelect('ctYear', years.map(y => ({ value: y, label: y })), d.year);
+    ctFillSelect('ctMonth', d.periods.filter(p => p.year === d.year).map(p => ({ value: p.month, label: ctMonthName(p.month) })), d.month);
+    ctFillSelect('ctStore', [{ value: '', label: ctL.allStores }].concat(d.stores.map(s => ({ value: s, label: s }))), ctState.store);
+    const people = (id, all, list, key) => ctFillSelect(id, [{ value: '', label: all }].concat((list || []).map(n => ({ value: n, label: n }))), ctState[key]);
+    people('ctOc', ctL.allOc, d.operationConsultants, 'oc'); people('ctOm', ctL.allOm, d.operationManagers, 'om');
+    people('ctSoc', ctL.allSoc, d.seniorOperationConsultants, 'soc'); people('ctOd', ctL.allOd, d.operationDirectors, 'od');
+
+    document.getElementById('ctNoPlan').hidden = d.hasProjection;
+    ctRenderKpis(d); ctRenderChart(d); ctRenderCompare(d); ctRenderStores(); ctRenderMovement(d);
+}
+
+function ctRenderKpis(d) {
+    const k = d.kpis;
+    const card = (icon, cls, val, label, desc) =>
+        `<div class="kpi-card"><div class="kpi-icon ${cls}"><i class="bi ${icon}"></i></div><div class="kpi-value ${cls}">${val}</div><div class="kpi-label">${sapEscape(label)}</div><div class="kpi-desc">${sapEscape(desc)}</div></div>`;
+    document.getElementById('ctKpis').innerHTML =
+        card('bi-mortarboard-fill', k.gap < 0 && d.hasProjection ? 'text-danger' : '', d.hasProjection ? `${k.actual} / ${k.projected}` : k.actual, ctL.kTrainers, ctL.kTrainersD) +
+        card('bi-person-plus-fill', '', k.newHires, ctL.kHires, ctL.kHiresD) +
+        card('bi-person-lines-fill', k.hiresPerTrainer != null && k.hiresPerTrainer >= 4 ? 'text-danger' : '', k.hiresPerTrainer ?? '—', ctL.kPer, ctL.kPerD) +
+        card('bi-box-arrow-right', k.resigned > 0 ? 'text-danger' : '', k.resigned, ctL.kRes, ctL.kResD.replace('{0}', k.lookbackMonths));
+}
+
+// Stores grouped by how their trainers compare with the plan: actual against projected only.
+function ctRenderCompare(d) {
+    const card = document.getElementById('ctCmpCard');
+    card.hidden = !d.hasProjection;
+    if (!d.hasProjection) return;
+    const groups = {};
+    d.byStore.forEach(r => {
+        const g = groups[ctStatus(r)] ||= { stores: 0, projected: 0, actual: 0 };
+        g.stores++; g.projected += r.projected; g.actual += r.actual;
+    });
+    document.getElementById('ctCmpHead').innerHTML = [ctL.colStatus, ctL.colStores, ctL.projected, ctL.actual, ctL.gap, ctL.colFill]
+        .map((h, i) => `<th class="${i ? 'num' : ''}">${sapEscape(h)}</th>`).join('');
+    const fill = (a, p) => p > 0 ? Math.round(a * 1000 / p) / 10 + '%' : '—';
+    const line = (label, pillCls, g) => `<tr><td>${pillCls ? `<span class="ct-pill ${pillCls}">${sapEscape(label)}</span>` : `<b>${sapEscape(label)}</b>`}</td>
+        <td class="num">${g.stores}</td><td class="num">${g.projected}</td><td class="num">${g.actual}</td>
+        <td class="num ${ctGapClass(g.actual - g.projected)}">${ctGapText(g.actual - g.projected)}</td><td class="num">${fill(g.actual, g.projected)}</td></tr>`;
+    const order = Object.keys(groups).sort((a, b) => CT_ST_ORDER[a] - CT_ST_ORDER[b]);
+    const total = order.reduce((t, k) => ({ stores: t.stores + groups[k].stores, projected: t.projected + groups[k].projected, actual: t.actual + groups[k].actual }), { stores: 0, projected: 0, actual: 0 });
+    document.getElementById('ctCmpRows').innerHTML = order.map(k => line(ctStLabel(k), CT_ST_PILL[k], groups[k])).join('') + line(ctL.total, '', total);
+}
+
+function ctRenderChart(d) {
+    const t = d.trend.filter(p => p.projected > 0 || (p.actual || 0) > 0);
+    if (ctChart) ctChart.destroy();
+    const ds = [{ label: ctL.projected, data: t.map(p => p.projected), backgroundColor: 'oklch(0.5 0.06 258)', borderRadius: 3 }];
+    ds.push({ label: ctL.actual, data: t.map(p => p.actual), backgroundColor: 'oklch(0.55 0.19 25)', borderRadius: 3 });
+    ctChart = new Chart(document.getElementById('ctChart'), {
+        type: 'bar',
+        data: { labels: t.map(p => ctMonthName(p.month, 'short')), datasets: ds },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { enabled: true, callbacks: { label: c => ` ${c.dataset.label}: ${c.formattedValue}` } },
+                datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 11, weight: 'bold' }, formatter: v => v > 0 ? v : '' },
+            },
+            scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(128,128,128,.12)' } } },
+        },
+    });
+}
+
+const ctVal = {
+    store: r => r.store.toLowerCase(), oc: r => (r.operationConsultant || '').toLowerCase(), projected: r => r.projected, actual: r => r.actual,
+    gap: r => r.gap, status: r => CT_ST_ORDER[ctStatus(r)], newHires: r => r.newHires, perTrainer: r => r.hiresPerTrainer ?? (r.newHires > 0 ? Number.MAX_VALUE : -1),
+};
+function ctRenderStores() {
+    const d = ctData;
+    const th = (key, label, cls) => `<th class="sortable ${cls || ''}" data-sort="${key}">${sapEscape(label)}<i class="bi"></i></th>`;
+    const head = document.getElementById('ctHead');
+    head.innerHTML = th('store', ctL.store) + th('oc', ctL.oc) + th('projected', ctL.projected, 'num') + th('actual', ctL.actual, 'num') + th('gap', ctL.gap, 'num')
+        + th('newHires', ctL.newHires, 'num') + th('perTrainer', ctL.per, 'num') + th('status', ctL.colStatus);
+    head.querySelectorAll('th.sortable').forEach(el => {
+        const on = el.dataset.sort === ctSort.key;
+        el.classList.toggle('sorted', on);
+        el.querySelector('i').className = 'bi ' + (on && ctSort.dir === 'asc' ? 'bi-caret-up-fill' : 'bi-caret-down-fill');
+        el.addEventListener('click', () => { ctSort.dir = ctSort.key === el.dataset.sort && ctSort.dir === 'asc' ? 'desc' : 'asc'; ctSort.key = el.dataset.sort; ctRenderStores(); });
+    });
+    const term = (document.getElementById('ctSearch').value || '').trim().toLowerCase();
+    let rows = d.byStore.filter(r => !term || r.store.toLowerCase().includes(term) || (r.operationConsultant || '').toLowerCase().includes(term));
+    const val = ctVal[ctSort.key], sign = ctSort.dir === 'asc' ? 1 : -1;
+    rows = [...rows].sort((a, b) => { const x = val(a), y = val(b); const c = typeof x === 'string' ? x.localeCompare(y, undefined, { numeric: true }) : x - y; return (c || a.store.localeCompare(b.store)) * sign; });
+    document.getElementById('ctRows').innerHTML = rows.length ? rows.map(r => {
+        const per = r.hiresPerTrainer != null ? r.hiresPerTrainer : (r.newHires > 0 ? `<span class="ct-pill red">${sapEscape(ctL.noTrainer)}</span>` : '—');
+        return `<tr><td>${sapEscape(r.store)}</td><td>${r.operationConsultant ? sapEscape(r.operationConsultant) : '—'}</td>
+            <td class="num">${d.hasProjection ? r.projected : '—'}</td><td class="num">${r.actual}</td>
+            <td class="num ${ctGapClass(r.gap)}">${d.hasProjection ? ctGapText(r.gap) : '—'}</td><td class="num">${r.newHires}</td><td class="num">${per}</td><td>${d.hasProjection ? `<span class="ct-pill ${CT_ST_PILL[ctStatus(r)]}">${sapEscape(ctStLabel(ctStatus(r)))}</span>` : '—'}</td></tr>`;
+    }).join('') : `<tr><td colspan="8" class="text-center py-3 text-muted">${sapEscape(ctL.noRows)}</td></tr>`;
+}
+
+function ctRenderMovement(d) {
+    const sub = document.getElementById('ctMoveSub');
+    const host = document.getElementById('ctMove');
+    if (!d.hasPrevious) { sub.textContent = ''; host.innerHTML = `<div class="col-12 text-muted" style="font-size:13px">${sapEscape(ctL.noPrev)}</div>`; return; }
+    sub.textContent = ctL.moveSub.replace('{0}', ctMonthName(d.previousMonth) + ' ' + d.previousYear);
+    const pill = s => `<span class="ct-pill ${s === 'resigned' ? 'red' : s === 'active' ? 'amber' : 'grey'}">${sapEscape(ctL[s])}</span>`;
+    const list = (title, items, withStatus) => `<div class="col-12 col-xl-6"><h6 class="fw-bold mb-2">${sapEscape(title)} (${items.length})</h6>
+        <div class="ct-wrap" style="max-height:300px"><table class="ct-table"><thead><tr><th>${sapEscape(ctL.name)}</th><th>${sapEscape(ctL.store)}</th>${withStatus ? '<th></th>' : ''}</tr></thead>
+        <tbody>${items.length ? items.map(m => `<tr><td>${sapEscape(m.name || m.employeeId)}</td><td>${sapEscape(m.store)}</td>${withStatus ? `<td>${pill(m.status)}</td>` : ''}</tr>`).join('')
+            : `<tr><td colspan="3" class="text-muted">${sapEscape(ctL.none)}</td></tr>`}</tbody></table></div></div>`;
+    host.innerHTML = list(ctL.entered, d.entered, false) + list(ctL.left, d.left, true);
+}
+
+document.getElementById('ctYear').addEventListener('change', e => { ctState.year = e.target.value; ctState.month = ''; ctLoad(); });
+document.getElementById('ctMonth').addEventListener('change', e => { ctState.month = e.target.value; ctLoad(); });
+document.getElementById('ctStore').addEventListener('change', e => { ctState.store = e.target.value; ctLoad(); });
+[['ctOc', 'oc'], ['ctOm', 'om'], ['ctSoc', 'soc'], ['ctOd', 'od']].forEach(([id, key]) => document.getElementById(id).addEventListener('change', e => { ctState[key] = e.target.value; ctLoad(); }));
+document.getElementById('ctReset').addEventListener('click', () => { Object.keys(ctState).forEach(k => { ctState[k] = ''; }); ctLoad(); });
+document.getElementById('ctSearch').addEventListener('input', () => ctData && ctRenderStores());
+ctLoad();
+</script>

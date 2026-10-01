@@ -761,3 +761,79 @@ public class CrewTrainerUploadParseTests
         Assert.Equal("no id", ex.Message);
     }
 }
+
+/// <summary>The Crew Trainers page: trainers against the plan, new hires to train, and list movement.</summary>
+public class CrewTrainerServiceTests
+{
+    private static AppDbContext NewDb() =>
+        new(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+
+    private static CrewTrainerService NewService(AppDbContext db)
+    {
+        var cache = new MemoryCache(new MemoryCacheOptions());
+        return new CrewTrainerService(db, new WorkforcePlanningService(db, new StoreAccessService(db), cache), cache);
+    }
+
+    private static void Person(AppDbContext db, int month, string id, string store, DateOnly? hired = null) =>
+        db.ActiveEmployees.Add(new ActiveEmployee { Year = 2026, Month = month, EmployeeId = id, Name = "N" + id, Store = store, JobTitle = "Crew", HireDate = hired });
+
+    private static void Trainer(AppDbContext db, int month, string id, string store) =>
+        db.CrewTrainerEmployees.Add(new CrewTrainerEmployee { Year = 2026, Month = month, EmployeeId = id, Name = "N" + id, StoreName = store });
+
+    [Fact]
+    public async Task NoLists_HasNoData()
+    {
+        var dto = await NewService(NewDb()).GetAsync(null, null, null, "Admin", null);
+        Assert.False(dto.HasData);
+    }
+
+    [Fact]
+    public async Task Store_ComparesTrainersToPlan_AndCountsNewHiresPerTrainer()
+    {
+        var db = NewDb();
+        db.JobHeadcountProjections.Add(new JobHeadcountProjection { Year = 2026, Month = 2, StoreName = "1 | A", JobTitle = "Crew Trainer", ProjectedHeadcount = 3 });
+        db.JobHeadcountProjections.Add(new JobHeadcountProjection { Year = 2026, Month = 2, StoreName = "2 | B", JobTitle = "Crew Trainer", ProjectedHeadcount = 1 });
+        // Store A: 2 trainers, 4 hired in the last 90 days. Store B: no trainers, 1 recent hire.
+        Person(db, 2, "1", "1 | A", new DateOnly(2025, 1, 1)); Person(db, 2, "2", "1 | A", new DateOnly(2025, 1, 1));
+        Person(db, 2, "3", "1 | A", new DateOnly(2026, 1, 10)); Person(db, 2, "4", "1 | A", new DateOnly(2026, 2, 1));
+        Person(db, 2, "5", "1 | A", new DateOnly(2026, 2, 5)); Person(db, 2, "6", "1 | A", new DateOnly(2025, 6, 1)); // old hire: not new
+        Person(db, 2, "7", "2 | B", new DateOnly(2026, 2, 2));
+        Trainer(db, 2, "1", "1 | A"); Trainer(db, 2, "2", "1 | A");
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 2, null, "Admin", null);
+
+        Assert.True(dto.HasProjection);
+        var a = Assert.Single(dto.ByStore, r => r.Store == "1 | A");
+        Assert.Equal(3, a.Projected); Assert.Equal(2, a.Actual); Assert.Equal(-1, a.Gap);
+        Assert.Equal(3, a.NewHires);              // hired 2026-01-10, 02-01, 02-05 (within 90 days of Feb 28)
+        Assert.Equal(1.5, a.HiresPerTrainer);
+        var b = Assert.Single(dto.ByStore, r => r.Store == "2 | B");
+        Assert.Equal(0, b.Actual); Assert.Null(b.HiresPerTrainer); Assert.Equal(1, b.NewHires);
+        Assert.Equal("2 | B", dto.ByStore[0].Store);          // a store with hires and no trainer is listed first
+        Assert.Equal(2, dto.Kpis.Actual); Assert.Equal(4, dto.Kpis.Projected); Assert.Equal(4, dto.Kpis.NewHires);
+    }
+
+    [Fact]
+    public async Task Movement_ShowsWhoJoinedAndLeft_AndWhyTheyLeft()
+    {
+        var db = NewDb();
+        db.JobHeadcountProjections.Add(new JobHeadcountProjection { Year = 2026, Month = 2, StoreName = "1 | A", JobTitle = "Crew Trainer", ProjectedHeadcount = 3 });
+        foreach (var id in new[] { "1", "2", "3", "4" }) Person(db, 2, id, "1 | A");   // everyone but "5" is on the February roster
+        Person(db, 1, "1", "1 | A");                                                      // January has a roster too
+        Trainer(db, 1, "1", "1 | A"); Trainer(db, 1, "2", "1 | A"); Trainer(db, 1, "3", "1 | A"); Trainer(db, 1, "5", "1 | A");
+        Trainer(db, 2, "1", "1 | A"); Trainer(db, 2, "4", "1 | A");                     // 4 joined; 2, 3, 5 left
+        db.Resignations.Add(new Resignation { Year = 2026, Month = 2, EmployeeId = "2", Store = "1 | A", JobTitle = "Crew" });
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 2, null, "Admin", null);
+
+        Assert.True(dto.HasPrevious);
+        Assert.Equal(1, dto.PreviousMonth);
+        Assert.Equal("4", Assert.Single(dto.Entered).EmployeeId);
+        Assert.Equal("resigned", dto.Left.Single(m => m.EmployeeId == "2").Status);
+        Assert.Equal("active", dto.Left.Single(m => m.EmployeeId == "3").Status);   // still on the roster, off the list
+        Assert.Equal("gone", dto.Left.Single(m => m.EmployeeId == "5").Status);     // not on the roster any more
+        Assert.Equal(1, dto.Kpis.Resigned);
+    }
+}
