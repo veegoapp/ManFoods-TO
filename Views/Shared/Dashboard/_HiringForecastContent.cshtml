@@ -51,6 +51,7 @@
     </div>
     <div class="d-flex gap-2 flex-wrap align-items-end" id="hfFilters" hidden>
         <div class="hf-select-wrap"><select id="hfYear" class="hf-select" aria-label="@L["WP_Year"]"></select><i class="bi bi-chevron-down"></i></div>
+        <div class="hf-select-wrap"><select id="hfMonth" class="hf-select" aria-label="@L["WP_Month"]"></select><i class="bi bi-chevron-down"></i></div>
         <div class="hf-select-wrap"><select id="hfStore" class="hf-select" aria-label="@L["WP_ColStore"]"></select><i class="bi bi-chevron-down"></i></div>
         <div class="hf-select-wrap"><select id="hfJob" class="hf-select" aria-label="@L["WP_ColJob"]"></select><i class="bi bi-chevron-down"></i></div>
         <div class="hf-select-wrap"><select id="hfOc" class="hf-select" aria-label="@L["Common_OperationConsultant"]"></select><i class="bi bi-chevron-down"></i></div>
@@ -134,6 +135,7 @@
      data-kpi-year="@L["HF_KpiYear"]" data-kpi-year-d="@L["HF_KpiYearDesc"]" data-kpi-peak="@L["HF_KpiPeak"]" data-kpi-peak-d="@L["HF_KpiPeakDesc"]" data-kpi-next="@L["HF_KpiNext"]" data-kpi-next-d="@L["HF_KpiNextDesc"]" data-kpi-store="@L["HF_KpiStore"]" data-kpi-store-d="@L["HF_KpiStoreDesc"]"
      data-chart-label="@L["HF_ChartLabel"]"
      data-job="@L["WP_ColJob"]" data-payroll="@L["HF_ByPayroll"]"
+     data-all-months="@L["HF_AllMonths"]" data-k-month="@L["HF_KpiMonth"]" data-k-month-d="@L["HF_KpiMonthDesc"]" data-k-share="@L["HF_KpiShare"]" data-k-share-d="@L["HF_KpiShareDesc"]" data-k-from="@L["HF_KpiFrom"]" data-k-from-d="@L["HF_KpiFromDesc"]" data-k-store-m="@L["HF_KpiStoreMonth"]" data-k-store-m-d="@L["HF_KpiStoreMonthDesc"]"
      data-store="@L["WP_ColStore"]" data-oc="@L["Common_OperationConsultant"]" data-total="@L["HF_Total"]" data-forecast="@L["HF_Forecast"]" data-roster="@L["HF_Roster"]"
      data-note="@L["HF_Note"]" data-note-none="@L["HF_NoteNoRoster"]" data-no-rows="@L["Common_NoData"]"></div>
 
@@ -154,10 +156,10 @@ const HF_I = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new Dictionary<
     ["Consultant_T"] = L["HF_In_Consultant_T"].Value, ["Consultant_D"] = L["HF_In_Consultant_D"].Value,
     ["NoNeed_T"] = L["HF_In_NoNeed_T"].Value, ["NoNeed_D"] = L["HF_In_NoNeed_D"].Value,
     ["NoHires_T"] = L["HF_In_NoHires_T"].Value, ["NoHires_D"] = L["HF_In_NoHires_D"].Value,
-    ["Above"] = L["HF_In_Above"].Value, ["Below"] = L["HF_In_Below"].Value, ["Rises"] = L["HF_In_Rises"].Value, ["Falls"] = L["HF_In_Falls"].Value,
+    ["Month_T"] = L["HF_In_Month_T"].Value, ["Month_D"] = L["HF_In_Month_D"].Value, ["Above"] = L["HF_In_Above"].Value, ["Below"] = L["HF_In_Below"].Value, ["Rises"] = L["HF_In_Rises"].Value, ["Falls"] = L["HF_In_Falls"].Value,
     ["More"] = L["HF_In_More"].Value, ["Fewer"] = L["HF_In_Fewer"].Value,
 }));
-const hfState = { by: 'store', year: '', store: '', job: '', oc: '', om: '', soc: '', od: '' };
+const hfState = { by: 'store', year: '', month: '', store: '', job: '', oc: '', om: '', soc: '', od: '' };
 const hfSort = { key: 'total', dir: 'desc' };
 let hfData, hfChart;
 const hfMonthName = (m, style) => new Date(2000, m - 1, 1).toLocaleString('default', { month: style || 'short' });
@@ -194,6 +196,9 @@ async function hfLoad() {
 
     hfState.year = d.year;
     hfFillSelect('hfYear', d.years.map(y => ({ value: y, label: y })), d.year);
+    const monthsWithData = [...Array(12).keys()].filter(i => d.monthModes[i] !== 'none');
+    if (hfState.month && !monthsWithData.includes(+hfState.month - 1)) hfState.month = '';
+    hfFillSelect('hfMonth', [{ value: '', label: hfL.allMonths }].concat(monthsWithData.map(i => ({ value: i + 1, label: hfMonthName(i + 1, 'long') }))), hfState.month);
     hfFillSelect('hfStore', [{ value: '', label: hfL.allStores }].concat(d.stores.map(s => ({ value: s, label: s }))), hfState.store);
     hfFillSelect('hfJob', [{ value: '', label: hfL.allJobs }].concat(d.jobs.map(j => ({ value: j, label: j }))), hfState.job);
     const people = (id, all, list, key) => hfFillSelect(id, [{ value: '', label: all }].concat((list || []).map(n => ({ value: n, label: n }))), hfState[key]);
@@ -217,18 +222,32 @@ function hfRenderKpis(d) {
     const idx = [...Array(12).keys()].filter(i => d.monthModes[i] !== 'none');
     const card = (icon, cls, val, label, desc) =>
         `<div class="kpi-card"><div class="kpi-icon ${cls}"><i class="bi ${icon}"></i></div><div class="kpi-value ${cls}">${val}</div><div class="kpi-label">${sapEscape(label)}</div><div class="kpi-desc">${sapEscape(desc)}</div></div>`;
-    let peak = null;
-    idx.forEach(i => { if (!peak || d.monthTotals[i] > d.monthTotals[peak.i]) peak = { i }; });
-    // "Next 3 months": from this month on when viewing the current year, else the first three months of the plan.
+    const mi = hfState.month ? +hfState.month - 1 : -1; // selected month (0-based), -1 = the whole year
     const now = new Date();
-    const upcoming = (d.year === now.getFullYear() ? idx.filter(i => i >= now.getMonth()) : idx).slice(0, 3);
-    const next3 = upcoming.reduce((a, i) => a + d.monthTotals[i], 0);
-    const top = d.rows.reduce((b, r) => (!b || r.total > b.total) ? r : b, null);
-    document.getElementById('hfKpis').innerHTML =
-        card('bi-person-plus-fill', d.grandTotal > 0 ? 'text-danger' : '', d.grandTotal, hfL.kpiYear, hfL.kpiYearD) +
-        card('bi-calendar-event', '', peak && d.monthTotals[peak.i] > 0 ? `${hfMonthName(peak.i + 1)} (${d.monthTotals[peak.i]})` : '—', hfL.kpiPeak, hfL.kpiPeakD) +
-        card('bi-calendar-range', '', upcoming.length ? next3 : '—', hfL.kpiNext, hfL.kpiNextD) +
-        (d.by === 'store' ? card('bi-shop', '', top && top.total > 0 ? `${sapEscape(top.store)} (${top.total})` : '—', hfL.kpiStore, hfL.kpiStoreD) : '');
+    let html;
+    if (mi >= 0) {
+        // One month: its total, its share of the year, the three months starting with it, and its biggest store.
+        const name = hfMonthName(mi + 1, 'long');
+        const tot = d.monthTotals[mi];
+        const span = idx.filter(i => i >= mi).slice(0, 3);
+        const top = d.rows.reduce((b, r) => (!b || r.months[mi] > b.months[mi]) ? r : b, null);
+        html = card('bi-person-plus-fill', tot > 0 ? 'text-danger' : '', tot, hfL.kMonth.replace('{0}', name), hfL.kMonthD) +
+            card('bi-pie-chart-fill', '', d.grandTotal > 0 ? Math.round(tot * 100 / d.grandTotal) + '%' : '—', hfL.kShare, hfL.kShareD) +
+            card('bi-calendar-range', '', span.reduce((t, i) => t + d.monthTotals[i], 0), hfL.kFrom.replace('{0}', name), hfL.kFromD) +
+            (d.by === 'store' ? card('bi-shop', '', top && top.months[mi] > 0 ? `${sapEscape(top.store)} (${top.months[mi]})` : '—', hfL.kStoreM.replace('{0}', name), hfL.kStoreMD) : '');
+    } else {
+        let peak = null;
+        idx.forEach(i => { if (!peak || d.monthTotals[i] > d.monthTotals[peak.i]) peak = { i }; });
+        // "Next 3 months": from this month on when viewing the current year, else the first three months of the plan.
+        const upcoming = (d.year === now.getFullYear() ? idx.filter(i => i >= now.getMonth()) : idx).slice(0, 3);
+        const next3 = upcoming.reduce((a, i) => a + d.monthTotals[i], 0);
+        const top = d.rows.reduce((b, r) => (!b || r.total > b.total) ? r : b, null);
+        html = card('bi-person-plus-fill', d.grandTotal > 0 ? 'text-danger' : '', d.grandTotal, hfL.kpiYear, hfL.kpiYearD) +
+            card('bi-calendar-event', '', peak && d.monthTotals[peak.i] > 0 ? `${hfMonthName(peak.i + 1)} (${d.monthTotals[peak.i]})` : '—', hfL.kpiPeak, hfL.kpiPeakD) +
+            card('bi-calendar-range', '', upcoming.length ? next3 : '—', hfL.kpiNext, hfL.kpiNextD) +
+            (d.by === 'store' ? card('bi-shop', '', top && top.total > 0 ? `${sapEscape(top.store)} (${top.total})` : '—', hfL.kpiStore, hfL.kpiStoreD) : '');
+    }
+    document.getElementById('hfKpis').innerHTML = html;
 }
 
 // Hires per month: roster months in dark red, forecast months in a lighter red.
@@ -241,7 +260,11 @@ function hfRenderChart(d) {
             labels: idx.map(i => hfMonthName(i + 1)),
             datasets: [{
                 data: idx.map(i => d.monthTotals[i]), borderRadius: 3,
-                backgroundColor: idx.map(i => d.monthModes[i] === 'forecast' ? 'oklch(0.72 0.14 25)' : 'oklch(0.52 0.2 25)'),
+                // With a month selected, that month keeps its colour and the others fade.
+                backgroundColor: idx.map(i => {
+                    const base = d.monthModes[i] === 'forecast' ? 'oklch(0.72 0.14 25)' : 'oklch(0.52 0.2 25)';
+                    return hfState.month && +hfState.month - 1 !== i ? base.replace(')', ' / .3)') : base;
+                }),
             }]
         },
         options: {
@@ -272,54 +295,64 @@ function hfRenderInsights(d) {
     const items = [];
     const add = (icon, color, title, description) => items.push({ icon, color, title, description });
     const idx = [...Array(12).keys()].filter(i => d.monthModes[i] !== 'none');
-    const total = d.grandTotal;
+    const mi = hfState.month ? +hfState.month - 1 : -1; // selected month (0-based), -1 = the whole year
+    const valueOf = mi >= 0 ? r => r.months[mi] : r => r.total;
+    const total = mi >= 0 ? d.monthTotals[mi] : d.grandTotal;
+    const pct = (a, b) => Math.round(a * 100 / b);
     if (!idx.length || total <= 0) { add('bi-info-circle-fill', 'secondary', HF_I.NoHires_T, HF_I.NoHires_D); }
     else {
-        const pct = (a, b) => Math.round(a * 100 / b);
-        // Busiest month
-        const peak = idx.reduce((b, i) => d.monthTotals[i] > d.monthTotals[b] ? i : b, idx[0]);
-        add('bi-calendar-event', 'warning', hfFmt(HF_I.Peak_T, hfMonthName(peak + 1, 'long')), hfFmt(HF_I.Peak_D, hfMonthName(peak + 1, 'long'), d.monthTotals[peak], pct(d.monthTotals[peak], total)));
+        if (mi >= 0) {
+            // The month on its own: its size against the year and the monthly average, and where its hires come from.
+            const name = hfMonthName(mi + 1, 'long');
+            const avg = Math.round(d.grandTotal / idx.length);
+            add('bi-calendar-event', total > avg ? 'warning' : 'secondary', hfFmt(HF_I.Month_T, name),
+                hfFmt(HF_I.Month_D, name, total, pct(total, d.grandTotal), avg, d.monthModes[mi] === 'forecast' ? hfL.forecast : hfL.roster));
+        } else {
+            // Busiest month
+            const peak = idx.reduce((b, i) => d.monthTotals[i] > d.monthTotals[b] ? i : b, idx[0]);
+            add('bi-calendar-event', 'warning', hfFmt(HF_I.Peak_T, hfMonthName(peak + 1, 'long')), hfFmt(HF_I.Peak_D, hfMonthName(peak + 1, 'long'), d.monthTotals[peak], pct(d.monthTotals[peak], total)));
 
-        // The next three months against the monthly average
-        const now = new Date();
-        const upcoming = (d.year === now.getFullYear() ? idx.filter(i => i >= now.getMonth()) : idx).slice(0, 3);
-        const avg = total / idx.length;
-        if (upcoming.length) {
-            const nextAvg = upcoming.reduce((t, i) => t + d.monthTotals[i], 0) / upcoming.length;
-            const diff = Math.round((nextAvg - avg) * 100 / avg);
-            if (Math.abs(diff) >= 5) add(diff > 0 ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill', diff > 0 ? 'danger' : 'success',
-                hfFmt(HF_I.Next_T, diff > 0 ? HF_I.Above : HF_I.Below), hfFmt(HF_I.Next_D, Math.round(nextAvg), Math.round(avg), Math.abs(diff), diff > 0 ? HF_I.More : HF_I.Fewer));
-        }
+            // The next three months against the monthly average
+            const now = new Date();
+            const upcoming = (d.year === now.getFullYear() ? idx.filter(i => i >= now.getMonth()) : idx).slice(0, 3);
+            const avg = total / idx.length;
+            if (upcoming.length) {
+                const nextAvg = upcoming.reduce((t, i) => t + d.monthTotals[i], 0) / upcoming.length;
+                const diff = Math.round((nextAvg - avg) * 100 / avg);
+                if (Math.abs(diff) >= 5) add(diff > 0 ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill', diff > 0 ? 'danger' : 'success',
+                    hfFmt(HF_I.Next_T, diff > 0 ? HF_I.Above : HF_I.Below), hfFmt(HF_I.Next_D, Math.round(nextAvg), Math.round(avg), Math.abs(diff), diff > 0 ? HF_I.More : HF_I.Fewer));
+            }
 
-        // Rising or falling through the year
-        if (idx.length >= 3) {
-            const first = idx[0], last = idx[idx.length - 1];
-            const a = d.monthTotals[first], b = d.monthTotals[last];
-            if (a > 0) {
-                const diff = Math.round((b - a) * 100 / a);
-                if (Math.abs(diff) >= 5) add(diff > 0 ? 'bi-graph-up-arrow' : 'bi-graph-down-arrow', diff > 0 ? 'warning' : 'success',
-                    hfFmt(HF_I.Trend_T, diff > 0 ? HF_I.Rises : HF_I.Falls), hfFmt(HF_I.Trend_D, hfMonthName(first + 1), a, hfMonthName(last + 1), b, Math.abs(diff), diff > 0 ? HF_I.More : HF_I.Fewer));
+            // Rising or falling through the year
+            if (idx.length >= 3) {
+                const first = idx[0], last = idx[idx.length - 1];
+                const a = d.monthTotals[first], b = d.monthTotals[last];
+                if (a > 0) {
+                    const diff = Math.round((b - a) * 100 / a);
+                    if (Math.abs(diff) >= 5) add(diff > 0 ? 'bi-graph-up-arrow' : 'bi-graph-down-arrow', diff > 0 ? 'warning' : 'success',
+                        hfFmt(HF_I.Trend_T, diff > 0 ? HF_I.Rises : HF_I.Falls), hfFmt(HF_I.Trend_D, hfMonthName(first + 1), a, hfMonthName(last + 1), b, Math.abs(diff), diff > 0 ? HF_I.More : HF_I.Fewer));
+                }
             }
         }
 
         // How concentrated the hiring is
-        const sorted = [...d.rows].sort((x, y) => y.total - x.total);
+        const sorted = [...d.rows].sort((x, y) => valueOf(y) - valueOf(x));
         if (sorted.length >= 4) {
             const n = sorted.length >= 10 ? 5 : 3;
-            const top = sorted.slice(0, n);
-            const share = pct(top.reduce((t, r) => t + r.total, 0), total);
-            add('bi-bullseye', share >= 40 ? 'danger' : 'secondary', hfFmt(HF_I.Concentration_T, n, share),
-                hfFmt(HF_I.Concentration_D, top.map(r => `${r.store || '—'} (${r.total})`).join(', ')));
+            const top = sorted.slice(0, n).filter(r => valueOf(r) > 0); // never list a row that needs no hires
+            const share = pct(top.reduce((t, r) => t + valueOf(r), 0), total);
+            if (top.length >= 2) add('bi-bullseye', share >= 40 ? 'danger' : 'secondary', hfFmt(HF_I.Concentration_T, top.length, share),
+                hfFmt(HF_I.Concentration_D, top.map(r => `${r.store || '—'} (${valueOf(r)})`).join(', ')));
         }
 
         // The consultant whose stores need the most hires (store view only)
         if (d.by === 'store') {
             const byOc = {};
-            d.rows.forEach(r => { if (r.operationConsultant) { const o = byOc[r.operationConsultant] ||= { hires: 0, stores: 0 }; o.hires += r.total; o.stores++; } });
+            d.rows.forEach(r => { if (r.operationConsultant) { const o = byOc[r.operationConsultant] ||= { hires: 0, stores: 0 }; o.hires += valueOf(r); o.stores++; } });
             const ocs = Object.entries(byOc).sort((x, y) => y[1].hires - x[1].hires);
             if (ocs.length >= 2 && ocs[0][1].hires > 0) add('bi-person-badge', 'secondary', hfFmt(HF_I.Consultant_T, ocs[0][0]),
                 hfFmt(HF_I.Consultant_D, ocs[0][0], ocs[0][1].hires, pct(ocs[0][1].hires, total), ocs[0][1].stores));
-            const none = d.rows.filter(r => r.total === 0).length;
+            const none = d.rows.filter(r => valueOf(r) === 0).length;
             if (none > 0) add('bi-check-circle-fill', 'success', hfFmt(HF_I.NoNeed_T, none), HF_I.NoNeed_D);
         }
 
@@ -391,7 +424,9 @@ function hfRender() {
 }
 
 document.getElementById('hfBy').addEventListener('change', e => { hfState.by = e.target.value; hfLoad(); });
-document.getElementById('hfYear').addEventListener('change', e => { hfState.year = e.target.value; hfLoad(); });
+document.getElementById('hfYear').addEventListener('change', e => { hfState.year = e.target.value; hfState.month = ''; hfLoad(); });
+// The month only changes the cards, the insights and the chart: the table below always shows the whole year.
+document.getElementById('hfMonth').addEventListener('change', e => { hfState.month = e.target.value; if (hfData) { hfRenderKpis(hfData); hfRenderInsights(hfData); hfRenderChart(hfData); } });
 document.getElementById('hfStore').addEventListener('change', e => { hfState.store = e.target.value; hfLoad(); });
 document.getElementById('hfJob').addEventListener('change', e => { hfState.job = e.target.value; hfLoad(); });
 [['hfOc', 'oc'], ['hfOm', 'om'], ['hfSoc', 'soc'], ['hfOd', 'od']].forEach(([id, key]) =>

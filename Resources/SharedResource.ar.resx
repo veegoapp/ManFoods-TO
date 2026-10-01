@@ -1982,7 +1982,7 @@
   <data name="HF_Note" xml:space="preserve"><value>يبدأ التقدير من قائمة الموظفين لشهر {0}. يغادر كل شهر المستقيلون المتوقعون (متوسط آخر {2} أشهر من القوائم) ثم تسدّ التعيينات الفرق حتى التوقّع. وتُزاد التعيينات بنسبة {1}٪ وهي نسبة من يغادرون خلال 90 يومًا من الموظفين الجدد على مستوى الشركة.</value></data>
   <data name="HF_NoteNoRoster" xml:space="preserve"><value>لم يتم رفع قائمة الموظفين الحاليين بعد، فلا توجد نقطة بداية للتقدير.</value></data>
   <data name="Guide_HF_Overview" xml:space="preserve"><value>جدول يوضح كم شخصًا يحتاج كل فرع لتعيينه في كل شهر من السنة، لتخطيط التوظيف مبكرًا.</value></data>
-  <data name="Guide_HF_FilterNote" xml:space="preserve"><value>تضيّق السنة والفرع والمسمى الوظيفي واستشاري العمليات والمدير والاستشاري الأول ومدير أول التشغيل الجدول وإجمالياته. ترى فقط الفروع المتاحة لك (الإعدادات ← الوصول، صف تخطيط القوى العاملة).</value></data>
+  <data name="Guide_HF_FilterNote" xml:space="preserve"><value>تضيّق السنة والفرع والمسمى الوظيفي واستشاري العمليات والمدير والاستشاري الأول ومدير أول التشغيل الجدول وإجمالياته. ترى فقط الفروع المتاحة لك (الإعدادات ← الوصول، صف تخطيط القوى العاملة). يركّز فلتر الشهر كروت الملخص والـ Smart Insights والرسم البياني على شهر واحد؛ أما الجدول أدناه فيعرض السنة كلها دائمًا.</value></data>
   <data name="Guide_HF_MatrixTitle" xml:space="preserve"><value>كيف تقرأ الجدول</value></data>
   <data name="Guide_HF_Matrix" xml:space="preserve"><value>استخدم «عرض حسب» فوق الجدول لتجميع الصفوف حسب الفرع (مع استشاري العمليات) أو الوظيفة أو مجموعة الرواتب أو استشاري العمليات — الإجمالي لا يتغير، فقط طريقة التجميع. عمود لكل شهر وإجمالي في النهاية، وآخر صف يجمع كل الصفوف. اضغط على عنوان العمود للترتيب واستخدم البحث للوصول لصف. كلما زاد احمرار الخلية زادت التعيينات. الشرطة تعني أن التوقّع لا يحتوي بيانات لهذا الشهر.</value></data>
   <data name="Guide_HF_MethodTitle" xml:space="preserve"><value>طريقة الحساب</value></data>
@@ -2109,10 +2109,21 @@
   <data name="HF_In_Consultant_T" xml:space="preserve"><value>الأكثر تعيينًا: {0}</value></data>
   <data name="HF_In_Consultant_D" xml:space="preserve"><value>فروع {0} تحتاج {1} تعيين، أي {2}% من الإجمالي، موزعة على {3} فرع.</value></data>
   <data name="HF_In_NoNeed_T" xml:space="preserve"><value>{0} فرع لا يحتاج تعيينات</value></data>
-  <data name="HF_In_NoNeed_D" xml:space="preserve"><value>هي عند التوقّع أو فوقه في كل الأشهر المعروضة.</value></data>
+  <data name="HF_In_NoNeed_D" xml:space="preserve"><value>هي عند التوقّع أو فوقه في الفترة المعروضة.</value></data>
   <data name="HF_In_EarlyLeavers_T" xml:space="preserve"><value>{0}% من التعيينات تعوّض المغادرين مبكرًا</value></data>
   <data name="HF_In_EarlyLeavers_D" xml:space="preserve"><value>حوالي {0} من {1} تعيين تعوّض فقط موظفين جدد يغادرون خلال 90 يومًا (المعدل على مستوى الشركة {2}%).</value></data>
   <data name="HF_In_NoHires_T" xml:space="preserve"><value>لا توجد تعيينات مطلوبة</value></data>
   <data name="HF_In_NoHires_D" xml:space="preserve"><value>التوقّع مُحقَّق بالفعل في كل الأشهر المعروضة.</value></data>
   <data name="Guide_HF_Insights" xml:space="preserve"><value>جمل بسيطة محسوبة من الجدول: أكثر شهر ضغطًا، وهل الأشهر الثلاثة القادمة أعلى أم أقل من المتوسط الشهري، وهل يرتفع التعيين الشهري أم ينخفض على مدار السنة، ومدى تركّز التعيينات، والاستشاري الذي تحتاج فروعه أكثر تعيينات، وكم تعيينًا يعوّض فقط المغادرين مبكرًا. وهي تتبع الفلاتر واختيار «عرض حسب».</value></data>
+  <data name="HF_AllMonths" xml:space="preserve"><value>كل الأشهر</value></data>
+  <data name="HF_KpiMonth" xml:space="preserve"><value>التعيينات المطلوبة في {0}</value></data>
+  <data name="HF_KpiMonthDesc" xml:space="preserve"><value>إجمالي الصفوف المعروضة في ذلك الشهر</value></data>
+  <data name="HF_KpiShare" xml:space="preserve"><value>حصة السنة</value></data>
+  <data name="HF_KpiShareDesc" xml:space="preserve"><value>تعيينات ذلك الشهر كنسبة من تعيينات السنة كلها</value></data>
+  <data name="HF_KpiFrom" xml:space="preserve"><value>3 أشهر من {0}</value></data>
+  <data name="HF_KpiFromDesc" xml:space="preserve"><value>التعيينات المطلوبة في ذلك الشهر والشهرين بعده</value></data>
+  <data name="HF_KpiStoreMonth" xml:space="preserve"><value>الفرع الأكثر تعيينًا في {0}</value></data>
+  <data name="HF_KpiStoreMonthDesc" xml:space="preserve"><value>الأعلى في ذلك الشهر</value></data>
+  <data name="HF_In_Month_T" xml:space="preserve"><value>التعيينات في {0}</value></data>
+  <data name="HF_In_Month_D" xml:space="preserve"><value>يحتاج {0} إلى {1} تعيين، أي {2}% من السنة ({4}). والمتوسط الشهري {3}.</value></data>
 </root>

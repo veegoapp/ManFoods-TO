@@ -1976,7 +1976,7 @@
   <data name="HF_Note" xml:space="preserve"><value>The forecast starts from the {0} employee list. Expected resignations (average of the last {2} roster months) leave each month, and hires fill the gap up to the projection. Hires are increased by {1}% — the share of new hires who leave within 90 days company-wide.</value></data>
   <data name="HF_NoteNoRoster" xml:space="preserve"><value>No employee list (active employees) has been uploaded yet, so there is nothing to start the forecast from.</value></data>
   <data name="Guide_HF_Overview" xml:space="preserve"><value>A table of how many people each store needs to hire in each month of the year, so hiring can be planned ahead.</value></data>
-  <data name="Guide_HF_FilterNote" xml:space="preserve"><value>Year, Store, Job title and the Operation Consultant / Manager / Senior Consultant / Director selectors narrow the table and its totals. You only see the stores you have access to (Settings → Access, Workforce Planning row).</value></data>
+  <data name="Guide_HF_FilterNote" xml:space="preserve"><value>Year, Store, Job title and the Operation Consultant / Manager / Senior Consultant / Director selectors narrow the table and its totals. You only see the stores you have access to (Settings → Access, Workforce Planning row). The Month filter focuses the summary cards, the Smart Insights and the chart on one month; the table below always shows the whole year.</value></data>
   <data name="Guide_HF_MatrixTitle" xml:space="preserve"><value>Reading the table</value></data>
   <data name="Guide_HF_Matrix" xml:space="preserve"><value>Use "View by" above the table to group the rows by store (with its Operation Consultant), job, payroll group or Operation Consultant — the totals stay the same, only the grouping changes. One column per month and a Total at the end; the last row adds up every row. Click a column title to sort and use the search box to find a row. The darker the red, the more hires that month. A dash means the projection has no data for that month.</value></data>
   <data name="Guide_HF_MethodTitle" xml:space="preserve"><value>How it is calculated</value></data>
@@ -2103,10 +2103,21 @@
   <data name="HF_In_Consultant_T" xml:space="preserve"><value>Most hires: {0}</value></data>
   <data name="HF_In_Consultant_D" xml:space="preserve"><value>{0}'s stores need {1} hires, {2}% of the total, across {3} store(s).</value></data>
   <data name="HF_In_NoNeed_T" xml:space="preserve"><value>{0} store(s) need no hires</value></data>
-  <data name="HF_In_NoNeed_D" xml:space="preserve"><value>They are at or above their projection in every month shown.</value></data>
+  <data name="HF_In_NoNeed_D" xml:space="preserve"><value>They are at or above their projection in the period shown.</value></data>
   <data name="HF_In_EarlyLeavers_T" xml:space="preserve"><value>{0}% of hires replace early leavers</value></data>
   <data name="HF_In_EarlyLeavers_D" xml:space="preserve"><value>About {0} of the {1} hires only replace new employees who leave within 90 days (company-wide rate {2}%).</value></data>
   <data name="HF_In_NoHires_T" xml:space="preserve"><value>No hires needed</value></data>
   <data name="HF_In_NoHires_D" xml:space="preserve"><value>The projection is already met in every month shown.</value></data>
   <data name="Guide_HF_Insights" xml:space="preserve"><value>A few plain sentences worked out from the table: the busiest month, whether the next 3 months are above or below the monthly average, whether monthly hiring rises or falls through the year, how concentrated the hiring is, the consultant whose stores need the most hires, and how many hires only replace early leavers. They follow the filters and the "View by" choice.</value></data>
+  <data name="HF_AllMonths" xml:space="preserve"><value>All months</value></data>
+  <data name="HF_KpiMonth" xml:space="preserve"><value>Hires needed in {0}</value></data>
+  <data name="HF_KpiMonthDesc" xml:space="preserve"><value>Total of all rows shown, in that month</value></data>
+  <data name="HF_KpiShare" xml:space="preserve"><value>Share of the year</value></data>
+  <data name="HF_KpiShareDesc" xml:space="preserve"><value>That month's hires as a share of the whole year's</value></data>
+  <data name="HF_KpiFrom" xml:space="preserve"><value>3 months from {0}</value></data>
+  <data name="HF_KpiFromDesc" xml:space="preserve"><value>Hires needed in that month and the two after it</value></data>
+  <data name="HF_KpiStoreMonth" xml:space="preserve"><value>Store with most hires in {0}</value></data>
+  <data name="HF_KpiStoreMonthDesc" xml:space="preserve"><value>Highest in that month</value></data>
+  <data name="HF_In_Month_T" xml:space="preserve"><value>Hires in {0}</value></data>
+  <data name="HF_In_Month_D" xml:space="preserve"><value>{0} needs {1} hires, {2}% of the year ({4}). The monthly average is {3}.</value></data>
 </root>
