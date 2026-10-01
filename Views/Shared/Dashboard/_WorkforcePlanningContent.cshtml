@@ -130,13 +130,13 @@
     <div class="chart-card mb-4"><div id="wpInsights"></div></div>
 
     <div class="row g-3 mb-4">
-        <div class="col-12 col-xl-7">
+        <div class="col-12">
             <div class="chart-card h-100">
                 <div class="chart-header"><h6>@L["WP_ChartByJob"]</h6><p>@L["WP_ChartByJobSub"]</p></div>
                 <div class="chart-body" id="wpJobWrap" style="position:relative"><canvas id="wpJobChart"></canvas></div>
             </div>
         </div>
-        <div class="col-12 col-xl-5">
+        <div class="col-12">
             <div class="chart-card h-100">
                 <div class="chart-header"><h6>@L["WP_ChartTrend"]</h6><p>@L["WP_ChartTrendSub"]</p></div>
                 <div class="chart-body" style="position:relative;height:320px"><canvas id="wpTrendChart"></canvas></div>
@@ -403,15 +403,17 @@ function wpRenderKpis(d) {
 function wpRenderJobChart(d) {
     const rows = d.byJob.filter(r => r.projected > 0 || r.actual > 0);
     const wrap = document.getElementById('wpJobWrap');
-    wrap.style.height = Math.max(260, rows.length * 30 + 60) + 'px';
+    wrap.style.height = '460px'; // vertical columns across the full width
     const datasets = [{ label: wpL.projected, data: rows.map(r => r.projected), backgroundColor: WP_PROJECTED, borderRadius: 3 }];
     if (d.hasActual) datasets.push({ label: wpL.actual, data: rows.map(r => r.actual), backgroundColor: WP_ACTUAL, borderRadius: 3 });
     if (wpJobChart) wpJobChart.destroy();
+    const labelColor = getComputedStyle(document.body).color; // follows the light / dark theme
     wpJobChart = new Chart(document.getElementById('wpJobChart'), {
         type: 'bar',
         data: { labels: rows.map(r => r.name), datasets },
         options: {
-            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
+            layout: { padding: { top: 36 } },
             // Tooltip/hit-testing follow the global chart-colors.js defaults
             // (index mode, intersect:true) so the popup only appears over a bar.
             plugins: {
@@ -426,9 +428,13 @@ function wpRenderJobChart(d) {
                         }
                     }
                 },
-                datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 11, weight: 'bold' }, formatter: v => v > 0 ? v : '' }
+                // Numbers stand above each column, turned upright-to-read so 56 narrow columns never overlap.
+                datalabels: { anchor: 'end', align: 'end', rotation: -90, clip: false, color: labelColor, font: { size: 10, weight: 'bold' }, formatter: v => v > 0 ? v : '' }
             },
-            scales: { x: { beginAtZero: true, grid: { color: 'rgba(128,128,128,.12)' } }, y: { grid: { display: false } } }
+            scales: {
+                x: { grid: { display: false }, ticks: { autoSkip: false, minRotation: 40, maxRotation: 60, font: { size: 11 } } },
+                y: { beginAtZero: true, grid: { color: 'rgba(128,128,128,.12)' } },
+            }
         }
     });
 }

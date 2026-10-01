@@ -231,7 +231,7 @@ function hfRenderChart(d) {
                     title: items => hfMonthName(idx[items[0].dataIndex] + 1) + ' — ' + (d.monthModes[idx[items[0].dataIndex]] === 'forecast' ? hfL.forecast : hfL.roster),
                     label: c => ` ${hfL.chartLabel}: ${c.formattedValue}`,
                 } },
-                datalabels: { anchor: 'end', align: 'top', color: 'var(--text)', font: { size: 11, weight: 'bold' }, formatter: v => v > 0 ? v : '' }
+                datalabels: { anchor: 'end', align: 'top', color: getComputedStyle(document.body).color, font: { size: 11, weight: 'bold' }, formatter: v => v > 0 ? v : '' }
             },
             layout: { padding: { top: 18 } },
             scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(128,128,128,.12)' } } }
