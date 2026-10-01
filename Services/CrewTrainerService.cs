@@ -83,7 +83,7 @@ public class CrewTrainerService : ICrewTrainerService
         dto.Year = pick.Item1; dto.Month = pick.Item2;
 
         // The plan side: Crew Trainer projected vs actual per store, with the same access and leadership scoping as Workforce Planning.
-        var plan = await _planning.GetAsync(dto.Year, dto.Month, stores, WorkforcePlanningService.CrewTrainerJob, role, assignedName, om, oc, soc, od);
+        var plan = await _planning.GetAsync(dto.Year, dto.Month, stores, string.Join(",", WorkforcePlanningService.CrewTrainerJobs), role, assignedName, om, oc, soc, od);
         dto.Stores = plan.Stores; dto.OperationConsultants = plan.OperationConsultants; dto.OperationManagers = plan.OperationManagers;
         dto.SeniorOperationConsultants = plan.SeniorOperationConsultants; dto.OperationDirectors = plan.OperationDirectors;
         bool samePeriod = plan.HasData && plan.Year == dto.Year && plan.Month == dto.Month;

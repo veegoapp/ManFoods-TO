@@ -28,6 +28,12 @@ public interface IUploadService
     /// actual Crew Trainer headcount in Workforce Planning.</summary>
     Task<(bool success, string message, int rows, string? warning)> UploadCrewTrainersAsync(IFormFile file, int year, int month, string uploadedBy);
 
+    /// <summary>Replaces the job → payroll group reference list (columns: Job Title, Payroll Group).</summary>
+    Task<(bool success, string message, int rows, string? warning)> UploadJobPayrollGroupsAsync(IFormFile file, string uploadedBy);
+
+    /// <summary>The current reference list, for the download template.</summary>
+    Task<List<(string Job, string Group)>> GetJobPayrollGroupRowsAsync();
+
     /// <summary>
     /// Upload history grouped so the three period-tied files show as one row.
     /// Deleting any file in a period group (via <see cref="DeleteLogAsync"/>)

@@ -335,9 +335,26 @@ public class DashboardController : Controller
         }
     }
 
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
+    public async Task<IActionResult> UploadJobPayrollGroups(MvcApp.Models.ViewModels.JobPayrollGroupUploadViewModel vm)
+    {
+        if (!ModelState.IsValid || vm.File == null) return RedirectToUploads(error: _L["Msg_SelectFile"].Value, tab: UploadTabs.JobProjections);
+        try
+        {
+            var email = HttpContext.Session.GetEmail();
+            var (_, msg, _, warning) = await _uploads.UploadJobPayrollGroupsAsync(vm.File, email);
+            return RedirectToUploads(success: msg, warning: warning, tab: UploadTabs.JobProjections);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Job payroll groups upload failed");
+            return RedirectToUploads(error: string.Format(_L["Msg_JobGroupUploadFailed"].Value, ex.Message), tab: UploadTabs.JobProjections);
+        }
+    }
+
     [HttpGet("admin/dashboard/download-template")]
     [RequireAdminAuth]
-    public IActionResult DownloadTemplate([FromQuery] string type)
+    public async Task<IActionResult> DownloadTemplate([FromQuery] string type)
     {
         using var wb = new XLWorkbook();
         string fileName;
@@ -543,18 +560,34 @@ public class DashboardController : Controller
                 ws.Columns().AdjustToContents();
             }
         }
+        else if (type == "job_payroll_groups")
+        {
+            // The template is the current list, so it can be edited and uploaded back.
+            fileName = "Job_Payroll_Groups.xlsx";
+            var ws = wb.AddWorksheet("Job Payroll Groups");
+            ws.Cell(1, 1).Value = "Job Title"; ws.Cell(1, 2).Value = "Payroll Group";
+            var header = ws.Range(1, 1, 1, 2);
+            header.Style.Font.Bold = true;
+            header.Style.Fill.BackgroundColor = XLColor.FromHtml("#C8102E");
+            header.Style.Font.FontColor = XLColor.White;
+            header.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            int r = 2;
+            foreach (var (job, group) in await _uploads.GetJobPayrollGroupRowsAsync()) { ws.Cell(r, 1).Value = job; ws.Cell(r, 2).Value = group; r++; }
+            if (r == 2) { ws.Cell(2, 1).Value = "Crew"; ws.Cell(2, 2).Value = "Manfoods Company"; ws.Cell(3, 1).Value = "Hourly Paid Crew"; ws.Cell(3, 2).Value = "Hourly Paid"; }
+            ws.Columns().AdjustToContents();
+        }
         else if (type == "crew_trainers")
         {
             fileName = "Template_Crew_Trainers.xlsx";
             var ws = wb.AddWorksheet("Crew Trainers");
-            string[] heads = { "Employee ID", "Name", "Job Title", "Store" };
+            string[] heads = { "Employee ID", "Name", "Job Title", "Payroll Group", "Store" };
             for (int i = 0; i < heads.Length; i++) ws.Cell(1, i + 1).Value = heads[i];
             var header = ws.Range(1, 1, 1, heads.Length);
             header.Style.Font.Bold = true;
             header.Style.Fill.BackgroundColor = XLColor.FromHtml("#C8102E");
             header.Style.Font.FontColor = XLColor.White;
             header.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(2, 1).Value = "100234"; ws.Cell(2, 2).Value = "Ahmed Ali"; ws.Cell(2, 3).Value = "Crew"; ws.Cell(2, 4).Value = "1480001 | Merghany";
+            ws.Cell(2, 1).Value = "100234"; ws.Cell(2, 2).Value = "Ahmed Ali"; ws.Cell(2, 3).Value = "Crew"; ws.Cell(2, 4).Value = "Manfoods Company"; ws.Cell(2, 5).Value = "1480001 | Merghany";
             ws.Columns().AdjustToContents();
         }
         else

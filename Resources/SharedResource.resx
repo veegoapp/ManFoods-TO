@@ -2010,7 +2010,7 @@
   <data name="UL_CrewTrainers" xml:space="preserve"><value>Crew Trainers (monthly)</value></data>
   <data name="UL_CrewTrainersSub" xml:space="preserve"><value>Employees who receive the Crew Trainer allowance in a month</value></data>
   <data name="UL_CrewTrainersTemplate" xml:space="preserve"><value>Download template</value></data>
-  <data name="UL_CrewTrainersNote" xml:space="preserve"><value>One file per month with the columns Employee ID, Name, Job Title and Store (the full store name, as everywhere in the portal). Employees are matched to the active employee list by Employee ID; only those found there are counted. Each store's count is its actual Crew Trainer headcount in Workforce Planning, and their payroll group and resignations come from the same IDs. Uploading again for the same month replaces it.</value></data>
+  <data name="UL_CrewTrainersNote" xml:space="preserve"><value>One file per month with the columns Employee ID, Name, Job Title, Payroll Group and Store (the full store name, as everywhere in the portal). Employees are matched to the active employee list by Employee ID; only those found there are counted. The Payroll Group decides the trainer job: the group of "Crew Trainer" (Manfoods Company) counts as Crew Trainer and the group of "Hourly Paid Crew Trainer" (Hourly Paid) as Hourly Paid Crew Trainer, whatever the employee's own job. They are taken out of their own job in the Workforce Planning comparison only. Uploading again for the same month replaces it.</value></data>
   <data name="DM_UploadCrewTrainersButton" xml:space="preserve"><value>Upload Crew Trainers</value></data>
   <data name="DM_CrewTrainersBadge" xml:space="preserve"><value>Crew Trainers</value></data>
   <data name="DM_DeleteConfirmCrewTrainers" xml:space="preserve"><value>Delete this Crew Trainers upload? The list for that month will be removed.</value></data>
@@ -2069,4 +2069,23 @@
   <data name="CT_StNone" xml:space="preserve"><value>No trainers</value></data>
   <data name="CT_StNoPlan" xml:space="preserve"><value>No plan</value></data>
   <data name="Guide_CT_Cmp" xml:space="preserve"><value>Groups the stores by how many trainers they have against the Crew Trainer projection: Enough (actual is at least the projection), Short (some trainers but fewer than planned), No trainers (planned but none), and No plan (trainers but no projection). Each group shows its stores, projected, actual, gap and fill rate; the Status column in the stores table below uses the same groups.</value></data>
+  <data name="UL_JobGroups" xml:space="preserve"><value>Job Payroll Groups</value></data>
+  <data name="UL_JobGroupsSub" xml:space="preserve"><value>The payroll group of each job title — the reference for payroll groups in Workforce Planning</value></data>
+  <data name="UL_JobGroupsTemplate" xml:space="preserve"><value>Download current list</value></data>
+  <data name="UL_JobGroupsNote" xml:space="preserve"><value>Two columns: Job Title and Payroll Group. Download the current list, edit it and upload it back: the upload replaces the whole list. A job that is not on the list falls back to the payroll group most of its employees are in. Matching ignores capital letters and extra spaces.</value></data>
+  <data name="DM_UploadJobGroupsButton" xml:space="preserve"><value>Upload Job Payroll Groups</value></data>
+  <data name="DM_JobGroupsBadge" xml:space="preserve"><value>Job Payroll Groups</value></data>
+  <data name="DM_DeleteConfirmJobGroups" xml:space="preserve"><value>Delete the Job Payroll Groups list? Payroll groups will fall back to what the active employee list shows until a new list is uploaded.</value></data>
+  <data name="Msg_JobGroupNoJobColumn" xml:space="preserve"><value>The file needs a Job Title column in the first row.</value></data>
+  <data name="Msg_JobGroupNoGroupColumn" xml:space="preserve"><value>The file needs a Payroll Group column in the first row.</value></data>
+  <data name="Msg_JobGroupNoRows" xml:space="preserve"><value>No jobs were found in the file.</value></data>
+  <data name="Msg_JobGroupProcessed" xml:space="preserve"><value>Saved {0} job payroll group(s).</value></data>
+  <data name="Msg_JobGroupDuplicates" xml:space="preserve"><value>{0} repeated job title(s): the last one was kept.</value></data>
+  <data name="Msg_JobGroupBlank" xml:space="preserve"><value>{0} row(s) were skipped because the job title or the payroll group was empty.</value></data>
+  <data name="Msg_JobGroupUnseen" xml:space="preserve"><value>{0} job(s) on the list are not in any projection or employee list (check the spelling): {1}.</value></data>
+  <data name="Msg_JobGroupMissing" xml:space="preserve"><value>{0} job(s) in the projection or employee list are not on this list: {1}.</value></data>
+  <data name="Msg_JobGroupUploadFailed" xml:space="preserve"><value>Job Payroll Groups upload failed: {0}</value></data>
+  <data name="Msg_CrewTrainerNoGroupColumn" xml:space="preserve"><value>The file needs a Payroll Group column in the first row.</value></data>
+  <data name="Msg_CrewTrainerGroupUnknown" xml:space="preserve"><value>{0} employee(s) have a payroll group that is not a trainer group (or is empty) and are not counted: {1}.</value></data>
+  <data name="Msg_CrewTrainerGroupDiffers" xml:space="preserve"><value>{0} employee(s) have a different payroll group here than in the active employee list (the list here is used).</value></data>
 </root>

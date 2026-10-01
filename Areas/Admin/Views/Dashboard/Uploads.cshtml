@@ -387,6 +387,32 @@
     </form>
 </div>
 
+<div class="chart-card mb-4">
+    <div class="chart-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <h6>@L["UL_JobGroups"]</h6>
+            <p>@L["UL_JobGroupsSub"]</p>
+        </div>
+        <a href="/admin/dashboard/download-template?type=job_payroll_groups" class="dm-template-btn"><i class="bi bi-file-earmark-arrow-down"></i>@L["UL_JobGroupsTemplate"]</a>
+    </div>
+    <div class="dm-requirement-banner">
+        <i class="bi bi-info-circle-fill"></i>
+        <span>@L["UL_JobGroupsNote"]</span>
+    </div>
+    <form id="dmJobGroupForm" asp-area="Admin" asp-controller="Dashboard" asp-action="UploadJobPayrollGroups" method="post" enctype="multipart/form-data" data-change-label="@L["DM_ChangeFile"]">
+        @Html.AntiForgeryToken()
+        <div class="dm-dropzone-grid" style="grid-template-columns:1fr;max-width:360px">
+            <div class="dm-dropzone" id="dmZoneJobGroup" data-title="@L["UL_JobGroups"]">
+                <i class="bi bi-wallet2 dm-dropzone-icon"></i>
+                <div class="dm-dropzone-title">@L["UL_JobGroups"]</div>
+                <div class="dm-dropzone-hint" data-role="hint">@L["DM_DropzoneHint"]</div>
+                <input type="file" name="File" accept=".xlsx,.xls" required>
+            </div>
+        </div>
+        <button type="submit" class="dm-btn-submit"><i class="bi bi-cloud-upload me-1"></i>@L["DM_UploadJobGroupsButton"]</button>
+    </form>
+</div>
+
 </div>
 
 <div class="chart-card p-0" style="overflow:hidden">
@@ -418,9 +444,10 @@
                         var isPeriod = item.Kind == "period";
                         var isJobProj = item.Kind == "job_projections";
                         var isTrainer = item.Kind == "crew_trainers";
+                        var isGroups = item.Kind == "job_payroll_groups";
                         <tr>
                             <td class="px-3 py-2">
-                                <span class="dm-history-badge @(isPeriod ? "period" : (isJobProj || isTrainer) ? "jobproj" : "exit")">@(isPeriod ? L["DM_MonthlyDataBadge"] : isJobProj ? L["DM_JobProjectionsBadge"] : isTrainer ? L["DM_CrewTrainersBadge"] : L["DM_ExitInterviewsBadge"])</span>
+                                <span class="dm-history-badge @(isPeriod ? "period" : (isJobProj || isTrainer || isGroups) ? "jobproj" : "exit")">@(isPeriod ? L["DM_MonthlyDataBadge"] : isJobProj ? L["DM_JobProjectionsBadge"] : isTrainer ? L["DM_CrewTrainersBadge"] : isGroups ? L["DM_JobGroupsBadge"] : L["DM_ExitInterviewsBadge"])</span>
                             </td>
                             <td class="px-3 py-2">
                                 @foreach (var f in item.Files)
@@ -457,7 +484,7 @@
                                         </button>
                                     }
                                     <form asp-area="Admin" asp-controller="Dashboard" asp-action="DeleteUploadLog" method="post"
-                                          onsubmit="return confirm('@(isPeriod ? L["DM_DeleteConfirmPeriod"].Value : isJobProj ? L["DM_DeleteConfirmJobProj"].Value : isTrainer ? L["DM_DeleteConfirmCrewTrainers"].Value : L["DM_DeleteConfirmExit"].Value)')">
+                                          onsubmit="return confirm('@(isPeriod ? L["DM_DeleteConfirmPeriod"].Value : isJobProj ? L["DM_DeleteConfirmJobProj"].Value : isTrainer ? L["DM_DeleteConfirmCrewTrainers"].Value : isGroups ? L["DM_DeleteConfirmJobGroups"].Value : L["DM_DeleteConfirmExit"].Value)')">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.PrimaryLogId"/>
                                         <input type="hidden" name="tab" value="@currentTab"/>
@@ -600,7 +627,7 @@ function dmSetupDropzone(zoneId) {
     });
 }
 
-['dmZone1', 'dmZone2', 'dmZone3', 'dmZoneExit', 'dmZoneJobProj', 'dmZoneCrewTrainer'].forEach(dmSetupDropzone);
+['dmZone1', 'dmZone2', 'dmZone3', 'dmZoneExit', 'dmZoneJobProj', 'dmZoneCrewTrainer', 'dmZoneJobGroup'].forEach(dmSetupDropzone);
 
 /* Month/year combos that already have data — re-uploading one deletes and
    replaces its rows (and the old Excel files themselves) with no other undo,
@@ -682,6 +709,7 @@ dmLockSubmit(document.getElementById('dmPeriodForm'), document.querySelector('#d
 dmLockSubmit(document.getElementById('dmExitForm'), document.querySelector('#dmExitForm .dm-btn-submit'), '@L["DM_Uploading"]');
 dmLockSubmit(document.getElementById('dmJobProjForm'), document.querySelector('#dmJobProjForm .dm-btn-submit'), '@L["DM_Uploading"]');
 dmLockSubmit(document.getElementById('dmCrewTrainerForm'), document.querySelector('#dmCrewTrainerForm .dm-btn-submit'), '@L["DM_Uploading"]');
+dmLockSubmit(document.getElementById('dmJobGroupForm'), document.querySelector('#dmJobGroupForm .dm-btn-submit'), '@L["DM_Uploading"]');
 dmLockSubmit(document.getElementById('dmUpdateForm'), dmUpdateSubmitBtn, '@L["DM_Uploading"]');
 
 /* ── Background-jobs status panel ───────────────────── */
