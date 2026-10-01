@@ -99,7 +99,6 @@
             new() { Icon = "bi-wallet2", Title = L["WP_ChartByPayroll"], Body = L["Guide_WP_Payroll"] },
             new() { Icon = "bi-shop", Title = L["WP_StoresTable"], Body = L["Guide_WP_Stores"] },
             new() { Icon = "bi-people", Title = L["Common_ByOcOm"], Body = L["Guide_WP_Groups"] },
-            new() { Icon = "bi-bullseye", Title = L["WP_RiskTitle"], Body = L["Guide_WP_Risk"] },
             new() { Icon = "bi-calculator", Title = L["Guide_WP_HiringTitle"], Body = L["Guide_WP_HiringBody"] },
         }
     };
@@ -197,12 +196,6 @@
         <h5 class="mb-0 fw-bold">@L["Common_ByOcOm"]</h5>
     </div>
     <div id="wpGroups" class="d-flex flex-column gap-3 mb-4"></div>
-
-    <div class="chart-card mb-4" id="wpRiskCard" hidden>
-        <div class="chart-header"><h6>@L["WP_RiskTitle"]</h6><p>@L["WP_RiskSub"]</p></div>
-        <div class="chart-body" style="position:relative;height:380px"><canvas id="wpRiskChart"></canvas></div>
-        <div class="text-muted-custom small mt-2" id="wpRiskNote"></div>
-    </div>
 </div>
 
 <div id="wpL" hidden
@@ -214,7 +207,6 @@
      data-projected="@L["WP_Projected"]" data-actual="@L["WP_Actual"]"
      data-ok="@L["WP_StatusOk"]" data-watch="@L["WP_StatusWatch"]" data-critical="@L["WP_StatusCritical"]" data-none="@L["WP_StatusNone"]"
      data-col-name="@L["Common_Name"]" data-col-stores="@L["Common_Stores"]" data-col-projected="@L["WP_ColProjected"]" data-col-actual="@L["WP_ColActual"]" data-col-gap="@L["WP_ColGap"]" data-unassigned="@L["WP_Unassigned"]" data-col-hiring="@L["WP_ColHiring"]" data-col-shortage="@L["WP_ColShortage"]" data-col-attrition="@L["WP_ColAttrition"]" data-over="@L["WP_StatusOver"]" data-col-fill="@L["WP_ColFill"]" data-col-status="@L["WP_ColStatus"]" data-no-rows="@L["Common_NoData"]" data-oc-title="@L["Common_OperationConsultants"]" data-oc-sub="@L["WP_GrpSubOc"]" data-od-title="@L["Common_OperationDirectors"]" data-od-sub="@L["WP_GrpSubOd"]" data-om-title="@L["Common_OperationManagers"]" data-om-sub="@L["WP_GrpSubOm"]" data-soc-title="@L["Common_SeniorOperationConsultants"]" data-soc-sub="@L["WP_GrpSubSoc"]" data-hiring="@L["WP_ColHiring"]" data-kpi-hiring="@L["WP_KpiHiring"]" data-kpi-hiring-desc="@L["WP_KpiHiringDesc"]" data-attr-note="@L["WP_AttrNote"]" data-no-attr="@L["WP_NoAttrition"]" data-gap="@L["WP_ColGap"]" data-fill="@L["WP_ColFill"]" data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
-     data-risk-x="@L["WP_RiskX"]" data-risk-y="@L["WP_RiskY"]" data-risk-danger="@L["WP_RiskDanger"]" data-risk-note="@L["WP_RiskNote"]" data-risk-resign="@L["WP_RiskResign"]"
      data-drill-title="@L["WP_DrillTitle"]" data-drill-formula="@L["WP_DrillFormula"]" data-drill-absorbed="@L["WP_DrillAbsorbed"]" data-drill-loading="@L["WP_DrillLoading"]" data-drill-hint="@L["WP_DrillHint"]" data-col-job="@L["WP_ColJob"]" data-total="@L["HF_Total"]"
      data-error="@L["Common_NoData"]"></div>
 
@@ -323,50 +315,6 @@ async function wpLoad() {
     wpRenderStores();
     wpOpenStores.forEach(st => { if (d.byStore.some(r => r.name === st)) wpFetchStoreJobs(st); else wpOpenStores.delete(st); });
     wpRenderGroups();
-    wpRenderRisk(d); // separate request: never delays the rest of the page
-}
-
-/* ── Staffing vs turnover map: one dot per store. Bottom-right of the red zone = short-staffed AND people leaving. ── */
-let wpRiskChart;
-async function wpRenderRisk(d) {
-    const card = document.getElementById('wpRiskCard');
-    card.hidden = true;
-    if (!d.hasActual) return;
-    const q = new URLSearchParams({ year: d.year, month: d.month });
-    if (wpState.store) q.set('store', wpState.store);
-    if (wpState.job) q.set('jobs', wpState.job);
-    ['oc', 'om', 'soc', 'od'].forEach(k => { if (wpState[k]) q.set(k, wpState[k]); });
-    let r;
-    try { const res = await fetch('/api/workforce-planning/risk-map?' + q); if (!res.ok) return; r = await res.json(); } catch { return; }
-    if (wpData !== d || !r.points.length) return; // a newer load replaced this one
-    card.hidden = false;
-    const danger = p => p.fillPercent < 95 && p.turnoverRate > r.avgTurnover;
-    if (wpRiskChart) wpRiskChart.destroy();
-    wpRiskChart = new Chart(document.getElementById('wpRiskChart'), {
-        type: 'scatter',
-        data: { datasets: [{
-            data: r.points.map(p => ({ x: p.fillPercent, y: p.turnoverRate, p })),
-            pointRadius: 6, pointHoverRadius: 8,
-            backgroundColor: r.points.map(p => danger(p) ? 'oklch(0.6 0.22 22)' : 'oklch(0.62 0.15 155)'),
-        }] },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                datalabels: { display: false },
-                tooltip: { enabled: true, callbacks: {
-                    title: items => items[0].raw.p.store,
-                    label: c => { const p = c.raw.p; return [`${wpL.fill}: ${p.fillPercent}%`, `${wpL.riskY}: ${p.turnoverRate}%`, `${wpL.riskResign}: ${p.resignations}`, `${wpL.gap}: ${wpGapText(p.gap)}`]; },
-                } },
-            },
-            scales: {
-                x: { title: { display: true, text: wpL.riskX }, grid: { color: ctx => ctx.tick.value === 95 ? 'rgba(200,50,50,.6)' : 'rgba(128,128,128,.12)' } },
-                y: { beginAtZero: true, title: { display: true, text: wpL.riskY }, grid: { color: ctx => ctx.tick.value === Math.round(r.avgTurnover) ? 'rgba(200,50,50,.6)' : 'rgba(128,128,128,.12)' } },
-            },
-        },
-    });
-    const n = r.points.filter(danger).length;
-    document.getElementById('wpRiskNote').textContent = wpFmt(wpL.riskNote, n, r.avgTurnover);
 }
 
 /* ── Smart Insights: plain-language takeaways computed from the numbers on the page ── */

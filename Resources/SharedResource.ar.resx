@@ -2002,14 +2002,6 @@
   <data name="HF_ChartLabel" xml:space="preserve"><value>التعيينات المطلوبة</value></data>
   <data name="HF_ViewBy" xml:space="preserve"><value>عرض حسب</value></data>
   <data name="HF_ByPayroll" xml:space="preserve"><value>مجموعة الرواتب</value></data>
-  <data name="WP_RiskTitle" xml:space="preserve"><value>التغطية مقابل الدوران</value></data>
-  <data name="WP_RiskSub" xml:space="preserve"><value>كل نقطة فرع: مدى اكتمال عدده مقابل عدد من يغادرون</value></data>
-  <data name="WP_RiskX" xml:space="preserve"><value>نسبة التغطية % (الفعلي ÷ المتوقع)</value></data>
-  <data name="WP_RiskY" xml:space="preserve"><value>الدوران % (آخر 3 أشهر)</value></data>
-  <data name="WP_RiskResign" xml:space="preserve"><value>الاستقالات (3 أشهر)</value></data>
-  <data name="WP_RiskDanger" xml:space="preserve"><value>نقص في العدد ودوران أعلى من المتوسط</value></data>
-  <data name="WP_RiskNote" xml:space="preserve"><value>{0} فرع في المنطقة الحمراء: تغطية أقل من 95٪ ودوران أعلى من المتوسط ({1}٪). ابدأ بهذه الفروع.</value></data>
-  <data name="Guide_WP_Risk" xml:space="preserve"><value>نقطة لكل فرع أسفل الصفحة: الأفقي نسبة اكتمال الفرع (الفعلي ÷ المتوقع) والرأسي الدوران خلال آخر 3 أشهر. النقاط الحمراء هي الفروع بتغطية أقل من 95٪ ودوران أعلى من متوسط الفروع المعروضة، أي ناقصة عددًا وتفقد موظفين فتحتاج اهتمامًا أولًا. مرّر على النقطة لترى أرقام الفرع. تحتاج قائمة موظفين مرفوعة للشهر.</value></data>
   <data name="Guide_HF_KpisTitle" xml:space="preserve"><value>كروت الملخص</value></data>
   <data name="Guide_HF_Kpis" xml:space="preserve"><value>إجمالي التعيينات المطلوبة في السنة، وأكثر شهر ضغطًا، والتعيينات المطلوبة في الأشهر الثلاثة القادمة (من الشهر الحالي عند عرض السنة الحالية)، والفرع الأكثر تعيينًا. يظهر كارت الفرع فقط عند عرض الجدول حسب الفرع.</value></data>
   <data name="Guide_HF_Chart" xml:space="preserve"><value>التعيينات المطلوبة في كل شهر. الأعمدة الداكنة أشهر لها قائمة موظفين مرفوعة، والفاتحة تقدير. مرّر على العمود لترى الشهر ورقمه.</value></data>
