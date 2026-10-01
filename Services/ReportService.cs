@@ -977,7 +977,7 @@ public class ReportService : IReportService
         sum.Cell(5, 1).Value = "Responsible filter"; sum.Cell(5, 2).Value = responsible.Length == 0 ? "All" : SafeText(responsible);
         sum.Cell(6, 1).Value = "Generated"; sum.Cell(6, 2).Value = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC";
         sum.Range(2, 1, 6, 1).Style.Font.Bold = true;
-        sum.Cell(7, 1).Value = "Gap = Actual − Projected (positive = surplus, negative = shortage). Fill rate = Actual ÷ Projected. Shortage = people missing in the jobs that are short (a surplus in one job never offsets another). Hiring need = shortage + expected resignations (average monthly resignations of the last 6 roster months), never below zero per store and job — an estimate. Only stores with a projection for a month are compared in that month; months without an uploaded roster show the projection only.";
+        sum.Cell(7, 1).Value = "Gap = Actual − Projected (positive = surplus, negative = shortage). Fill rate = Actual ÷ Projected. Shortage = people missing in the jobs that are short (a surplus in one job never offsets another). Hiring need = shortage + expected resignations (average monthly resignations of the last 6 roster months) — an estimate. Only stores with a projection for a month are compared in that month; months without an uploaded roster show the projection only.";
         sum.Cell(7, 1).Style.Font.Italic = true;
 
         if (rows.Count == 0)

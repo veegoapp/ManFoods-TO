@@ -55,6 +55,29 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task HiringNeed_IsAlwaysShortagePlusExpectedResignations()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "1 | A", "MDS", 2);          // Crew is 3 short, MDS has 1 too many
+        Active(db, 1, "1 | A", "Crew", 7); Active(db, 1, "1 | A", "MDS", 3);
+        db.Resignations.Add(new Resignation { Year = 2026, Month = 1, EmployeeId = "r1", Store = "1 | A", JobTitle = "MDS" });   // expected: 1 a month, from the job that has a surplus
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        Assert.Equal(3, dto.Kpis.Shortage);
+        Assert.Equal(1, dto.Kpis.ExpectedAttrition);
+        Assert.Equal(4, dto.Kpis.HiringNeed);                                      // 3 + 1, even though the leaver is from a job above its plan
+        var store = Assert.Single(dto.ByStore);
+        Assert.Equal(store.Shortage + Math.Round(store.ExpectedAttrition, MidpointRounding.AwayFromZero), store.HiringNeed);
+        foreach (var g in dto.ByPayrollGroup)
+            Assert.Equal(g.Shortage + Math.Round(g.ExpectedAttrition, MidpointRounding.AwayFromZero), g.HiringNeed);
+
+        var detail = await NewService(db).GetDetailAsync(2026, new[] { 1 }, null, null, "Admin", null);
+        Assert.Equal(4.0, detail.Sum(r => r.HiringNeed ?? 0));                      // the per-job rows add up to the same
+    }
+
+    [Fact]
     public async Task GapAndFillRate_AreActualMinusProjected()
     {
         var db = NewDb();

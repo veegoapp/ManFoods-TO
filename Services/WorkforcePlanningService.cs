@@ -405,8 +405,8 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             StoresShort = dto.HasActual ? dto.ByStore.Count(r => r.Status is "watch" or "critical") : 0,
         };
 
-        // Hiring need: per store+job the shortage plus expected resignations, never below
-        // zero (a surplus in one job can't cover another), summed and rounded for display.
+        // Hiring need: the shortage (people missing in the jobs that are short — a surplus in one job
+        // never covers another) plus the expected resignations.
         Dictionary<string, double[]>? storeNeed = null; // store -> [need, expected resignations, shortage], unrounded
         Dictionary<string, double[]>? jobNeed = null;   // job   -> same
         if (includeHiring && dto.HasActual)
@@ -421,15 +421,15 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                 var store = data.Stores[cell.Key.Store]; var job = data.Jobs[cell.Key.Job];
                 var expected = attrition.PerMonth.TryGetValue(AttrKey(store, job), out var e) ? e : 0;
                 var shortage = Math.Max(0, cell.Value[0] - cell.Value[1]);
-                var need = Math.Max(0, cell.Value[0] - cell.Value[1] + expected);
+                var need = shortage + expected;
                 AddNeed(byStoreNeed, store, need, expected, shortage); AddNeed(byJobNeed, job, need, expected, shortage);
                 totalNeed += need; totalAttr += expected; totalShort += shortage;
             }
-            foreach (var r in dto.ByStore) if (byStoreNeed.TryGetValue(r.Name, out var v)) { r.HiringNeed = RoundNeed(v[0]); r.ExpectedAttrition = Math.Round(v[1], 1); r.Shortage = RoundNeed(v[2]); }
-            foreach (var r in dto.ByJob) if (byJobNeed.TryGetValue(r.Name, out var v)) { r.HiringNeed = RoundNeed(v[0]); r.ExpectedAttrition = Math.Round(v[1], 1); r.Shortage = RoundNeed(v[2]); }
-            dto.Kpis.HiringNeed = RoundNeed(totalNeed);
-            dto.Kpis.ExpectedAttrition = Math.Round(totalAttr, 1);
+            foreach (var r in dto.ByStore) if (byStoreNeed.TryGetValue(r.Name, out var v)) SetNeed(r, v[2], v[1]);
+            foreach (var r in dto.ByJob) if (byJobNeed.TryGetValue(r.Name, out var v)) SetNeed(r, v[2], v[1]);
             dto.Kpis.Shortage = RoundNeed(totalShort);
+            dto.Kpis.ExpectedAttrition = Math.Round(totalAttr, 1);
+            dto.Kpis.HiringNeed = dto.Kpis.Shortage + RoundNeed(dto.Kpis.ExpectedAttrition);
             storeNeed = byStoreNeed;
             jobNeed = byJobNeed;
         }
@@ -451,9 +451,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             dto.ByPayrollGroup = accPg.Select(kv =>
                 {
                     var row = Row(kv.Key, new[] { kv.Value.P, kv.Value.A }, dto.HasActual);
-                    row.HiringNeed = RoundNeed(kv.Value.Need);
-                    row.ExpectedAttrition = Math.Round(kv.Value.Attr, 1);
-                    row.Shortage = RoundNeed(kv.Value.Short);
+                    SetNeed(row, kv.Value.Short, kv.Value.Attr);
                     return row;
                 })
                 .OrderBy(r => dto.HasActual ? r.Gap : -r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
@@ -480,9 +478,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                     {
                         var row = Row(kv.Key, new[] { kv.Value.P, kv.Value.A }, dto.HasActual);
                         row.StoreCount = kv.Value.Stores;
-                        row.HiringNeed = RoundNeed(kv.Value.Need);
-                        row.ExpectedAttrition = Math.Round(kv.Value.Attr, 1);
-                        row.Shortage = RoundNeed(kv.Value.Short);
+                        SetNeed(row, kv.Value.Short, kv.Value.Attr);
                         return row;
                     })
                     .OrderBy(r => dto.HasActual ? r.Gap : -r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
@@ -596,7 +592,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             {
                 var expected = attrition.PerMonth.TryGetValue(AttrKey(r.Store, r.Job), out var e) ? e : 0;
                 r.ExpectedAttrition = Math.Round(expected, 2);
-                r.HiringNeed = Math.Round(Math.Max(0, r.Projected - r.Actual!.Value + expected), 2);
+                r.HiringNeed = Math.Round(Math.Max(0, r.Projected - r.Actual!.Value) + expected, 2); // shortage + expected resignations
             }
         }
         return rows;
@@ -712,7 +708,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                 {
                     var a = actual.TryGetValue((mon, store, job), out var av) ? av : 0;
                     var exp = attrByMonth[mon].PerMonth.TryGetValue(AttrKey(data.Stores[store], data.Jobs[job]), out var e1) ? e1 : 0;
-                    hires = Math.Max(0, p - a + exp);
+                    hires = Math.Max(0, p - a) + exp; // shortage + expected resignations, as on Workforce Planning
                     prev = a;
                 }
                 else
@@ -770,6 +766,15 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             foreach (var j in data.Projected.Select(c => c.Job).Distinct()) jobs.Add(data.Jobs[j]);
         }
         return jobs.OrderBy(j => j, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    // Shortage, expected resignations and hiring need of a row. Hiring need is always the shortage plus the
+    // expected resignations as displayed (rounded), so the three columns add up on screen.
+    private static void SetNeed(PlanningRowDto row, double shortage, double attrition)
+    {
+        row.Shortage = RoundNeed(shortage);
+        row.ExpectedAttrition = Math.Round(attrition, 1);
+        row.HiringNeed = row.Shortage + RoundNeed(row.ExpectedAttrition);
     }
 
     private static int RoundNeed(double v) => (int)Math.Round(v, MidpointRounding.AwayFromZero);

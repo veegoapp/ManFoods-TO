@@ -207,7 +207,7 @@
      data-projected="@L["WP_Projected"]" data-actual="@L["WP_Actual"]"
      data-ok="@L["WP_StatusOk"]" data-watch="@L["WP_StatusWatch"]" data-critical="@L["WP_StatusCritical"]" data-none="@L["WP_StatusNone"]"
      data-col-name="@L["Common_Name"]" data-col-stores="@L["Common_Stores"]" data-col-projected="@L["WP_ColProjected"]" data-col-actual="@L["WP_ColActual"]" data-col-gap="@L["WP_ColGap"]" data-unassigned="@L["WP_Unassigned"]" data-col-hiring="@L["WP_ColHiring"]" data-col-shortage="@L["WP_ColShortage"]" data-col-attrition="@L["WP_ColAttrition"]" data-over="@L["WP_StatusOver"]" data-col-fill="@L["WP_ColFill"]" data-col-status="@L["WP_ColStatus"]" data-no-rows="@L["Common_NoData"]" data-oc-title="@L["Common_OperationConsultants"]" data-oc-sub="@L["WP_GrpSubOc"]" data-od-title="@L["Common_OperationDirectors"]" data-od-sub="@L["WP_GrpSubOd"]" data-om-title="@L["Common_OperationManagers"]" data-om-sub="@L["WP_GrpSubOm"]" data-soc-title="@L["Common_SeniorOperationConsultants"]" data-soc-sub="@L["WP_GrpSubSoc"]" data-hiring="@L["WP_ColHiring"]" data-kpi-hiring="@L["WP_KpiHiring"]" data-kpi-hiring-desc="@L["WP_KpiHiringDesc"]" data-attr-note="@L["WP_AttrNote"]" data-no-attr="@L["WP_NoAttrition"]" data-gap="@L["WP_ColGap"]" data-fill="@L["WP_ColFill"]" data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
-     data-drill-title="@L["WP_DrillTitle"]" data-drill-formula="@L["WP_DrillFormula"]" data-drill-absorbed="@L["WP_DrillAbsorbed"]" data-drill-loading="@L["WP_DrillLoading"]" data-drill-hint="@L["WP_DrillHint"]" data-col-job="@L["WP_ColJob"]" data-total="@L["HF_Total"]"
+     data-drill-title="@L["WP_DrillTitle"]" data-drill-formula="@L["WP_DrillFormula"]" data-drill-loading="@L["WP_DrillLoading"]" data-drill-hint="@L["WP_DrillHint"]" data-col-job="@L["WP_ColJob"]" data-total="@L["HF_Total"]"
      data-error="@L["Common_NoData"]"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -675,25 +675,22 @@ async function wpFetchStoreJobs(store) {
     if (wpData === d) wpRenderStores();
 }
 
-function wpDrillHtml(store, rows) {
+function wpDrillHtml(main, rows) {
     if (rows === 'loading' || !rows) return `<div class="text-muted" style="font-size:13px">${sapEscape(wpL.drillLoading)}</div>`;
     const lines = rows.map(r => {
-        const p = r.projected, a = r.actual ?? 0, gap = a - p;
-        return { job: r.job, p, a, gap, shortage: Math.max(0, p - a), exp: r.expectedAttrition ?? 0, need: r.hiringNeed ?? 0 };
+        const p = r.projected, a = r.actual ?? 0;
+        return { job: r.job, p, a, gap: a - p, shortage: Math.max(0, p - a), exp: r.expectedAttrition ?? 0, need: r.hiringNeed ?? 0 };
     });
-    const sum = f => lines.reduce((t, l) => t + f(l), 0);
-    const short = sum(l => l.shortage), exp = Math.round(sum(l => l.exp)), need = Math.round(sum(l => l.need));
     const body = lines.map(l => `<tr><td>${sapEscape(l.job)}</td><td class="num">${l.p}</td><td class="num">${l.a}</td>
         <td class="num ${wpGapClass(l.gap)}">${wpGapText(l.gap)}</td><td class="num">${l.shortage}</td><td class="num">${wpNum(l.exp)}</td><td class="num"><b>${wpNum(l.need)}</b></td></tr>`).join('');
-    const foot = `<tr><td>${sapEscape(wpL.total)}</td><td class="num">${sum(l => l.p)}</td><td class="num">${sum(l => l.a)}</td>
-        <td class="num ${wpGapClass(sum(l => l.gap))}">${wpGapText(sum(l => l.gap))}</td><td class="num">${short}</td><td class="num">${exp}</td><td class="num">${need}</td></tr>`;
-    const diff = short + exp - need;
-    const absorbed = diff > 0 ? `<div class="wp-explain">${sapEscape(wpFmt(wpL.drillAbsorbed, diff, exp, need, short + exp))}</div>` : '';
-    return `<div style="font-weight:700;font-size:13px">${sapEscape(wpFmt(wpL.drillTitle, store))}</div>
+    // The total is the store's own row, so it always matches the table above.
+    const foot = `<tr><td>${sapEscape(wpL.total)}</td><td class="num">${main.projected}</td><td class="num">${main.actual}</td>
+        <td class="num ${wpGapClass(main.gap)}">${wpGapText(main.gap)}</td><td class="num">${main.shortage}</td><td class="num">${Math.round(main.expectedAttrition)}</td><td class="num">${main.hiringNeed}</td></tr>`;
+    return `<div style="font-weight:700;font-size:13px">${sapEscape(wpFmt(wpL.drillTitle, main.name))}</div>
         <div class="wp-table-wrap" style="max-height:340px"><table class="wp-sub"><thead><tr><th>${sapEscape(wpL.colJob)}</th><th class="num">${sapEscape(wpL.colProjected)}</th><th class="num">${sapEscape(wpL.colActual)}</th>
         <th class="num">${sapEscape(wpL.colGap)}</th><th class="num">${sapEscape(wpL.colShortage)}</th><th class="num">${sapEscape(wpL.colAttrition)}</th><th class="num">${sapEscape(wpL.colHiring)}</th></tr></thead>
         <tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
-        <div class="wp-explain">${sapEscape(wpL.drillFormula)}</div>${absorbed}`;
+        <div class="wp-explain">${sapEscape(wpL.drillFormula)}</div>`;
 }
 
 function wpRenderStores() {
@@ -720,7 +717,7 @@ function wpRenderStores() {
             <td>${fill}</td>
             <td><span class="wp-pill ${r.status}">${sapEscape(wpPillLabel(r.status))}</span></td>
         </tr>`;
-        return main + (open ? `<tr class="wp-detail"><td colspan="10">${wpDrillHtml(r.name, wpStoreJobs.get(r.name))}</td></tr>` : '');
+        return main + (open ? `<tr class="wp-detail"><td colspan="10">${wpDrillHtml(r, wpStoreJobs.get(r.name))}</td></tr>` : '');
     }).join('');
 }
 document.getElementById('wpStoreRows').addEventListener('click', e => {
