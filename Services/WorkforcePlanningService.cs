@@ -181,8 +181,8 @@ public class WorkforcePlanningService : IWorkforcePlanningService
 
         // Resigned Crew Trainers are filed under their roster job (Crew) in the Resignations file. Spot
         // them by employee id: anyone on a Crew Trainer list in the window (or the month before it) who
-        // resigned in the window counts as a Crew Trainer resignation too (the same people also stay in
-        // Crew, matching the actual headcount, until they are taken out of it).
+        // resigned in the window is a Crew Trainer resignation, and is taken out of the job they were
+        // filed under (trainers are planned apart from Crew, so they must not count in both).
         if (used.Count > 0)
         {
             var window = (await GetRosterPeriodKeysAsync()).Where(k => k <= year * 100 + month).Take(AttritionLookbackMonths + 1).ToList();
@@ -191,11 +191,14 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                 where used.Contains(r.Year * 100 + r.Month)
                 join t in _db.CrewTrainerEmployees.AsNoTracking() on r.EmployeeId equals t.EmployeeId
                 where window.Contains(t.Year * 100 + t.Month)
-                select new { r.Store, r.EmployeeId }).Distinct().ToListAsync();
-            foreach (var g in resigned.GroupBy(r => r.Store))
+                select new { r.Store, r.JobTitle, r.EmployeeId }).Distinct().ToListAsync();
+            foreach (var r in resigned)
             {
-                var k = AttrKey(g.Key, CrewTrainerJob);
-                data.PerMonth[k] = (data.PerMonth.TryGetValue(k, out var prev) ? prev : 0) + g.Count() / (double)used.Count;
+                var share = 1 / (double)used.Count;
+                var from = AttrKey(r.Store, r.JobTitle);
+                if (data.PerMonth.TryGetValue(from, out var left)) data.PerMonth[from] = Math.Max(0, left - share);
+                var to = AttrKey(r.Store, CrewTrainerJob);
+                data.PerMonth[to] = (data.PerMonth.TryGetValue(to, out var prev) ? prev : 0) + share;
             }
         }
         _cache.Set(key, data, CacheOptions());
@@ -239,22 +242,28 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             .GroupBy(e => new { e.Month, e.Store, e.JobTitle })
             .Select(g => new { g.Key.Month, g.Key.Store, g.Key.JobTitle, Count = g.Count() })
             .ToListAsync();
-        var actualCells = actual.Select(a => new Cell(a.Month, Store(a.Store), Job(a.JobTitle), a.Count)).ToList();
+        var counts = new Dictionary<(int Month, string Store, string Job), int>();
+        foreach (var a in actual) counts[(a.Month, a.Store, a.JobTitle)] = a.Count;
 
-        // Crew Trainers are Crew who get an allowance, so the roster has no such job: the actual
-        // headcount comes from the monthly allowance list instead. Matched by employee id against
-        // that month's roster, so only people who are really on the roster count (a resigned employee
-        // or a wrong month never inflates a store). A month without a roster is skipped, so a list
-        // alone never makes a month look "actual". The same people are still counted in their roster
-        // job until it is confirmed they should leave it.
+        // Crew Trainers are Crew who get an allowance, but the projection plans them as their own job on
+        // top of Crew. So the people on the monthly allowance list move out of their roster job (and store)
+        // into Crew Trainer, which keeps the total headcount unchanged. Matched by employee id against
+        // that month's roster: only people really on the roster move (a resigned employee or a wrong
+        // month never inflates a store). A month without a roster is skipped, so a list alone never makes
+        // a month look "actual". The store is the list's, falling back to the roster's.
         var trainers = await (
             from t in _db.CrewTrainerEmployees.AsNoTracking()
             where t.Year == year
             join e in _db.ActiveEmployees.AsNoTracking() on new { t.Year, t.Month, t.EmployeeId } equals new { e.Year, e.Month, e.EmployeeId }
-            group t by new { t.Month, t.StoreName } into g
-            select new { g.Key.Month, g.Key.StoreName, Count = g.Count() }).ToListAsync();
-        foreach (var t in trainers.Where(t => !string.IsNullOrWhiteSpace(t.StoreName)))
-            actualCells.Add(new Cell(t.Month, Store(t.StoreName), Job(CrewTrainerJob), t.Count));
+            select new { t.Month, ListStore = t.StoreName, RosterStore = e.Store, RosterJob = e.JobTitle }).ToListAsync();
+        foreach (var t in trainers)
+        {
+            var from = (t.Month, t.RosterStore, t.RosterJob);
+            if (counts.TryGetValue(from, out var n)) counts[from] = Math.Max(0, n - 1);
+            var to = (t.Month, string.IsNullOrWhiteSpace(t.ListStore) ? t.RosterStore : t.ListStore, CrewTrainerJob);
+            counts[to] = (counts.TryGetValue(to, out var m) ? m : 0) + 1;
+        }
+        var actualCells = counts.Where(c => c.Value > 0).Select(c => new Cell(c.Key.Month, Store(c.Key.Store), Job(c.Key.Job), c.Value)).ToList();
         data.Actual = actualCells.ToArray();
 
         _cache.Set(key, data, CacheOptions());
