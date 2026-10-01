@@ -203,7 +203,21 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             .GroupBy(e => new { e.Month, e.Store, e.JobTitle })
             .Select(g => new { g.Key.Month, g.Key.Store, g.Key.JobTitle, Count = g.Count() })
             .ToListAsync();
-        data.Actual = actual.Select(a => new Cell(a.Month, Store(a.Store), Job(a.JobTitle), a.Count)).ToArray();
+        var actualCells = actual.Select(a => new Cell(a.Month, Store(a.Store), Job(a.JobTitle), a.Count)).ToList();
+
+        // Crew Trainers are Crew who get an allowance, so the roster has no such job: the actual
+        // headcount comes from the monthly allowance list instead (distinct employees per store). A
+        // month without a roster is skipped, so a list alone never makes a month look "actual".
+        // The same people are still counted in their roster job until it is confirmed they should leave it.
+        var rosterMonths = actual.Select(a => a.Month).Distinct().ToHashSet();
+        var trainers = await _db.CrewTrainerEmployees.AsNoTracking()
+            .Where(t => t.Year == year)
+            .GroupBy(t => new { t.Month, t.StoreName })
+            .Select(g => new { g.Key.Month, g.Key.StoreName, Count = g.Count() })
+            .ToListAsync();
+        foreach (var t in trainers.Where(t => rosterMonths.Contains(t.Month) && !string.IsNullOrWhiteSpace(t.StoreName)))
+            actualCells.Add(new Cell(t.Month, Store(t.StoreName), Job(CrewTrainerJob), t.Count));
+        data.Actual = actualCells.ToArray();
 
         _cache.Set(key, data, CacheOptions());
         return data;

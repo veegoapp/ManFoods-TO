@@ -451,6 +451,32 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task CrewTrainerActual_ComesFromTheMonthlyList_AndCrewIsUntouched()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew Trainer", 2); Proj(db, 1, "1 | A", "Hourly Paid Crew Trainer", 1); Proj(db, 1, "1 | A", "Crew", 10);
+        Proj(db, 2, "1 | A", "Crew Trainer", 3); Proj(db, 3, "1 | A", "Crew Trainer", 3);
+        Active(db, 1, "1 | A", "Crew", 9);
+        Active(db, 2, "1 | A", "Crew", 9);
+        db.CrewTrainerEmployees.Add(new CrewTrainerEmployee { Year = 2026, Month = 1, EmployeeId = "1", StoreName = "1 | A" });
+        db.CrewTrainerEmployees.Add(new CrewTrainerEmployee { Year = 2026, Month = 1, EmployeeId = "2", StoreName = "1 | A" });
+        db.CrewTrainerEmployees.Add(new CrewTrainerEmployee { Year = 2026, Month = 3, EmployeeId = "9", StoreName = "1 | A" }); // no roster for March
+        await db.SaveChangesAsync();
+
+        var jan = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+        var trainer = Assert.Single(jan.ByJob, r => r.Name == "Crew Trainer");
+        Assert.Equal(3, trainer.Projected);
+        Assert.Equal(2, trainer.Actual);
+        Assert.Equal(9, Assert.Single(jan.ByJob, r => r.Name == "Crew").Actual); // trainers are not taken out of Crew (yet)
+
+        var feb = await NewService(db).GetAsync(2026, 2, null, null, "Admin", null);
+        Assert.Equal(0, Assert.Single(feb.ByJob, r => r.Name == "Crew Trainer").Actual); // no list uploaded for February
+
+        var mar = await NewService(db).GetAsync(2026, 3, null, null, "Admin", null);
+        Assert.False(mar.HasActual); // a trainer list alone does not make March an "actual" month
+    }
+
+    [Fact]
     public async Task HiringForecast_NoRoster_HasNoRows()
     {
         var db = NewDb();
