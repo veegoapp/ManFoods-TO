@@ -947,6 +947,19 @@ public class JobPayrollGroupUploadParseTests
     }
 
     [Fact]
+    public void CrewLevelColumn_IsReadWhenPresent_AndFlaggedAsMissingWhenNot()
+    {
+        var withCol = Book(new[] { "Job Title", "Payroll Group", "crew level" },
+            new[] { "Crew", "Manfoods Company", "TRUE" }, new[] { "Barista", "Manfoods Company", "" }, new[] { "Hourly Paid Crew", "Hourly Paid", "yes" });
+        var p = UploadService.ParseJobPayrollGroups(withCol, "no job", "no group");
+        Assert.True(p.HasCrewLevelColumn);
+        Assert.Equal(new[] { "Crew", "Hourly Paid Crew" }, p.Rows.Where(r => r.IsCrewLevel).Select(r => r.JobTitle).ToArray());
+
+        var without = Book(new[] { "Job Title", "Payroll Group" }, new[] { "Crew", "Manfoods Company" });
+        Assert.False(UploadService.ParseJobPayrollGroups(without, "no job", "no group").HasCrewLevelColumn);
+    }
+
+    [Fact]
     public void MissingColumns_AreRejected()
     {
         var noGroup = Book(new[] { "Job Title" }, new[] { "Crew" });

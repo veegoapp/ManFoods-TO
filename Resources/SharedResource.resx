@@ -2064,7 +2064,7 @@
   <data name="UL_JobGroups" xml:space="preserve"><value>Job Payroll Groups</value></data>
   <data name="UL_JobGroupsSub" xml:space="preserve"><value>The payroll group of each job title — the reference for payroll groups in Workforce Planning</value></data>
   <data name="UL_JobGroupsTemplate" xml:space="preserve"><value>Download current list</value></data>
-  <data name="UL_JobGroupsNote" xml:space="preserve"><value>Two columns: Job Title and Payroll Group. Download the current list, edit it and upload it back: the upload replaces the whole list. A job that is not on the list falls back to the payroll group most of its employees are in. Matching ignores capital letters and extra spaces.</value></data>
+  <data name="UL_JobGroupsNote" xml:space="preserve"><value>Columns: Job Title, Payroll Group and Crew Level (put TRUE on the jobs that count as crew level — the people one Crew Trainer trains, one trainer per 6). Download the current list, edit it and upload it back: the upload replaces the whole list. A file without the Crew Level column keeps the crew-level jobs as they are. A job that is not on the list falls back to the payroll group most of its employees are in. Matching ignores capital letters and extra spaces.</value></data>
   <data name="DM_UploadJobGroupsButton" xml:space="preserve"><value>Upload Job Payroll Groups</value></data>
   <data name="DM_JobGroupsBadge" xml:space="preserve"><value>Job Payroll Groups</value></data>
   <data name="DM_DeleteConfirmJobGroups" xml:space="preserve"><value>Delete the Job Payroll Groups list? Payroll groups will fall back to what the active employee list shows until a new list is uploaded.</value></data>
@@ -2140,4 +2140,5 @@
   <data name="CT_In_NoData_T" xml:space="preserve"><value>Nothing to flag</value></data>
   <data name="CT_In_NoData_D" xml:space="preserve"><value>No notable pattern in this month's trainers.</value></data>
   <data name="Guide_CT_Insights" xml:space="preserve"><value>A few plain sentences worked out from the numbers on the page: trainers against the plan, whether extra trainers in some stores could cover the gap in others, stores with new hires and no trainer, the store with the heaviest training load, how the number of trainers changed since the first list, who joined or left the list, and how many trainers resigned. They follow the filters.</value></data>
+  <data name="Msg_JobGroupCrewLevel" xml:space="preserve"><value>{0} job(s) are marked as crew level.</value></data>
 </root>

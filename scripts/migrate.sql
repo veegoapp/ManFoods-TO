@@ -643,6 +643,14 @@ BEGIN
             (N'NGBL Swing', N'Hourly Paid');
 END
 
+-- Which jobs count as "crew level" (the people one Crew Trainer trains: 1 trainer per 6). Set once, when the
+-- column is added; afterwards it comes from the Job Payroll Groups upload (column "Crew Level").
+IF COL_LENGTH('dbo.job_payroll_groups', 'is_crew_level') IS NULL
+BEGIN
+    ALTER TABLE dbo.job_payroll_groups ADD is_crew_level BIT NOT NULL CONSTRAINT df_job_payroll_groups_is_crew_level DEFAULT 0;
+    EXEC(N'UPDATE dbo.job_payroll_groups SET is_crew_level = 1 WHERE job_title IN (N''Hourly Paid Crew'', N''hourly paid crew trainer'', N''Hourly Paid handicaps crew'', N''McAcademy'', N''McAcademy (NGBL)'', N''Crew'', N''Crew (Touristic)'', N''Crew Trainee'', N''Crew Trainer'', N''Handicaps Crew'', N''Handicaps Crew Trainee'')');
+END
+
 -- ── page_access_config ────────────────────────────────────────────────────
 -- Admin-configurable per-area access. One row per access area (see
 -- Services/AccessAreas). is_restricted = 1 means restricted roles (OC/OM/Head

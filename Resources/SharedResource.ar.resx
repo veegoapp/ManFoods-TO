@@ -2070,7 +2070,7 @@
   <data name="UL_JobGroups" xml:space="preserve"><value>مجموعات رواتب الوظائف</value></data>
   <data name="UL_JobGroupsSub" xml:space="preserve"><value>مجموعة الرواتب لكل مسمى وظيفي — المرجع لمجموعات الرواتب في تخطيط القوى العاملة</value></data>
   <data name="UL_JobGroupsTemplate" xml:space="preserve"><value>تحميل القائمة الحالية</value></data>
-  <data name="UL_JobGroupsNote" xml:space="preserve"><value>عمودان: Job Title و Payroll Group. حمّل القائمة الحالية وعدّلها وارفعها: الرفع يستبدل القائمة بالكامل. الوظيفة غير الموجودة في القائمة تأخذ مجموعة الرواتب التي فيها أغلب موظفيها. المطابقة تتجاهل حالة الأحرف والمسافات الزائدة.</value></data>
+  <data name="UL_JobGroupsNote" xml:space="preserve"><value>الأعمدة: Job Title و Payroll Group و Crew Level (ضع TRUE على الوظائف التي تُحسب مستوى كرو — الأفراد الذين يدرّبهم مدرب واحد، مدرب لكل 6). حمّل القائمة الحالية وعدّلها وارفعها: الرفع يستبدل القائمة بالكامل. الملف بلا عمود Crew Level يُبقي وظائف مستوى الكرو كما هي. الوظيفة غير الموجودة في القائمة تأخذ مجموعة الرواتب التي فيها أغلب موظفيها. المطابقة تتجاهل حالة الأحرف والمسافات الزائدة.</value></data>
   <data name="DM_UploadJobGroupsButton" xml:space="preserve"><value>رفع مجموعات رواتب الوظائف</value></data>
   <data name="DM_JobGroupsBadge" xml:space="preserve"><value>مجموعات رواتب الوظائف</value></data>
   <data name="DM_DeleteConfirmJobGroups" xml:space="preserve"><value>حذف قائمة مجموعات رواتب الوظائف؟ ستعود المجموعات لما تُظهره قائمة الموظفين الحاليين حتى ترفع قائمة جديدة.</value></data>
@@ -2146,4 +2146,5 @@
   <data name="CT_In_NoData_T" xml:space="preserve"><value>لا شيء يستحق التنبيه</value></data>
   <data name="CT_In_NoData_D" xml:space="preserve"><value>لا نمط ملحوظ في مدربي هذا الشهر.</value></data>
   <data name="Guide_CT_Insights" xml:space="preserve"><value>جمل بسيطة محسوبة من أرقام الصفحة: المدربون مقابل الخطة، وهل زيادة المدربين في بعض الفروع قد تسد النقص في غيرها، والفروع التي فيها موظفون جدد وبلا مدرب، والفرع الأعلى حملًا في التدريب، وكيف تغيّر عدد المدربين منذ أول قائمة، ومن دخل القائمة أو خرج منها، وكم مدربًا استقال. وهي تتبع الفلاتر.</value></data>
+  <data name="Msg_JobGroupCrewLevel" xml:space="preserve"><value>{0} وظيفة معلَّمة كمستوى كرو.</value></data>
 </root>

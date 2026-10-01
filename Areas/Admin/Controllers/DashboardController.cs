@@ -565,15 +565,15 @@ public class DashboardController : Controller
             // The template is the current list, so it can be edited and uploaded back.
             fileName = "Job_Payroll_Groups.xlsx";
             var ws = wb.AddWorksheet("Job Payroll Groups");
-            ws.Cell(1, 1).Value = "Job Title"; ws.Cell(1, 2).Value = "Payroll Group";
-            var header = ws.Range(1, 1, 1, 2);
+            ws.Cell(1, 1).Value = "Job Title"; ws.Cell(1, 2).Value = "Payroll Group"; ws.Cell(1, 3).Value = "Crew Level";
+            var header = ws.Range(1, 1, 1, 3);
             header.Style.Font.Bold = true;
             header.Style.Fill.BackgroundColor = XLColor.FromHtml("#C8102E");
             header.Style.Font.FontColor = XLColor.White;
             header.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             int r = 2;
-            foreach (var (job, group) in await _uploads.GetJobPayrollGroupRowsAsync()) { ws.Cell(r, 1).Value = job; ws.Cell(r, 2).Value = group; r++; }
-            if (r == 2) { ws.Cell(2, 1).Value = "Crew"; ws.Cell(2, 2).Value = "Manfoods Company"; ws.Cell(3, 1).Value = "Hourly Paid Crew"; ws.Cell(3, 2).Value = "Hourly Paid"; }
+            foreach (var (job, group, crew) in await _uploads.GetJobPayrollGroupRowsAsync()) { ws.Cell(r, 1).Value = job; ws.Cell(r, 2).Value = group; if (crew) ws.Cell(r, 3).Value = "TRUE"; r++; }
+            if (r == 2) { ws.Cell(2, 1).Value = "Crew"; ws.Cell(2, 2).Value = "Manfoods Company"; ws.Cell(2, 3).Value = "TRUE"; ws.Cell(3, 1).Value = "Hourly Paid Crew"; ws.Cell(3, 2).Value = "Hourly Paid"; ws.Cell(3, 3).Value = "TRUE"; }
             ws.Columns().AdjustToContents();
         }
         else if (type == "crew_trainers")

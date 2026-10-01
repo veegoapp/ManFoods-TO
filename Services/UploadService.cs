@@ -903,10 +903,18 @@ public class UploadService : IUploadService
     }
 
     // ── Job → payroll group reference list ──
-    internal sealed record JobGroupParse(List<JobPayrollGroup> Rows, int Duplicates, int Blank);
+    internal sealed record JobGroupParse(List<JobPayrollGroup> Rows, int Duplicates, int Blank, bool HasCrewLevelColumn);
 
     private static readonly string[] JobGroupJobHeaders = { "Job Title", "JobTitle", "Job", "Position", "الوظيفة", "الوظيفه" };
     private static readonly string[] JobGroupGroupHeaders = { "Payroll Group", "PayrollGroup", "Group", "مجموعة الرواتب", "مجموعه الرواتب" };
+    private static readonly string[] JobGroupCrewHeaders = { "Crew Level", "CrewLevel", "Is Crew Level", "مستوى الكرو", "كرو ليفل" };
+
+    // A ticked cell: TRUE / yes / 1 / x / نعم (anything else, including empty, is "no").
+    private static bool IsTicked(string? text)
+    {
+        var t = (text ?? "").Trim().ToLowerInvariant();
+        return t is "true" or "yes" or "y" or "1" or "x" or "✓" or "✔" or "نعم" or "اه" or "أيوه";
+    }
 
     /// <summary>Reads the first sheet by header (job title + payroll group). One row per job (case and
     /// spacing ignored, the last repeat wins); rows missing either value are skipped and counted.</summary>
@@ -919,6 +927,7 @@ public class UploadService : IUploadService
         var groupCol = FindHeaderColumn(ws, JobGroupGroupHeaders);
         if (jobCol == 0) throw new InvalidOperationException(jobMissingMessage);
         if (groupCol == 0) throw new InvalidOperationException(groupMissingMessage);
+        var crewCol = FindHeaderColumn(ws, JobGroupCrewHeaders);
 
         var byJob = new Dictionary<string, JobPayrollGroup>();
         int duplicates = 0, blank = 0;
@@ -930,14 +939,14 @@ public class UploadService : IUploadService
             if (job.Length == 0 || group.Length == 0) { blank++; continue; }
             var key = Fold(job);
             if (byJob.ContainsKey(key)) duplicates++;
-            byJob[key] = new JobPayrollGroup { JobTitle = job, PayrollGroup = group };
+            byJob[key] = new JobPayrollGroup { JobTitle = job, PayrollGroup = group, IsCrewLevel = crewCol > 0 && IsTicked(row.Cell(crewCol).GetString()) };
         }
-        return new JobGroupParse(byJob.Values.ToList(), duplicates, blank);
+        return new JobGroupParse(byJob.Values.ToList(), duplicates, blank, crewCol > 0);
     }
 
-    public async Task<List<(string Job, string Group)>> GetJobPayrollGroupRowsAsync() =>
-        (await _db.JobPayrollGroups.AsNoTracking().OrderBy(j => j.PayrollGroup).ThenBy(j => j.JobTitle).Select(j => new { j.JobTitle, j.PayrollGroup }).ToListAsync())
-            .Select(j => (j.JobTitle, j.PayrollGroup)).ToList();
+    public async Task<List<(string Job, string Group, bool CrewLevel)>> GetJobPayrollGroupRowsAsync() =>
+        (await _db.JobPayrollGroups.AsNoTracking().OrderBy(j => j.PayrollGroup).ThenBy(j => j.JobTitle).Select(j => new { j.JobTitle, j.PayrollGroup, j.IsCrewLevel }).ToListAsync())
+            .Select(j => (j.JobTitle, j.PayrollGroup, j.IsCrewLevel)).ToList();
 
     public async Task<(bool, string, int, string?)> UploadJobPayrollGroupsAsync(IFormFile file, string uploadedBy)
     {
@@ -945,6 +954,14 @@ public class UploadService : IUploadService
         var fileBytes = await ReadBytesAsync(file);
         var parsed = ParseJobPayrollGroups(fileBytes, _L["Msg_JobGroupNoJobColumn"].Value, _L["Msg_JobGroupNoGroupColumn"].Value);
         if (parsed.Rows.Count == 0) throw new InvalidOperationException(_L["Msg_JobGroupNoRows"].Value);
+
+        // A file without the Crew Level column keeps the crew-level jobs as they were.
+        if (!parsed.HasCrewLevelColumn)
+        {
+            var kept = (await _db.JobPayrollGroups.AsNoTracking().Where(j => j.IsCrewLevel).Select(j => j.JobTitle).ToListAsync())
+                .Select(j => Fold(CollapseSpaces(j))).ToHashSet();
+            foreach (var r in parsed.Rows) r.IsCrewLevel = kept.Contains(Fold(r.JobTitle));
+        }
 
         await using var tx = await _db.Database.BeginTransactionAsync();
         await _db.JobPayrollGroups.ExecuteDeleteAsync();
@@ -955,7 +972,7 @@ public class UploadService : IUploadService
         await tx.CommitAsync();
         WorkforcePlanningService.InvalidateCache();
 
-        var message = string.Format(_L["Msg_JobGroupProcessed"].Value, parsed.Rows.Count);
+        var message = string.Format(_L["Msg_JobGroupProcessed"].Value, parsed.Rows.Count) + " " + string.Format(_L["Msg_JobGroupCrewLevel"].Value, parsed.Rows.Count(r => r.IsCrewLevel));
         var warnings = new List<string>();
         static string Cap(IEnumerable<string> items) { var l = items.ToList(); return string.Join(", ", l.Take(10)) + (l.Count > 10 ? $" (+{l.Count - 10})" : ""); }
         if (parsed.Duplicates > 0) warnings.Add(string.Format(_L["Msg_JobGroupDuplicates"].Value, parsed.Duplicates));
