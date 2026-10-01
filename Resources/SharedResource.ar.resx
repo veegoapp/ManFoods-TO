@@ -2127,4 +2127,23 @@
   <data name="HF_In_Month_T" xml:space="preserve"><value>التعيينات في {0}</value></data>
   <data name="HF_In_Month_D" xml:space="preserve"><value>يحتاج {0} إلى {1} تعيين، أي {2}% من السنة ({4}). والمتوسط الشهري {3}.</value></data>
   <data name="CT_StOver" xml:space="preserve"><value>زيادة</value></data>
+  <data name="CT_In_Plan_T" xml:space="preserve"><value>المدربون {0}% من الخطة</value></data>
+  <data name="CT_In_Plan_D" xml:space="preserve"><value>{0} مدرب مقابل {1} مخطط: ينقص {2} في الفروع الناقصة، ويزيد {3} في الفروع التي فوق خطتها.</value></data>
+  <data name="CT_In_Rebalance_T" xml:space="preserve"><value>الزيادة قد تسد {0} من النقص</value></data>
+  <data name="CT_In_Rebalance_D" xml:space="preserve"><value>يوجد {0} مدرب زائد في {1} فرع فوق خطته بينما ينقص {2} في {3} فرع. نقل بعضهم يغطي جزءًا من النقص.</value></data>
+  <data name="CT_In_NoTrainer_T" xml:space="preserve"><value>{0} فرع فيه موظفون جدد وبلا مدرب</value></data>
+  <data name="CT_In_NoTrainer_D" xml:space="preserve"><value>الأكثر موظفين جددًا بلا مدرب: {0}.</value></data>
+  <data name="CT_In_Load_T" xml:space="preserve"><value>أعلى حمل تدريب: {0}</value></data>
+  <data name="CT_In_Load_D" xml:space="preserve"><value>{0} موظف جديد لكل مدرب ({1} جديد، {2} مدرب)، مقابل {3} في المتوسط.</value></data>
+  <data name="CT_In_Trend_T" xml:space="preserve"><value>المدربون {0} منذ أول قائمة</value></data>
+  <data name="CT_In_Trend_D" xml:space="preserve"><value>من {0} ({1}) إلى {2} ({3}): تغيّر {4}%.</value></data>
+  <data name="CT_In_Rose" xml:space="preserve"><value>زادوا</value></data>
+  <data name="CT_In_Fell" xml:space="preserve"><value>قلّوا</value></data>
+  <data name="CT_In_Moves_T" xml:space="preserve"><value>دخل {0} إلى قائمة المدربين وخرج {1}</value></data>
+  <data name="CT_In_Moves_D" xml:space="preserve"><value>من الخارجين: استقال {0} ولا يزال {1} يعملون وخرجوا من القائمة (مقارنة بقائمة {2}).</value></data>
+  <data name="CT_In_Resigned_T" xml:space="preserve"><value>استقال {0} مدرب خلال {1} أشهر</value></data>
+  <data name="CT_In_Resigned_D" xml:space="preserve"><value>حوالي {0}% من مدربي اليوم.</value></data>
+  <data name="CT_In_NoData_T" xml:space="preserve"><value>لا شيء يستحق التنبيه</value></data>
+  <data name="CT_In_NoData_D" xml:space="preserve"><value>لا نمط ملحوظ في مدربي هذا الشهر.</value></data>
+  <data name="Guide_CT_Insights" xml:space="preserve"><value>جمل بسيطة محسوبة من أرقام الصفحة: المدربون مقابل الخطة، وهل زيادة المدربين في بعض الفروع قد تسد النقص في غيرها، والفروع التي فيها موظفون جدد وبلا مدرب، والفرع الأعلى حملًا في التدريب، وكيف تغيّر عدد المدربين منذ أول قائمة، ومن دخل القائمة أو خرج منها، وكم مدربًا استقال. وهي تتبع الفلاتر.</value></data>
 </root>
