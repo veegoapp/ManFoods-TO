@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<UploadLog> UploadLogs { get; set; }
     public DbSet<ExitInterview> ExitInterviews { get; set; }
     public DbSet<JobHeadcountProjection> JobHeadcountProjections { get; set; }
+    public DbSet<CrewTrainerEmployee> CrewTrainerEmployees { get; set; }
     public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
     public DbSet<AppSetting> AppSettings { get; set; }
     public DbSet<StoreActionPlan> StoreActionPlans { get; set; }
@@ -71,6 +72,14 @@ public class AppDbContext : DbContext
             .HasDatabaseName("ux_job_headcount_projections_period_store_job");
         modelBuilder.Entity<JobHeadcountProjection>().Property(j => j.StoreName).HasMaxLength(450);
         modelBuilder.Entity<JobHeadcountProjection>().Property(j => j.JobTitle).HasMaxLength(200);
+
+        // One row per employee per month — a re-upload replaces the whole month.
+        modelBuilder.Entity<CrewTrainerEmployee>()
+            .HasIndex(c => new { c.Year, c.Month, c.EmployeeId })
+            .IsUnique()
+            .HasDatabaseName("ux_crew_trainer_employees_period_employee");
+        modelBuilder.Entity<CrewTrainerEmployee>().Property(c => c.EmployeeId).HasMaxLength(100);
+        modelBuilder.Entity<CrewTrainerEmployee>().Property(c => c.StoreName).HasMaxLength(450);
 
         // Per-area access configuration — one row per area, keyed by the area
         // string (same fresh-DB caveat as above).

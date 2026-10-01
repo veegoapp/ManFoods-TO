@@ -41,6 +41,18 @@ public class JobProjectionUploadViewModel
     public int Year { get; set; }
 }
 
+public class CrewTrainerUploadViewModel
+{
+    [Required]
+    public IFormFile? File { get; set; }
+
+    [Required, Range(2000, 2100)]
+    public int Year { get; set; }
+
+    [Required, Range(1, 12)]
+    public int Month { get; set; }
+}
+
 public class BulkUserUploadViewModel
 {
     [Required]

@@ -766,6 +766,128 @@ public class UploadService : IUploadService
         return (true, message, totalRows, warnings.Count > 0 ? string.Join(" ", warnings) : null);
     }
 
+    // ── Crew Trainer allowance list (monthly) ──
+    internal sealed record CrewTrainerParse(List<CrewTrainerEmployee> Rows, int Duplicates, int MissingStore, SortedSet<string> UnknownStores);
+
+    private static readonly string[] TrainerIdHeaders = { "Employee ID", "EmployeeID", "Employee Id", "Emp ID", "ID", "Employee Number", "الرقم الوظيفي", "الرقم الوظيفى", "رقم وظيفي", "رقم وظيفى" };
+    private static readonly string[] TrainerNameHeaders = { "Name", "Employee Name", "الاسم" };
+    private static readonly string[] TrainerJobHeaders = { "Job Title", "JobTitle", "Job", "Position", "الوظيفة", "الوظيفه" };
+    private static readonly string[] TrainerStoreHeaders = { "Store", "Store Name", "Restaurant", "المطعم" };
+
+    private static int FindHeaderColumn(IXLWorksheet ws, string[] names)
+    {
+        foreach (var name in names)
+        {
+            var cell = ws.Row(1).Cells().FirstOrDefault(c => CollapseSpaces(c.GetString()).Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (cell != null) return cell.Address.ColumnNumber;
+        }
+        return 0;
+    }
+
+    /// <summary>Reads the first sheet: employee id, name, job title and store (by header). One row per
+    /// employee id (the last repeat wins); stores are spelled the way the rest of the portal spells them.</summary>
+    internal static CrewTrainerParse ParseCrewTrainers(byte[] fileBytes, IReadOnlyDictionary<string, string> knownStores, string idMissingMessage, string storeMissingMessage)
+    {
+        using var ms = new MemoryStream(fileBytes);
+        using var wb = new XLWorkbook(ms);
+        var ws = wb.Worksheet(1);
+        var idCol = FindHeaderColumn(ws, TrainerIdHeaders);
+        var storeCol = FindHeaderColumn(ws, TrainerStoreHeaders);
+        if (idCol == 0) throw new InvalidOperationException(idMissingMessage);
+        if (storeCol == 0) throw new InvalidOperationException(storeMissingMessage);
+        var nameCol = FindHeaderColumn(ws, TrainerNameHeaders);
+        var jobCol = FindHeaderColumn(ws, TrainerJobHeaders);
+
+        var byId = new Dictionary<string, CrewTrainerEmployee>(StringComparer.OrdinalIgnoreCase);
+        var unknown = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+        int duplicates = 0, missingStore = 0;
+        foreach (var row in ws.RowsUsed().Skip(1))
+        {
+            var id = CollapseSpaces(row.Cell(idCol).GetString());
+            if (id.Length == 0) continue;
+            var storeRaw = row.Cell(storeCol).GetString();
+            string store;
+            if (string.IsNullOrWhiteSpace(storeRaw)) { store = ""; missingStore++; }
+            else
+            {
+                var norm = NormalizeStoreLabel(storeRaw);
+                if (knownStores.TryGetValue(Fold(norm), out var ks)) store = ks;
+                else { store = norm; if (knownStores.Count > 0) unknown.Add(norm); }
+            }
+            if (byId.ContainsKey(id)) duplicates++;
+            byId[id] = new CrewTrainerEmployee
+            {
+                EmployeeId = id,
+                Name = nameCol > 0 ? CollapseSpaces(row.Cell(nameCol).GetString()) : "",
+                JobTitle = jobCol > 0 ? CollapseSpaces(row.Cell(jobCol).GetString()) : "",
+                StoreName = store,
+            };
+        }
+        return new CrewTrainerParse(byId.Values.ToList(), duplicates, missingStore, unknown);
+    }
+
+    public async Task<(bool, string, int, string?)> UploadCrewTrainersAsync(IFormFile file, int year, int month, string uploadedBy)
+    {
+        await ValidateFileAsync(file);
+        if (year < 2000 || year > 2100) throw new InvalidOperationException(_L["Msg_JobProjInvalidYear"].Value);
+        if (month < 1 || month > 12) throw new InvalidOperationException(_L["Msg_CrewTrainerInvalidMonth"].Value);
+        var fileBytes = await ReadBytesAsync(file);
+
+        var knownStores = new Dictionary<string, string>();
+        var storeNames = await _db.ActiveEmployees.Select(e => e.Store).Distinct().ToListAsync();
+        storeNames.AddRange(await _db.StoreReferences.Select(r => r.StoreName).Distinct().ToListAsync());
+        foreach (var n in storeNames)
+        {
+            if (string.IsNullOrWhiteSpace(n)) continue;
+            knownStores.TryAdd(Fold(NormalizeStoreLabel(n)), n.Trim());
+        }
+
+        var parsed = ParseCrewTrainers(fileBytes, knownStores, _L["Msg_CrewTrainerNoIdColumn"].Value, _L["Msg_CrewTrainerNoStoreColumn"].Value);
+        if (parsed.Rows.Count == 0) throw new InvalidOperationException(_L["Msg_CrewTrainerNoRows"].Value);
+        foreach (var r in parsed.Rows) { r.Year = year; r.Month = month; }
+
+        await using var tx = await _db.Database.BeginTransactionAsync();
+        await _db.CrewTrainerEmployees.Where(c => c.Year == year && c.Month == month).ExecuteDeleteAsync();
+        await _db.UploadLogs.Where(l => l.FileType == "crew_trainers" && l.Year == year && l.Month == month).ExecuteDeleteAsync();
+        _db.CrewTrainerEmployees.AddRange(parsed.Rows);
+        _db.UploadLogs.Add(new UploadLog { FileType = "crew_trainers", FileName = file.FileName, Month = month, Year = year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
+        await _db.SaveChangesAsync();
+        await tx.CommitAsync();
+        WorkforcePlanningService.InvalidateCache();
+
+        // Check the list against that month's roster (by employee id): people missing from it are not
+        // counted in Workforce Planning, and a different job is worth a look. Skipped when the month has
+        // no roster yet — the list is counted as soon as it arrives.
+        var ids = parsed.Rows.Select(r => r.EmployeeId).ToList();
+        var rosterHasMonth = await _db.ActiveEmployees.AnyAsync(e => e.Year == year && e.Month == month);
+        var notInRoster = new List<string>();
+        int jobDiffers = 0;
+        if (rosterHasMonth)
+        {
+            var rosterJobs = (await _db.ActiveEmployees.AsNoTracking().Where(e => e.Year == year && e.Month == month && ids.Contains(e.EmployeeId))
+                .Select(e => new { e.EmployeeId, e.JobTitle }).ToListAsync())
+                .GroupBy(e => e.EmployeeId, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().JobTitle, StringComparer.OrdinalIgnoreCase);
+            foreach (var r in parsed.Rows)
+            {
+                if (!rosterJobs.TryGetValue(r.EmployeeId, out var rosterJob)) { notInRoster.Add(r.EmployeeId); continue; }
+                var sheetJob = Fold(CollapseSpaces(r.JobTitle));
+                if (sheetJob.Length > 0 && !sheetJob.Contains("trainer") && sheetJob != Fold(CollapseSpaces(rosterJob))) jobDiffers++;
+            }
+        }
+
+        var monthName = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames[month - 1];
+        var message = string.Format(_L["Msg_CrewTrainerProcessed"].Value, parsed.Rows.Count, monthName, year);
+        var warnings = new List<string>();
+        static string Cap(IEnumerable<string> items) { var l = items.ToList(); return string.Join(", ", l.Take(10)) + (l.Count > 10 ? $" (+{l.Count - 10})" : ""); }
+        if (parsed.Duplicates > 0) warnings.Add(string.Format(_L["Msg_CrewTrainerDuplicates"].Value, parsed.Duplicates));
+        if (parsed.MissingStore > 0) warnings.Add(string.Format(_L["Msg_CrewTrainerMissingStore"].Value, parsed.MissingStore));
+        if (parsed.UnknownStores.Count > 0) warnings.Add(string.Format(_L["Msg_JobProjUnknownStores"].Value, parsed.UnknownStores.Count, Cap(parsed.UnknownStores)));
+        if (!rosterHasMonth) warnings.Add(string.Format(_L["Msg_CrewTrainerNoRoster"].Value, monthName, year));
+        if (notInRoster.Count > 0) warnings.Add(string.Format(_L["Msg_CrewTrainerNotInRoster"].Value, notInRoster.Count, Cap(notInRoster)));
+        if (jobDiffers > 0) warnings.Add(string.Format(_L["Msg_CrewTrainerJobDiffers"].Value, jobDiffers));
+        return (true, message, parsed.Rows.Count, warnings.Count > 0 ? string.Join(" ", warnings) : null);
+    }
+
     public async Task<(List<UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize, string sort = "date", string dir = "desc", string? kind = null)
     {
         var logs = await _db.UploadLogs.OrderByDescending(l => l.UploadDate)
@@ -813,8 +935,27 @@ public class UploadService : IUploadService
             });
         }
 
-        // Optional per-tab filter: "period" | "exit_interviews" | "job_projections".
-        if (!string.IsNullOrEmpty(kind)) items = items.Where(i => i.Kind == kind).ToList();
+        foreach (var l in logs.Where(l => l.FileType == "crew_trainers"))
+        {
+            items.Add(new UploadHistoryItem
+            {
+                Kind = "crew_trainers",
+                Month = l.Month,
+                Year = l.Year,
+                UploadDate = l.UploadDate,
+                UploadedBy = l.UploadedBy,
+                PrimaryLogId = l.Id,
+                Files = new List<UploadFileRef> { new() { LogId = l.Id, FileType = l.FileType, FileName = l.FileName, HasFile = l.HasFile } },
+            });
+        }
+
+        // Optional per-tab filter: one kind or several, comma-separated
+        // ("period" | "exit_interviews" | "job_projections" | "crew_trainers").
+        if (!string.IsNullOrEmpty(kind))
+        {
+            var kinds = kind.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            items = items.Where(i => kinds.Contains(i.Kind)).ToList();
+        }
 
         bool asc = dir == "asc";
         IOrderedEnumerable<UploadHistoryItem> sorted = sort switch
@@ -965,6 +1106,17 @@ public class UploadService : IUploadService
             await _db.JobHeadcountProjections.Where(j => j.Year == log.Year).ExecuteDeleteAsync();
             await _db.UploadLogs.Where(l => l.FileType == "job_projections" && l.Year == log.Year).ExecuteDeleteAsync();
             await jtx.CommitAsync();
+            WorkforcePlanningService.InvalidateCache();
+            return;
+        }
+
+        if (log.FileType == "crew_trainers")
+        {
+            // A trainer list is one month's snapshot: removing its log removes that month's rows.
+            await using var ctx = await _db.Database.BeginTransactionAsync();
+            await _db.CrewTrainerEmployees.Where(c => c.Year == log.Year && c.Month == log.Month).ExecuteDeleteAsync();
+            await _db.UploadLogs.Where(l => l.FileType == "crew_trainers" && l.Year == log.Year && l.Month == log.Month).ExecuteDeleteAsync();
+            await ctx.CommitAsync();
             WorkforcePlanningService.InvalidateCache();
             return;
         }

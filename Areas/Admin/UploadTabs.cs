@@ -19,7 +19,7 @@ public static class UploadTabs
     public static string KindOf(string tab) => Normalize(tab) switch
     {
         Exit => "exit_interviews",
-        JobProjections => "job_projections",
+        JobProjections => "job_projections,crew_trainers", // both uploads live on this tab
         _ => "period",
     };
 }

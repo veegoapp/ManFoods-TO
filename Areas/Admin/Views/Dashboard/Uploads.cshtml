@@ -345,6 +345,48 @@
     </form>
 </div>
 
+<div class="chart-card mb-4">
+    <div class="chart-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <h6>@L["UL_CrewTrainers"]</h6>
+            <p>@L["UL_CrewTrainersSub"]</p>
+        </div>
+        <a href="/admin/dashboard/download-template?type=crew_trainers" class="dm-template-btn"><i class="bi bi-file-earmark-arrow-down"></i>@L["UL_CrewTrainersTemplate"]</a>
+    </div>
+    <div class="dm-requirement-banner">
+        <i class="bi bi-info-circle-fill"></i>
+        <span>@L["UL_CrewTrainersNote"]</span>
+    </div>
+    <form id="dmCrewTrainerForm" asp-area="Admin" asp-controller="Dashboard" asp-action="UploadCrewTrainers" method="post" enctype="multipart/form-data" data-change-label="@L["DM_ChangeFile"]">
+        @Html.AntiForgeryToken()
+        <div class="d-flex gap-2 mb-3 flex-wrap">
+            <div class="dm-select-wrap">
+                <select name="Year" class="dm-select" required>
+                    <option value="">@L["Common_Year"]</option>
+                    @for (int y = DateTime.Now.Year + 1; y >= 2022; y--) { <option value="@y">@y</option> }
+                </select>
+                <i class="bi bi-chevron-down"></i>
+            </div>
+            <div class="dm-select-wrap">
+                <select name="Month" class="dm-select" required>
+                    <option value="">@L["Common_Month"]</option>
+                    @for (int m = 1; m <= 12; m++) { <option value="@m">@System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(m)</option> }
+                </select>
+                <i class="bi bi-chevron-down"></i>
+            </div>
+        </div>
+        <div class="dm-dropzone-grid" style="grid-template-columns:1fr;max-width:360px">
+            <div class="dm-dropzone" id="dmZoneCrewTrainer" data-title="@L["UL_CrewTrainers"]">
+                <i class="bi bi-mortarboard-fill dm-dropzone-icon"></i>
+                <div class="dm-dropzone-title">@L["UL_CrewTrainers"]</div>
+                <div class="dm-dropzone-hint" data-role="hint">@L["DM_DropzoneHint"]</div>
+                <input type="file" name="File" accept=".xlsx,.xls" required>
+            </div>
+        </div>
+        <button type="submit" class="dm-btn-submit"><i class="bi bi-cloud-upload me-1"></i>@L["DM_UploadCrewTrainersButton"]</button>
+    </form>
+</div>
+
 </div>
 
 <div class="chart-card p-0" style="overflow:hidden">
@@ -375,9 +417,10 @@
                     {
                         var isPeriod = item.Kind == "period";
                         var isJobProj = item.Kind == "job_projections";
+                        var isTrainer = item.Kind == "crew_trainers";
                         <tr>
                             <td class="px-3 py-2">
-                                <span class="dm-history-badge @(isPeriod ? "period" : isJobProj ? "jobproj" : "exit")">@(isPeriod ? L["DM_MonthlyDataBadge"] : isJobProj ? L["DM_JobProjectionsBadge"] : L["DM_ExitInterviewsBadge"])</span>
+                                <span class="dm-history-badge @(isPeriod ? "period" : (isJobProj || isTrainer) ? "jobproj" : "exit")">@(isPeriod ? L["DM_MonthlyDataBadge"] : isJobProj ? L["DM_JobProjectionsBadge"] : isTrainer ? L["DM_CrewTrainersBadge"] : L["DM_ExitInterviewsBadge"])</span>
                             </td>
                             <td class="px-3 py-2">
                                 @foreach (var f in item.Files)
@@ -400,7 +443,7 @@
                                 }
                             </td>
                             <td class="px-3 py-2 text-muted-custom">
-                                @(isPeriod ? new DateTime(item.Year!.Value, item.Month!.Value, 1).ToString("MMMM yyyy") : isJobProj ? item.Year!.Value.ToString() : "—")
+                                @((isPeriod || isTrainer) ? new DateTime(item.Year!.Value, item.Month!.Value, 1).ToString("MMMM yyyy") : isJobProj ? item.Year!.Value.ToString() : "—")
                             </td>
                             <td class="px-3 py-2 text-muted-custom">@item.UploadedBy</td>
                             <td class="px-3 py-2 text-muted-custom small">@item.UploadDate.ToString("MMM dd, yyyy HH:mm")</td>
@@ -414,7 +457,7 @@
                                         </button>
                                     }
                                     <form asp-area="Admin" asp-controller="Dashboard" asp-action="DeleteUploadLog" method="post"
-                                          onsubmit="return confirm('@(isPeriod ? L["DM_DeleteConfirmPeriod"].Value : isJobProj ? L["DM_DeleteConfirmJobProj"].Value : L["DM_DeleteConfirmExit"].Value)')">
+                                          onsubmit="return confirm('@(isPeriod ? L["DM_DeleteConfirmPeriod"].Value : isJobProj ? L["DM_DeleteConfirmJobProj"].Value : isTrainer ? L["DM_DeleteConfirmCrewTrainers"].Value : L["DM_DeleteConfirmExit"].Value)')">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.PrimaryLogId"/>
                                         <input type="hidden" name="tab" value="@currentTab"/>
@@ -557,7 +600,7 @@ function dmSetupDropzone(zoneId) {
     });
 }
 
-['dmZone1', 'dmZone2', 'dmZone3', 'dmZoneExit', 'dmZoneJobProj'].forEach(dmSetupDropzone);
+['dmZone1', 'dmZone2', 'dmZone3', 'dmZoneExit', 'dmZoneJobProj', 'dmZoneCrewTrainer'].forEach(dmSetupDropzone);
 
 /* Month/year combos that already have data — re-uploading one deletes and
    replaces its rows (and the old Excel files themselves) with no other undo,
@@ -638,6 +681,7 @@ function dmLockSubmit(form, btn, busyLabel) {
 dmLockSubmit(document.getElementById('dmPeriodForm'), document.querySelector('#dmPeriodForm .dm-btn-submit'), '@L["DM_Uploading"]');
 dmLockSubmit(document.getElementById('dmExitForm'), document.querySelector('#dmExitForm .dm-btn-submit'), '@L["DM_Uploading"]');
 dmLockSubmit(document.getElementById('dmJobProjForm'), document.querySelector('#dmJobProjForm .dm-btn-submit'), '@L["DM_Uploading"]');
+dmLockSubmit(document.getElementById('dmCrewTrainerForm'), document.querySelector('#dmCrewTrainerForm .dm-btn-submit'), '@L["DM_Uploading"]');
 dmLockSubmit(document.getElementById('dmUpdateForm'), dmUpdateSubmitBtn, '@L["DM_Uploading"]');
 
 /* ── Background-jobs status panel ───────────────────── */

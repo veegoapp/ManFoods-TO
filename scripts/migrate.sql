@@ -574,6 +574,27 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_job_headcount_projecti
     CREATE UNIQUE INDEX ux_job_headcount_projections_period_store_job
         ON dbo.job_headcount_projections (year, month, store_name, job_title);
 
+-- ── crew_trainer_employees ───────────────────────────────────────────────
+-- Employees who get the Crew Trainer allowance, uploaded monthly. Their count per
+-- store is the actual Crew Trainer headcount in Workforce Planning. A re-upload
+-- replaces the whole month.
+IF OBJECT_ID('dbo.crew_trainer_employees', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.crew_trainer_employees (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        year INT NOT NULL DEFAULT 0,
+        month INT NOT NULL DEFAULT 0,
+        employee_id NVARCHAR(100) NOT NULL DEFAULT '',
+        name NVARCHAR(MAX) NOT NULL DEFAULT '',
+        job_title NVARCHAR(MAX) NOT NULL DEFAULT '',
+        store_name NVARCHAR(450) NOT NULL DEFAULT '',
+        created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+    );
+END
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_crew_trainer_employees_period_employee' AND object_id = OBJECT_ID('dbo.crew_trainer_employees'))
+    CREATE UNIQUE INDEX ux_crew_trainer_employees_period_employee
+        ON dbo.crew_trainer_employees (year, month, employee_id);
+
 -- ── page_access_config ────────────────────────────────────────────────────
 -- Admin-configurable per-area access. One row per access area (see
 -- Services/AccessAreas). is_restricted = 1 means restricted roles (OC/OM/Head
