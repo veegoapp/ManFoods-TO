@@ -70,6 +70,7 @@
                     <div id="notifList"></div>
                 </div>
             </div>
+            <partial name="_UserMenu" model="@(userRole == "Admin" ? "Admin" : "Home")" />
         </div>
     </header>
 
@@ -145,31 +146,6 @@
             }
         </nav>
 
-        <div class="admin-sidebar-user">
-            <div class="admin-sidebar-avatar">@initials</div>
-            <div class="admin-sidebar-user-details">
-                <div class="admin-sidebar-user-email">@userEmail</div>
-                <div class="admin-sidebar-user-role">@(string.IsNullOrEmpty(userRole) ? "" : L["Role_" + userRole.Replace("_", "")].Value)</div>
-            </div>
-            <button class="admin-sidebar-iconbtn theme-toggle" id="themeToggle" title="@L["Layout_DarkMode"] / @L["Layout_LightMode"]">
-                <i class="bi bi-moon-stars-fill icon-dark"></i>
-                <i class="bi bi-sun-fill icon-light"></i>
-            </button>
-            <form asp-area="@(userRole == "Admin" ? "Admin" : "Home")" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="admin-sidebar-iconbtn" title="@L["Layout_SignOut"]">
-                    <i class="bi bi-box-arrow-right"></i>
-                </button>
-            </form>
-            <form action="/language/set" method="post" class="d-inline">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="lang" value="@switchLang"/>
-                <input type="hidden" name="returnUrl" value="@returnUrl"/>
-                <button type="submit" class="admin-sidebar-iconbtn" title="@L["Layout_SwitchLang"]" style="font-size:11px;font-weight:700;letter-spacing:.5px">
-                    @L["Layout_SwitchLang"]
-                </button>
-            </form>
-        </div>
     </aside>
 
     <!-- ══ MAIN ═══════════════════════════════════════════ -->
