@@ -1996,14 +1996,6 @@
   <data name="HF_ChartLabel" xml:space="preserve"><value>Hires needed</value></data>
   <data name="HF_ViewBy" xml:space="preserve"><value>View by</value></data>
   <data name="HF_ByPayroll" xml:space="preserve"><value>Payroll group</value></data>
-  <data name="WP_RiskTitle" xml:space="preserve"><value>Staffing vs turnover</value></data>
-  <data name="WP_RiskSub" xml:space="preserve"><value>Each dot is a store: how full it is against how many people are leaving</value></data>
-  <data name="WP_RiskX" xml:space="preserve"><value>Fill % (actual ÷ projected)</value></data>
-  <data name="WP_RiskY" xml:space="preserve"><value>Turnover % (last 3 months)</value></data>
-  <data name="WP_RiskResign" xml:space="preserve"><value>Resignations (3 months)</value></data>
-  <data name="WP_RiskDanger" xml:space="preserve"><value>Short-staffed and above-average turnover</value></data>
-  <data name="WP_RiskNote" xml:space="preserve"><value>{0} store(s) are in the red zone: below 95% fill and above the average turnover of {1}%. Start with those.</value></data>
-  <data name="Guide_WP_Risk" xml:space="preserve"><value>One dot per store at the bottom of the page: across is how full the store is (actual ÷ projected), up is turnover over the last 3 months. Red dots are below 95% fill and above the average turnover of the stores shown — short-staffed and losing people, so they need attention first. Hover a dot for the store's figures. It needs an uploaded employee list for the month.</value></data>
   <data name="Guide_HF_KpisTitle" xml:space="preserve"><value>Summary cards</value></data>
   <data name="Guide_HF_Kpis" xml:space="preserve"><value>Hires needed in the year, the busiest month, the hires needed in the next 3 months (from this month on when you look at the current year), and the store with the most hires. The store card only shows when the table is viewed by store.</value></data>
   <data name="Guide_HF_Chart" xml:space="preserve"><value>Hires needed in each month. Dark bars are months that have an uploaded employee list; light bars are forecast. Hover a bar for the month and its number.</value></data>
