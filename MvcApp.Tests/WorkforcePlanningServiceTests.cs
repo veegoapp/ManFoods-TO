@@ -636,3 +636,56 @@ public class StoreHealthStaffingPillarTests
         Assert.Equal(100, pillar.SubScore);
     }
 }
+
+/// <summary>Reading the monthly Crew Trainer allowance list.</summary>
+public class CrewTrainerUploadParseTests
+{
+    private static byte[] Book(string[] headers, params string[][] rows)
+    {
+        using var wb = new ClosedXML.Excel.XLWorkbook();
+        var ws = wb.AddWorksheet("Sheet1");
+        for (int c = 0; c < headers.Length; c++) ws.Cell(1, c + 1).Value = headers[c];
+        for (int r = 0; r < rows.Length; r++)
+            for (int c = 0; c < rows[r].Length; c++) ws.Cell(r + 2, c + 1).Value = rows[r][c];
+        using var ms = new MemoryStream();
+        wb.SaveAs(ms);
+        return ms.ToArray();
+    }
+
+    private static readonly Dictionary<string, string> Known = new() { ["1480001 | merghany"] = "1480001 | Merghany" };
+
+    [Fact]
+    public void Reads_ByHeader_RespellsStore_AndCountsRepeatedIdOnce()
+    {
+        var bytes = Book(new[] { "Store", "Employee ID", "Name", "Job Title" },
+            new[] { "1480001|Merghany", "100", "Ali", "Crew" },
+            new[] { "1480001 | Merghany", "101", "Sara", "Crew" },
+            new[] { "1480001 | Merghany", "100", "Ali", "Crew" },   // repeated id
+            new[] { "9999 | Unknown", "102", "Omar", "Crew" },
+            new[] { "", "103", "Mona", "Crew" });                   // no store
+
+        var p = UploadService.ParseCrewTrainers(bytes, Known, "no id", "no store");
+
+        Assert.Equal(4, p.Rows.Count);
+        Assert.Equal(1, p.Duplicates);
+        Assert.Equal(1, p.MissingStore);
+        Assert.Equal(2, p.Rows.Count(r => r.StoreName == "1480001 | Merghany"));
+        Assert.Contains("9999 | Unknown", p.UnknownStores);
+    }
+
+    [Fact]
+    public void ArabicHeaders_AreRecognised()
+    {
+        var bytes = Book(new[] { "الرقم الوظيفي", "الاسم", "الوظيفة", "المطعم" }, new[] { "100", "Ali", "Crew", "1480001 | Merghany" });
+        var p = UploadService.ParseCrewTrainers(bytes, Known, "no id", "no store");
+        Assert.Equal("100", Assert.Single(p.Rows).EmployeeId);
+    }
+
+    [Fact]
+    public void MissingEmployeeIdColumn_IsRejected()
+    {
+        var bytes = Book(new[] { "Name", "Store" }, new[] { "Ali", "1480001 | Merghany" });
+        var ex = Assert.Throws<InvalidOperationException>(() => UploadService.ParseCrewTrainers(bytes, Known, "no id", "no store"));
+        Assert.Equal("no id", ex.Message);
+    }
+}

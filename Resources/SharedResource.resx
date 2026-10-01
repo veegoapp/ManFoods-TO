@@ -1855,7 +1855,7 @@
   <data name="Msg_JobProjUploadFailed" xml:space="preserve"><value>Job projection upload failed: {0}</value></data>
   <data name="DM_TabMonthly" xml:space="preserve"><value>Monthly Workforce Data</value></data>
   <data name="DM_TabExit" xml:space="preserve"><value>Exit Interviews</value></data>
-  <data name="DM_TabJobProj" xml:space="preserve"><value>Job Projection</value></data>
+  <data name="DM_TabJobProj" xml:space="preserve"><value>Workforce Planning</value></data>
   <data name="Nav_WorkforcePlanning" xml:space="preserve"><value>Workforce Planning</value></data>
   <data name="Page_WorkforcePlanning" xml:space="preserve"><value>Workforce Planning</value></data>
   <data name="Page_WorkforcePlanningSub" xml:space="preserve"><value>Projected headcount against who actually works for you, by job and store</value></data>
@@ -2007,4 +2007,19 @@
   <data name="Guide_HF_KpisTitle" xml:space="preserve"><value>Summary cards</value></data>
   <data name="Guide_HF_Kpis" xml:space="preserve"><value>Hires needed in the year, the busiest month, the hires needed in the next 3 months (from this month on when you look at the current year), and the store with the most hires. The store card only shows when the table is viewed by store.</value></data>
   <data name="Guide_HF_Chart" xml:space="preserve"><value>Hires needed in each month. Dark bars are months that have an uploaded employee list; light bars are forecast. Hover a bar for the month and its number.</value></data>
+  <data name="UL_CrewTrainers" xml:space="preserve"><value>Crew Trainers (monthly)</value></data>
+  <data name="UL_CrewTrainersSub" xml:space="preserve"><value>Employees who receive the Crew Trainer allowance in a month</value></data>
+  <data name="UL_CrewTrainersTemplate" xml:space="preserve"><value>Download template</value></data>
+  <data name="UL_CrewTrainersNote" xml:space="preserve"><value>One file per month with the columns Employee ID, Name, Job Title and Store (the full store name, as everywhere in the portal). Each store's number of employees in the list is its actual Crew Trainer headcount in Workforce Planning. Uploading again for the same month replaces it.</value></data>
+  <data name="DM_UploadCrewTrainersButton" xml:space="preserve"><value>Upload Crew Trainers</value></data>
+  <data name="DM_CrewTrainersBadge" xml:space="preserve"><value>Crew Trainers</value></data>
+  <data name="DM_DeleteConfirmCrewTrainers" xml:space="preserve"><value>Delete this Crew Trainers upload? The list for that month will be removed.</value></data>
+  <data name="Msg_CrewTrainerInvalidMonth" xml:space="preserve"><value>Please choose a valid month.</value></data>
+  <data name="Msg_CrewTrainerNoIdColumn" xml:space="preserve"><value>The file needs an Employee ID column in the first row.</value></data>
+  <data name="Msg_CrewTrainerNoStoreColumn" xml:space="preserve"><value>The file needs a Store column in the first row.</value></data>
+  <data name="Msg_CrewTrainerNoRows" xml:space="preserve"><value>No employees were found in the file.</value></data>
+  <data name="Msg_CrewTrainerProcessed" xml:space="preserve"><value>Processed {0} Crew Trainer(s) for {1} {2}.</value></data>
+  <data name="Msg_CrewTrainerDuplicates" xml:space="preserve"><value>{0} repeated employee ID(s) were counted once.</value></data>
+  <data name="Msg_CrewTrainerMissingStore" xml:space="preserve"><value>{0} employee(s) have no store and are not counted in any store.</value></data>
+  <data name="Msg_CrewTrainerUploadFailed" xml:space="preserve"><value>Crew Trainers upload failed: {0}</value></data>
 </root>

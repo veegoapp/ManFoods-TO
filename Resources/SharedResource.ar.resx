@@ -1861,7 +1861,7 @@
   <data name="Msg_JobProjUploadFailed" xml:space="preserve"><value>فشل رفع توقّعات الوظائف: {0}</value></data>
   <data name="DM_TabMonthly" xml:space="preserve"><value>بيانات القوى العاملة الشهرية</value></data>
   <data name="DM_TabExit" xml:space="preserve"><value>مقابلات الخروج</value></data>
-  <data name="DM_TabJobProj" xml:space="preserve"><value>توقّعات الوظائف</value></data>
+  <data name="DM_TabJobProj" xml:space="preserve"><value>تخطيط القوى العاملة</value></data>
   <data name="Nav_WorkforcePlanning" xml:space="preserve"><value>تخطيط القوى العاملة</value></data>
   <data name="Page_WorkforcePlanning" xml:space="preserve"><value>تخطيط القوى العاملة</value></data>
   <data name="Page_WorkforcePlanningSub" xml:space="preserve"><value>العدد المتوقّع مقابل اللي شغّال فعلًا، حسب الوظيفة والفرع</value></data>
@@ -2013,4 +2013,19 @@
   <data name="Guide_HF_KpisTitle" xml:space="preserve"><value>كروت الملخص</value></data>
   <data name="Guide_HF_Kpis" xml:space="preserve"><value>إجمالي التعيينات المطلوبة في السنة، وأكثر شهر ضغطًا، والتعيينات المطلوبة في الأشهر الثلاثة القادمة (من الشهر الحالي عند عرض السنة الحالية)، والفرع الأكثر تعيينًا. يظهر كارت الفرع فقط عند عرض الجدول حسب الفرع.</value></data>
   <data name="Guide_HF_Chart" xml:space="preserve"><value>التعيينات المطلوبة في كل شهر. الأعمدة الداكنة أشهر لها قائمة موظفين مرفوعة، والفاتحة تقدير. مرّر على العمود لترى الشهر ورقمه.</value></data>
+  <data name="UL_CrewTrainers" xml:space="preserve"><value>مدربو الطاقم (شهري)</value></data>
+  <data name="UL_CrewTrainersSub" xml:space="preserve"><value>الموظفون الذين يحصلون على بدل مدرب الطاقم في الشهر</value></data>
+  <data name="UL_CrewTrainersTemplate" xml:space="preserve"><value>تحميل النموذج</value></data>
+  <data name="UL_CrewTrainersNote" xml:space="preserve"><value>ملف واحد لكل شهر بالأعمدة: Employee ID و Name و Job Title و Store (اسم الفرع كاملًا كما في باقي البوابة). عدد موظفي كل فرع في القائمة هو العدد الفعلي لمدربي الطاقم (Crew Trainer) في تخطيط القوى العاملة. الرفع مرة أخرى لنفس الشهر يستبدله.</value></data>
+  <data name="DM_UploadCrewTrainersButton" xml:space="preserve"><value>رفع مدربي الطاقم</value></data>
+  <data name="DM_CrewTrainersBadge" xml:space="preserve"><value>مدربو الطاقم</value></data>
+  <data name="DM_DeleteConfirmCrewTrainers" xml:space="preserve"><value>حذف رفع مدربي الطاقم هذا؟ ستُحذف قائمة ذلك الشهر.</value></data>
+  <data name="Msg_CrewTrainerInvalidMonth" xml:space="preserve"><value>اختر شهرًا صحيحًا.</value></data>
+  <data name="Msg_CrewTrainerNoIdColumn" xml:space="preserve"><value>يجب أن يحتوي الملف على عمود Employee ID في الصف الأول.</value></data>
+  <data name="Msg_CrewTrainerNoStoreColumn" xml:space="preserve"><value>يجب أن يحتوي الملف على عمود Store في الصف الأول.</value></data>
+  <data name="Msg_CrewTrainerNoRows" xml:space="preserve"><value>لم يتم العثور على موظفين في الملف.</value></data>
+  <data name="Msg_CrewTrainerProcessed" xml:space="preserve"><value>تمت معالجة {0} من مدربي الطاقم لشهر {1} {2}.</value></data>
+  <data name="Msg_CrewTrainerDuplicates" xml:space="preserve"><value>تم احتساب {0} رقم وظيفي مكرر مرة واحدة.</value></data>
+  <data name="Msg_CrewTrainerMissingStore" xml:space="preserve"><value>{0} موظف بدون فرع ولم يُحتسبوا في أي فرع.</value></data>
+  <data name="Msg_CrewTrainerUploadFailed" xml:space="preserve"><value>فشل رفع مدربي الطاقم: {0}</value></data>
 </root>

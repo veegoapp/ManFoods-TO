@@ -316,6 +316,23 @@ public class DashboardController : Controller
         }
     }
 
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
+    public async Task<IActionResult> UploadCrewTrainers(MvcApp.Models.ViewModels.CrewTrainerUploadViewModel vm)
+    {
+        if (!ModelState.IsValid || vm.File == null) return RedirectToUploads(error: _L["Msg_SelectFile"].Value, tab: UploadTabs.JobProjections);
+        try
+        {
+            var email = HttpContext.Session.GetEmail();
+            var (_, msg, _, warning) = await _uploads.UploadCrewTrainersAsync(vm.File, vm.Year, vm.Month, email);
+            return RedirectToUploads(success: msg, warning: warning, tab: UploadTabs.JobProjections);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Crew trainer upload failed for {Year}-{Month}", vm.Year, vm.Month);
+            return RedirectToUploads(error: string.Format(_L["Msg_CrewTrainerUploadFailed"].Value, ex.Message), tab: UploadTabs.JobProjections);
+        }
+    }
+
     [HttpGet("admin/dashboard/download-template")]
     [RequireAdminAuth]
     public IActionResult DownloadTemplate([FromQuery] string type)
@@ -523,6 +540,20 @@ public class DashboardController : Controller
                 }
                 ws.Columns().AdjustToContents();
             }
+        }
+        else if (type == "crew_trainers")
+        {
+            fileName = "Template_Crew_Trainers.xlsx";
+            var ws = wb.AddWorksheet("Crew Trainers");
+            string[] heads = { "Employee ID", "Name", "Job Title", "Store" };
+            for (int i = 0; i < heads.Length; i++) ws.Cell(1, i + 1).Value = heads[i];
+            var header = ws.Range(1, 1, 1, heads.Length);
+            header.Style.Font.Bold = true;
+            header.Style.Fill.BackgroundColor = XLColor.FromHtml("#C8102E");
+            header.Style.Font.FontColor = XLColor.White;
+            header.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(2, 1).Value = "100234"; ws.Cell(2, 2).Value = "Ahmed Ali"; ws.Cell(2, 3).Value = "Crew"; ws.Cell(2, 4).Value = "1480001 | Merghany";
+            ws.Columns().AdjustToContents();
         }
         else
         {
