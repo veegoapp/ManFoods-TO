@@ -2160,4 +2160,11 @@
   <data name="CT_In_Over_D" xml:space="preserve"><value>Most above: {0}.</value></data>
   <data name="CT_In_PlanVsRule_T" xml:space="preserve"><value>The projection plans {0} trainers than the rule asks for</value></data>
   <data name="CT_In_PlanVsRule_D" xml:space="preserve"><value>The projection has {0} trainers; the rule asks for {1} ({2} difference).</value></data>
+  <data name="Set_Tab_Pages" xml:space="preserve"><value>Pages</value></data>
+  <data name="Set_Pages_Sub" xml:space="preserve"><value>Choose which pages the User interface shows. A hidden page disappears from the sidebar and cannot be opened (users are sent to the first page that is still visible). The Admin interface is not affected. At least one page must stay visible.</value></data>
+  <data name="Set_Pages_Visible" xml:space="preserve"><value>Visible</value></data>
+  <data name="Set_Pages_Hidden" xml:space="preserve"><value>Hidden</value></data>
+  <data name="Api_NoPageSettings" xml:space="preserve"><value>No page settings were sent.</value></data>
+  <data name="Api_NoPagesVisible" xml:space="preserve"><value>At least one page must stay visible.</value></data>
+  <data name="Msg_PageHidden" xml:space="preserve"><value>That page is not available. You were taken to another page.</value></data>
 </root>

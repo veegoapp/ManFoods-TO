@@ -2166,4 +2166,11 @@
   <data name="CT_In_Over_D" xml:space="preserve"><value>الأكثر زيادة: {0}.</value></data>
   <data name="CT_In_PlanVsRule_T" xml:space="preserve"><value>التوقّع يخطط لمدربين {0} مما تطلبه القاعدة</value></data>
   <data name="CT_In_PlanVsRule_D" xml:space="preserve"><value>في التوقّع {0} مدرب؛ والقاعدة تطلب {1} (فرق {2}).</value></data>
+  <data name="Set_Tab_Pages" xml:space="preserve"><value>الصفحات</value></data>
+  <data name="Set_Pages_Sub" xml:space="preserve"><value>اختر الصفحات التي تظهر في واجهة المستخدم. الصفحة المخفية تختفي من القائمة الجانبية ولا يمكن فتحها (يُحوَّل المستخدم إلى أول صفحة ظاهرة). واجهة الأدمن لا تتأثر. يجب أن تبقى صفحة واحدة على الأقل ظاهرة.</value></data>
+  <data name="Set_Pages_Visible" xml:space="preserve"><value>ظاهرة</value></data>
+  <data name="Set_Pages_Hidden" xml:space="preserve"><value>مخفية</value></data>
+  <data name="Api_NoPageSettings" xml:space="preserve"><value>لم يتم إرسال إعدادات الصفحات.</value></data>
+  <data name="Api_NoPagesVisible" xml:space="preserve"><value>يجب أن تبقى صفحة واحدة على الأقل ظاهرة.</value></data>
+  <data name="Msg_PageHidden" xml:space="preserve"><value>هذه الصفحة غير متاحة. تم تحويلك إلى صفحة أخرى.</value></data>
 </root>

@@ -8,22 +8,30 @@ namespace MvcApp.Areas.Home.Controllers;
 
 [Area("Home")]
 [RequireUserAuth]
+[ServiceFilter(typeof(MvcApp.Filters.UserPageVisibilityFilter))] // pages an Admin hid in Settings → Pages do not open
 public class DashboardController : Controller
 {
     private readonly IDashboardService _dashboard;
     private readonly IStoreService _stores;
     private readonly IReportService _reports;
     private readonly IWorkforcePlanningService _planning;
+    private readonly IPageVisibilityService _visibility;
 
-    public DashboardController(IDashboardService dashboard, IStoreService stores, IReportService reports, IWorkforcePlanningService planning)
+    public DashboardController(IDashboardService dashboard, IStoreService stores, IReportService reports, IWorkforcePlanningService planning, IPageVisibilityService visibility)
     {
+        _visibility = visibility;
         _dashboard = dashboard;
         _stores = stores;
         _reports = reports;
         _planning = planning;
     }
 
-    public IActionResult Index() => RedirectToAction("Workforce");
+    // Users land on the first page that is not hidden.
+    public async Task<IActionResult> Index()
+    {
+        var first = UserPages.FirstVisible(await _visibility.GetHiddenAsync()) ?? UserPages.All[0];
+        return RedirectToAction(first.Action);
+    }
 
     public IActionResult Turnover() => View();
 

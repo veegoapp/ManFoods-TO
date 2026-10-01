@@ -1,6 +1,7 @@
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpCtx
 @inject Microsoft.Extensions.Localization.IStringLocalizer<MvcApp.Resources.SharedResource> L
 @inject MvcApp.Services.IDataFreshnessService DataFreshness
+@inject MvcApp.Services.IPageVisibilityService PageVis
 @{
     var session = HttpCtx.HttpContext?.Session;
     var userEmail    = session?.GetString("Email") ?? "";
@@ -16,6 +17,7 @@
     bool IsActive(string seg) => currentPath.Contains(seg, StringComparison.OrdinalIgnoreCase);
 
     string RoleLabel(string r) => string.IsNullOrEmpty(r) ? "" : L["Role_" + r.Replace("_", "")].Value;
+    var hiddenPages = await PageVis.GetHiddenAsync(); // pages an Admin hid in Settings → Pages
     var latestDataPeriod = await DataFreshness.GetLatestDataPeriodAsync();
     var latestDataPeriodLabel = latestDataPeriod is null
         ? ""
@@ -76,73 +78,108 @@
         <!-- Navigation -->
         <nav class="sidebar-nav" style="flex:1; padding: 8px 0; overflow-y:auto;">
             <div class="nav-section-label">@L["Nav_MyWorkspace"]</div>
+            @if (!hiddenPages.Contains("workforce"))
+            {
             <a href="/home/dashboard/workforce" class="nav-item @(IsActive("Workforce") && !IsActive("WorkforcePlanning") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-people-fill"></i></span>
                     <span class="nav-item-label">@L["Nav_Workforce"]</span>
                 </span>
             </a>
+            }
+            @if (!hiddenPages.Contains("workforceplanning"))
+            {
             <a href="/home/dashboard/workforceplanning" class="nav-item @(IsActive("WorkforcePlanning") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-diagram-3-fill"></i></span>
                     <span class="nav-item-label">@L["Nav_WorkforcePlanning"]</span>
                 </span>
             </a>
+            }
+            @if (!hiddenPages.Contains("hiringforecast"))
+            {
             <a href="/home/dashboard/hiringforecast" class="nav-item @(IsActive("HiringForecast") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-person-plus-fill"></i></span>
                     <span class="nav-item-label">@L["Nav_HiringForecast"]</span>
                 </span>
             </a>
+            }
+            @if (!hiddenPages.Contains("crewtrainers"))
+            {
             <a href="/home/dashboard/crewtrainers" class="nav-item @(IsActive("CrewTrainers") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-mortarboard-fill"></i></span>
                     <span class="nav-item-label">@L["Nav_CrewTrainers"]</span>
                 </span>
             </a>
+            }
+            @if (!hiddenPages.Contains("turnover"))
+            {
             <a href="/home/dashboard/turnover" class="nav-item @(IsActive("Turnover") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-pie-chart-fill"></i></span>
                     <span class="nav-item-label">@L["Nav_Turnover"]</span>
                 </span>
             </a>
+            }
+            @if (!hiddenPages.Contains("ninetyday"))
+            {
             <a href="/home/dashboard/ninetydayturnover" class="nav-item @(IsActive("NinetyDayTurnover") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-hourglass-split"></i></span>
                     <span class="nav-item-label">@L["Nav_NinetyDay"]</span>
                 </span>
             </a>
+            }
+            @if (!hiddenPages.Contains("comparisons"))
+            {
             <a href="/home/dashboard/comparisons" class="nav-item @(IsActive("Comparisons") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-arrow-left-right"></i></span>
                     <span class="nav-item-label">@L["Nav_Comparisons"]</span>
                 </span>
             </a>
+            }
+            @if (!hiddenPages.Contains("retention"))
+            {
             <a href="/home/dashboard/retention" class="nav-item @(IsActive("Retention") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-graph-up-arrow"></i></span>
                     <span class="nav-item-label">@L["Nav_Retention"]</span>
                 </span>
             </a>
+            }
+            @if (!hiddenPages.Contains("exitinterviews"))
+            {
             <a href="/home/dashboard/exitinterviews" class="nav-item @(IsActive("ExitInterviews") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-chat-square-text-fill"></i></span>
                     <span class="nav-item-label">@L["Nav_ExitInterviews"]</span>
                 </span>
             </a>
+            }
+            @if (!hiddenPages.Contains("earlywarning"))
+            {
             <a href="/home/dashboard/earlywarning" class="nav-item @(IsActive("EarlyWarning") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-exclamation-diamond-fill"></i></span>
                     <span class="nav-item-label">@L["Nav_EarlyWarning"]</span>
                 </span>
             </a>
+            }
+            @if (!hiddenPages.Contains("scorecard"))
+            {
             <a href="/home/dashboard/scorecard" class="nav-item @(IsActive("Scorecard") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-award-fill"></i></span>
                     <span class="nav-item-label">@L["Nav_Scorecard"]</span>
                 </span>
             </a>
-            @{ var acSectionActive = IsActive("ActionCenter") || IsActive("ActionCenterDetail") || IsActive("ActionPlanGuide"); }
+            }
+            @if (!hiddenPages.Contains("actioncenter"))
+            {
+                var acSectionActive = IsActive("ActionCenter") || IsActive("ActionCenterDetail") || IsActive("ActionPlanGuide");
             <a href="/home/dashboard/actioncenter" class="nav-item @(acSectionActive ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-bullseye"></i></span>
@@ -157,18 +194,25 @@
                     </a>
                 </div>
             }
+            }
+            @if (!hiddenPages.Contains("stores"))
+            {
             <a href="/home/dashboard/stores" class="nav-item @(IsActive("Stores") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-shop"></i></span>
                     <span class="nav-item-label">@L["Nav_Stores"]</span>
                 </span>
             </a>
+            }
+            @if (!hiddenPages.Contains("reports"))
+            {
             <a href="/home/dashboard/reports" class="nav-item @(IsActive("Reports") ? "active" : "")">
                 <span class="nav-item-inner">
                     <span class="nav-icon-wrap"><i class="bi bi-file-earmark-bar-graph-fill"></i></span>
                     <span class="nav-item-label">@L["Nav_Reports"]</span>
                 </span>
             </a>
+            }
         </nav>
 
         <!-- Footer -->
