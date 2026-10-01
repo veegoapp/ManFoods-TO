@@ -47,6 +47,7 @@
 .ct-pill.grey { background:var(--bg-2); color:var(--text-3); }
 .ct-gap-short { color:oklch(0.55 0.2 22); }
 .ct-gap-over { color:oklch(0.45 0.15 250); }
+.ct-pill.blue { background:oklch(0.55 0.15 250 / .14); color:oklch(0.42 0.15 250); }
 .ct-pill.green { background:oklch(0.62 0.15 155 / .14); color:oklch(0.45 0.15 155); }
 .ct-legend { font-size:12px; color:var(--text-3); }
 </style>
@@ -137,7 +138,7 @@
 
 <div id="ctL" hidden
      data-all-oc="@L["Common_AllOperationConsultants"]" data-all-om="@L["Common_AllOperationManagers"]" data-all-soc="@L["WP_AllSoc"]" data-all-od="@L["WP_AllOd"]" data-all-stores="@L["WP_AllStores"]"
-     data-col-stores="@L["Common_Stores"]" data-col-fill="@L["WP_ColFill"]" data-col-status="@L["WP_ColStatus"]" data-st-enough="@L["CT_StEnough"]" data-st-short="@L["CT_StShort"]" data-st-none="@L["CT_StNone"]" data-st-noplan="@L["CT_StNoPlan"]" data-total="@L["HF_Total"]"
+     data-col-stores="@L["Common_Stores"]" data-col-fill="@L["WP_ColFill"]" data-col-status="@L["WP_ColStatus"]" data-st-over="@L["CT_StOver"]" data-st-enough="@L["CT_StEnough"]" data-st-short="@L["CT_StShort"]" data-st-none="@L["CT_StNone"]" data-st-noplan="@L["CT_StNoPlan"]" data-total="@L["HF_Total"]"
      data-store="@L["WP_ColStore"]" data-oc="@L["Common_OperationConsultant"]" data-projected="@L["WP_ColProjected"]" data-actual="@L["WP_ColActual"]" data-gap="@L["WP_ColGap"]"
      data-new-hires="@L["CT_ColNewHires"]" data-per="@L["CT_ColPerTrainer"]" data-no-trainer="@L["CT_NoTrainer"]" data-no-rows="@L["Common_NoData"]"
      data-k-trainers="@L["CT_KTrainers"]" data-k-trainers-d="@L["CT_KTrainersDesc"]" data-k-hires="@L["CT_KHires"]" data-k-hires-d="@L["CT_KHiresDesc"]"
@@ -158,10 +159,15 @@ const ctSort = { key: 'perTrainer', dir: 'desc' };
 let ctData, ctChart;
 const ctMonthName = (m, s) => new Date(2000, m - 1, 1).toLocaleString('default', { month: s || 'long' });
 // Staffing status of a store's trainers against its plan.
-const ctStatus = r => r.projected <= 0 ? 'noplan' : r.actual <= 0 ? 'none' : r.actual >= r.projected ? 'enough' : 'short';
-const CT_ST_ORDER = { enough: 0, short: 1, none: 2, noplan: 3 };
-const CT_ST_PILL = { enough: 'green', short: 'amber', none: 'red', noplan: 'grey' };
-const ctStLabel = st => ({ enough: ctL.stEnough, short: ctL.stShort, none: ctL.stNone, noplan: ctL.stNoplan }[st]);
+// Over = more trainers than planned (including trainers where none were planned); Enough = exactly the plan;
+// None planned = no trainers planned and none present.
+const ctStatus = r => r.actual > r.projected ? 'over'
+    : r.projected <= 0 ? 'noplan'
+    : r.actual <= 0 ? 'none'
+    : r.actual === r.projected ? 'enough' : 'short';
+const CT_ST_ORDER = { over: 0, enough: 1, short: 2, none: 3, noplan: 4 };
+const CT_ST_PILL = { over: 'blue', enough: 'green', short: 'amber', none: 'red', noplan: 'grey' };
+const ctStLabel = st => ({ over: ctL.stOver, enough: ctL.stEnough, short: ctL.stShort, none: ctL.stNone, noplan: ctL.stNoplan }[st]);
 const ctGapText = g => (g > 0 ? '+' : '') + g;
 const ctGapClass = g => g < 0 ? 'ct-gap-short' : g > 0 ? 'ct-gap-over' : '';
 

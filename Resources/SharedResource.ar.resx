@@ -2065,8 +2065,8 @@
   <data name="CT_StEnough" xml:space="preserve"><value>مدربون كافون</value></data>
   <data name="CT_StShort" xml:space="preserve"><value>نقص في المدربين</value></data>
   <data name="CT_StNone" xml:space="preserve"><value>بلا مدربين</value></data>
-  <data name="CT_StNoPlan" xml:space="preserve"><value>بلا خطة</value></data>
-  <data name="Guide_CT_Cmp" xml:space="preserve"><value>يجمّع الفروع حسب عدد مدربيها مقابل توقّع مدربي الطاقم: كافٍ (الفعلي لا يقل عن المتوقع)، ناقص (لديه مدربون لكن أقل من المخطط)، بلا مدربين (مخطط لكن لا يوجد أحد)، وبلا خطة (لديه مدربون بلا توقّع). تعرض كل مجموعة فروعها والمتوقع والفعلي والفجوة ونسبة التغطية، ويستخدم عمود الحالة في جدول الفروع أدناه المجموعات نفسها.</value></data>
+  <data name="CT_StNoPlan" xml:space="preserve"><value>غير مخطط</value></data>
+  <data name="Guide_CT_Cmp" xml:space="preserve"><value>يجمّع الفروع حسب عدد مدربيها مقابل توقّع مدربي الطاقم: زيادة (مدربون أكثر من المخطط)، كافٍ (بالضبط المخطط)، ناقص (لديه مدربون لكن أقل من المخطط)، بلا مدربين (مخطط لكن لا يوجد أحد)، وغير مخطط (لا مدربين مخططين ولا موجودين). تعرض كل مجموعة فروعها والمتوقع والفعلي والفجوة ونسبة التغطية، ويستخدم عمود الحالة في جدول الفروع أدناه المجموعات نفسها.</value></data>
   <data name="UL_JobGroups" xml:space="preserve"><value>مجموعات رواتب الوظائف</value></data>
   <data name="UL_JobGroupsSub" xml:space="preserve"><value>مجموعة الرواتب لكل مسمى وظيفي — المرجع لمجموعات الرواتب في تخطيط القوى العاملة</value></data>
   <data name="UL_JobGroupsTemplate" xml:space="preserve"><value>تحميل القائمة الحالية</value></data>
@@ -2126,4 +2126,5 @@
   <data name="HF_KpiStoreMonthDesc" xml:space="preserve"><value>الأعلى في ذلك الشهر</value></data>
   <data name="HF_In_Month_T" xml:space="preserve"><value>التعيينات في {0}</value></data>
   <data name="HF_In_Month_D" xml:space="preserve"><value>يحتاج {0} إلى {1} تعيين، أي {2}% من السنة ({4}). والمتوسط الشهري {3}.</value></data>
+  <data name="CT_StOver" xml:space="preserve"><value>زيادة</value></data>
 </root>

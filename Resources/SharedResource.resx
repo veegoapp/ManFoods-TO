@@ -2059,8 +2059,8 @@
   <data name="CT_StEnough" xml:space="preserve"><value>Enough trainers</value></data>
   <data name="CT_StShort" xml:space="preserve"><value>Short of trainers</value></data>
   <data name="CT_StNone" xml:space="preserve"><value>No trainers</value></data>
-  <data name="CT_StNoPlan" xml:space="preserve"><value>No plan</value></data>
-  <data name="Guide_CT_Cmp" xml:space="preserve"><value>Groups the stores by how many trainers they have against the Crew Trainer projection: Enough (actual is at least the projection), Short (some trainers but fewer than planned), No trainers (planned but none), and No plan (trainers but no projection). Each group shows its stores, projected, actual, gap and fill rate; the Status column in the stores table below uses the same groups.</value></data>
+  <data name="CT_StNoPlan" xml:space="preserve"><value>None planned</value></data>
+  <data name="Guide_CT_Cmp" xml:space="preserve"><value>Groups the stores by how many trainers they have against the Crew Trainer projection: Over (more trainers than planned), Enough (exactly the plan), Short (some trainers but fewer than planned), No trainers (planned but none) and None planned (no trainers planned and none present). Each group shows its stores, projected, actual, gap and fill rate; the Status column in the stores table below uses the same groups.</value></data>
   <data name="UL_JobGroups" xml:space="preserve"><value>Job Payroll Groups</value></data>
   <data name="UL_JobGroupsSub" xml:space="preserve"><value>The payroll group of each job title — the reference for payroll groups in Workforce Planning</value></data>
   <data name="UL_JobGroupsTemplate" xml:space="preserve"><value>Download current list</value></data>
@@ -2120,4 +2120,5 @@
   <data name="HF_KpiStoreMonthDesc" xml:space="preserve"><value>Highest in that month</value></data>
   <data name="HF_In_Month_T" xml:space="preserve"><value>Hires in {0}</value></data>
   <data name="HF_In_Month_D" xml:space="preserve"><value>{0} needs {1} hires, {2}% of the year ({4}). The monthly average is {3}.</value></data>
+  <data name="CT_StOver" xml:space="preserve"><value>Over</value></data>
 </root>
