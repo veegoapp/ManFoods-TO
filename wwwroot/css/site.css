@@ -1320,3 +1320,43 @@ html[dir="rtl"] .page-guide-orb {
 .job-filter-option:hover { background: var(--bg-2); color: var(--text); }
 .job-filter-option input { accent-color: var(--red); }
 .job-filter-empty { padding: 10px; color: var(--text-3); font-size: 12px; }
+
+/* ══ HEADER USER MENU (avatar + dropdown) ═════════════ */
+.user-menu { position: relative; display: inline-flex; }
+.user-menu-btn {
+    width: 36px; height: 36px; border-radius: 50%; border: 0; cursor: pointer;
+    background: var(--red); color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .3px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .15s, box-shadow .15s;
+}
+.user-menu-btn:hover, .user-menu-btn[aria-expanded="true"] { box-shadow: 0 0 0 3px rgba(218,41,28,.25); }
+.user-menu-panel {
+    position: absolute; top: calc(100% + 8px); inset-inline-end: 0; direction: ltr;
+    min-width: 190px; padding: 6px; z-index: 2000;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm); box-shadow: var(--shadow-md, 0 8px 24px rgba(0,0,0,.2));
+}
+html[dir="rtl"] .user-menu-panel { direction: rtl; }
+.user-menu-panel[hidden] { display: none; }
+.user-menu-panel form { margin: 0; }
+.user-menu-item {
+    width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    background: none; border: 0; border-radius: 8px; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: var(--text); text-align: start;
+}
+.user-menu-item:hover { background: var(--bg-2, rgba(128,128,128,.12)); }
+.user-menu-item i { font-size: 15px; color: var(--text-3); }
+.user-menu-signout, .user-menu-signout i { color: var(--danger, #DA291C); }
+/* dark mode is the default; light shows the sun */
+.user-menu-item .icon-light { display: none; }
+[data-theme="light"] .user-menu-item .icon-dark  { display: none; }
+[data-theme="light"] .user-menu-item .icon-light { display: inline-block; }
+
+/* Home: slim top bar holding the bell + avatar (replaces the sidebar user card) */
+.home-topbar {
+    display: flex; align-items: center; justify-content: flex-end; gap: 14px;
+    direction: ltr; padding: 12px 32px 0;
+}
+html[dir="rtl"] .home-topbar { justify-content: flex-start; }
+.home-topbar .notif-badge { right: -3px; left: auto; }
+@media (max-width: 760px) { .home-topbar { padding: 10px 14px 0; } }

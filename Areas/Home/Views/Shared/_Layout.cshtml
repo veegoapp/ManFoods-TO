@@ -55,26 +55,6 @@
             </div>
         </div>
 
-        <!-- User card -->
-        <div class="home-user-hero">
-            <div class="notif-wrap home-notif-wrap" id="notifWrap">
-                <button type="button" class="notif-btn home-notif-btn" id="notifBtn" title="@L["Notif_Title"]" data-empty-text="@L["Notif_Empty"]">
-                    <i class="bi bi-bell-fill"></i>
-                    <span class="notif-badge" id="notifBadge" hidden>0</span>
-                </button>
-                <div class="notif-panel" id="notifPanel" hidden>
-                    <div class="notif-panel-header">
-                        <span>@L["Notif_Title"]</span>
-                        <button type="button" class="notif-clear-btn" id="notifClearBtn" hidden>@L["Notif_ClearAll"]</button>
-                    </div>
-                    <div id="notifList"></div>
-                </div>
-            </div>
-            <div class="hero-avatar">@initials</div>
-            <div class="hero-name">@displayName</div>
-            <div class="hero-role">@RoleLabel(userRole)</div>
-        </div>
-
         <!-- Navigation -->
         <nav class="sidebar-nav" style="flex:1; padding: 8px 0; overflow-y:auto;">
             <div class="nav-section-label">@L["Nav_MyWorkspace"]</div>
@@ -215,34 +195,25 @@
             }
         </nav>
 
-        <!-- Footer -->
-        <div class="sidebar-footer">
-            <div class="sidebar-footer-inner">
-                <button class="btn-change-password w-100 mb-1" id="themeToggle" title="@L["Layout_DarkMode"] / @L["Layout_LightMode"]">
-                    <i class="bi bi-moon-stars-fill icon-dark"></i>
-                    <i class="bi bi-sun-fill icon-light"></i>
-                    <span class="icon-dark">@L["Layout_DarkMode"]</span>
-                    <span class="icon-light">@L["Layout_LightMode"]</span>
-                </button>
-                <form action="/language/set" method="post" class="w-100 mb-1">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="lang" value="@switchLang"/>
-                    <input type="hidden" name="returnUrl" value="@returnUrl"/>
-                    <button type="submit" class="btn-change-password w-100" style="font-weight:700">
-                        <i class="bi bi-translate me-1"></i>@L["Layout_SwitchLang"]
-                    </button>
-                </form>
-                <form asp-area="Home" asp-controller="Account" asp-action="Logout" method="post" class="w-100">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn-signout-full">
-                        <i class="bi bi-box-arrow-left me-2"></i>@L["Layout_SignOut"]
-                    </button>
-                </form>
-            </div>
-        </div>
     </aside>
 
     <main class="main-content">
+        <div class="home-topbar">
+            <div class="notif-wrap " id="notifWrap">
+                <button type="button" class="notif-btn" id="notifBtn" title="@L["Notif_Title"]" data-empty-text="@L["Notif_Empty"]">
+                    <i class="bi bi-bell-fill"></i>
+                    <span class="notif-badge" id="notifBadge" hidden>0</span>
+                </button>
+                <div class="notif-panel" id="notifPanel" hidden>
+                    <div class="notif-panel-header">
+                        <span>@L["Notif_Title"]</span>
+                        <button type="button" class="notif-clear-btn" id="notifClearBtn" hidden>@L["Notif_ClearAll"]</button>
+                    </div>
+                    <div id="notifList"></div>
+                </div>
+            </div>
+            <partial name="_UserMenu" model="@("Home")" />
+        </div>
         @if (TempData["Success"] != null)
         {
             <div class="alert-banner alert-success-banner">

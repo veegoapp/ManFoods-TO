@@ -1,0 +1,59 @@
+@* Header avatar menu (shared by the Admin and Home layouts).
+   Model = area used for the sign-out form ("Admin" or "Home"). *@
+@model string
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpCtx
+@inject Microsoft.Extensions.Localization.IStringLocalizer<MvcApp.Resources.SharedResource> L
+@{
+    var s = HttpCtx.HttpContext?.Session;
+    var email = s?.GetString("Email") ?? "";
+    var assigned = s?.GetString("AssignedName") ?? "";
+    var rtl = (HttpCtx.HttpContext?.Request.Cookies["mf-lang"] ?? "en") == "ar";
+    var switchTo = rtl ? "en" : "ar";
+    var back = HttpCtx.HttpContext?.Request.Path.Value ?? "/";
+
+    // First letter of the first name + first letter of the second name.
+    // Falls back to the e-mail local part (ahmed.ali@… → AA), then a single letter.
+    var source = !string.IsNullOrWhiteSpace(assigned)
+        ? assigned
+        : (email.Contains('@') ? email[..email.IndexOf('@')] : email);
+    var parts = source.Split(new[] { ' ', '.', '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
+    var letters = parts.Length >= 2
+        ? string.Concat(parts[0].Substring(0, 1), parts[1].Substring(0, 1))
+        : (parts.Length == 1 ? parts[0].Substring(0, 1) : "U");
+    letters = letters.ToUpperInvariant();
+}
+<div class="user-menu" id="userMenu">
+    <button type="button" class="user-menu-btn" id="userMenuBtn" aria-haspopup="true" aria-expanded="false" title="@source">@letters</button>
+    <div class="user-menu-panel" id="userMenuPanel" hidden>
+        <button type="button" class="user-menu-item theme-toggle" id="themeToggle">
+            <i class="bi bi-moon-stars-fill icon-dark"></i>
+            <i class="bi bi-sun-fill icon-light"></i>
+            <span class="icon-dark">@L["Layout_DarkMode"]</span>
+            <span class="icon-light">@L["Layout_LightMode"]</span>
+        </button>
+        <form action="/language/set" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="lang" value="@switchTo"/>
+            <input type="hidden" name="returnUrl" value="@back"/>
+            <button type="submit" class="user-menu-item"><i class="bi bi-translate"></i><span>@(rtl ? "English" : "العربية")</span></button>
+        </form>
+        <form asp-area="@Model" asp-controller="Account" asp-action="Logout" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="user-menu-item user-menu-signout"><i class="bi bi-box-arrow-right"></i><span>@L["Layout_SignOut"]</span></button>
+        </form>
+    </div>
+</div>
+<script>
+(function () {
+    var btn = document.getElementById('userMenuBtn'), panel = document.getElementById('userMenuPanel');
+    if (!btn || !panel) return;
+    function close() { panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
+    btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        panel.hidden = !panel.hidden;
+        btn.setAttribute('aria-expanded', String(!panel.hidden));
+    });
+    document.addEventListener('click', function (e) { if (!panel.contains(e.target)) close(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+})();
+</script>
