@@ -588,6 +588,44 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task TrainerJobs_AreCountedTogether_ForShortageHiringNeedAndTheForecast()
+    {
+        var db = NewDb();
+        // The projection plans one Crew Trainer; the store hired one Hourly Paid trainer instead. Together: nothing missing.
+        Proj(db, 1, "1 | A", "Crew Trainer", 1); Proj(db, 1, "1 | A", "Hourly Paid Crew Trainer", 0);
+        Person(db, 1, "1", "1 | A", "Hourly Paid Crew", "Hourly Paid");
+        Trainer(db, 1, "1", "1 | A", "Hourly Paid");
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        Assert.Equal(0, dto.Kpis.Shortage);
+        Assert.Equal(0, dto.Kpis.HiringNeed);
+        Assert.Equal(1, Assert.Single(dto.ByJob, r => r.Name.Equals("Hourly Paid Crew Trainer", StringComparison.OrdinalIgnoreCase)).Actual); // the jobs themselves still show separately
+        Assert.Equal(1, Assert.Single(dto.ByJob, r => r.Name == "Crew Trainer").Projected);
+        var detail = await NewService(db).GetDetailAsync(2026, new[] { 1 }, null, null, "Admin", null);
+        Assert.Equal(0.0, detail.Sum(r => r.Shortage ?? 0));
+
+        var forecast = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null);
+        Assert.Equal(0, Assert.Single(forecast.Rows).Months[0]);
+    }
+
+    [Fact]
+    public async Task TrainerShortage_StillCountsWhenBothTrainerJobsTogetherAreShort()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew Trainer", 2); Proj(db, 1, "1 | A", "Hourly Paid Crew Trainer", 1);
+        Person(db, 1, "1", "1 | A", "Hourly Paid Crew", "Hourly Paid");
+        Trainer(db, 1, "1", "1 | A", "Hourly Paid");
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        Assert.Equal(2, dto.Kpis.Shortage);          // 3 planned, 1 present
+        Assert.Equal(2, dto.Kpis.HiringNeed);
+    }
+
+    [Fact]
     public async Task HiringForecast_NoRoster_HasNoRows()
     {
         var db = NewDb();
@@ -626,8 +664,8 @@ public class WorkforcePlanningReportTests
         {
             Rows =
             {
-                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", PayrollGroup = "Hourly", Projected = 10, Actual = 8, ExpectedAttrition = 1.5, HiringNeed = 3.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
-                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4, ExpectedAttrition = 0.5, HiringNeed = 0.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", PayrollGroup = "Hourly", Projected = 10, Actual = 8, Shortage = 2, ExpectedAttrition = 1.5, HiringNeed = 3.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4, Shortage = 0, ExpectedAttrition = 0.5, HiringNeed = 0.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
                 new() { Year = 2026, Month = 2, Store = "1 | A", Job = "Crew", Projected = 11, Actual = null },
             }
         };

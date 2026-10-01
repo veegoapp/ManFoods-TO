@@ -100,7 +100,9 @@ public class PlanningDetailRow
     public int? Actual { get; set; }
     /// <summary>Expected resignations per month for this store/job (null without a roster).</summary>
     public double? ExpectedAttrition { get; set; }
-    /// <summary>max(0, projected − actual + expected resignations); null without a roster.</summary>
+    /// <summary>People missing in the job (a surplus in one trainer job covers a shortage in the other); null without a roster.</summary>
+    public double? Shortage { get; set; }
+    /// <summary>Shortage + expected resignations; null without a roster.</summary>
     public double? HiringNeed { get; set; }
     /// <summary>The people responsible for the store that month (Store Reference file).</summary>
     public string OperationConsultant { get; set; } = "";

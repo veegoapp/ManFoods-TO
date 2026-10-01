@@ -1006,7 +1006,7 @@ public class ReportService : IReportService
             sum.Cell(rr, 4).FormulaA1 = $"=IF(C{rr}=\"\",\"\",C{rr}-B{rr})";
             sum.Cell(rr, 5).FormulaA1 = $"=IF(OR(C{rr}=\"\",B{rr}=0),\"\",C{rr}/B{rr})";
             sum.Cell(rr, 5).Style.NumberFormat.Format = "0.0%";
-            if (g.All(x => x.Actual.HasValue)) SetIntCell(sum.Cell(rr, 6), g.Sum(x => Math.Max(0, x.Projected - x.Actual!.Value)));
+            if (g.All(x => x.Actual.HasValue)) SetIntCell(sum.Cell(rr, 6), (int)Math.Round(g.Sum(x => x.Shortage ?? 0), MidpointRounding.AwayFromZero));
             if (g.All(x => x.ExpectedAttrition.HasValue)) sum.Cell(rr, 7).Value = Math.Round(g.Sum(x => x.ExpectedAttrition!.Value), 1);
             if (g.All(x => x.HiringNeed.HasValue)) SetIntCell(sum.Cell(rr, 8), (int)Math.Round(g.Sum(x => x.HiringNeed!.Value), MidpointRounding.AwayFromZero));
             rr++;
@@ -1048,8 +1048,8 @@ public class ReportService : IReportService
             }
             Finalize(ws);
         }
-        WriteBreakdown($"By Store ({monthName[snapMonth - 1]})", "Store", snap.GroupBy(r => r.Store).Select(g => (g.Key, g.Sum(x => x.Projected), g.Sum(x => x.Actual ?? 0), g.Sum(x => x.ExpectedAttrition ?? 0), g.Sum(x => x.HiringNeed ?? 0), g.Sum(x => x.Actual.HasValue ? (double)Math.Max(0, x.Projected - x.Actual.Value) : 0.0))));
-        WriteBreakdown($"By Job ({monthName[snapMonth - 1]})", "Job title", snap.GroupBy(r => r.Job).Select(g => (g.Key, g.Sum(x => x.Projected), g.Sum(x => x.Actual ?? 0), g.Sum(x => x.ExpectedAttrition ?? 0), g.Sum(x => x.HiringNeed ?? 0), g.Sum(x => x.Actual.HasValue ? (double)Math.Max(0, x.Projected - x.Actual.Value) : 0.0))));
+        WriteBreakdown($"By Store ({monthName[snapMonth - 1]})", "Store", snap.GroupBy(r => r.Store).Select(g => (g.Key, g.Sum(x => x.Projected), g.Sum(x => x.Actual ?? 0), g.Sum(x => x.ExpectedAttrition ?? 0), g.Sum(x => x.HiringNeed ?? 0), g.Sum(x => x.Shortage ?? 0.0))));
+        WriteBreakdown($"By Job ({monthName[snapMonth - 1]})", "Job title", snap.GroupBy(r => r.Job).Select(g => (g.Key, g.Sum(x => x.Projected), g.Sum(x => x.Actual ?? 0), g.Sum(x => x.ExpectedAttrition ?? 0), g.Sum(x => x.HiringNeed ?? 0), g.Sum(x => x.Shortage ?? 0.0))));
 
 
         // ── By Consultant & Manager: the page's four roll-up tables, stacked on one sheet ──
@@ -1089,7 +1089,7 @@ public class ReportService : IReportService
                         Stores = g.Select(x => x.Store).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
                         P = g.Sum(x => x.Projected), A = g.Sum(x => x.Actual ?? 0),
                         Attr = g.Sum(x => x.ExpectedAttrition ?? 0), Need = g.Sum(x => x.HiringNeed ?? 0),
-                        Short = g.Sum(x => x.Actual.HasValue ? (double)Math.Max(0, x.Projected - x.Actual.Value) : 0.0),
+                        Short = g.Sum(x => x.Shortage ?? 0.0),
                     })
                     .OrderBy(x => snapHasActual ? x.A - x.P : -x.P).ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase).ToList();
                 if (people.Count == 0)
@@ -1180,7 +1180,7 @@ public class ReportService : IReportService
             {
                 data.Cell(dr, 7).Value = (double)r.Actual.Value;
                 data.Cell(dr, 8).Value = (double)(r.Actual.Value - r.Projected);
-                data.Cell(dr, 16).Value = (double)Math.Max(0, r.Projected - r.Actual.Value);
+                data.Cell(dr, 16).Value = r.Shortage ?? 0.0;
                 if (r.Projected > 0) { data.Cell(dr, 9).Value = r.Actual.Value / (double)r.Projected; data.Cell(dr, 9).Style.NumberFormat.Format = "0.0%"; }
                 if (r.ExpectedAttrition.HasValue) data.Cell(dr, 10).Value = r.ExpectedAttrition.Value;
                 if (r.HiringNeed.HasValue) data.Cell(dr, 11).Value = r.HiringNeed.Value;

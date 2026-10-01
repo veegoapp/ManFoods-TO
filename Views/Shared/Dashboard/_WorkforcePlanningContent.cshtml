@@ -680,7 +680,7 @@ function wpDrillHtml(main, rows) {
     if (rows === 'loading' || !rows) return `<div class="text-muted" style="font-size:13px">${sapEscape(wpL.drillLoading)}</div>`;
     const lines = rows.map(r => {
         const p = r.projected, a = r.actual ?? 0;
-        return { job: r.job, p, a, gap: a - p, shortage: Math.max(0, p - a), exp: r.expectedAttrition ?? 0, need: r.hiringNeed ?? 0 };
+        return { job: r.job, p, a, gap: a - p, shortage: r.shortage ?? Math.max(0, p - a), exp: r.expectedAttrition ?? 0, need: r.hiringNeed ?? 0 };
     });
     const body = lines.map(l => `<tr><td>${sapEscape(l.job)}</td><td class="num">${l.p}</td><td class="num">${l.a}</td>
         <td class="num ${wpGapClass(l.gap)}">${wpGapText(l.gap)}</td><td class="num">${l.shortage}</td><td class="num">${wpNum(l.exp)}</td><td class="num"><b>${wpNum(l.need)}</b></td></tr>`).join('');
