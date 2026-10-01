@@ -1325,11 +1325,13 @@ html[dir="rtl"] .page-guide-orb {
 .user-menu { position: relative; display: inline-flex; }
 .user-menu-btn {
     width: 36px; height: 36px; border-radius: 50%; border: 0; cursor: pointer;
-    background: var(--red); color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .3px;
+    background: #D9D9D9; color: #1a1a1a; font-size: 13px; font-weight: 700; letter-spacing: .3px;
     display: flex; align-items: center; justify-content: center;
     transition: transform .15s, box-shadow .15s;
 }
-.user-menu-btn:hover, .user-menu-btn[aria-expanded="true"] { box-shadow: 0 0 0 3px rgba(218,41,28,.25); }
+.user-menu-btn:hover, .user-menu-btn[aria-expanded="true"] { box-shadow: 0 0 0 3px rgba(217,217,217,.25); }
+[data-theme="light"] .user-menu-btn { background: #2B2B2B; color: #fff; }
+[data-theme="light"] .user-menu-btn:hover, [data-theme="light"] .user-menu-btn[aria-expanded="true"] { box-shadow: 0 0 0 3px rgba(43,43,43,.2); }
 .user-menu-panel {
     position: absolute; top: calc(100% + 8px); inset-inline-end: 0; direction: ltr;
     min-width: 190px; padding: 6px; z-index: 2000;
