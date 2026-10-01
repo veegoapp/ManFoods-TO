@@ -7,7 +7,8 @@ namespace MvcApp.Services;
 
 public class CrewTrainerService : ICrewTrainerService
 {
-    private const int NewHireDays = 90;
+    /// <summary>One trainer for every 6 crew-level employees.</summary>
+    public const int CrewPerTrainer = 6;
     private const int ResignationLookbackMonths = 6;
 
     private readonly AppDbContext _db;
@@ -41,16 +42,17 @@ public class CrewTrainerService : ICrewTrainerService
         (await _db.CrewTrainerEmployees.AsNoTracking().Where(t => t.Year == year && t.Month == month)
             .Select(t => new Listed(t.EmployeeId, t.Name, t.StoreName)).ToListAsync()));
 
-    // Employees on that month's roster hired in the 90 days up to the end of the month, per store.
-    private Task<Dictionary<string, int>> GetNewHiresAsync(int year, int month) => CachedAsync($"trainers:hires:{year}:{month}", async () =>
+    // The jobs marked "crew level" in the Job Payroll Groups list (normalised titles), trainer jobs excluded:
+    // the people one trainer trains.
+    private Task<HashSet<string>> GetCrewLevelJobsAsync() => CachedAsync("trainers:crew-level-jobs", async () =>
     {
-        var end = new DateOnly(year, month, DateTime.DaysInMonth(year, month));
-        var cutoff = end.AddDays(-NewHireDays);
-        var rows = await _db.ActiveEmployees.AsNoTracking()
-            .Where(e => e.Year == year && e.Month == month && e.HireDate != null && e.HireDate >= cutoff && e.HireDate <= end)
-            .GroupBy(e => e.Store).Select(g => new { Store = g.Key, Count = g.Count() }).ToListAsync();
-        return rows.ToDictionary(r => (r.Store ?? "").Trim(), r => r.Count, StringComparer.OrdinalIgnoreCase);
+        var trainerJobs = WorkforcePlanningService.CrewTrainerJobs.Select(WorkforcePlanningService.Norm).ToHashSet();
+        var jobs = await _db.JobPayrollGroups.AsNoTracking().Where(j => j.IsCrewLevel).Select(j => j.JobTitle).ToListAsync();
+        return jobs.Select(WorkforcePlanningService.Norm).Where(j => j.Length > 0 && !trainerJobs.Contains(j)).ToHashSet();
     });
+
+    /// <summary>Trainers the rule asks for: crew level ÷ 6 rounded to the nearest whole number, half up.</summary>
+    internal static int RequiredTrainers(int crewLevel) => (int)Math.Floor(crewLevel / (double)CrewPerTrainer + 0.5);
 
     // Distinct trainers (on a list in the window or the month before) who resigned in the last months, with their store.
     private Task<List<(string EmployeeId, string Store)>> GetResignedAsync(int year, int month) => CachedAsync($"trainers:resigned:{year}:{month}", async () =>
@@ -87,29 +89,43 @@ public class CrewTrainerService : ICrewTrainerService
         dto.Stores = plan.Stores; dto.OperationConsultants = plan.OperationConsultants; dto.OperationManagers = plan.OperationManagers;
         dto.SeniorOperationConsultants = plan.SeniorOperationConsultants; dto.OperationDirectors = plan.OperationDirectors;
         bool samePeriod = plan.HasData && plan.Year == dto.Year && plan.Month == dto.Month;
-        dto.HasProjection = samePeriod && plan.ByStore.Any(r => r.Projected > 0);
-        var planRows = samePeriod ? plan.ByStore : new List<PlanningRowDto>();
-        var universe = new HashSet<string>(planRows.Select(r => r.Name.Trim()), StringComparer.OrdinalIgnoreCase);
 
-        var hires = await GetNewHiresAsync(dto.Year, dto.Month);
-        foreach (var r in planRows)
+        // One row per store from the month's projected-vs-actual rows: the trainer jobs give projected and actual
+        // trainers, the crew-level jobs (trainers excluded: they are moved into the trainer jobs) give the people the
+        // rule counts. Same access and leadership scoping as Workforce Planning.
+        var crewJobs = await GetCrewLevelJobsAsync();
+        dto.HasCrewLevelJobs = crewJobs.Count > 0;
+        dto.CrewPerTrainer = CrewPerTrainer;
+        var trainerJobNames = WorkforcePlanningService.CrewTrainerJobs.Select(WorkforcePlanningService.Norm).ToHashSet();
+        var detail = samePeriod
+            ? await _planning.GetDetailAsync(dto.Year, new[] { dto.Month }, stores, null, role, assignedName, om, oc, soc, od)
+            : new List<PlanningDetailRow>();
+        var byStore = new Dictionary<string, CrewTrainerStoreDto>(StringComparer.OrdinalIgnoreCase);
+        foreach (var r in detail)
         {
-            var newHires = hires.TryGetValue(r.Name.Trim(), out var h) ? h : 0;
-            dto.ByStore.Add(new CrewTrainerStoreDto
-            {
-                Store = r.Name, OperationConsultant = r.OperationConsultant, Projected = r.Projected, Actual = r.Actual, Gap = r.Actual - r.Projected,
-                NewHires = newHires, HiresPerTrainer = r.Actual > 0 ? Math.Round(newHires / (double)r.Actual, 1) : null,
-            });
+            var job = WorkforcePlanningService.Norm(r.Job);
+            var isTrainer = trainerJobNames.Contains(job);
+            if (!isTrainer && !crewJobs.Contains(job)) continue;
+            var key = r.Store.Trim();
+            if (!byStore.TryGetValue(key, out var row)) byStore[key] = row = new CrewTrainerStoreDto { Store = r.Store, OperationConsultant = r.OperationConsultant };
+            if (isTrainer) { row.Projected += r.Projected; row.Actual += r.Actual ?? 0; }
+            else row.CrewLevel += r.Actual ?? 0;
         }
-        dto.ByStore = dto.ByStore.OrderByDescending(r => r.HiresPerTrainer ?? (r.NewHires > 0 ? double.MaxValue : -1)).ThenBy(r => r.Store, StringComparer.OrdinalIgnoreCase).ToList();
+        foreach (var row in byStore.Values)
+        {
+            row.Gap = row.Actual - row.Projected;
+            row.Required = RequiredTrainers(row.CrewLevel);
+            row.GapRule = row.Actual - row.Required;
+        }
+        dto.ByStore = byStore.Values.OrderBy(r => r.GapRule).ThenBy(r => r.Store, StringComparer.OrdinalIgnoreCase).ToList(); // most short of trainers first
+        dto.HasProjection = dto.ByStore.Any(r => r.Projected > 0);
+        var universe = new HashSet<string>(dto.ByStore.Select(r => r.Store.Trim()), StringComparer.OrdinalIgnoreCase);
 
-        var totalActual = dto.ByStore.Sum(r => r.Actual);
-        var totalHires = dto.ByStore.Sum(r => r.NewHires);
         var resigned = (await GetResignedAsync(dto.Year, dto.Month)).Count(r => universe.Contains((r.Store ?? "").Trim()));
         dto.Kpis = new CrewTrainerKpiDto
         {
-            Projected = dto.ByStore.Sum(r => r.Projected), Actual = totalActual, Gap = totalActual - dto.ByStore.Sum(r => r.Projected),
-            NewHires = totalHires, HiresPerTrainer = totalActual > 0 ? Math.Round(totalHires / (double)totalActual, 1) : null,
+            Projected = dto.ByStore.Sum(r => r.Projected), Actual = dto.ByStore.Sum(r => r.Actual), Gap = dto.ByStore.Sum(r => r.Gap),
+            CrewLevel = dto.ByStore.Sum(r => r.CrewLevel), Required = dto.ByStore.Sum(r => r.Required), GapRule = dto.ByStore.Sum(r => r.GapRule),
             Resigned = resigned, LookbackMonths = ResignationLookbackMonths,
         };
         dto.Trend = samePeriod ? plan.Trend : new List<PlanningTrendPointDto>();

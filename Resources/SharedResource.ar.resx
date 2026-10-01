@@ -2025,14 +2025,14 @@
   <data name="Msg_CrewTrainerJobDiffers" xml:space="preserve"><value>{0} موظف وظيفتهم هنا تختلف عنها في قائمة الموظفين الحاليين.</value></data>
   <data name="Nav_CrewTrainers" xml:space="preserve"><value>مدربو الطاقم</value></data>
   <data name="Page_CrewTrainers" xml:space="preserve"><value>مدربو الطاقم</value></data>
-  <data name="Page_CrewTrainersSub" xml:space="preserve"><value>المدربون مقابل الخطة والموظفون الجدد الذين يدرّبونهم ومن دخل القائمة أو خرج منها</value></data>
+  <data name="Page_CrewTrainersSub" xml:space="preserve"><value>المدربون مقابل قاعدة مدرب لكل 6 كرو ومقابل الخطة، ومن دخل القائمة أو خرج منها</value></data>
   <data name="CT_NoData" xml:space="preserve"><value>لم تُرفع قائمة مدربي الطاقم بعد.</value></data>
   <data name="CT_NoDataAdmin" xml:space="preserve"><value>ارفع قائمة مدربي الطاقم من إدارة البيانات</value></data>
   <data name="CT_NoPlan" xml:space="preserve"><value>هذا الشهر بلا توقّع لمدربي الطاقم (Crew Trainer) لذلك لا تظهر أعمدة الخطة.</value></data>
   <data name="CT_ChartTitle" xml:space="preserve"><value>المدربون في كل شهر</value></data>
   <data name="CT_ChartSub" xml:space="preserve"><value>توقّع مدربي الطاقم مقابل المدربين الموجودين في قائمة الموظفين الحاليين لكل شهر</value></data>
-  <data name="CT_StoresTitle" xml:space="preserve"><value>المدربون والموظفون الجدد حسب الفرع</value></data>
-  <data name="CT_StoresSub" xml:space="preserve"><value>الفروع الأعلى في عدد الموظفين الجدد لكل مدرب تظهر أولًا</value></data>
+  <data name="CT_StoresTitle" xml:space="preserve"><value>المدربون حسب الفرع</value></data>
+  <data name="CT_StoresSub" xml:space="preserve"><value>الفروع الأكثر نقصًا في المدربين (حسب القاعدة) تظهر أولًا</value></data>
   <data name="CT_ColNewHires" xml:space="preserve"><value>الجدد (90 يومًا)</value></data>
   <data name="CT_ColPerTrainer" xml:space="preserve"><value>الجدد لكل مدرب</value></data>
   <data name="CT_NoTrainer" xml:space="preserve"><value>بلا مدرب</value></data>
@@ -2053,20 +2053,20 @@
   <data name="CT_StResigned" xml:space="preserve"><value>استقال</value></data>
   <data name="CT_StActive" xml:space="preserve"><value>لا يزال يعمل وخرج من القائمة</value></data>
   <data name="CT_StGone" xml:space="preserve"><value>غير موجود في القائمة الحالية للموظفين</value></data>
-  <data name="Guide_CT_Overview" xml:space="preserve"><value>يعرض مدربي الطاقم: عددهم مقابل الخطة وعدد الموظفين الجدد الذين يجب أن يدرّبهم كل فرع ومن دخل قائمة المدربين أو خرج منها.</value></data>
+  <data name="Guide_CT_Overview" xml:space="preserve"><value>يعرض مدربي الطاقم مقابل قاعدة مدرب لكل 6 من مستوى الكرو ومقابل التوقّع، ومن دخل قائمة المدربين أو خرج منها.</value></data>
   <data name="Guide_CT_FilterNote" xml:space="preserve"><value>تختار السنة والشهر من الأشهر التي لها قائمة مدربين مرفوعة. يضيّق الفرع واستشاري العمليات والمدير والاستشاري الأول ومدير أول التشغيل كل رقم وجدول. ترى فقط الفروع المتاحة لك (الإعدادات ← الوصول، صف تخطيط القوى العاملة).</value></data>
   <data name="Guide_CT_KpisTitle" xml:space="preserve"><value>كروت الملخص</value></data>
-  <data name="Guide_CT_Kpis" xml:space="preserve"><value>المدربون: الفعلي على المتوقع للشهر. الموظفون الجدد: من عُيّنوا خلال 90 يومًا حتى نهاية الشهر (من تواريخ التعيين في قائمة الموظفين الحاليين). الجدد لكل مدرب: عدد الجدد مقسومًا على المدربين، وكلما زاد الرقم زاد حمل التدريب. مدربون استقالوا: مدربون كانوا في قائمة واستقالوا خلال آخر 6 أشهر.</value></data>
+  <data name="Guide_CT_Kpis" xml:space="preserve"><value>المدربون مقابل القاعدة: الفعلي على المطلوب. مستوى الكرو: موظفو مستوى الكرو في قائمة الموظفين (الوظائف المعلَّمة Crew Level في مجموعات رواتب الوظائف) بدون المدربين أنفسهم. المدربون مقابل الخطة: الفعلي على التوقّع. مدربون استقالوا: مدربون كانوا في قائمة واستقالوا خلال آخر 6 أشهر.</value></data>
   <data name="Guide_CT_Chart" xml:space="preserve"><value>المتوقع مقابل الفعلي لمدربي الطاقم في كل شهر. الفعلي هو من في القائمة المرفوعة وموجود أيضًا في قائمة الموظفين الحاليين لذلك الشهر، فالشهر بلا قائمة أو بلا قائمة موظفين يظهر 0.</value></data>
-  <data name="Guide_CT_Stores" xml:space="preserve"><value>صف لكل فرع له توقّع لمدربي الطاقم هذا الشهر: المتوقع والفعلي والفجوة (الفعلي − المتوقع، السالب نقص في المدربين) والموظفون الجدد في آخر 90 يومًا وعدد الجدد لكل مدرب. الفرع الذي فيه جدد وبلا مدرب يظهر «بلا مدرب» ويأتي أولًا. اضغط على عنوان العمود للترتيب واستخدم البحث لإيجاد فرع أو استشاري.</value></data>
+  <data name="Guide_CT_Stores" xml:space="preserve"><value>صف لكل فرع: مستوى الكرو (من يدرّبهم المدربون)، والمطلوب (مستوى الكرو ÷ 6 مقرَّبًا لأقرب رقم صحيح، والنصف يُقرَّب لأعلى)، والمدربون الفعليون، والفجوة عن القاعدة (الفعلي − المطلوب: السالب نقص والموجب زيادة)، والتوقّع والفجوة عن الخطة. الحالة تتبع القاعدة: زيادة أو كافٍ أو ناقص أو بلا مدربين أو غير مطلوب (لا مطلوب ولا موجود). الأكثر نقصًا أولًا؛ اضغط على عنوان العمود للترتيب واستخدم البحث لإيجاد فرع أو استشاري.</value></data>
   <data name="Guide_CT_Movement" xml:space="preserve"><value>من دخل قائمة المدربين ومن خرج منها مقارنة بالقائمة المرفوعة السابقة. وللخارجين: استقال (ظهر في الاستقالات)، أو لا يزال يعمل وخرج من القائمة (موجود في قائمة هذا الشهر أي أُلغي البدل أو انتقل)، أو غير موجود في القائمة الحالية للموظفين.</value></data>
   <data name="CT_CmpTitle" xml:space="preserve"><value>الفروع ذات المدربين الكافين مقابل الناقصة</value></data>
-  <data name="CT_CmpSub" xml:space="preserve"><value>الفروع مجمّعة حسب المدربين الفعليين مقابل التوقّع</value></data>
+  <data name="CT_CmpSub" xml:space="preserve"><value>الفروع مجمّعة حسب المدربين الفعليين مقابل القاعدة (مدرب لكل 6 من مستوى الكرو)</value></data>
   <data name="CT_StEnough" xml:space="preserve"><value>مدربون كافون</value></data>
   <data name="CT_StShort" xml:space="preserve"><value>نقص في المدربين</value></data>
   <data name="CT_StNone" xml:space="preserve"><value>بلا مدربين</value></data>
-  <data name="CT_StNoPlan" xml:space="preserve"><value>غير مخطط</value></data>
-  <data name="Guide_CT_Cmp" xml:space="preserve"><value>يجمّع الفروع حسب عدد مدربيها مقابل توقّع مدربي الطاقم: زيادة (مدربون أكثر من المخطط)، كافٍ (بالضبط المخطط)، ناقص (لديه مدربون لكن أقل من المخطط)، بلا مدربين (مخطط لكن لا يوجد أحد)، وغير مخطط (لا مدربين مخططين ولا موجودين). تعرض كل مجموعة فروعها والمتوقع والفعلي والفجوة ونسبة التغطية، ويستخدم عمود الحالة في جدول الفروع أدناه المجموعات نفسها.</value></data>
+  <data name="CT_StNoPlan" xml:space="preserve"><value>غير مطلوب</value></data>
+  <data name="Guide_CT_Cmp" xml:space="preserve"><value>يجمّع الفروع حسب عدد مدربيها مقابل القاعدة: زيادة (أكثر من المطلوب)، كافٍ (بالضبط)، ناقص (أقل)، بلا مدربين (مطلوب ولا يوجد أحد)، وغير مطلوب (لا مطلوب ولا موجود). تعرض كل مجموعة فروعها ومستوى الكرو والمطلوب والفعلي والفجوة عن القاعدة والمتوقع والفجوة عن الخطة؛ ويستخدم عمود الحالة في جدول الفروع أدناه المجموعات نفسها.</value></data>
   <data name="UL_JobGroups" xml:space="preserve"><value>مجموعات رواتب الوظائف</value></data>
   <data name="UL_JobGroupsSub" xml:space="preserve"><value>مجموعة الرواتب لكل مسمى وظيفي — المرجع لمجموعات الرواتب في تخطيط القوى العاملة</value></data>
   <data name="UL_JobGroupsTemplate" xml:space="preserve"><value>تحميل القائمة الحالية</value></data>
@@ -2130,7 +2130,7 @@
   <data name="CT_In_Plan_T" xml:space="preserve"><value>المدربون {0}% من الخطة</value></data>
   <data name="CT_In_Plan_D" xml:space="preserve"><value>{0} مدرب مقابل {1} مخطط: ينقص {2} في الفروع الناقصة، ويزيد {3} في الفروع التي فوق خطتها.</value></data>
   <data name="CT_In_Rebalance_T" xml:space="preserve"><value>الزيادة قد تسد {0} من النقص</value></data>
-  <data name="CT_In_Rebalance_D" xml:space="preserve"><value>يوجد {0} مدرب زائد في {1} فرع فوق خطته بينما ينقص {2} في {3} فرع. نقل بعضهم يغطي جزءًا من النقص.</value></data>
+  <data name="CT_In_Rebalance_D" xml:space="preserve"><value>يوجد {0} مدرب زائد في {1} فرع فوق القاعدة بينما ينقص {2} في {3} فرع. نقل بعضهم يغطي جزءًا من النقص.</value></data>
   <data name="CT_In_NoTrainer_T" xml:space="preserve"><value>{0} فرع فيه موظفون جدد وبلا مدرب</value></data>
   <data name="CT_In_NoTrainer_D" xml:space="preserve"><value>الأكثر موظفين جددًا بلا مدرب: {0}.</value></data>
   <data name="CT_In_Load_T" xml:space="preserve"><value>أعلى حمل تدريب: {0}</value></data>
@@ -2145,6 +2145,25 @@
   <data name="CT_In_Resigned_D" xml:space="preserve"><value>حوالي {0}% من مدربي اليوم.</value></data>
   <data name="CT_In_NoData_T" xml:space="preserve"><value>لا شيء يستحق التنبيه</value></data>
   <data name="CT_In_NoData_D" xml:space="preserve"><value>لا نمط ملحوظ في مدربي هذا الشهر.</value></data>
-  <data name="Guide_CT_Insights" xml:space="preserve"><value>جمل بسيطة محسوبة من أرقام الصفحة: المدربون مقابل الخطة، وهل زيادة المدربين في بعض الفروع قد تسد النقص في غيرها، والفروع التي فيها موظفون جدد وبلا مدرب، والفرع الأعلى حملًا في التدريب، وكيف تغيّر عدد المدربين منذ أول قائمة، ومن دخل القائمة أو خرج منها، وكم مدربًا استقال. وهي تتبع الفلاتر.</value></data>
+  <data name="Guide_CT_Insights" xml:space="preserve"><value>جمل بسيطة محسوبة من أرقام الصفحة: المدربون مقابل القاعدة، والفروع الأكثر نقصًا والفروع الأعلى من القاعدة، وهل زيادة المدربين في بعض الفروع قد تسد النقص في غيرها، وما يخطط له التوقّع مقابل ما تطلبه القاعدة، وكيف تغيّر عدد المدربين منذ أول قائمة، ومن دخل القائمة أو خرج منها، وكم مدربًا استقال. وهي تتبع الفلاتر.</value></data>
   <data name="Msg_JobGroupCrewLevel" xml:space="preserve"><value>{0} وظيفة معلَّمة كمستوى كرو.</value></data>
+  <data name="CT_NoCrewJobs" xml:space="preserve"><value>لم تُحدد أي وظيفة كمستوى كرو، لذلك لا يمكن تطبيق قاعدة مدرب لكل 6 كرو. حدّدها من إدارة البيانات ← تخطيط القوى العاملة ← مجموعات رواتب الوظائف (عمود Crew Level).</value></data>
+  <data name="CT_ColCrew" xml:space="preserve"><value>مستوى الكرو</value></data>
+  <data name="CT_ColRequired" xml:space="preserve"><value>المطلوب (1 لكل {0})</value></data>
+  <data name="CT_ColGapRule" xml:space="preserve"><value>الفجوة عن القاعدة</value></data>
+  <data name="CT_ColGapPlan" xml:space="preserve"><value>الفجوة عن الخطة</value></data>
+  <data name="CT_KRule" xml:space="preserve"><value>المدربون مقابل القاعدة</value></data>
+  <data name="CT_KRuleDesc" xml:space="preserve"><value>الفعلي / المطلوب من المدربين (1 لكل {0} من مستوى الكرو)</value></data>
+  <data name="CT_KCrew" xml:space="preserve"><value>مستوى الكرو</value></data>
+  <data name="CT_KCrewDesc" xml:space="preserve"><value>موظفو مستوى الكرو في قائمة الموظفين، بدون المدربين</value></data>
+  <data name="CT_KPlan" xml:space="preserve"><value>المدربون مقابل الخطة</value></data>
+  <data name="CT_KPlanDesc" xml:space="preserve"><value>الفعلي / المدربون في التوقّع</value></data>
+  <data name="CT_In_Rule_T" xml:space="preserve"><value>المدربون {0}% من القاعدة</value></data>
+  <data name="CT_In_Rule_D" xml:space="preserve"><value>{0} مدرب مقابل {1} مطلوبين لـ {2} من مستوى الكرو (مدرب لكل {3}).</value></data>
+  <data name="CT_In_Short_T" xml:space="preserve"><value>{0} فرع ناقص في المدربين</value></data>
+  <data name="CT_In_Short_D" xml:space="preserve"><value>ينقص {1} في المجموع. الأكثر نقصًا: {0}.</value></data>
+  <data name="CT_In_Over_T" xml:space="preserve"><value>{0} فرع عنده مدربون أكثر من القاعدة</value></data>
+  <data name="CT_In_Over_D" xml:space="preserve"><value>الأكثر زيادة: {0}.</value></data>
+  <data name="CT_In_PlanVsRule_T" xml:space="preserve"><value>التوقّع يخطط لمدربين {0} مما تطلبه القاعدة</value></data>
+  <data name="CT_In_PlanVsRule_D" xml:space="preserve"><value>في التوقّع {0} مدرب؛ والقاعدة تطلب {1} (فرق {2}).</value></data>
 </root>

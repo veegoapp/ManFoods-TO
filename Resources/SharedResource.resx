@@ -2019,14 +2019,14 @@
   <data name="Msg_CrewTrainerJobDiffers" xml:space="preserve"><value>{0} employee(s) have a different job here than in the active employee list.</value></data>
   <data name="Nav_CrewTrainers" xml:space="preserve"><value>Crew Trainers</value></data>
   <data name="Page_CrewTrainers" xml:space="preserve"><value>Crew Trainers</value></data>
-  <data name="Page_CrewTrainersSub" xml:space="preserve"><value>Trainers against the plan, the new hires they train, and who joined or left the list</value></data>
+  <data name="Page_CrewTrainersSub" xml:space="preserve"><value>Trainers against the 1-per-6 crew rule and the plan, and who joined or left the list</value></data>
   <data name="CT_NoData" xml:space="preserve"><value>No Crew Trainers list has been uploaded yet.</value></data>
   <data name="CT_NoDataAdmin" xml:space="preserve"><value>Upload a Crew Trainers list in Data Management</value></data>
   <data name="CT_NoPlan" xml:space="preserve"><value>This month has no Crew Trainer projection, so the plan columns are not shown.</value></data>
   <data name="CT_ChartTitle" xml:space="preserve"><value>Trainers per month</value></data>
   <data name="CT_ChartSub" xml:space="preserve"><value>Crew Trainer projection against the trainers found on each month's active employee list</value></data>
-  <data name="CT_StoresTitle" xml:space="preserve"><value>Trainers and new hires by store</value></data>
-  <data name="CT_StoresSub" xml:space="preserve"><value>Stores with the most new hires per trainer come first</value></data>
+  <data name="CT_StoresTitle" xml:space="preserve"><value>Trainers by store</value></data>
+  <data name="CT_StoresSub" xml:space="preserve"><value>Stores most short of trainers (by the rule) come first</value></data>
   <data name="CT_ColNewHires" xml:space="preserve"><value>New hires (90 days)</value></data>
   <data name="CT_ColPerTrainer" xml:space="preserve"><value>New hires per trainer</value></data>
   <data name="CT_NoTrainer" xml:space="preserve"><value>No trainer</value></data>
@@ -2047,20 +2047,20 @@
   <data name="CT_StResigned" xml:space="preserve"><value>Resigned</value></data>
   <data name="CT_StActive" xml:space="preserve"><value>Still working, off the list</value></data>
   <data name="CT_StGone" xml:space="preserve"><value>Not on the roster</value></data>
-  <data name="Guide_CT_Overview" xml:space="preserve"><value>Shows the Crew Trainers: how many there are against the plan, how many new hires each store has to train, and who joined or left the trainer list.</value></data>
+  <data name="Guide_CT_Overview" xml:space="preserve"><value>Shows the Crew Trainers against the rule of one trainer for every 6 crew-level employees and against the projection, and who joined or left the trainer list.</value></data>
   <data name="Guide_CT_FilterNote" xml:space="preserve"><value>Year and Month pick one of the months that have an uploaded trainer list. Store and the Operation Consultant / Manager / Senior Consultant / Director selectors narrow every number and table. You only see the stores you have access to (Settings → Access, Workforce Planning row).</value></data>
   <data name="Guide_CT_KpisTitle" xml:space="preserve"><value>Summary cards</value></data>
-  <data name="Guide_CT_Kpis" xml:space="preserve"><value>Trainers: actual over projected for the month. New hires: employees hired in the 90 days up to the month end (from the active employee list hire dates). New hires per trainer: new hires divided by trainers, so a higher number means more training load. Trainers who resigned: trainers who were on a list and resigned in the last 6 months.</value></data>
+  <data name="Guide_CT_Kpis" xml:space="preserve"><value>Trainers vs the rule: actual trainers over the trainers required. Crew level: the crew-level employees on the roster (the jobs marked Crew Level in Job Payroll Groups), the trainers themselves excluded. Trainers vs plan: actual trainers over the projection. Trainers who resigned: trainers who were on a list and resigned in the last 6 months.</value></data>
   <data name="Guide_CT_Chart" xml:space="preserve"><value>Projected against actual Crew Trainers for each month of the year. Actual is the people on the uploaded list who are also on that month's active employee list, so a month without a list or a roster shows 0.</value></data>
-  <data name="Guide_CT_Stores" xml:space="preserve"><value>One row per store with a Crew Trainer projection that month: projected, actual and gap (actual − projected, negative = short of trainers), the new hires of the last 90 days, and new hires per trainer. A store with new hires and no trainer shows "No trainer" and comes first. Click a column title to sort and use the search box to find a store or consultant.</value></data>
+  <data name="Guide_CT_Stores" xml:space="preserve"><value>One row per store: Crew level (the people the trainers train), Required (crew level ÷ 6, rounded to the nearest whole number — a half rounds up), Actual trainers, Gap vs rule (actual − required: negative = short of trainers, positive = over), the projection and Gap vs plan. Status follows the rule: Over, Enough, Short, No trainers, or Not needed (none required and none present). Stores most short come first; click a column title to sort and use the search box to find a store or consultant.</value></data>
   <data name="Guide_CT_Movement" xml:space="preserve"><value>Who joined and who left the trainer list compared with the previous uploaded list. For people who left: Resigned (they appear in the resignations), Still working, off the list (still on this month's active list, so the allowance was removed or they moved), or Not on the roster.</value></data>
   <data name="CT_CmpTitle" xml:space="preserve"><value>Stores with enough trainers vs short</value></data>
-  <data name="CT_CmpSub" xml:space="preserve"><value>Stores grouped by actual trainers against the projection</value></data>
+  <data name="CT_CmpSub" xml:space="preserve"><value>Stores grouped by actual trainers against the rule (one trainer per 6 crew-level employees)</value></data>
   <data name="CT_StEnough" xml:space="preserve"><value>Enough trainers</value></data>
   <data name="CT_StShort" xml:space="preserve"><value>Short of trainers</value></data>
   <data name="CT_StNone" xml:space="preserve"><value>No trainers</value></data>
-  <data name="CT_StNoPlan" xml:space="preserve"><value>None planned</value></data>
-  <data name="Guide_CT_Cmp" xml:space="preserve"><value>Groups the stores by how many trainers they have against the Crew Trainer projection: Over (more trainers than planned), Enough (exactly the plan), Short (some trainers but fewer than planned), No trainers (planned but none) and None planned (no trainers planned and none present). Each group shows its stores, projected, actual, gap and fill rate; the Status column in the stores table below uses the same groups.</value></data>
+  <data name="CT_StNoPlan" xml:space="preserve"><value>Not needed</value></data>
+  <data name="Guide_CT_Cmp" xml:space="preserve"><value>Groups the stores by how many trainers they have against the rule: Over (more than required), Enough (exactly), Short (fewer), No trainers (required but none) and Not needed (none required and none present). Each group shows its stores, crew level, required, actual, gap vs rule, projected and gap vs plan; the Status column in the stores table below uses the same groups.</value></data>
   <data name="UL_JobGroups" xml:space="preserve"><value>Job Payroll Groups</value></data>
   <data name="UL_JobGroupsSub" xml:space="preserve"><value>The payroll group of each job title — the reference for payroll groups in Workforce Planning</value></data>
   <data name="UL_JobGroupsTemplate" xml:space="preserve"><value>Download current list</value></data>
@@ -2124,7 +2124,7 @@
   <data name="CT_In_Plan_T" xml:space="preserve"><value>Trainers are {0}% of the plan</value></data>
   <data name="CT_In_Plan_D" xml:space="preserve"><value>{0} trainers against {1} planned: {2} missing in the stores that are short and {3} extra in the stores above their plan.</value></data>
   <data name="CT_In_Rebalance_T" xml:space="preserve"><value>Extra trainers could close {0} of the gap</value></data>
-  <data name="CT_In_Rebalance_D" xml:space="preserve"><value>{0} extra trainers sit in {1} store(s) above their plan while {2} are missing in {3} store(s). Moving some would cover part of the gap.</value></data>
+  <data name="CT_In_Rebalance_D" xml:space="preserve"><value>{0} extra trainers sit in {1} store(s) above the rule while {2} are missing in {3} store(s). Moving some would cover part of the gap.</value></data>
   <data name="CT_In_NoTrainer_T" xml:space="preserve"><value>{0} store(s) have new hires and no trainer</value></data>
   <data name="CT_In_NoTrainer_D" xml:space="preserve"><value>Most new hires without a trainer: {0}.</value></data>
   <data name="CT_In_Load_T" xml:space="preserve"><value>Heaviest training load: {0}</value></data>
@@ -2139,6 +2139,25 @@
   <data name="CT_In_Resigned_D" xml:space="preserve"><value>About {0}% of today's trainers.</value></data>
   <data name="CT_In_NoData_T" xml:space="preserve"><value>Nothing to flag</value></data>
   <data name="CT_In_NoData_D" xml:space="preserve"><value>No notable pattern in this month's trainers.</value></data>
-  <data name="Guide_CT_Insights" xml:space="preserve"><value>A few plain sentences worked out from the numbers on the page: trainers against the plan, whether extra trainers in some stores could cover the gap in others, stores with new hires and no trainer, the store with the heaviest training load, how the number of trainers changed since the first list, who joined or left the list, and how many trainers resigned. They follow the filters.</value></data>
+  <data name="Guide_CT_Insights" xml:space="preserve"><value>A few plain sentences worked out from the numbers on the page: trainers against the rule, the stores most short and the stores above the rule, whether extra trainers could cover gaps elsewhere, what the projection plans against what the rule asks for, how the number of trainers changed since the first list, who joined or left the list, and how many trainers resigned. They follow the filters.</value></data>
   <data name="Msg_JobGroupCrewLevel" xml:space="preserve"><value>{0} job(s) are marked as crew level.</value></data>
+  <data name="CT_NoCrewJobs" xml:space="preserve"><value>No job is marked as crew level, so the 1-trainer-per-6-crew rule cannot be applied. Mark them in Data Management → Workforce Planning → Job Payroll Groups (column Crew Level).</value></data>
+  <data name="CT_ColCrew" xml:space="preserve"><value>Crew level</value></data>
+  <data name="CT_ColRequired" xml:space="preserve"><value>Required (1 per {0})</value></data>
+  <data name="CT_ColGapRule" xml:space="preserve"><value>Gap vs rule</value></data>
+  <data name="CT_ColGapPlan" xml:space="preserve"><value>Gap vs plan</value></data>
+  <data name="CT_KRule" xml:space="preserve"><value>Trainers vs the rule</value></data>
+  <data name="CT_KRuleDesc" xml:space="preserve"><value>Actual trainers / trainers required (1 per {0} crew level)</value></data>
+  <data name="CT_KCrew" xml:space="preserve"><value>Crew level</value></data>
+  <data name="CT_KCrewDesc" xml:space="preserve"><value>Crew-level employees on the roster, trainers excluded</value></data>
+  <data name="CT_KPlan" xml:space="preserve"><value>Trainers vs plan</value></data>
+  <data name="CT_KPlanDesc" xml:space="preserve"><value>Actual trainers / trainers in the projection</value></data>
+  <data name="CT_In_Rule_T" xml:space="preserve"><value>Trainers are {0}% of the rule</value></data>
+  <data name="CT_In_Rule_D" xml:space="preserve"><value>{0} trainers against {1} required for {2} crew-level employees (one per {3}).</value></data>
+  <data name="CT_In_Short_T" xml:space="preserve"><value>{0} store(s) are short of trainers</value></data>
+  <data name="CT_In_Short_D" xml:space="preserve"><value>{1} missing in total. Most short: {0}.</value></data>
+  <data name="CT_In_Over_T" xml:space="preserve"><value>{0} store(s) have more trainers than the rule</value></data>
+  <data name="CT_In_Over_D" xml:space="preserve"><value>Most above: {0}.</value></data>
+  <data name="CT_In_PlanVsRule_T" xml:space="preserve"><value>The projection plans {0} trainers than the rule asks for</value></data>
+  <data name="CT_In_PlanVsRule_D" xml:space="preserve"><value>The projection has {0} trainers; the rule asks for {1} ({2} difference).</value></data>
 </root>
