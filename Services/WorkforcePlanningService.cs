@@ -29,7 +29,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
     private static CancellationTokenSource _reset = new();
     public static void InvalidateCache() => Interlocked.Exchange(ref _reset, new CancellationTokenSource()).Cancel();
 
-    private static MemoryCacheEntryOptions CacheOptions() =>
+    internal static MemoryCacheEntryOptions CacheOptions() =>
         new MemoryCacheEntryOptions()
             .AddExpirationToken(new CancellationChangeToken(_reset.Token))
             .SetAbsoluteExpiration(TimeSpan.FromHours(6));
