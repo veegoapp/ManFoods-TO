@@ -2062,4 +2062,11 @@
   <data name="Guide_CT_Chart" xml:space="preserve"><value>Projected against actual Crew Trainers for each month of the year. Actual is the people on the uploaded list who are also on that month's active employee list, so a month without a list or a roster shows 0.</value></data>
   <data name="Guide_CT_Stores" xml:space="preserve"><value>One row per store with a Crew Trainer projection that month: projected, actual and gap (actual − projected, negative = short of trainers), the new hires of the last 90 days, and new hires per trainer. A store with new hires and no trainer shows "No trainer" and comes first. Click a column title to sort and use the search box to find a store or consultant.</value></data>
   <data name="Guide_CT_Movement" xml:space="preserve"><value>Who joined and who left the trainer list compared with the previous uploaded list. For people who left: Resigned (they appear in the resignations), Still working, off the list (still on this month's active list, so the allowance was removed or they moved), or Not on the roster.</value></data>
+  <data name="CT_CmpTitle" xml:space="preserve"><value>Stores with enough trainers vs short</value></data>
+  <data name="CT_CmpSub" xml:space="preserve"><value>Stores grouped by actual trainers against the projection</value></data>
+  <data name="CT_StEnough" xml:space="preserve"><value>Enough trainers</value></data>
+  <data name="CT_StShort" xml:space="preserve"><value>Short of trainers</value></data>
+  <data name="CT_StNone" xml:space="preserve"><value>No trainers</value></data>
+  <data name="CT_StNoPlan" xml:space="preserve"><value>No plan</value></data>
+  <data name="Guide_CT_Cmp" xml:space="preserve"><value>Groups the stores by how many trainers they have against the Crew Trainer projection: Enough (actual is at least the projection), Short (some trainers but fewer than planned), No trainers (planned but none), and No plan (trainers but no projection). Each group shows its stores, projected, actual, gap and fill rate; the Status column in the stores table below uses the same groups.</value></data>
 </root>

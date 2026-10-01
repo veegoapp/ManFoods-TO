@@ -47,6 +47,7 @@
 .ct-pill.grey { background:var(--bg-2); color:var(--text-3); }
 .ct-gap-short { color:oklch(0.55 0.2 22); }
 .ct-gap-over { color:oklch(0.45 0.15 250); }
+.ct-pill.green { background:oklch(0.62 0.15 155 / .14); color:oklch(0.45 0.15 155); }
 .ct-legend { font-size:12px; color:var(--text-3); }
 </style>
 
@@ -77,6 +78,7 @@
         {
             new() { Icon = "bi-speedometer2", Title = L["Guide_CT_KpisTitle"], Body = L["Guide_CT_Kpis"] },
             new() { Icon = "bi-graph-up-arrow", Title = L["CT_ChartTitle"], Body = L["Guide_CT_Chart"] },
+            new() { Icon = "bi-columns-gap", Title = L["CT_CmpTitle"], Body = L["Guide_CT_Cmp"] },
             new() { Icon = "bi-shop", Title = L["CT_StoresTitle"], Body = L["Guide_CT_Stores"] },
             new() { Icon = "bi-arrow-left-right", Title = L["CT_MovementTitle"], Body = L["Guide_CT_Movement"] },
         }
@@ -104,6 +106,16 @@
         <div class="chart-body" style="position:relative;height:300px"><canvas id="ctChart"></canvas></div>
     </div>
 
+    <div class="chart-card mb-3" id="ctCmpCard">
+        <div class="chart-header"><h6>@L["CT_CmpTitle"]</h6><p>@L["CT_CmpSub"]</p></div>
+        <div class="ct-wrap" style="max-height:none">
+            <table class="ct-table">
+                <thead><tr id="ctCmpHead"></tr></thead>
+                <tbody id="ctCmpRows"></tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="chart-card mb-3">
         <div class="chart-header d-flex flex-wrap align-items-center justify-content-between gap-2">
             <div><h6>@L["CT_StoresTitle"]</h6><p>@L["CT_StoresSub"]</p></div>
@@ -125,6 +137,7 @@
 
 <div id="ctL" hidden
      data-all-oc="@L["Common_AllOperationConsultants"]" data-all-om="@L["Common_AllOperationManagers"]" data-all-soc="@L["WP_AllSoc"]" data-all-od="@L["WP_AllOd"]" data-all-stores="@L["WP_AllStores"]"
+     data-col-stores="@L["Common_Stores"]" data-col-fill="@L["WP_ColFill"]" data-col-status="@L["WP_ColStatus"]" data-st-enough="@L["CT_StEnough"]" data-st-short="@L["CT_StShort"]" data-st-none="@L["CT_StNone"]" data-st-noplan="@L["CT_StNoPlan"]" data-total="@L["HF_Total"]"
      data-store="@L["WP_ColStore"]" data-oc="@L["Common_OperationConsultant"]" data-projected="@L["WP_ColProjected"]" data-actual="@L["WP_ColActual"]" data-gap="@L["WP_ColGap"]"
      data-new-hires="@L["CT_ColNewHires"]" data-per="@L["CT_ColPerTrainer"]" data-no-trainer="@L["CT_NoTrainer"]" data-no-rows="@L["Common_NoData"]"
      data-k-trainers="@L["CT_KTrainers"]" data-k-trainers-d="@L["CT_KTrainersDesc"]" data-k-hires="@L["CT_KHires"]" data-k-hires-d="@L["CT_KHiresDesc"]"
@@ -144,6 +157,11 @@ const ctState = { year: '', month: '', store: '', oc: '', om: '', soc: '', od: '
 const ctSort = { key: 'perTrainer', dir: 'desc' };
 let ctData, ctChart;
 const ctMonthName = (m, s) => new Date(2000, m - 1, 1).toLocaleString('default', { month: s || 'long' });
+// Staffing status of a store's trainers against its plan.
+const ctStatus = r => r.projected <= 0 ? 'noplan' : r.actual <= 0 ? 'none' : r.actual >= r.projected ? 'enough' : 'short';
+const CT_ST_ORDER = { enough: 0, short: 1, none: 2, noplan: 3 };
+const CT_ST_PILL = { enough: 'green', short: 'amber', none: 'red', noplan: 'grey' };
+const ctStLabel = st => ({ enough: ctL.stEnough, short: ctL.stShort, none: ctL.stNone, noplan: ctL.stNoplan }[st]);
 const ctGapText = g => (g > 0 ? '+' : '') + g;
 const ctGapClass = g => g < 0 ? 'ct-gap-short' : g > 0 ? 'ct-gap-over' : '';
 
@@ -181,7 +199,7 @@ async function ctLoad() {
     people('ctSoc', ctL.allSoc, d.seniorOperationConsultants, 'soc'); people('ctOd', ctL.allOd, d.operationDirectors, 'od');
 
     document.getElementById('ctNoPlan').hidden = d.hasProjection;
-    ctRenderKpis(d); ctRenderChart(d); ctRenderStores(); ctRenderMovement(d);
+    ctRenderKpis(d); ctRenderChart(d); ctRenderCompare(d); ctRenderStores(); ctRenderMovement(d);
 }
 
 function ctRenderKpis(d) {
@@ -193,6 +211,27 @@ function ctRenderKpis(d) {
         card('bi-person-plus-fill', '', k.newHires, ctL.kHires, ctL.kHiresD) +
         card('bi-person-lines-fill', k.hiresPerTrainer != null && k.hiresPerTrainer >= 4 ? 'text-danger' : '', k.hiresPerTrainer ?? '—', ctL.kPer, ctL.kPerD) +
         card('bi-box-arrow-right', k.resigned > 0 ? 'text-danger' : '', k.resigned, ctL.kRes, ctL.kResD.replace('{0}', k.lookbackMonths));
+}
+
+// Stores grouped by how their trainers compare with the plan: actual against projected only.
+function ctRenderCompare(d) {
+    const card = document.getElementById('ctCmpCard');
+    card.hidden = !d.hasProjection;
+    if (!d.hasProjection) return;
+    const groups = {};
+    d.byStore.forEach(r => {
+        const g = groups[ctStatus(r)] ||= { stores: 0, projected: 0, actual: 0 };
+        g.stores++; g.projected += r.projected; g.actual += r.actual;
+    });
+    document.getElementById('ctCmpHead').innerHTML = [ctL.colStatus, ctL.colStores, ctL.projected, ctL.actual, ctL.gap, ctL.colFill]
+        .map((h, i) => `<th class="${i ? 'num' : ''}">${sapEscape(h)}</th>`).join('');
+    const fill = (a, p) => p > 0 ? Math.round(a * 1000 / p) / 10 + '%' : '—';
+    const line = (label, pillCls, g) => `<tr><td>${pillCls ? `<span class="ct-pill ${pillCls}">${sapEscape(label)}</span>` : `<b>${sapEscape(label)}</b>`}</td>
+        <td class="num">${g.stores}</td><td class="num">${g.projected}</td><td class="num">${g.actual}</td>
+        <td class="num ${ctGapClass(g.actual - g.projected)}">${ctGapText(g.actual - g.projected)}</td><td class="num">${fill(g.actual, g.projected)}</td></tr>`;
+    const order = Object.keys(groups).sort((a, b) => CT_ST_ORDER[a] - CT_ST_ORDER[b]);
+    const total = order.reduce((t, k) => ({ stores: t.stores + groups[k].stores, projected: t.projected + groups[k].projected, actual: t.actual + groups[k].actual }), { stores: 0, projected: 0, actual: 0 });
+    document.getElementById('ctCmpRows').innerHTML = order.map(k => line(ctStLabel(k), CT_ST_PILL[k], groups[k])).join('') + line(ctL.total, '', total);
 }
 
 function ctRenderChart(d) {
@@ -217,14 +256,14 @@ function ctRenderChart(d) {
 
 const ctVal = {
     store: r => r.store.toLowerCase(), oc: r => (r.operationConsultant || '').toLowerCase(), projected: r => r.projected, actual: r => r.actual,
-    gap: r => r.gap, newHires: r => r.newHires, perTrainer: r => r.hiresPerTrainer ?? (r.newHires > 0 ? Number.MAX_VALUE : -1),
+    gap: r => r.gap, status: r => CT_ST_ORDER[ctStatus(r)], newHires: r => r.newHires, perTrainer: r => r.hiresPerTrainer ?? (r.newHires > 0 ? Number.MAX_VALUE : -1),
 };
 function ctRenderStores() {
     const d = ctData;
     const th = (key, label, cls) => `<th class="sortable ${cls || ''}" data-sort="${key}">${sapEscape(label)}<i class="bi"></i></th>`;
     const head = document.getElementById('ctHead');
     head.innerHTML = th('store', ctL.store) + th('oc', ctL.oc) + th('projected', ctL.projected, 'num') + th('actual', ctL.actual, 'num') + th('gap', ctL.gap, 'num')
-        + th('newHires', ctL.newHires, 'num') + th('perTrainer', ctL.per, 'num');
+        + th('newHires', ctL.newHires, 'num') + th('perTrainer', ctL.per, 'num') + th('status', ctL.colStatus);
     head.querySelectorAll('th.sortable').forEach(el => {
         const on = el.dataset.sort === ctSort.key;
         el.classList.toggle('sorted', on);
@@ -239,8 +278,8 @@ function ctRenderStores() {
         const per = r.hiresPerTrainer != null ? r.hiresPerTrainer : (r.newHires > 0 ? `<span class="ct-pill red">${sapEscape(ctL.noTrainer)}</span>` : '—');
         return `<tr><td>${sapEscape(r.store)}</td><td>${r.operationConsultant ? sapEscape(r.operationConsultant) : '—'}</td>
             <td class="num">${d.hasProjection ? r.projected : '—'}</td><td class="num">${r.actual}</td>
-            <td class="num ${ctGapClass(r.gap)}">${d.hasProjection ? ctGapText(r.gap) : '—'}</td><td class="num">${r.newHires}</td><td class="num">${per}</td></tr>`;
-    }).join('') : `<tr><td colspan="7" class="text-center py-3 text-muted">${sapEscape(ctL.noRows)}</td></tr>`;
+            <td class="num ${ctGapClass(r.gap)}">${d.hasProjection ? ctGapText(r.gap) : '—'}</td><td class="num">${r.newHires}</td><td class="num">${per}</td><td>${d.hasProjection ? `<span class="ct-pill ${CT_ST_PILL[ctStatus(r)]}">${sapEscape(ctStLabel(ctStatus(r)))}</span>` : '—'}</td></tr>`;
+    }).join('') : `<tr><td colspan="8" class="text-center py-3 text-muted">${sapEscape(ctL.noRows)}</td></tr>`;
 }
 
 function ctRenderMovement(d) {
