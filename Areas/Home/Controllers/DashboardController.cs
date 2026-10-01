@@ -35,6 +35,8 @@ public class DashboardController : Controller
 
     public IActionResult HiringForecast() => View();
 
+    public IActionResult CrewTrainers() => View();
+
     public IActionResult Retention() => View();
 
     public IActionResult Stores() => View();

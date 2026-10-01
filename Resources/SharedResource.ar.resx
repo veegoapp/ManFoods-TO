@@ -2031,4 +2031,41 @@
   <data name="Msg_CrewTrainerNoRoster" xml:space="preserve"><value>لم تُرفع قائمة الموظفين الحاليين لشهر {0} {1} بعد، فلم يمكن مطابقة المدربين بها. سيُحتسبون عند رفع قائمة ذلك الشهر.</value></data>
   <data name="Msg_CrewTrainerNotInRoster" xml:space="preserve"><value>{0} رقم وظيفي غير موجود في قائمة الموظفين الحاليين لذلك الشهر ولم يُحتسب: {1}.</value></data>
   <data name="Msg_CrewTrainerJobDiffers" xml:space="preserve"><value>{0} موظف وظيفتهم هنا تختلف عنها في قائمة الموظفين الحاليين.</value></data>
+  <data name="Nav_CrewTrainers" xml:space="preserve"><value>مدربو الطاقم</value></data>
+  <data name="Page_CrewTrainers" xml:space="preserve"><value>مدربو الطاقم</value></data>
+  <data name="Page_CrewTrainersSub" xml:space="preserve"><value>المدربون مقابل الخطة والموظفون الجدد الذين يدرّبونهم ومن دخل القائمة أو خرج منها</value></data>
+  <data name="CT_NoData" xml:space="preserve"><value>لم تُرفع قائمة مدربي الطاقم بعد.</value></data>
+  <data name="CT_NoDataAdmin" xml:space="preserve"><value>ارفع قائمة مدربي الطاقم من إدارة البيانات</value></data>
+  <data name="CT_NoPlan" xml:space="preserve"><value>هذا الشهر بلا توقّع لمدربي الطاقم (Crew Trainer) لذلك لا تظهر أعمدة الخطة.</value></data>
+  <data name="CT_ChartTitle" xml:space="preserve"><value>المدربون في كل شهر</value></data>
+  <data name="CT_ChartSub" xml:space="preserve"><value>توقّع مدربي الطاقم مقابل المدربين الموجودين في قائمة الموظفين الحاليين لكل شهر</value></data>
+  <data name="CT_StoresTitle" xml:space="preserve"><value>المدربون والموظفون الجدد حسب الفرع</value></data>
+  <data name="CT_StoresSub" xml:space="preserve"><value>الفروع الأعلى في عدد الموظفين الجدد لكل مدرب تظهر أولًا</value></data>
+  <data name="CT_ColNewHires" xml:space="preserve"><value>الجدد (90 يومًا)</value></data>
+  <data name="CT_ColPerTrainer" xml:space="preserve"><value>الجدد لكل مدرب</value></data>
+  <data name="CT_NoTrainer" xml:space="preserve"><value>بلا مدرب</value></data>
+  <data name="CT_KTrainers" xml:space="preserve"><value>المدربون</value></data>
+  <data name="CT_KTrainersDesc" xml:space="preserve"><value>الفعلي / المتوقع لمدربي الطاقم هذا الشهر</value></data>
+  <data name="CT_KHires" xml:space="preserve"><value>الموظفون الجدد</value></data>
+  <data name="CT_KHiresDesc" xml:space="preserve"><value>من تم تعيينهم خلال 90 يومًا حتى نهاية الشهر</value></data>
+  <data name="CT_KPer" xml:space="preserve"><value>الجدد لكل مدرب</value></data>
+  <data name="CT_KPerDesc" xml:space="preserve"><value>عدد الجدد مقسومًا على المدربين؛ كلما زاد زاد حمل التدريب</value></data>
+  <data name="CT_KResigned" xml:space="preserve"><value>مدربون استقالوا</value></data>
+  <data name="CT_KResignedDesc" xml:space="preserve"><value>مدربون استقالوا خلال آخر {0} أشهر</value></data>
+  <data name="CT_MovementTitle" xml:space="preserve"><value>تغييرات قائمة المدربين</value></data>
+  <data name="CT_MoveSub" xml:space="preserve"><value>مقارنة بقائمة {0}</value></data>
+  <data name="CT_Entered" xml:space="preserve"><value>دخلوا القائمة</value></data>
+  <data name="CT_Left" xml:space="preserve"><value>خرجوا من القائمة</value></data>
+  <data name="CT_NoPrevious" xml:space="preserve"><value>لا توجد قائمة سابقة للمقارنة.</value></data>
+  <data name="CT_NoneMoved" xml:space="preserve"><value>لا أحد.</value></data>
+  <data name="CT_StResigned" xml:space="preserve"><value>استقال</value></data>
+  <data name="CT_StActive" xml:space="preserve"><value>لا يزال يعمل وخرج من القائمة</value></data>
+  <data name="CT_StGone" xml:space="preserve"><value>غير موجود في القائمة الحالية للموظفين</value></data>
+  <data name="Guide_CT_Overview" xml:space="preserve"><value>يعرض مدربي الطاقم: عددهم مقابل الخطة وعدد الموظفين الجدد الذين يجب أن يدرّبهم كل فرع ومن دخل قائمة المدربين أو خرج منها.</value></data>
+  <data name="Guide_CT_FilterNote" xml:space="preserve"><value>تختار السنة والشهر من الأشهر التي لها قائمة مدربين مرفوعة. يضيّق الفرع واستشاري العمليات والمدير والاستشاري الأول ومدير أول التشغيل كل رقم وجدول. ترى فقط الفروع المتاحة لك (الإعدادات ← الوصول، صف تخطيط القوى العاملة).</value></data>
+  <data name="Guide_CT_KpisTitle" xml:space="preserve"><value>كروت الملخص</value></data>
+  <data name="Guide_CT_Kpis" xml:space="preserve"><value>المدربون: الفعلي على المتوقع للشهر. الموظفون الجدد: من عُيّنوا خلال 90 يومًا حتى نهاية الشهر (من تواريخ التعيين في قائمة الموظفين الحاليين). الجدد لكل مدرب: عدد الجدد مقسومًا على المدربين، وكلما زاد الرقم زاد حمل التدريب. مدربون استقالوا: مدربون كانوا في قائمة واستقالوا خلال آخر 6 أشهر.</value></data>
+  <data name="Guide_CT_Chart" xml:space="preserve"><value>المتوقع مقابل الفعلي لمدربي الطاقم في كل شهر. الفعلي هو من في القائمة المرفوعة وموجود أيضًا في قائمة الموظفين الحاليين لذلك الشهر، فالشهر بلا قائمة أو بلا قائمة موظفين يظهر 0.</value></data>
+  <data name="Guide_CT_Stores" xml:space="preserve"><value>صف لكل فرع له توقّع لمدربي الطاقم هذا الشهر: المتوقع والفعلي والفجوة (الفعلي − المتوقع، السالب نقص في المدربين) والموظفون الجدد في آخر 90 يومًا وعدد الجدد لكل مدرب. الفرع الذي فيه جدد وبلا مدرب يظهر «بلا مدرب» ويأتي أولًا. اضغط على عنوان العمود للترتيب واستخدم البحث لإيجاد فرع أو استشاري.</value></data>
+  <data name="Guide_CT_Movement" xml:space="preserve"><value>من دخل قائمة المدربين ومن خرج منها مقارنة بالقائمة المرفوعة السابقة. وللخارجين: استقال (ظهر في الاستقالات)، أو لا يزال يعمل وخرج من القائمة (موجود في قائمة هذا الشهر أي أُلغي البدل أو انتقل)، أو غير موجود في القائمة الحالية للموظفين.</value></data>
 </root>
