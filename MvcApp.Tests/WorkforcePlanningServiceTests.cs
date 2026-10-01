@@ -450,30 +450,74 @@ public class WorkforcePlanningServiceTests
         Assert.Contains("Crew Trainer", dto.Jobs);
     }
 
+    private static void Person(AppDbContext db, int month, string id, string store, string job, string group = "Hourly") =>
+        db.ActiveEmployees.Add(new ActiveEmployee { Year = 2026, Month = month, EmployeeId = id, Store = store, JobTitle = job, PayrollGroup = group });
+
+    private static void Trainer(AppDbContext db, int month, string id, string store) =>
+        db.CrewTrainerEmployees.Add(new CrewTrainerEmployee { Year = 2026, Month = month, EmployeeId = id, StoreName = store });
+
     [Fact]
-    public async Task CrewTrainerActual_ComesFromTheMonthlyList_AndCrewIsUntouched()
+    public async Task CrewTrainerActual_CountsOnlyListedPeopleWhoAreOnTheRoster_AndCrewIsUntouched()
     {
         var db = NewDb();
         Proj(db, 1, "1 | A", "Crew Trainer", 2); Proj(db, 1, "1 | A", "Hourly Paid Crew Trainer", 1); Proj(db, 1, "1 | A", "Crew", 10);
         Proj(db, 2, "1 | A", "Crew Trainer", 3); Proj(db, 3, "1 | A", "Crew Trainer", 3);
-        Active(db, 1, "1 | A", "Crew", 9);
-        Active(db, 2, "1 | A", "Crew", 9);
-        db.CrewTrainerEmployees.Add(new CrewTrainerEmployee { Year = 2026, Month = 1, EmployeeId = "1", StoreName = "1 | A" });
-        db.CrewTrainerEmployees.Add(new CrewTrainerEmployee { Year = 2026, Month = 1, EmployeeId = "2", StoreName = "1 | A" });
-        db.CrewTrainerEmployees.Add(new CrewTrainerEmployee { Year = 2026, Month = 3, EmployeeId = "9", StoreName = "1 | A" }); // no roster for March
+        Person(db, 1, "1", "1 | A", "Crew"); Person(db, 1, "2", "1 | A", "Crew"); Person(db, 1, "3", "1 | A", "Crew");
+        Person(db, 2, "1", "1 | A", "Crew");
+        Trainer(db, 1, "1", "1 | A"); Trainer(db, 1, "2", "1 | A");
+        Trainer(db, 1, "99", "1 | A");   // not on the January roster: not counted
+        Trainer(db, 3, "1", "1 | A");    // no roster for March
         await db.SaveChangesAsync();
 
         var jan = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
         var trainer = Assert.Single(jan.ByJob, r => r.Name == "Crew Trainer");
         Assert.Equal(3, trainer.Projected);
         Assert.Equal(2, trainer.Actual);
-        Assert.Equal(9, Assert.Single(jan.ByJob, r => r.Name == "Crew").Actual); // trainers are not taken out of Crew (yet)
+        Assert.Equal(3, Assert.Single(jan.ByJob, r => r.Name == "Crew").Actual); // trainers are not taken out of Crew (yet)
 
         var feb = await NewService(db).GetAsync(2026, 2, null, null, "Admin", null);
         Assert.Equal(0, Assert.Single(feb.ByJob, r => r.Name == "Crew Trainer").Actual); // no list uploaded for February
 
         var mar = await NewService(db).GetAsync(2026, 3, null, null, "Admin", null);
         Assert.False(mar.HasActual); // a trainer list alone does not make March an "actual" month
+    }
+
+    [Fact]
+    public async Task CrewTrainer_PayrollGroupComesFromTheTrainersOwnGroup()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew Trainer", 3); Proj(db, 1, "1 | A", "Crew", 5);
+        Person(db, 1, "1", "1 | A", "Crew", "Hourly"); Person(db, 1, "2", "1 | A", "Crew", "Monthly"); Person(db, 1, "3", "1 | A", "Crew", "Monthly");
+        Person(db, 1, "4", "1 | A", "Crew", "Hourly"); Person(db, 1, "5", "1 | A", "Crew", "Hourly"); Person(db, 1, "6", "1 | A", "Crew", "Hourly");
+        Trainer(db, 1, "1", "1 | A"); Trainer(db, 1, "2", "1 | A"); Trainer(db, 1, "3", "1 | A");
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        var monthly = Assert.Single(dto.ByPayrollGroup, r => r.Name == "Monthly");
+        Assert.Equal(3, monthly.Projected);   // Crew Trainer goes to the group most trainers are in
+        Assert.Equal(3, monthly.Actual);
+        Assert.Equal(5, Assert.Single(dto.ByPayrollGroup, r => r.Name == "Hourly").Projected); // Crew stays in its own group
+        Assert.DoesNotContain(dto.ByPayrollGroup, r => r.Name == "");
+    }
+
+    [Fact]
+    public async Task CrewTrainer_ExpectedResignationsAreFoundByEmployeeId()
+    {
+        var db = NewDb();
+        Proj(db, 2, "1 | A", "Crew Trainer", 3); Proj(db, 2, "1 | A", "Crew", 5);
+        Person(db, 1, "1", "1 | A", "Crew"); Person(db, 1, "2", "1 | A", "Crew");
+        Person(db, 2, "2", "1 | A", "Crew");
+        Trainer(db, 1, "1", "1 | A");                       // a trainer in January...
+        db.Resignations.Add(new Resignation { Year = 2026, Month = 2, EmployeeId = "1", Store = "1 | A", JobTitle = "Crew" }); // ...who resigned in February
+        db.Resignations.Add(new Resignation { Year = 2026, Month = 2, EmployeeId = "2", Store = "1 | A", JobTitle = "Crew" }); // an ordinary Crew resignation
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 2, null, null, "Admin", null);
+
+        // two roster months (Jan, Feb) -> 1 trainer resignation / 2 months = 0.5 expected per month
+        Assert.Equal(0.5, Assert.Single(dto.ByJob, r => r.Name == "Crew Trainer").ExpectedAttrition);
+        Assert.Equal(1.0, Assert.Single(dto.ByJob, r => r.Name == "Crew").ExpectedAttrition);
     }
 
     [Fact]

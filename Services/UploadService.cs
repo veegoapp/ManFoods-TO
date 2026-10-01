@@ -855,6 +855,26 @@ public class UploadService : IUploadService
         await tx.CommitAsync();
         WorkforcePlanningService.InvalidateCache();
 
+        // Check the list against that month's roster (by employee id): people missing from it are not
+        // counted in Workforce Planning, and a different job is worth a look. Skipped when the month has
+        // no roster yet — the list is counted as soon as it arrives.
+        var ids = parsed.Rows.Select(r => r.EmployeeId).ToList();
+        var rosterHasMonth = await _db.ActiveEmployees.AnyAsync(e => e.Year == year && e.Month == month);
+        var notInRoster = new List<string>();
+        int jobDiffers = 0;
+        if (rosterHasMonth)
+        {
+            var rosterJobs = (await _db.ActiveEmployees.AsNoTracking().Where(e => e.Year == year && e.Month == month && ids.Contains(e.EmployeeId))
+                .Select(e => new { e.EmployeeId, e.JobTitle }).ToListAsync())
+                .GroupBy(e => e.EmployeeId, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().JobTitle, StringComparer.OrdinalIgnoreCase);
+            foreach (var r in parsed.Rows)
+            {
+                if (!rosterJobs.TryGetValue(r.EmployeeId, out var rosterJob)) { notInRoster.Add(r.EmployeeId); continue; }
+                var sheetJob = Fold(CollapseSpaces(r.JobTitle));
+                if (sheetJob.Length > 0 && !sheetJob.Contains("trainer") && sheetJob != Fold(CollapseSpaces(rosterJob))) jobDiffers++;
+            }
+        }
+
         var monthName = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames[month - 1];
         var message = string.Format(_L["Msg_CrewTrainerProcessed"].Value, parsed.Rows.Count, monthName, year);
         var warnings = new List<string>();
@@ -862,6 +882,9 @@ public class UploadService : IUploadService
         if (parsed.Duplicates > 0) warnings.Add(string.Format(_L["Msg_CrewTrainerDuplicates"].Value, parsed.Duplicates));
         if (parsed.MissingStore > 0) warnings.Add(string.Format(_L["Msg_CrewTrainerMissingStore"].Value, parsed.MissingStore));
         if (parsed.UnknownStores.Count > 0) warnings.Add(string.Format(_L["Msg_JobProjUnknownStores"].Value, parsed.UnknownStores.Count, Cap(parsed.UnknownStores)));
+        if (!rosterHasMonth) warnings.Add(string.Format(_L["Msg_CrewTrainerNoRoster"].Value, monthName, year));
+        if (notInRoster.Count > 0) warnings.Add(string.Format(_L["Msg_CrewTrainerNotInRoster"].Value, notInRoster.Count, Cap(notInRoster)));
+        if (jobDiffers > 0) warnings.Add(string.Format(_L["Msg_CrewTrainerJobDiffers"].Value, jobDiffers));
         return (true, message, parsed.Rows.Count, warnings.Count > 0 ? string.Join(" ", warnings) : null);
     }
 

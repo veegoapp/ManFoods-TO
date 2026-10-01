@@ -2010,7 +2010,7 @@
   <data name="UL_CrewTrainers" xml:space="preserve"><value>Crew Trainers (monthly)</value></data>
   <data name="UL_CrewTrainersSub" xml:space="preserve"><value>Employees who receive the Crew Trainer allowance in a month</value></data>
   <data name="UL_CrewTrainersTemplate" xml:space="preserve"><value>Download template</value></data>
-  <data name="UL_CrewTrainersNote" xml:space="preserve"><value>One file per month with the columns Employee ID, Name, Job Title and Store (the full store name, as everywhere in the portal). Each store's number of employees in the list is its actual Crew Trainer headcount in Workforce Planning. Uploading again for the same month replaces it.</value></data>
+  <data name="UL_CrewTrainersNote" xml:space="preserve"><value>One file per month with the columns Employee ID, Name, Job Title and Store (the full store name, as everywhere in the portal). Employees are matched to the active employee list by Employee ID; only those found there are counted. Each store's count is its actual Crew Trainer headcount in Workforce Planning, and their payroll group and resignations come from the same IDs. Uploading again for the same month replaces it.</value></data>
   <data name="DM_UploadCrewTrainersButton" xml:space="preserve"><value>Upload Crew Trainers</value></data>
   <data name="DM_CrewTrainersBadge" xml:space="preserve"><value>Crew Trainers</value></data>
   <data name="DM_DeleteConfirmCrewTrainers" xml:space="preserve"><value>Delete this Crew Trainers upload? The list for that month will be removed.</value></data>
@@ -2022,4 +2022,7 @@
   <data name="Msg_CrewTrainerDuplicates" xml:space="preserve"><value>{0} repeated employee ID(s) were counted once.</value></data>
   <data name="Msg_CrewTrainerMissingStore" xml:space="preserve"><value>{0} employee(s) have no store and are not counted in any store.</value></data>
   <data name="Msg_CrewTrainerUploadFailed" xml:space="preserve"><value>Crew Trainers upload failed: {0}</value></data>
+  <data name="Msg_CrewTrainerNoRoster" xml:space="preserve"><value>No active employee list is uploaded for {0} {1} yet, so the trainers could not be checked against it. They are counted once that month's list is uploaded.</value></data>
+  <data name="Msg_CrewTrainerNotInRoster" xml:space="preserve"><value>{0} employee ID(s) are not in that month's active employee list and are not counted: {1}.</value></data>
+  <data name="Msg_CrewTrainerJobDiffers" xml:space="preserve"><value>{0} employee(s) have a different job here than in the active employee list.</value></data>
 </root>
