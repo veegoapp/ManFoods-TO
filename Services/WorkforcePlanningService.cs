@@ -302,7 +302,13 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         dto.HasData = true;
 
         var now = DateTime.Now;
-        var y = year.HasValue && years.Contains(year.Value) ? year.Value : (years.Contains(now.Year) ? now.Year : years[0]);
+        // Default period: the latest month that has an uploaded roster (Monthly Workforce Data), not the
+        // calendar month, so the page keeps showing real data until the new month's roster is uploaded.
+        var rosterKeys = await GetRosterPeriodKeysAsync();
+        var latestRosterYear = rosterKeys.Count > 0 ? rosterKeys[0] / 100 : 0;
+        var y = year.HasValue && years.Contains(year.Value) ? year.Value
+              : years.Contains(latestRosterYear) ? latestRosterYear
+              : (years.Contains(now.Year) ? now.Year : years[0]);
         dto.Year = y;
         var data = await GetYearDataAsync(y);
 
@@ -331,9 +337,11 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         var actualMonths = data.Actual.Select(c => c.Month).Distinct().ToHashSet();
         dto.Months = projMonths;
         if (strict && !projMonths.Contains(month!.Value)) { dto.HasData = false; return dto; }
+        var latestActual = actualMonths.Intersect(projMonths).DefaultIfEmpty(0).Max(); // latest month with both a roster and a projection
         var m = month.HasValue && projMonths.Contains(month.Value) ? month.Value
+              : latestActual > 0 ? latestActual
               : (y == now.Year && projMonths.Contains(now.Month)) ? now.Month
-              : actualMonths.Intersect(projMonths).DefaultIfEmpty(projMonths.Count > 0 ? projMonths[^1] : 1).Max();
+              : (projMonths.Count > 0 ? projMonths[^1] : 1);
         dto.Month = m;
         dto.HasActual = actualMonths.Contains(m);
 

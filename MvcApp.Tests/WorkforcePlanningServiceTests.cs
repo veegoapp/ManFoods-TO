@@ -33,6 +33,28 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task DefaultPeriod_IsTheLatestMonthWithAnUploadedRoster()
+    {
+        var db = NewDb();
+        // The projection covers the whole year; rosters are only uploaded up to March. Whatever today's date is,
+        // the page must open on March (the latest month with real data), not on the calendar month.
+        for (int m = 1; m <= 12; m++) Proj(db, m, "1 | A", "Crew", 10);
+        Active(db, 1, "1 | A", "Crew", 9); Active(db, 2, "1 | A", "Crew", 9); Active(db, 3, "1 | A", "Crew", 8);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(null, null, null, null, "Admin", null);
+
+        Assert.Equal(2026, dto.Year);
+        Assert.Equal(3, dto.Month);
+        Assert.True(dto.HasActual);
+        Assert.Equal(8, dto.Kpis.Actual);
+
+        var chosen = await NewService(db).GetAsync(2026, 7, null, null, "Admin", null); // an explicit month is still honoured
+        Assert.Equal(7, chosen.Month);
+        Assert.False(chosen.HasActual);
+    }
+
+    [Fact]
     public async Task GapAndFillRate_AreActualMinusProjected()
     {
         var db = NewDb();
