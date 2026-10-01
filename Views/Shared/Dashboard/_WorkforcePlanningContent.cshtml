@@ -48,6 +48,17 @@
     background:var(--card-bg); border:1px solid var(--card-border); color:var(--text);
     border-radius:var(--radius-sm); font-size:13px; height:36px; padding:0 12px; min-width:200px;
 }
+.wp-click { cursor:pointer; }
+.wp-chev { display:inline-block; width:14px; font-size:11px; color:var(--text-3); transition:transform .15s; }
+.wp-open .wp-chev { transform:rotate(90deg); color:var(--red); }
+.wp-detail > td { background:var(--bg-2); padding:14px 18px !important; white-space:normal !important; }
+.wp-sub { width:100%; border-collapse:collapse; font-size:13px; margin-top:8px; background:var(--card-bg); border:1px solid var(--card-border); }
+.wp-sub th, .wp-sub td { padding:7px 12px; border-bottom:1px solid var(--card-border); text-align:start; white-space:nowrap; position:static; background:transparent; }
+.wp-sub th { background:var(--bg-2); font-weight:700; }
+.wp-sub td.num, .wp-sub th.num { text-align:end; font-variant-numeric:tabular-nums; }
+.wp-sub tfoot td { font-weight:700; background:var(--bg-2); }
+.wp-explain { font-size:12.5px; color:var(--text-2); margin-top:8px; line-height:1.6; }
+.wp-explain b { color:var(--text); }
 .wp-gap-short { color:oklch(0.55 0.2 22); }
 .wp-gap-over { color:oklch(0.45 0.15 250); }
 .wp-empty { padding:40px 20px; text-align:center; color:var(--text-3); font-size:14px; }
@@ -204,6 +215,7 @@
      data-ok="@L["WP_StatusOk"]" data-watch="@L["WP_StatusWatch"]" data-critical="@L["WP_StatusCritical"]" data-none="@L["WP_StatusNone"]"
      data-col-name="@L["Common_Name"]" data-col-stores="@L["Common_Stores"]" data-col-projected="@L["WP_ColProjected"]" data-col-actual="@L["WP_ColActual"]" data-col-gap="@L["WP_ColGap"]" data-unassigned="@L["WP_Unassigned"]" data-col-hiring="@L["WP_ColHiring"]" data-col-shortage="@L["WP_ColShortage"]" data-col-attrition="@L["WP_ColAttrition"]" data-over="@L["WP_StatusOver"]" data-col-fill="@L["WP_ColFill"]" data-col-status="@L["WP_ColStatus"]" data-no-rows="@L["Common_NoData"]" data-oc-title="@L["Common_OperationConsultants"]" data-oc-sub="@L["WP_GrpSubOc"]" data-od-title="@L["Common_OperationDirectors"]" data-od-sub="@L["WP_GrpSubOd"]" data-om-title="@L["Common_OperationManagers"]" data-om-sub="@L["WP_GrpSubOm"]" data-soc-title="@L["Common_SeniorOperationConsultants"]" data-soc-sub="@L["WP_GrpSubSoc"]" data-hiring="@L["WP_ColHiring"]" data-kpi-hiring="@L["WP_KpiHiring"]" data-kpi-hiring-desc="@L["WP_KpiHiringDesc"]" data-attr-note="@L["WP_AttrNote"]" data-no-attr="@L["WP_NoAttrition"]" data-gap="@L["WP_ColGap"]" data-fill="@L["WP_ColFill"]" data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
      data-risk-x="@L["WP_RiskX"]" data-risk-y="@L["WP_RiskY"]" data-risk-danger="@L["WP_RiskDanger"]" data-risk-note="@L["WP_RiskNote"]" data-risk-resign="@L["WP_RiskResign"]"
+     data-drill-title="@L["WP_DrillTitle"]" data-drill-formula="@L["WP_DrillFormula"]" data-drill-absorbed="@L["WP_DrillAbsorbed"]" data-drill-loading="@L["WP_DrillLoading"]" data-drill-hint="@L["WP_DrillHint"]" data-col-job="@L["WP_ColJob"]" data-total="@L["HF_Total"]"
      data-error="@L["Common_NoData"]"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -279,6 +291,7 @@ async function wpLoad() {
         return;
     }
     wpData = d;
+    wpStoreJobs.clear(); // the filters or the period may have changed the figures
     if (!d.hasData) {
         document.getElementById('wpEmpty').hidden = false;
         document.getElementById('wpBody').hidden = true;
@@ -308,6 +321,7 @@ async function wpLoad() {
     wpRenderTrend(d);
     wpRenderPayroll(d);
     wpRenderStores();
+    wpOpenStores.forEach(st => { if (d.byStore.some(r => r.name === st)) wpFetchStoreJobs(st); else wpOpenStores.delete(st); });
     wpRenderGroups();
     wpRenderRisk(d); // separate request: never delays the rest of the page
 }
@@ -681,6 +695,53 @@ function wpRenderPayrollTable(d) {
     }).join('');
 }
 
+/* ── Store drill-down: click a store to see its jobs, so every number in its row can be traced ── */
+const wpOpenStores = new Set();
+const wpStoreJobs = new Map(); // store -> job rows (or 'loading')
+const wpNum = v => Math.round(v * 10) / 10;
+
+async function wpToggleStore(store) {
+    if (wpOpenStores.has(store)) { wpOpenStores.delete(store); wpRenderStores(); return; }
+    wpOpenStores.add(store);
+    wpRenderStores();
+    wpFetchStoreJobs(store);
+}
+async function wpFetchStoreJobs(store) {
+    if (wpStoreJobs.has(store)) return;
+    wpStoreJobs.set(store, 'loading');
+    const d = wpData;
+    const q = new URLSearchParams({ store, year: d.year, month: d.month });
+    if (wpState.job) q.set('jobs', wpState.job);
+    try {
+        const r = await fetch('/api/workforce-planning/store-jobs?' + q);
+        if (!r.ok) throw new Error();
+        const rows = await r.json();
+        if (wpData === d) wpStoreJobs.set(store, rows); // ignore if the filters changed meanwhile
+    } catch { if (wpData === d) wpStoreJobs.set(store, []); }
+    if (wpData === d) wpRenderStores();
+}
+
+function wpDrillHtml(store, rows) {
+    if (rows === 'loading' || !rows) return `<div class="text-muted" style="font-size:13px">${sapEscape(wpL.drillLoading)}</div>`;
+    const lines = rows.map(r => {
+        const p = r.projected, a = r.actual ?? 0, gap = a - p;
+        return { job: r.job, p, a, gap, shortage: Math.max(0, p - a), exp: r.expectedAttrition ?? 0, need: r.hiringNeed ?? 0 };
+    });
+    const sum = f => lines.reduce((t, l) => t + f(l), 0);
+    const short = sum(l => l.shortage), exp = Math.round(sum(l => l.exp)), need = Math.round(sum(l => l.need));
+    const body = lines.map(l => `<tr><td>${sapEscape(l.job)}</td><td class="num">${l.p}</td><td class="num">${l.a}</td>
+        <td class="num ${wpGapClass(l.gap)}">${wpGapText(l.gap)}</td><td class="num">${l.shortage}</td><td class="num">${wpNum(l.exp)}</td><td class="num"><b>${wpNum(l.need)}</b></td></tr>`).join('');
+    const foot = `<tr><td>${sapEscape(wpL.total)}</td><td class="num">${sum(l => l.p)}</td><td class="num">${sum(l => l.a)}</td>
+        <td class="num ${wpGapClass(sum(l => l.gap))}">${wpGapText(sum(l => l.gap))}</td><td class="num">${short}</td><td class="num">${exp}</td><td class="num">${need}</td></tr>`;
+    const diff = short + exp - need;
+    const absorbed = diff > 0 ? `<div class="wp-explain">${sapEscape(wpFmt(wpL.drillAbsorbed, diff, exp, need, short + exp))}</div>` : '';
+    return `<div style="font-weight:700;font-size:13px">${sapEscape(wpFmt(wpL.drillTitle, store))}</div>
+        <div class="wp-table-wrap" style="max-height:340px"><table class="wp-sub"><thead><tr><th>${sapEscape(wpL.colJob)}</th><th class="num">${sapEscape(wpL.colProjected)}</th><th class="num">${sapEscape(wpL.colActual)}</th>
+        <th class="num">${sapEscape(wpL.colGap)}</th><th class="num">${sapEscape(wpL.colShortage)}</th><th class="num">${sapEscape(wpL.colAttrition)}</th><th class="num">${sapEscape(wpL.colHiring)}</th></tr></thead>
+        <tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
+        <div class="wp-explain">${sapEscape(wpL.drillFormula)}</div>${absorbed}`;
+}
+
 function wpRenderStores() {
     const term = (document.getElementById('wpSearch').value || '').trim().toLowerCase();
     const has = wpData.hasActual;
@@ -692,8 +753,9 @@ function wpRenderStores() {
         const fill = has
             ? `<span class="wp-fill"><span style="width:${Math.min(100, r.fillPercent)}%;background:${wpFillColor(r.status)}"></span></span>${r.fillPercent}%`
             : '—';
-        return `<tr>
-            <td>${sapEscape(r.name)}</td>
+        const open = has && wpOpenStores.has(r.name);
+        const main = `<tr class="${has ? 'wp-click' : ''} ${open ? 'wp-open' : ''}" ${has ? `data-store="${sapEscape(r.name)}" title="${sapEscape(wpL.drillHint)}"` : ''}>
+            <td>${has ? '<i class="bi bi-chevron-right wp-chev"></i>' : ''}${sapEscape(r.name)}</td>
             <td>${r.operationConsultant ? sapEscape(r.operationConsultant) : '—'}</td>
             <td class="num">${r.projected}</td>
             <td class="num">${has ? r.actual : '—'}</td>
@@ -704,8 +766,13 @@ function wpRenderStores() {
             <td>${fill}</td>
             <td><span class="wp-pill ${r.status}">${sapEscape(wpPillLabel(r.status))}</span></td>
         </tr>`;
+        return main + (open ? `<tr class="wp-detail"><td colspan="10">${wpDrillHtml(r.name, wpStoreJobs.get(r.name))}</td></tr>` : '');
     }).join('');
 }
+document.getElementById('wpStoreRows').addEventListener('click', e => {
+    const tr = e.target.closest('tr.wp-click');
+    if (tr && !e.target.closest('.wp-detail')) wpToggleStore(tr.dataset.store);
+});
 
 document.getElementById('wpYear').addEventListener('change', e => { wpState.year = e.target.value; wpState.month = ''; wpLoad(); });
 document.getElementById('wpMonth').addEventListener('change', e => { wpState.month = e.target.value; wpLoad(); });

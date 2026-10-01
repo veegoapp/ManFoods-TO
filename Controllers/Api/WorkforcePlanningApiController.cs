@@ -80,6 +80,19 @@ public class WorkforcePlanningApiController : ControllerBase
         return Ok(await _planning.GetAsync(year, month, store, jobs, role, assignedName, om, oc, soc, od));
     }
 
+    /// <summary>One store's jobs for a month (projected, actual, expected resignations, hiring need): the
+    /// breakdown behind the store's row in the stores table.</summary>
+    [HttpGet("store-jobs")]
+    public async Task<IActionResult> StoreJobs([FromQuery] string store, [FromQuery] int year, [FromQuery] int month, [FromQuery] string? jobs)
+    {
+        if (string.IsNullOrWhiteSpace(store)) return BadRequest(new { error = "Store is required." });
+        var role = HttpContext.Session.GetRole();
+        var assignedName = HttpContext.Session.GetEmail();
+        var rows = await _planning.GetDetailAsync(year, new[] { month }, store, jobs, role, assignedName);
+        return Ok(rows.Select(r => new { job = r.Job, projected = r.Projected, actual = r.Actual, expectedAttrition = r.ExpectedAttrition, hiringNeed = r.HiringNeed })
+            .OrderByDescending(r => r.hiringNeed ?? 0).ThenByDescending(r => r.projected).ThenBy(r => r.job, StringComparer.OrdinalIgnoreCase));
+    }
+
     // The two endpoints below feed the Stores and Store Profile pages, which run on the
     // Analytics area, so they follow that area's store visibility rather than this page's.
     [HttpGet("store-fill")]
