@@ -19,6 +19,10 @@ public class JobPayrollGroup
     [Column("payroll_group")]
     public string PayrollGroup { get; set; } = "";
 
+    /// <summary>True for the jobs that count as "crew level": the people a Crew Trainer trains (one trainer per 6).</summary>
+    [Column("is_crew_level")]
+    public bool IsCrewLevel { get; set; }
+
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

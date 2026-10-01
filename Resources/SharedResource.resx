@@ -1914,12 +1914,12 @@
   <data name="Action_Workforce_Staffing" xml:space="preserve"><value>Close the staffing gap: accelerate hiring and onboarding ahead of the shortfall.</value></data>
   <data name="Guide_WP_Overview" xml:space="preserve"><value>This page compares the headcount you planned (the job projection uploaded in Data Management) with the headcount that actually works for you, by job title and by store, for the month you pick. It shows where you are short, by how much, and roughly how many hires are needed. Only stores that have a projection for the month are compared.</value></data>
   <data name="Guide_WP_KpisTitle" xml:space="preserve"><value>Headline numbers</value></data>
-  <data name="Guide_WP_Kpis" xml:space="preserve"><value>Projected — the planned headcount for the month. Actual — active employees in the same stores that month. Gap — actual minus projected: a positive (+) number is a surplus, a negative number is a shortage. Fill Rate — actual as a percentage of projected. Hiring Need — the estimated hires required. Months that have no uploaded roster yet (future months) show the projection only.</value></data>
+  <data name="Guide_WP_Kpis" xml:space="preserve"><value>Projected — the planned headcount for the month. Actual — active employees in the same stores that month. Gap — actual minus projected: a positive (+) number is a surplus, a negative number is a shortage. Fill Rate — actual as a percentage of projected. Shortage — the people missing in the jobs that are below their plan (a surplus in one job never covers another). Hiring Need — the estimated hires required: the shortage plus the expected resignations. Months that have no uploaded roster yet (future months) show the projection only.</value></data>
   <data name="Guide_WP_ByJob" xml:space="preserve"><value>Planned and actual headcount side by side for each job title, with the numbers on the bars. Hover a bar to see the gap, fill rate and hiring need for that job.</value></data>
   <data name="Guide_WP_Trend" xml:space="preserve"><value>Projected headcount for every month of the selected year (dashed line) and actual headcount for the months that already have an uploaded roster (solid line), so you can see how reality compares with the plan as the year unfolds.</value></data>
   <data name="Guide_WP_Stores" xml:space="preserve"><value>Every store with a projection for the month, largest shortage first. Status: On track (95–100% filled), Watch (85–95%), Understaffed (below 85%) and Overstaffed (above 100%). Shortage is the number of people missing in the jobs that are short; Expected resignations is the average monthly resignations of the last 6 months; Hiring need is built from the two. Each store shows its Operation Consultant; click any column header to sort by it (click again to reverse). The search box also matches the consultant's name. Click a store to open its jobs: the Projected, Actual, Shortage, Expected resignations and Hiring need of each job, so you can see where the store's numbers come from.</value></data>
   <data name="Guide_WP_HiringTitle" xml:space="preserve"><value>How Hiring Need Is Estimated</value></data>
-  <data name="Guide_WP_HiringBody" xml:space="preserve"><value>For each store and job: shortage = projected − actual when actual is below projected (otherwise 0). Hiring need = projected − actual + expected resignations, never below zero, then summed. Expected resignations are the average monthly resignations of the last 6 roster months for that store and job, taken from the uploaded Resignations files. A surplus in one job does not offset a shortage in another — it only absorbs resignations in its own job — so the total hiring need can be positive even when the total gap is a surplus. If there is no resignation history yet, the hiring need equals the shortage. It is an estimate, not a guarantee.</value></data>
+  <data name="Guide_WP_HiringBody" xml:space="preserve"><value>Hiring need = Shortage + Expected resignations. Shortage is the number of people missing in each job that is below its projection  (a surplus in one job never covers another job, except that Crew Trainer and Hourly Paid Crew Trainer are counted together: the store's trainers are what matters). Expected resignations are the average monthly resignations of the last 6 roster months for that store and job, taken from the uploaded Resignations files. Click a store in the stores table to see its jobs and where its numbers come from. If there is no resignation history yet, the hiring need equals the shortage. It is an estimate, not a guarantee.</value></data>
   <data name="Guide_WP_FilterNote" xml:space="preserve"><value>Year and Month pick the period (only months that have a projection are listed). Store, Job title and the Operation Consultant / Manager / Senior Consultant / Director selectors narrow every number, chart and table on the page. You only see the stores you have access to; the Workforce Planning row in Settings → Access decides whether that is your own stores or all of them.</value></data>
   <data name="Guide_StoreProfile_StaffingPlan" xml:space="preserve"><value>The Staffing Plan card on the Workforce tab compares the store's projected headcount with its actual headcount, by job title (gap = actual − projected: + is a surplus, − a shortage), for the end of the selected period, and lists the projected headcount for the coming months. It appears only when a job projection has been uploaded for this store.</value></data>
   <data name="WP_GrpSubOc" xml:space="preserve"><value>Projected vs actual headcount by consultant</value></data>
@@ -1942,7 +1942,7 @@
   <data name="WP_In_WorstJob_T" xml:space="preserve"><value>Biggest shortage by job</value></data>
   <data name="WP_In_WorstJob_D" xml:space="preserve"><value>{0} — {1} short ({2}% filled).</value></data>
   <data name="WP_In_Hiring_T" xml:space="preserve"><value>Estimated hiring need</value></data>
-  <data name="WP_In_Hiring_D" xml:space="preserve"><value>About {0} hires are needed: {1} to close the shortages plus about {2} expected resignations a month, less what surplus in the same job can absorb (an estimate).</value></data>
+  <data name="WP_In_Hiring_D" xml:space="preserve"><value>About {0} hires are needed: {1} to close the shortages plus about {2} expected resignations a month (an estimate).</value></data>
   <data name="WP_In_NoHiring_T" xml:space="preserve"><value>No hiring needed</value></data>
   <data name="WP_In_NoHiring_D" xml:space="preserve"><value>Current staffing covers the projection and the expected resignations.</value></data>
   <data name="WP_In_WorstOc_T" xml:space="preserve"><value>Consultant with the biggest shortage</value></data>
@@ -1976,11 +1976,11 @@
   <data name="HF_Note" xml:space="preserve"><value>The forecast starts from the {0} employee list. Expected resignations (average of the last {2} roster months) leave each month, and hires fill the gap up to the projection. Hires are increased by {1}% — the share of new hires who leave within 90 days company-wide.</value></data>
   <data name="HF_NoteNoRoster" xml:space="preserve"><value>No employee list (active employees) has been uploaded yet, so there is nothing to start the forecast from.</value></data>
   <data name="Guide_HF_Overview" xml:space="preserve"><value>A table of how many people each store needs to hire in each month of the year, so hiring can be planned ahead.</value></data>
-  <data name="Guide_HF_FilterNote" xml:space="preserve"><value>Year, Store, Job title and the Operation Consultant / Manager / Senior Consultant / Director selectors narrow the table and its totals. You only see the stores you have access to (Settings → Access, Workforce Planning row).</value></data>
+  <data name="Guide_HF_FilterNote" xml:space="preserve"><value>Year, Store, Job title and the Operation Consultant / Manager / Senior Consultant / Director selectors narrow the table and its totals. You only see the stores you have access to (Settings → Access, Workforce Planning row). The Month filter focuses the summary cards, the Smart Insights and the chart on one month; the table below always shows the whole year.</value></data>
   <data name="Guide_HF_MatrixTitle" xml:space="preserve"><value>Reading the table</value></data>
   <data name="Guide_HF_Matrix" xml:space="preserve"><value>Use "View by" above the table to group the rows by store (with its Operation Consultant), job, payroll group or Operation Consultant — the totals stay the same, only the grouping changes. One column per month and a Total at the end; the last row adds up every row. Click a column title to sort and use the search box to find a row. The darker the red, the more hires that month. A dash means the projection has no data for that month.</value></data>
   <data name="Guide_HF_MethodTitle" xml:space="preserve"><value>How it is calculated</value></data>
-  <data name="Guide_HF_Method" xml:space="preserve"><value>Months that already have an uploaded employee list: hires = projected − actual + expected resignations (never below zero, per store and job). Later months are simulated from the latest list: people expected to resign leave, then hires fill up to that month's projection. Finally hires are increased by the company-wide 90-day early-leaver rate, because some new hires leave quickly and must be replaced.</value></data>
+  <data name="Guide_HF_Method" xml:space="preserve"><value>Months that already have an uploaded employee list: hires = shortage + expected resignations (per store and job, as on Workforce Planning). Later months are simulated from the latest list: people expected to resign leave, then hires fill up to that month's projection. Finally hires are increased by the company-wide 90-day early-leaver rate, because some new hires leave quickly and must be replaced.</value></data>
   <data name="Guide_HF_LimitsTitle" xml:space="preserve"><value>Good to know</value></data>
   <data name="Guide_HF_Limits" xml:space="preserve"><value>This is an estimate based on past resignations and the projection; it changes as new employee lists and projections are uploaded. It is not a hiring order.</value></data>
   <data name="HF_KpiYear" xml:space="preserve"><value>Hires needed in the year</value></data>
@@ -2019,14 +2019,14 @@
   <data name="Msg_CrewTrainerJobDiffers" xml:space="preserve"><value>{0} employee(s) have a different job here than in the active employee list.</value></data>
   <data name="Nav_CrewTrainers" xml:space="preserve"><value>Crew Trainers</value></data>
   <data name="Page_CrewTrainers" xml:space="preserve"><value>Crew Trainers</value></data>
-  <data name="Page_CrewTrainersSub" xml:space="preserve"><value>Trainers against the plan, the new hires they train, and who joined or left the list</value></data>
+  <data name="Page_CrewTrainersSub" xml:space="preserve"><value>Trainers against the 1-per-6 crew rule and the plan, and who joined or left the list</value></data>
   <data name="CT_NoData" xml:space="preserve"><value>No Crew Trainers list has been uploaded yet.</value></data>
   <data name="CT_NoDataAdmin" xml:space="preserve"><value>Upload a Crew Trainers list in Data Management</value></data>
   <data name="CT_NoPlan" xml:space="preserve"><value>This month has no Crew Trainer projection, so the plan columns are not shown.</value></data>
   <data name="CT_ChartTitle" xml:space="preserve"><value>Trainers per month</value></data>
   <data name="CT_ChartSub" xml:space="preserve"><value>Crew Trainer projection against the trainers found on each month's active employee list</value></data>
-  <data name="CT_StoresTitle" xml:space="preserve"><value>Trainers and new hires by store</value></data>
-  <data name="CT_StoresSub" xml:space="preserve"><value>Stores with the most new hires per trainer come first</value></data>
+  <data name="CT_StoresTitle" xml:space="preserve"><value>Trainers by store</value></data>
+  <data name="CT_StoresSub" xml:space="preserve"><value>Stores most short of trainers (by the rule) come first</value></data>
   <data name="CT_ColNewHires" xml:space="preserve"><value>New hires (90 days)</value></data>
   <data name="CT_ColPerTrainer" xml:space="preserve"><value>New hires per trainer</value></data>
   <data name="CT_NoTrainer" xml:space="preserve"><value>No trainer</value></data>
@@ -2047,24 +2047,24 @@
   <data name="CT_StResigned" xml:space="preserve"><value>Resigned</value></data>
   <data name="CT_StActive" xml:space="preserve"><value>Still working, off the list</value></data>
   <data name="CT_StGone" xml:space="preserve"><value>Not on the roster</value></data>
-  <data name="Guide_CT_Overview" xml:space="preserve"><value>Shows the Crew Trainers: how many there are against the plan, how many new hires each store has to train, and who joined or left the trainer list.</value></data>
+  <data name="Guide_CT_Overview" xml:space="preserve"><value>Shows the Crew Trainers against the rule of one trainer for every 6 crew-level employees and against the projection, and who joined or left the trainer list.</value></data>
   <data name="Guide_CT_FilterNote" xml:space="preserve"><value>Year and Month pick one of the months that have an uploaded trainer list. Store and the Operation Consultant / Manager / Senior Consultant / Director selectors narrow every number and table. You only see the stores you have access to (Settings → Access, Workforce Planning row).</value></data>
   <data name="Guide_CT_KpisTitle" xml:space="preserve"><value>Summary cards</value></data>
-  <data name="Guide_CT_Kpis" xml:space="preserve"><value>Trainers: actual over projected for the month. New hires: employees hired in the 90 days up to the month end (from the active employee list hire dates). New hires per trainer: new hires divided by trainers, so a higher number means more training load. Trainers who resigned: trainers who were on a list and resigned in the last 6 months.</value></data>
+  <data name="Guide_CT_Kpis" xml:space="preserve"><value>Trainers vs the rule: actual trainers over the trainers required. Crew level: the crew-level employees on the roster (the jobs marked Crew Level in Job Payroll Groups), the trainers themselves excluded. Trainers vs plan: actual trainers over the projection. Trainers who resigned: trainers who were on a list and resigned in the last 6 months.</value></data>
   <data name="Guide_CT_Chart" xml:space="preserve"><value>Projected against actual Crew Trainers for each month of the year. Actual is the people on the uploaded list who are also on that month's active employee list, so a month without a list or a roster shows 0.</value></data>
-  <data name="Guide_CT_Stores" xml:space="preserve"><value>One row per store with a Crew Trainer projection that month: projected, actual and gap (actual − projected, negative = short of trainers), the new hires of the last 90 days, and new hires per trainer. A store with new hires and no trainer shows "No trainer" and comes first. Click a column title to sort and use the search box to find a store or consultant.</value></data>
+  <data name="Guide_CT_Stores" xml:space="preserve"><value>One row per store: Crew level (the people the trainers train), Required (crew level ÷ 6, rounded to the nearest whole number — a half rounds up), Actual trainers, Gap vs rule (actual − required: negative = short of trainers, positive = over), the projection and Gap vs plan. Status follows the rule: Over, Enough, Short, No trainers, or Not needed (none required and none present). Stores most short come first; click a column title to sort and use the search box to find a store or consultant.</value></data>
   <data name="Guide_CT_Movement" xml:space="preserve"><value>Who joined and who left the trainer list compared with the previous uploaded list. For people who left: Resigned (they appear in the resignations), Still working, off the list (still on this month's active list, so the allowance was removed or they moved), or Not on the roster.</value></data>
   <data name="CT_CmpTitle" xml:space="preserve"><value>Stores with enough trainers vs short</value></data>
-  <data name="CT_CmpSub" xml:space="preserve"><value>Stores grouped by actual trainers against the projection</value></data>
+  <data name="CT_CmpSub" xml:space="preserve"><value>Stores grouped by actual trainers against the rule (one trainer per 6 crew-level employees)</value></data>
   <data name="CT_StEnough" xml:space="preserve"><value>Enough trainers</value></data>
   <data name="CT_StShort" xml:space="preserve"><value>Short of trainers</value></data>
   <data name="CT_StNone" xml:space="preserve"><value>No trainers</value></data>
-  <data name="CT_StNoPlan" xml:space="preserve"><value>No plan</value></data>
-  <data name="Guide_CT_Cmp" xml:space="preserve"><value>Groups the stores by how many trainers they have against the Crew Trainer projection: Enough (actual is at least the projection), Short (some trainers but fewer than planned), No trainers (planned but none), and No plan (trainers but no projection). Each group shows its stores, projected, actual, gap and fill rate; the Status column in the stores table below uses the same groups.</value></data>
+  <data name="CT_StNoPlan" xml:space="preserve"><value>Not needed</value></data>
+  <data name="Guide_CT_Cmp" xml:space="preserve"><value>Groups the stores by how many trainers they have against the rule: Over (more than required), Enough (exactly), Short (fewer), No trainers (required but none) and Not needed (none required and none present). Each group shows its stores, crew level, required, actual, gap vs rule, projected and gap vs plan; the Status column in the stores table below uses the same groups.</value></data>
   <data name="UL_JobGroups" xml:space="preserve"><value>Job Payroll Groups</value></data>
   <data name="UL_JobGroupsSub" xml:space="preserve"><value>The payroll group of each job title — the reference for payroll groups in Workforce Planning</value></data>
   <data name="UL_JobGroupsTemplate" xml:space="preserve"><value>Download current list</value></data>
-  <data name="UL_JobGroupsNote" xml:space="preserve"><value>Two columns: Job Title and Payroll Group. Download the current list, edit it and upload it back: the upload replaces the whole list. A job that is not on the list falls back to the payroll group most of its employees are in. Matching ignores capital letters and extra spaces.</value></data>
+  <data name="UL_JobGroupsNote" xml:space="preserve"><value>Columns: Job Title, Payroll Group and Crew Level (put TRUE on the jobs that count as crew level — the people one Crew Trainer trains, one trainer per 6). Download the current list, edit it and upload it back: the upload replaces the whole list. A file without the Crew Level column keeps the crew-level jobs as they are. A job that is not on the list falls back to the payroll group most of its employees are in. Matching ignores capital letters and extra spaces.</value></data>
   <data name="DM_UploadJobGroupsButton" xml:space="preserve"><value>Upload Job Payroll Groups</value></data>
   <data name="DM_JobGroupsBadge" xml:space="preserve"><value>Job Payroll Groups</value></data>
   <data name="DM_DeleteConfirmJobGroups" xml:space="preserve"><value>Delete the Job Payroll Groups list? Payroll groups will fall back to what the active employee list shows until a new list is uploaded.</value></data>
@@ -2083,6 +2083,81 @@
   <data name="WP_DrillHint" xml:space="preserve"><value>Click to see this store's jobs</value></data>
   <data name="WP_DrillLoading" xml:space="preserve"><value>Loading…</value></data>
   <data name="WP_DrillTitle" xml:space="preserve"><value>{0}: where the numbers come from</value></data>
-  <data name="WP_DrillFormula" xml:space="preserve"><value>For each job: Hiring need = Projected − Actual + Expected resignations, never below 0. Shortage is only what is missing today, and a job above its plan does not cover a job that is short.</value></data>
-  <data name="WP_DrillAbsorbed" xml:space="preserve"><value>{0} of the {1} expected resignations come from jobs that are already above their plan, so they do not leave a gap. That is why Hiring need ({2}) is less than Shortage + Expected resignations ({3}).</value></data>
+  <data name="WP_DrillFormula" xml:space="preserve"><value>Hiring need = Shortage + Expected resignations. Shortage is what is missing today in the jobs that are below their plan (a job above its plan never covers a short job, except that Crew Trainer and Hourly Paid Crew Trainer are counted together); Expected resignations is the monthly average of the last 6 months.</value></data>
+  <data name="WP_KpiShortage" xml:space="preserve"><value>Shortage</value></data>
+  <data name="WP_KpiShortageDesc" xml:space="preserve"><value>People missing in the jobs that are below their plan</value></data>
+  <data name="HF_In_Peak_T" xml:space="preserve"><value>Busiest month: {0}</value></data>
+  <data name="HF_In_Peak_D" xml:space="preserve"><value>{0} needs {1} hires, {2}% of all the hires shown.</value></data>
+  <data name="HF_In_Next_T" xml:space="preserve"><value>The next 3 months are {0} average</value></data>
+  <data name="HF_In_Next_D" xml:space="preserve"><value>About {0} hires a month are needed in the next 3 months, against {1} a month over the whole period ({2}% {3}).</value></data>
+  <data name="HF_In_Above" xml:space="preserve"><value>above</value></data>
+  <data name="HF_In_Below" xml:space="preserve"><value>below</value></data>
+  <data name="HF_In_More" xml:space="preserve"><value>more</value></data>
+  <data name="HF_In_Fewer" xml:space="preserve"><value>fewer</value></data>
+  <data name="HF_In_Trend_T" xml:space="preserve"><value>Monthly hiring {0} through the year</value></data>
+  <data name="HF_In_Trend_D" xml:space="preserve"><value>From {0} ({1} hires) to {2} ({3} hires): {4}% {5}.</value></data>
+  <data name="HF_In_Rises" xml:space="preserve"><value>rises</value></data>
+  <data name="HF_In_Falls" xml:space="preserve"><value>falls</value></data>
+  <data name="HF_In_Concentration_T" xml:space="preserve"><value>The top {0} take {1}% of the hires</value></data>
+  <data name="HF_In_Concentration_D" xml:space="preserve"><value>{0}.</value></data>
+  <data name="HF_In_Consultant_T" xml:space="preserve"><value>Most hires: {0}</value></data>
+  <data name="HF_In_Consultant_D" xml:space="preserve"><value>{0}'s stores need {1} hires, {2}% of the total, across {3} store(s).</value></data>
+  <data name="HF_In_NoNeed_T" xml:space="preserve"><value>{0} store(s) need no hires</value></data>
+  <data name="HF_In_NoNeed_D" xml:space="preserve"><value>They are at or above their projection in the period shown.</value></data>
+  <data name="HF_In_EarlyLeavers_T" xml:space="preserve"><value>{0}% of hires replace early leavers</value></data>
+  <data name="HF_In_EarlyLeavers_D" xml:space="preserve"><value>About {0} of the {1} hires only replace new employees who leave within 90 days (company-wide rate {2}%).</value></data>
+  <data name="HF_In_NoHires_T" xml:space="preserve"><value>No hires needed</value></data>
+  <data name="HF_In_NoHires_D" xml:space="preserve"><value>The projection is already met in every month shown.</value></data>
+  <data name="Guide_HF_Insights" xml:space="preserve"><value>A few plain sentences worked out from the table: the busiest month, whether the next 3 months are above or below the monthly average, whether monthly hiring rises or falls through the year, how concentrated the hiring is, the consultant whose stores need the most hires, and how many hires only replace early leavers. They follow the filters and the "View by" choice.</value></data>
+  <data name="HF_AllMonths" xml:space="preserve"><value>All months</value></data>
+  <data name="HF_KpiMonth" xml:space="preserve"><value>Hires needed in {0}</value></data>
+  <data name="HF_KpiMonthDesc" xml:space="preserve"><value>Total of all rows shown, in that month</value></data>
+  <data name="HF_KpiShare" xml:space="preserve"><value>Share of the year</value></data>
+  <data name="HF_KpiShareDesc" xml:space="preserve"><value>That month's hires as a share of the whole year's</value></data>
+  <data name="HF_KpiFrom" xml:space="preserve"><value>3 months from {0}</value></data>
+  <data name="HF_KpiFromDesc" xml:space="preserve"><value>Hires needed in that month and the two after it</value></data>
+  <data name="HF_KpiStoreMonth" xml:space="preserve"><value>Store with most hires in {0}</value></data>
+  <data name="HF_KpiStoreMonthDesc" xml:space="preserve"><value>Highest in that month</value></data>
+  <data name="HF_In_Month_T" xml:space="preserve"><value>Hires in {0}</value></data>
+  <data name="HF_In_Month_D" xml:space="preserve"><value>{0} needs {1} hires, {2}% of the year ({4}). The monthly average is {3}.</value></data>
+  <data name="CT_StOver" xml:space="preserve"><value>Over</value></data>
+  <data name="CT_In_Plan_T" xml:space="preserve"><value>Trainers are {0}% of the plan</value></data>
+  <data name="CT_In_Plan_D" xml:space="preserve"><value>{0} trainers against {1} planned: {2} missing in the stores that are short and {3} extra in the stores above their plan.</value></data>
+  <data name="CT_In_Rebalance_T" xml:space="preserve"><value>Extra trainers could close {0} of the gap</value></data>
+  <data name="CT_In_Rebalance_D" xml:space="preserve"><value>{0} extra trainers sit in {1} store(s) above the rule while {2} are missing in {3} store(s). Moving some would cover part of the gap.</value></data>
+  <data name="CT_In_NoTrainer_T" xml:space="preserve"><value>{0} store(s) have new hires and no trainer</value></data>
+  <data name="CT_In_NoTrainer_D" xml:space="preserve"><value>Most new hires without a trainer: {0}.</value></data>
+  <data name="CT_In_Load_T" xml:space="preserve"><value>Heaviest training load: {0}</value></data>
+  <data name="CT_In_Load_D" xml:space="preserve"><value>{0} new hires per trainer ({1} new hires, {2} trainer(s)), against {3} on average.</value></data>
+  <data name="CT_In_Trend_T" xml:space="preserve"><value>Trainers {0} since the first list</value></data>
+  <data name="CT_In_Trend_D" xml:space="preserve"><value>From {0} ({1}) to {2} ({3}): {4}% change.</value></data>
+  <data name="CT_In_Rose" xml:space="preserve"><value>rose</value></data>
+  <data name="CT_In_Fell" xml:space="preserve"><value>fell</value></data>
+  <data name="CT_In_Moves_T" xml:space="preserve"><value>{0} joined the trainer list, {1} left</value></data>
+  <data name="CT_In_Moves_D" xml:space="preserve"><value>Of those who left, {0} resigned and {1} are still working but off the list (compared with the {2} list).</value></data>
+  <data name="CT_In_Resigned_T" xml:space="preserve"><value>{0} trainer(s) resigned in {1} months</value></data>
+  <data name="CT_In_Resigned_D" xml:space="preserve"><value>About {0}% of today's trainers.</value></data>
+  <data name="CT_In_NoData_T" xml:space="preserve"><value>Nothing to flag</value></data>
+  <data name="CT_In_NoData_D" xml:space="preserve"><value>No notable pattern in this month's trainers.</value></data>
+  <data name="Guide_CT_Insights" xml:space="preserve"><value>A few plain sentences worked out from the numbers on the page: trainers against the rule, the stores most short and the stores above the rule, whether extra trainers could cover gaps elsewhere, what the projection plans against what the rule asks for, how the number of trainers changed since the first list, who joined or left the list, and how many trainers resigned. They follow the filters.</value></data>
+  <data name="Msg_JobGroupCrewLevel" xml:space="preserve"><value>{0} job(s) are marked as crew level.</value></data>
+  <data name="CT_NoCrewJobs" xml:space="preserve"><value>No job is marked as crew level, so the 1-trainer-per-6-crew rule cannot be applied. Mark them in Data Management → Workforce Planning → Job Payroll Groups (column Crew Level).</value></data>
+  <data name="CT_ColCrew" xml:space="preserve"><value>Crew level</value></data>
+  <data name="CT_ColRequired" xml:space="preserve"><value>Required (1 per {0})</value></data>
+  <data name="CT_ColGapRule" xml:space="preserve"><value>Gap vs rule</value></data>
+  <data name="CT_ColGapPlan" xml:space="preserve"><value>Gap vs plan</value></data>
+  <data name="CT_KRule" xml:space="preserve"><value>Trainers vs the rule</value></data>
+  <data name="CT_KRuleDesc" xml:space="preserve"><value>Actual trainers / trainers required (1 per {0} crew level)</value></data>
+  <data name="CT_KCrew" xml:space="preserve"><value>Crew level</value></data>
+  <data name="CT_KCrewDesc" xml:space="preserve"><value>Crew-level employees on the roster, trainers excluded</value></data>
+  <data name="CT_KPlan" xml:space="preserve"><value>Trainers vs plan</value></data>
+  <data name="CT_KPlanDesc" xml:space="preserve"><value>Actual trainers / trainers in the projection</value></data>
+  <data name="CT_In_Rule_T" xml:space="preserve"><value>Trainers are {0}% of the rule</value></data>
+  <data name="CT_In_Rule_D" xml:space="preserve"><value>{0} trainers against {1} required for {2} crew-level employees (one per {3}).</value></data>
+  <data name="CT_In_Short_T" xml:space="preserve"><value>{0} store(s) are short of trainers</value></data>
+  <data name="CT_In_Short_D" xml:space="preserve"><value>{1} missing in total. Most short: {0}.</value></data>
+  <data name="CT_In_Over_T" xml:space="preserve"><value>{0} store(s) have more trainers than the rule</value></data>
+  <data name="CT_In_Over_D" xml:space="preserve"><value>Most above: {0}.</value></data>
+  <data name="CT_In_PlanVsRule_T" xml:space="preserve"><value>The projection plans {0} trainers than the rule asks for</value></data>
+  <data name="CT_In_PlanVsRule_D" xml:space="preserve"><value>The projection has {0} trainers; the rule asks for {1} ({2} difference).</value></data>
 </root>

@@ -32,7 +32,7 @@ public interface IUploadService
     Task<(bool success, string message, int rows, string? warning)> UploadJobPayrollGroupsAsync(IFormFile file, string uploadedBy);
 
     /// <summary>The current reference list, for the download template.</summary>
-    Task<List<(string Job, string Group)>> GetJobPayrollGroupRowsAsync();
+    Task<List<(string Job, string Group, bool CrewLevel)>> GetJobPayrollGroupRowsAsync();
 
     /// <summary>
     /// Upload history grouped so the three period-tied files show as one row.

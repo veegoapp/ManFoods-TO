@@ -302,7 +302,13 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         dto.HasData = true;
 
         var now = DateTime.Now;
-        var y = year.HasValue && years.Contains(year.Value) ? year.Value : (years.Contains(now.Year) ? now.Year : years[0]);
+        // Default period: the latest month that has an uploaded roster (Monthly Workforce Data), not the
+        // calendar month, so the page keeps showing real data until the new month's roster is uploaded.
+        var rosterKeys = await GetRosterPeriodKeysAsync();
+        var latestRosterYear = rosterKeys.Count > 0 ? rosterKeys[0] / 100 : 0;
+        var y = year.HasValue && years.Contains(year.Value) ? year.Value
+              : years.Contains(latestRosterYear) ? latestRosterYear
+              : (years.Contains(now.Year) ? now.Year : years[0]);
         dto.Year = y;
         var data = await GetYearDataAsync(y);
 
@@ -331,9 +337,11 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         var actualMonths = data.Actual.Select(c => c.Month).Distinct().ToHashSet();
         dto.Months = projMonths;
         if (strict && !projMonths.Contains(month!.Value)) { dto.HasData = false; return dto; }
+        var latestActual = actualMonths.Intersect(projMonths).DefaultIfEmpty(0).Max(); // latest month with both a roster and a projection
         var m = month.HasValue && projMonths.Contains(month.Value) ? month.Value
+              : latestActual > 0 ? latestActual
               : (y == now.Year && projMonths.Contains(now.Month)) ? now.Month
-              : actualMonths.Intersect(projMonths).DefaultIfEmpty(projMonths.Count > 0 ? projMonths[^1] : 1).Max();
+              : (projMonths.Count > 0 ? projMonths[^1] : 1);
         dto.Month = m;
         dto.HasActual = actualMonths.Contains(m);
 
@@ -397,8 +405,8 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             StoresShort = dto.HasActual ? dto.ByStore.Count(r => r.Status is "watch" or "critical") : 0,
         };
 
-        // Hiring need: per store+job the shortage plus expected resignations, never below
-        // zero (a surplus in one job can't cover another), summed and rounded for display.
+        // Hiring need: the shortage (people missing in the jobs that are short — a surplus in one job
+        // never covers another) plus the expected resignations.
         Dictionary<string, double[]>? storeNeed = null; // store -> [need, expected resignations, shortage], unrounded
         Dictionary<string, double[]>? jobNeed = null;   // job   -> same
         if (includeHiring && dto.HasActual)
@@ -408,20 +416,22 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             var byStoreNeed = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase); // [need, attrition, shortage]
             var byJobNeed = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase);
             double totalNeed = 0, totalAttr = 0, totalShort = 0;
+            var trainerNames = CrewTrainerJobs.Select(Norm).ToHashSet();
+            var shortages = ShortagePerCell(sel.Cells, k => k.Store, k => trainerNames.Contains(Norm(data.Jobs[k.Job])));
             foreach (var cell in sel.Cells)
             {
                 var store = data.Stores[cell.Key.Store]; var job = data.Jobs[cell.Key.Job];
                 var expected = attrition.PerMonth.TryGetValue(AttrKey(store, job), out var e) ? e : 0;
-                var shortage = Math.Max(0, cell.Value[0] - cell.Value[1]);
-                var need = Math.Max(0, cell.Value[0] - cell.Value[1] + expected);
+                var shortage = shortages[cell.Key];
+                var need = shortage + expected;
                 AddNeed(byStoreNeed, store, need, expected, shortage); AddNeed(byJobNeed, job, need, expected, shortage);
                 totalNeed += need; totalAttr += expected; totalShort += shortage;
             }
-            foreach (var r in dto.ByStore) if (byStoreNeed.TryGetValue(r.Name, out var v)) { r.HiringNeed = RoundNeed(v[0]); r.ExpectedAttrition = Math.Round(v[1], 1); r.Shortage = RoundNeed(v[2]); }
-            foreach (var r in dto.ByJob) if (byJobNeed.TryGetValue(r.Name, out var v)) { r.HiringNeed = RoundNeed(v[0]); r.ExpectedAttrition = Math.Round(v[1], 1); r.Shortage = RoundNeed(v[2]); }
-            dto.Kpis.HiringNeed = RoundNeed(totalNeed);
-            dto.Kpis.ExpectedAttrition = Math.Round(totalAttr, 1);
+            foreach (var r in dto.ByStore) if (byStoreNeed.TryGetValue(r.Name, out var v)) SetNeed(r, v[2], v[1]);
+            foreach (var r in dto.ByJob) if (byJobNeed.TryGetValue(r.Name, out var v)) SetNeed(r, v[2], v[1]);
             dto.Kpis.Shortage = RoundNeed(totalShort);
+            dto.Kpis.ExpectedAttrition = Math.Round(totalAttr, 1);
+            dto.Kpis.HiringNeed = dto.Kpis.Shortage + RoundNeed(dto.Kpis.ExpectedAttrition);
             storeNeed = byStoreNeed;
             jobNeed = byJobNeed;
         }
@@ -443,9 +453,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             dto.ByPayrollGroup = accPg.Select(kv =>
                 {
                     var row = Row(kv.Key, new[] { kv.Value.P, kv.Value.A }, dto.HasActual);
-                    row.HiringNeed = RoundNeed(kv.Value.Need);
-                    row.ExpectedAttrition = Math.Round(kv.Value.Attr, 1);
-                    row.Shortage = RoundNeed(kv.Value.Short);
+                    SetNeed(row, kv.Value.Short, kv.Value.Attr);
                     return row;
                 })
                 .OrderBy(r => dto.HasActual ? r.Gap : -r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
@@ -472,9 +480,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                     {
                         var row = Row(kv.Key, new[] { kv.Value.P, kv.Value.A }, dto.HasActual);
                         row.StoreCount = kv.Value.Stores;
-                        row.HiringNeed = RoundNeed(kv.Value.Need);
-                        row.ExpectedAttrition = Math.Round(kv.Value.Attr, 1);
-                        row.Shortage = RoundNeed(kv.Value.Short);
+                        SetNeed(row, kv.Value.Short, kv.Value.Attr);
                         return row;
                     })
                     .OrderBy(r => dto.HasActual ? r.Gap : -r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
@@ -557,6 +563,8 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             if (!planned.Contains((c.Month, c.Store)) || !JobOk(c.Job)) continue;
             Bump(cells, (c.Month, c.Store, c.Job), 1, c.Count);
         }
+        var trainerNames = CrewTrainerJobs.Select(Norm).ToHashSet();
+        var detailShortage = ShortagePerCell(cells, k => (k.Month, k.Store), k => trainerNames.Contains(Norm(data.Jobs[k.Job])));
         foreach (var kv in cells.OrderBy(k => k.Key.Month).ThenBy(k => data.Stores[k.Key.Store], StringComparer.OrdinalIgnoreCase).ThenBy(k => data.Jobs[k.Key.Job], StringComparer.OrdinalIgnoreCase))
         {
             if (kv.Value[0] == 0 && kv.Value[1] == 0) continue;
@@ -564,6 +572,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             {
                 Year = year, Month = kv.Key.Month, Store = data.Stores[kv.Key.Store], Job = data.Jobs[kv.Key.Job],
                 Projected = kv.Value[0], Actual = actualMonths.Contains(kv.Key.Month) ? kv.Value[1] : null,
+                Shortage = actualMonths.Contains(kv.Key.Month) ? Math.Round(detailShortage[kv.Key], 2) : null,
             });
             if (leadersByMonth.TryGetValue(kv.Key.Month, out var lm) && lm.TryGetValue(data.Stores[kv.Key.Store].Trim(), out var lead))
             {
@@ -588,7 +597,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             {
                 var expected = attrition.PerMonth.TryGetValue(AttrKey(r.Store, r.Job), out var e) ? e : 0;
                 r.ExpectedAttrition = Math.Round(expected, 2);
-                r.HiringNeed = Math.Round(Math.Max(0, r.Projected - r.Actual!.Value + expected), 2);
+                r.HiringNeed = Math.Round((r.Shortage ?? 0) + expected, 2); // shortage + expected resignations
             }
         }
         return rows;
@@ -664,15 +673,29 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         var attrByMonth = new Dictionary<int, AttritionData>();
         foreach (var mon in actualMonths) attrByMonth[mon] = await GetAttritionAsync(y, mon);
 
+        // The two trainer jobs are forecast together (the store's trainers are what matters, not whether each is
+        // hourly paid), so they share one cell: the first trainer job found stands for both.
+        var trainerNames = CrewTrainerJobs.Select(Norm).ToHashSet();
+        int canonTrainer = -1;
+        int Canon(int job)
+        {
+            if (!trainerNames.Contains(Norm(data.Jobs[job]))) return job;
+            if (canonTrainer < 0) canonTrainer = job;
+            return canonTrainer;
+        }
         var actual = new Dictionary<(int Month, int Store, int Job), int>();
-        foreach (var c in data.Actual) actual[(c.Month, c.Store, c.Job)] = (actual.TryGetValue((c.Month, c.Store, c.Job), out var v) ? v : 0) + c.Count;
+        foreach (var c in data.Actual) { var key = (c.Month, c.Store, Canon(c.Job)); actual[key] = (actual.TryGetValue(key, out var v) ? v : 0) + c.Count; }
         var projected = new Dictionary<(int Store, int Job), int[]>();
         foreach (var c in data.Projected)
         {
             if (!StoreOk(c.Store) || (jobSet != null && !jobSet.Contains(data.Jobs[c.Job]))) continue;
-            if (!projected.TryGetValue((c.Store, c.Job), out var arr)) projected[(c.Store, c.Job)] = arr = new int[13];
+            var key = (c.Store, Canon(c.Job));
+            if (!projected.TryGetValue(key, out var arr)) projected[key] = arr = new int[13];
             arr[c.Month] += c.Count;
         }
+        // Expected resignations / starting headcount of a cell: both trainer jobs added up for the shared trainer cell.
+        double Sum(int store, int job, Func<string, double> lookup) =>
+            job == canonTrainer ? CrewTrainerJobs.Sum(j => lookup(AttrKey(data.Stores[store], j))) : lookup(AttrKey(data.Stores[store], data.Jobs[job]));
         // The starting headcount of a forecast that begins before the year's own data: the roster
         // of an earlier year (when the baseline is later than this year, nothing is simulated).
         Dictionary<string, int>? earlier = baseline / 100 < y ? await GetPeriodHeadcountAsync(baseline) : null;
@@ -683,7 +706,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         var groupOfJob = dto.By == "payroll" ? await GetJobPayrollGroupsAsync(y, 12) : null;
         string RowKey(int store, int job) => dto.By switch
         {
-            "job" => data.Jobs[job],
+            "job" => job == canonTrainer ? CrewTrainerJob + " + " + HourlyPaidCrewTrainerJob : data.Jobs[job],
             "payroll" => groupOfJob!.TryGetValue(Norm(data.Jobs[job]), out var g) ? g : "",
             "consultant" => leaders.TryGetValue(data.Stores[store].Trim(), out var lc) ? lc.Oc : "",
             _ => data.Stores[store],
@@ -703,8 +726,8 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                 if (actualMonths.Contains(mon))
                 {
                     var a = actual.TryGetValue((mon, store, job), out var av) ? av : 0;
-                    var exp = attrByMonth[mon].PerMonth.TryGetValue(AttrKey(data.Stores[store], data.Jobs[job]), out var e1) ? e1 : 0;
-                    hires = Math.Max(0, p - a + exp);
+                    var exp = Sum(store, job, k => attrByMonth[mon].PerMonth.TryGetValue(k, out var e1) ? e1 : 0);
+                    hires = Math.Max(0, p - a) + exp; // shortage + expected resignations, as on Workforce Planning
                     prev = a;
                 }
                 else
@@ -712,9 +735,9 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                     if (prev == null)
                     {
                         if (earlier == null) continue; // no starting point in or before this year
-                        prev = earlier.TryGetValue(AttrKey(data.Stores[store], data.Jobs[job]), out var b) ? b : 0;
+                        prev = Sum(store, job, k => earlier.TryGetValue(k, out var b) ? b : 0);
                     }
-                    var exp = baseAttr.PerMonth.TryGetValue(AttrKey(data.Stores[store], data.Jobs[job]), out var e2) ? e2 : 0;
+                    var exp = Sum(store, job, k => baseAttr.PerMonth.TryGetValue(k, out var e2) ? e2 : 0);
                     var before = Math.Max(0, prev.Value - exp);
                     var net = Math.Max(0, p - before);
                     hires = net;
@@ -762,6 +785,34 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             foreach (var j in data.Projected.Select(c => c.Job).Distinct()) jobs.Add(data.Jobs[j]);
         }
         return jobs.OrderBy(j => j, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    // Shortage, expected resignations and hiring need of a row. Hiring need is always the shortage plus the
+    // expected resignations as displayed (rounded), so the three columns add up on screen.
+    private static void SetNeed(PlanningRowDto row, double shortage, double attrition)
+    {
+        row.Shortage = RoundNeed(shortage);
+        row.ExpectedAttrition = Math.Round(attrition, 1);
+        row.HiringNeed = row.Shortage + RoundNeed(row.ExpectedAttrition);
+    }
+
+    // Shortage per store+job cell. The two trainer jobs are counted together (the store's trainers are what
+    // matters, not whether each is hourly paid): a surplus in one covers a shortage in the other.
+    private static Dictionary<TKey, double> ShortagePerCell<TKey>(IEnumerable<KeyValuePair<TKey, int[]>> cells, Func<TKey, object> storeOf, Func<TKey, bool> isTrainerJob) where TKey : notnull
+    {
+        var result = new Dictionary<TKey, double>();
+        foreach (var kv in cells) result[kv.Key] = Math.Max(0, kv.Value[0] - kv.Value[1]);
+        foreach (var group in cells.Where(c => isTrainerJob(c.Key)).GroupBy(c => storeOf(c.Key)))
+        {
+            var list = group.ToList();
+            if (list.Count < 2) continue;
+            double positive = list.Sum(c => Math.Max(0, c.Value[0] - c.Value[1]));
+            double surplus = list.Sum(c => Math.Max(0, c.Value[1] - c.Value[0]));
+            double net = Math.Max(0, positive - surplus);
+            foreach (var c in list)
+                result[c.Key] = positive > 0 ? Math.Max(0, c.Value[0] - c.Value[1]) * net / positive : 0;
+        }
+        return result;
     }
 
     private static int RoundNeed(double v) => (int)Math.Round(v, MidpointRounding.AwayFromZero);

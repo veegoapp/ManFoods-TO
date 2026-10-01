@@ -33,6 +33,51 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task DefaultPeriod_IsTheLatestMonthWithAnUploadedRoster()
+    {
+        var db = NewDb();
+        // The projection covers the whole year; rosters are only uploaded up to March. Whatever today's date is,
+        // the page must open on March (the latest month with real data), not on the calendar month.
+        for (int m = 1; m <= 12; m++) Proj(db, m, "1 | A", "Crew", 10);
+        Active(db, 1, "1 | A", "Crew", 9); Active(db, 2, "1 | A", "Crew", 9); Active(db, 3, "1 | A", "Crew", 8);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(null, null, null, null, "Admin", null);
+
+        Assert.Equal(2026, dto.Year);
+        Assert.Equal(3, dto.Month);
+        Assert.True(dto.HasActual);
+        Assert.Equal(8, dto.Kpis.Actual);
+
+        var chosen = await NewService(db).GetAsync(2026, 7, null, null, "Admin", null); // an explicit month is still honoured
+        Assert.Equal(7, chosen.Month);
+        Assert.False(chosen.HasActual);
+    }
+
+    [Fact]
+    public async Task HiringNeed_IsAlwaysShortagePlusExpectedResignations()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "1 | A", "MDS", 2);          // Crew is 3 short, MDS has 1 too many
+        Active(db, 1, "1 | A", "Crew", 7); Active(db, 1, "1 | A", "MDS", 3);
+        db.Resignations.Add(new Resignation { Year = 2026, Month = 1, EmployeeId = "r1", Store = "1 | A", JobTitle = "MDS" });   // expected: 1 a month, from the job that has a surplus
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        Assert.Equal(3, dto.Kpis.Shortage);
+        Assert.Equal(1, dto.Kpis.ExpectedAttrition);
+        Assert.Equal(4, dto.Kpis.HiringNeed);                                      // 3 + 1, even though the leaver is from a job above its plan
+        var store = Assert.Single(dto.ByStore);
+        Assert.Equal(store.Shortage + Math.Round(store.ExpectedAttrition, MidpointRounding.AwayFromZero), store.HiringNeed);
+        foreach (var g in dto.ByPayrollGroup)
+            Assert.Equal(g.Shortage + Math.Round(g.ExpectedAttrition, MidpointRounding.AwayFromZero), g.HiringNeed);
+
+        var detail = await NewService(db).GetDetailAsync(2026, new[] { 1 }, null, null, "Admin", null);
+        Assert.Equal(4.0, detail.Sum(r => r.HiringNeed ?? 0));                      // the per-job rows add up to the same
+    }
+
+    [Fact]
     public async Task GapAndFillRate_AreActualMinusProjected()
     {
         var db = NewDb();
@@ -543,6 +588,44 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task TrainerJobs_AreCountedTogether_ForShortageHiringNeedAndTheForecast()
+    {
+        var db = NewDb();
+        // The projection plans one Crew Trainer; the store hired one Hourly Paid trainer instead. Together: nothing missing.
+        Proj(db, 1, "1 | A", "Crew Trainer", 1); Proj(db, 1, "1 | A", "Hourly Paid Crew Trainer", 0);
+        Person(db, 1, "1", "1 | A", "Hourly Paid Crew", "Hourly Paid");
+        Trainer(db, 1, "1", "1 | A", "Hourly Paid");
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        Assert.Equal(0, dto.Kpis.Shortage);
+        Assert.Equal(0, dto.Kpis.HiringNeed);
+        Assert.Equal(1, Assert.Single(dto.ByJob, r => r.Name.Equals("Hourly Paid Crew Trainer", StringComparison.OrdinalIgnoreCase)).Actual); // the jobs themselves still show separately
+        Assert.Equal(1, Assert.Single(dto.ByJob, r => r.Name == "Crew Trainer").Projected);
+        var detail = await NewService(db).GetDetailAsync(2026, new[] { 1 }, null, null, "Admin", null);
+        Assert.Equal(0.0, detail.Sum(r => r.Shortage ?? 0));
+
+        var forecast = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null);
+        Assert.Equal(0, Assert.Single(forecast.Rows).Months[0]);
+    }
+
+    [Fact]
+    public async Task TrainerShortage_StillCountsWhenBothTrainerJobsTogetherAreShort()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew Trainer", 2); Proj(db, 1, "1 | A", "Hourly Paid Crew Trainer", 1);
+        Person(db, 1, "1", "1 | A", "Hourly Paid Crew", "Hourly Paid");
+        Trainer(db, 1, "1", "1 | A", "Hourly Paid");
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        Assert.Equal(2, dto.Kpis.Shortage);          // 3 planned, 1 present
+        Assert.Equal(2, dto.Kpis.HiringNeed);
+    }
+
+    [Fact]
     public async Task HiringForecast_NoRoster_HasNoRows()
     {
         var db = NewDb();
@@ -581,8 +664,8 @@ public class WorkforcePlanningReportTests
         {
             Rows =
             {
-                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", PayrollGroup = "Hourly", Projected = 10, Actual = 8, ExpectedAttrition = 1.5, HiringNeed = 3.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
-                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4, ExpectedAttrition = 0.5, HiringNeed = 0.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", PayrollGroup = "Hourly", Projected = 10, Actual = 8, Shortage = 2, ExpectedAttrition = 1.5, HiringNeed = 3.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4, Shortage = 0, ExpectedAttrition = 0.5, HiringNeed = 0.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
                 new() { Year = 2026, Month = 2, Store = "1 | A", Job = "Crew", Projected = 11, Actual = null },
             }
         };
@@ -804,8 +887,8 @@ public class CrewTrainerServiceTests
         return new CrewTrainerService(db, new WorkforcePlanningService(db, new StoreAccessService(db), cache), cache);
     }
 
-    private static void Person(AppDbContext db, int month, string id, string store, DateOnly? hired = null) =>
-        db.ActiveEmployees.Add(new ActiveEmployee { Year = 2026, Month = month, EmployeeId = id, Name = "N" + id, Store = store, JobTitle = "Crew", HireDate = hired });
+    private static void Person(AppDbContext db, int month, string id, string store, string job = "Crew", DateOnly? hired = null) =>
+        db.ActiveEmployees.Add(new ActiveEmployee { Year = 2026, Month = month, EmployeeId = id, Name = "N" + id, Store = store, JobTitle = job, HireDate = hired });
 
     private static void Trainer(AppDbContext db, int month, string id, string store) =>
         db.CrewTrainerEmployees.Add(new CrewTrainerEmployee { Year = 2026, Month = month, EmployeeId = id, Name = "N" + id, StoreName = store, PayrollGroup = "Manfoods Company" });
@@ -817,31 +900,57 @@ public class CrewTrainerServiceTests
         Assert.False(dto.HasData);
     }
 
+    [Theory]
+    [InlineData(0, 0)] [InlineData(2, 0)] [InlineData(3, 1)] [InlineData(6, 1)] [InlineData(8, 1)]
+    [InlineData(9, 2)] [InlineData(14, 2)] [InlineData(15, 3)] [InlineData(17, 3)]
+    public void RequiredTrainers_IsCrewLevelDividedBySix_RoundedHalfUp(int crew, int expected) =>
+        Assert.Equal(expected, CrewTrainerService.RequiredTrainers(crew));
+
     [Fact]
-    public async Task Store_ComparesTrainersToPlan_AndCountsNewHiresPerTrainer()
+    public async Task Store_ComparesTrainersToTheProjectionAndToTheOnePerSixRule()
     {
         var db = NewDb();
         db.JobHeadcountProjections.Add(new JobHeadcountProjection { Year = 2026, Month = 2, StoreName = "1 | A", JobTitle = "Crew Trainer", ProjectedHeadcount = 3 });
         db.JobHeadcountProjections.Add(new JobHeadcountProjection { Year = 2026, Month = 2, StoreName = "2 | B", JobTitle = "Crew Trainer", ProjectedHeadcount = 1 });
-        // Store A: 2 trainers, 4 hired in the last 90 days. Store B: no trainers, 1 recent hire.
-        Person(db, 2, "1", "1 | A", new DateOnly(2025, 1, 1)); Person(db, 2, "2", "1 | A", new DateOnly(2025, 1, 1));
-        Person(db, 2, "3", "1 | A", new DateOnly(2026, 1, 10)); Person(db, 2, "4", "1 | A", new DateOnly(2026, 2, 1));
-        Person(db, 2, "5", "1 | A", new DateOnly(2026, 2, 5)); Person(db, 2, "6", "1 | A", new DateOnly(2025, 6, 1)); // old hire: not new
-        Person(db, 2, "7", "2 | B", new DateOnly(2026, 2, 2));
-        Trainer(db, 2, "1", "1 | A"); Trainer(db, 2, "2", "1 | A");
+        db.JobHeadcountProjections.Add(new JobHeadcountProjection { Year = 2026, Month = 2, StoreName = "2 | B", JobTitle = "Crew", ProjectedHeadcount = 7 });
+        // Crew level = Crew and Hourly Paid Crew (the trainer jobs are flagged too, but never counted as the people trained).
+        db.JobPayrollGroups.Add(new JobPayrollGroup { JobTitle = "Crew", PayrollGroup = "Manfoods Company", IsCrewLevel = true });
+        db.JobPayrollGroups.Add(new JobPayrollGroup { JobTitle = "Hourly Paid Crew", PayrollGroup = "Hourly Paid", IsCrewLevel = true });
+        db.JobPayrollGroups.Add(new JobPayrollGroup { JobTitle = "Crew Trainer", PayrollGroup = "Manfoods Company", IsCrewLevel = true });
+        db.JobPayrollGroups.Add(new JobPayrollGroup { JobTitle = "Hostess", PayrollGroup = "Manfoods Company", IsCrewLevel = false });
+        // Store A: 16 Crew on the roster, 2 of them are trainers -> 14 crew level, rule asks for round(14/6) = 2.
+        for (int i = 1; i <= 16; i++) Person(db, 2, "a" + i, "1 | A");
+        Person(db, 2, "h1", "1 | A", "Hostess");   // not crew level
+        Trainer(db, 2, "a1", "1 | A"); Trainer(db, 2, "a2", "1 | A");
+        // Store B: 7 crew level (hourly paid included), no trainer -> rule asks for round(7/6) = 1.
+        for (int i = 1; i <= 4; i++) Person(db, 2, "b" + i, "2 | B");
+        for (int i = 5; i <= 7; i++) Person(db, 2, "b" + i, "2 | B", "Hourly Paid Crew");
         await db.SaveChangesAsync();
 
         var dto = await NewService(db).GetAsync(2026, 2, null, "Admin", null);
 
-        Assert.True(dto.HasProjection);
+        Assert.True(dto.HasCrewLevelJobs);
         var a = Assert.Single(dto.ByStore, r => r.Store == "1 | A");
-        Assert.Equal(3, a.Projected); Assert.Equal(2, a.Actual); Assert.Equal(-1, a.Gap);
-        Assert.Equal(3, a.NewHires);              // hired 2026-01-10, 02-01, 02-05 (within 90 days of Feb 28)
-        Assert.Equal(1.5, a.HiresPerTrainer);
+        Assert.Equal(3, a.Projected); Assert.Equal(2, a.Actual); Assert.Equal(-1, a.Gap);       // against the projection: one short
+        Assert.Equal(14, a.CrewLevel); Assert.Equal(2, a.Required); Assert.Equal(0, a.GapRule);  // against the rule: just right
         var b = Assert.Single(dto.ByStore, r => r.Store == "2 | B");
-        Assert.Equal(0, b.Actual); Assert.Null(b.HiresPerTrainer); Assert.Equal(1, b.NewHires);
-        Assert.Equal("2 | B", dto.ByStore[0].Store);          // a store with hires and no trainer is listed first
-        Assert.Equal(2, dto.Kpis.Actual); Assert.Equal(4, dto.Kpis.Projected); Assert.Equal(4, dto.Kpis.NewHires);
+        Assert.Equal(7, b.CrewLevel); Assert.Equal(1, b.Required); Assert.Equal(0, b.Actual); Assert.Equal(-1, b.GapRule);
+        Assert.Equal("2 | B", dto.ByStore[0].Store);                                             // the store most short of trainers (by the rule) comes first
+        Assert.Equal(21, dto.Kpis.CrewLevel); Assert.Equal(3, dto.Kpis.Required); Assert.Equal(2, dto.Kpis.Actual); Assert.Equal(-1, dto.Kpis.GapRule);
+    }
+
+    [Fact]
+    public async Task NoCrewLevelJobs_MeansTheRuleCannotBeApplied()
+    {
+        var db = NewDb();
+        db.JobHeadcountProjections.Add(new JobHeadcountProjection { Year = 2026, Month = 2, StoreName = "1 | A", JobTitle = "Crew Trainer", ProjectedHeadcount = 1 });
+        Person(db, 2, "1", "1 | A"); Trainer(db, 2, "1", "1 | A");
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 2, null, "Admin", null);
+
+        Assert.False(dto.HasCrewLevelJobs);
+        Assert.Equal(0, Assert.Single(dto.ByStore).Required);
     }
 
     [Fact]
@@ -899,6 +1008,19 @@ public class JobPayrollGroupUploadParseTests
         Assert.Equal(1, p.Duplicates);
         Assert.Equal(2, p.Blank);
         Assert.Equal("Hourly Paid", p.Rows.Single(r => r.JobTitle == "CREW").PayrollGroup);
+    }
+
+    [Fact]
+    public void CrewLevelColumn_IsReadWhenPresent_AndFlaggedAsMissingWhenNot()
+    {
+        var withCol = Book(new[] { "Job Title", "Payroll Group", "crew level" },
+            new[] { "Crew", "Manfoods Company", "TRUE" }, new[] { "Barista", "Manfoods Company", "" }, new[] { "Hourly Paid Crew", "Hourly Paid", "yes" });
+        var p = UploadService.ParseJobPayrollGroups(withCol, "no job", "no group");
+        Assert.True(p.HasCrewLevelColumn);
+        Assert.Equal(new[] { "Crew", "Hourly Paid Crew" }, p.Rows.Where(r => r.IsCrewLevel).Select(r => r.JobTitle).ToArray());
+
+        var without = Book(new[] { "Job Title", "Payroll Group" }, new[] { "Crew", "Manfoods Company" });
+        Assert.False(UploadService.ParseJobPayrollGroups(without, "no job", "no group").HasCrewLevelColumn);
     }
 
     [Fact]

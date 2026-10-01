@@ -62,7 +62,7 @@ public class WorkforcePlanningApiController : ControllerBase
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetEmail();
         var rows = await _planning.GetDetailAsync(year, new[] { month }, store, jobs, role, assignedName);
-        return Ok(rows.Select(r => new { job = r.Job, projected = r.Projected, actual = r.Actual, expectedAttrition = r.ExpectedAttrition, hiringNeed = r.HiringNeed })
+        return Ok(rows.Select(r => new { job = r.Job, projected = r.Projected, actual = r.Actual, shortage = r.Shortage, expectedAttrition = r.ExpectedAttrition, hiringNeed = r.HiringNeed })
             .OrderByDescending(r => r.hiringNeed ?? 0).ThenByDescending(r => r.projected).ThenBy(r => r.job, StringComparer.OrdinalIgnoreCase));
     }
 

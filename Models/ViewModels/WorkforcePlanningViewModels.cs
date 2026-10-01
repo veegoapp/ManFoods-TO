@@ -100,7 +100,9 @@ public class PlanningDetailRow
     public int? Actual { get; set; }
     /// <summary>Expected resignations per month for this store/job (null without a roster).</summary>
     public double? ExpectedAttrition { get; set; }
-    /// <summary>max(0, projected − actual + expected resignations); null without a roster.</summary>
+    /// <summary>People missing in the job (a surplus in one trainer job covers a shortage in the other); null without a roster.</summary>
+    public double? Shortage { get; set; }
+    /// <summary>Shortage + expected resignations; null without a roster.</summary>
     public double? HiringNeed { get; set; }
     /// <summary>The people responsible for the store that month (Store Reference file).</summary>
     public string OperationConsultant { get; set; } = "";
@@ -176,19 +178,23 @@ public class HiringForecastDto
     public int GrandTotal { get; set; }
 }
 
-/// <summary>One store on the Crew Trainers page: trainers against the plan, and the new hires they train.</summary>
+/// <summary>One store on the Crew Trainers page: trainers against the plan and against the 1-trainer-per-6-crew rule.</summary>
 public class CrewTrainerStoreDto
 {
     public string Store { get; set; } = "";
     public string OperationConsultant { get; set; } = "";
+    /// <summary>Crew Trainer + Hourly Paid Crew Trainer in the projection.</summary>
     public int Projected { get; set; }
+    /// <summary>Trainers on the roster (from the trainer list).</summary>
     public int Actual { get; set; }
-    /// <summary>Actual − projected (negative = short of trainers).</summary>
+    /// <summary>Actual − projected (negative = fewer trainers than planned).</summary>
     public int Gap { get; set; }
-    /// <summary>Employees hired in the 90 days up to the end of the month (roster hire dates).</summary>
-    public int NewHires { get; set; }
-    /// <summary>New hires per trainer; null when the store has no trainer.</summary>
-    public double? HiresPerTrainer { get; set; }
+    /// <summary>Crew-level employees on the roster, trainers excluded: the people the trainers train.</summary>
+    public int CrewLevel { get; set; }
+    /// <summary>Trainers the rule asks for: crew level ÷ 6, rounded to the nearest whole number (half up).</summary>
+    public int Required { get; set; }
+    /// <summary>Actual − required (negative = short of trainers, positive = over).</summary>
+    public int GapRule { get; set; }
 }
 
 /// <summary>A person who joined or left the trainer list compared with the previous list.</summary>
@@ -206,8 +212,9 @@ public class CrewTrainerKpiDto
     public int Projected { get; set; }
     public int Actual { get; set; }
     public int Gap { get; set; }
-    public int NewHires { get; set; }
-    public double? HiresPerTrainer { get; set; }
+    public int CrewLevel { get; set; }
+    public int Required { get; set; }
+    public int GapRule { get; set; }
     /// <summary>Trainers (on a list in the lookback window) who resigned in the lookback window.</summary>
     public int Resigned { get; set; }
     public int LookbackMonths { get; set; }
@@ -227,6 +234,10 @@ public class CrewTrainerDto
     public List<string> OperationDirectors { get; set; } = new();
     /// <summary>False when the month has no Crew Trainer projection (the plan columns are then 0).</summary>
     public bool HasProjection { get; set; }
+    /// <summary>False when no job is marked as crew level (Job Payroll Groups list), so the 1-per-6 rule cannot be applied.</summary>
+    public bool HasCrewLevelJobs { get; set; }
+    /// <summary>People per trainer in the rule (6).</summary>
+    public int CrewPerTrainer { get; set; }
     public CrewTrainerKpiDto Kpis { get; set; } = new();
     public List<PlanningTrendPointDto> Trend { get; set; } = new();
     public List<CrewTrainerStoreDto> ByStore { get; set; } = new();
