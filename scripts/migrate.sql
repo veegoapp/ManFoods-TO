@@ -667,6 +667,18 @@ BEGIN
     );
 END
 
+-- ── page_visibility ──────────────────────────────────────────────────────
+-- Pages an Admin hid from the User interface (Settings → Pages). A missing row = visible.
+IF OBJECT_ID('dbo.page_visibility', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.page_visibility (
+        page_key NVARCHAR(100) NOT NULL PRIMARY KEY,
+        is_hidden BIT NOT NULL DEFAULT 0,
+        updated_by_name NVARCHAR(MAX) NULL,
+        updated_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+    );
+END
+
 -- ── seed users ────────────────────────────────
 -- admin@mcd.com / 123123654  →  Admin portal
 -- user@mcd.com  / 123123654  →  Home portal

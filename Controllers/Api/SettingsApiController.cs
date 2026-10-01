@@ -18,16 +18,19 @@ public class SettingsApiController : ControllerBase
     private readonly IColorRulesService _colorRules;
     private readonly IRecommendationTemplateService _recTemplates;
     private readonly IAccessPolicyService _accessPolicy;
+    private readonly IPageVisibilityService _pageVisibility;
     private readonly IStringLocalizer<SharedResource> _L;
     public SettingsApiController(
         IColorRulesService colorRules,
         IRecommendationTemplateService recTemplates,
         IAccessPolicyService accessPolicy,
+        IPageVisibilityService pageVisibility,
         IStringLocalizer<SharedResource> localizer)
     {
         _colorRules = colorRules;
         _recTemplates = recTemplates;
         _accessPolicy = accessPolicy;
+        _pageVisibility = pageVisibility;
         _L = localizer;
     }
 
@@ -96,6 +99,27 @@ public class SettingsApiController : ControllerBase
             return BadRequest(_L["Api_NoAccessSettings"].Value);
         var adminName = HttpContext.Session.GetAssignedName() ?? HttpContext.Session.GetEmail();
         await _accessPolicy.SaveAsync(request.Settings, adminName);
+        return Ok();
+    }
+
+    // ── Pages hidden from the User interface ─────────────────────────────────
+
+    [HttpGet("page-visibility"), RequireRole("Admin")]
+    public async Task<IActionResult> GetPageVisibility() => Ok(await _pageVisibility.GetAllAsync());
+
+    public class SavePageVisibilityRequest
+    {
+        /// <summary>page key → is hidden from the User interface.</summary>
+        public Dictionary<string, bool> Hidden { get; set; } = new();
+    }
+
+    [HttpPost("page-visibility"), ValidateAntiForgeryToken, RequireRole("Admin")]
+    public async Task<IActionResult> SavePageVisibility([FromBody] SavePageVisibilityRequest request)
+    {
+        if (request?.Hidden == null || request.Hidden.Count == 0) return BadRequest(_L["Api_NoPageSettings"].Value);
+        var adminName = HttpContext.Session.GetAssignedName() ?? HttpContext.Session.GetEmail();
+        try { await _pageVisibility.SaveAsync(request.Hidden, adminName); }
+        catch (InvalidOperationException) { return BadRequest(_L["Api_NoPagesVisible"].Value); }
         return Ok();
     }
 }

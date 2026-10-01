@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<JobHeadcountProjection> JobHeadcountProjections { get; set; }
     public DbSet<CrewTrainerEmployee> CrewTrainerEmployees { get; set; }
     public DbSet<JobPayrollGroup> JobPayrollGroups { get; set; }
+    public DbSet<PageVisibility> PageVisibilities { get; set; }
     public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
     public DbSet<AppSetting> AppSettings { get; set; }
     public DbSet<StoreActionPlan> StoreActionPlans { get; set; }
@@ -94,6 +95,8 @@ public class AppDbContext : DbContext
         // Per-area access configuration — one row per area, keyed by the area
         // string (same fresh-DB caveat as above).
         modelBuilder.Entity<PageAccessConfig>().HasKey(p => p.AreaKey);
+        modelBuilder.Entity<PageVisibility>().HasKey(p => p.PageKey);
+        modelBuilder.Entity<PageVisibility>().Property(p => p.PageKey).HasMaxLength(100);
 
         // SQL Server's DATETIME2 (unlike Npgsql's TIMESTAMPTZ) has no concept of
         // DateTimeKind — every DateTime read back from it comes back as Kind=

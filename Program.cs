@@ -120,6 +120,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IWorkforcePlanningService, WorkforcePlanningService>();
 builder.Services.AddScoped<ICrewTrainerService, CrewTrainerService>();
+builder.Services.AddScoped<IPageVisibilityService, PageVisibilityService>();
+builder.Services.AddScoped<MvcApp.Filters.UserPageVisibilityFilter>();
 builder.Services.AddScoped<IUploadService, UploadService>();
 builder.Services.AddScoped<IDataFreshnessService, DataFreshnessService>();
 builder.Services.AddSingleton<IBackgroundJobTracker, BackgroundJobTracker>();
