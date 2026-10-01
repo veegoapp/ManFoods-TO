@@ -144,6 +144,22 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                 if (groups.Count > 0) map[Norm(CrewTrainerJob)] = groups.OrderByDescending(g => g.Count).First().Group.Trim();
             }
         }
+
+        // The reference list wins over anything learned from the roster.
+        foreach (var kv in await GetReferenceGroupsAsync()) map[kv.Key] = kv.Value;
+        _cache.Set(key, map, CacheOptions());
+        return map;
+    }
+
+    // The job → payroll group reference list (a few dozen rows), keyed by the normalised job title.
+    private async Task<Dictionary<string, string>> GetReferenceGroupsAsync()
+    {
+        const string key = "planning:job-group-reference";
+        if (_cache.TryGetValue(key, out Dictionary<string, string>? cached) && cached != null) return cached;
+        var rows = await _db.JobPayrollGroups.AsNoTracking().Select(j => new { j.JobTitle, j.PayrollGroup }).ToListAsync();
+        var map = new Dictionary<string, string>();
+        foreach (var r in rows)
+            if (!string.IsNullOrWhiteSpace(r.JobTitle) && !string.IsNullOrWhiteSpace(r.PayrollGroup)) map[Norm(r.JobTitle)] = r.PayrollGroup.Trim();
         _cache.Set(key, map, CacheOptions());
         return map;
     }

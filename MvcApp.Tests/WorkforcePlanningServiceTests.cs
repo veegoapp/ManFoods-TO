@@ -504,6 +504,25 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task PayrollGroup_ComesFromTheReferenceList_AndFallsBackToTheRoster()
+    {
+        var db = NewDb();
+        Proj(db, 1, "1 | A", "Crew", 5); Proj(db, 1, "1 | A", "MDS", 2); Proj(db, 1, "1 | A", "NGBL Swing", 1);
+        // On the roster Crew is mostly "Hourly" and MDS is "Hourly"; the reference says otherwise for Crew.
+        Person(db, 1, "1", "1 | A", "Crew", "Hourly"); Person(db, 1, "2", "1 | A", "Crew", "Hourly"); Person(db, 1, "3", "1 | A", "MDS", "Hourly");
+        db.JobPayrollGroups.Add(new JobPayrollGroup { JobTitle = "CREW ", PayrollGroup = "Manfoods Company" });     // case / spacing tolerant
+        db.JobPayrollGroups.Add(new JobPayrollGroup { JobTitle = "ngbl swing", PayrollGroup = "Hourly Paid" });
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+
+        Assert.Equal(5, Assert.Single(dto.ByPayrollGroup, r => r.Name == "Manfoods Company").Projected); // Crew: reference beats the roster
+        Assert.Equal(2, Assert.Single(dto.ByPayrollGroup, r => r.Name == "Hourly").Projected);            // MDS is not on the list: learned from the roster
+        Assert.Equal(1, Assert.Single(dto.ByPayrollGroup, r => r.Name == "Hourly Paid").Projected);       // a job nobody works yet still gets its group
+        Assert.DoesNotContain(dto.ByPayrollGroup, r => r.Name == "");
+    }
+
+    [Fact]
     public async Task CrewTrainer_ExpectedResignationsAreFoundByEmployeeId()
     {
         var db = NewDb();

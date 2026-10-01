@@ -595,6 +595,50 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_crew_trainer_employees
     CREATE UNIQUE INDEX ux_crew_trainer_employees_period_employee
         ON dbo.crew_trainer_employees (year, month, employee_id);
 
+-- ── job_payroll_groups ───────────────────────────────────────────────────
+-- The payroll group of each job title: the reference Workforce Planning uses for payroll groups.
+-- Seeded once when the table is created; afterwards it is replaced by an upload in Data Management.
+IF OBJECT_ID('dbo.job_payroll_groups', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.job_payroll_groups (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        job_title NVARCHAR(200) NOT NULL DEFAULT '',
+        payroll_group NVARCHAR(200) NOT NULL DEFAULT '',
+        updated_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+    );
+    CREATE UNIQUE INDEX ux_job_payroll_groups_job ON dbo.job_payroll_groups (job_title);
+    INSERT INTO dbo.job_payroll_groups (job_title, payroll_group)
+    VALUES
+            (N'Crew', N'Manfoods Company'),
+            (N'Crew (Touristic)', N'Manfoods Company'),
+            (N'Hourly Paid Crew', N'Hourly Paid'),
+            (N'McAcademy', N'Hourly Paid'),
+            (N'Crew Trainee', N'Manfoods Company'),
+            (N'Handicaps Crew', N'Manfoods Company'),
+            (N'Crew Trainer', N'Manfoods Company'),
+            (N'Handicaps Crew Trainee', N'Manfoods Company'),
+            (N'Hourly Paid handicaps crew', N'Hourly Paid'),
+            (N'Hostess', N'Manfoods Company'),
+            (N'Hourly Paid Hostes', N'Hourly Paid'),
+            (N'HP Gem (Guest experience manager)', N'Hourly Paid'),
+            (N'Gem (Guest Experience Manager)', N'Manfoods Company'),
+            (N'HOURLY PAID MDS (PER ORDER)', N'Hourly Paid'),
+            (N'MDS', N'Manfoods Company'),
+            (N'Hourly Paid MDS', N'Hourly Paid'),
+            (N'MDS (PER ORDER)', N'Manfoods Company'),
+            (N'MDS Trainee', N'Manfoods Company'),
+            (N'Senior MDS', N'Manfoods Company'),
+            (N'Senior Maintenance', N'Manfoods Company'),
+            (N'Hourly Paid Maintenance', N'Hourly Paid'),
+            (N'Maintenance Trainee', N'Manfoods Company'),
+            (N'Maintenance', N'Manfoods Company'),
+            (N'McAcademy (NGBL)', N'Hourly Paid'),
+            (N'McAcademy (GEM)', N'Hourly Paid'),
+            (N'hourly paid crew trainer', N'Hourly Paid'),
+            (N'Barista', N'Manfoods Company'),
+            (N'NGBL Swing', N'Hourly Paid');
+END
+
 -- ── page_access_config ────────────────────────────────────────────────────
 -- Admin-configurable per-area access. One row per access area (see
 -- Services/AccessAreas). is_restricted = 1 means restricted roles (OC/OM/Head

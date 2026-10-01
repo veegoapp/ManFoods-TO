@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<ExitInterview> ExitInterviews { get; set; }
     public DbSet<JobHeadcountProjection> JobHeadcountProjections { get; set; }
     public DbSet<CrewTrainerEmployee> CrewTrainerEmployees { get; set; }
+    public DbSet<JobPayrollGroup> JobPayrollGroups { get; set; }
     public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
     public DbSet<AppSetting> AppSettings { get; set; }
     public DbSet<StoreActionPlan> StoreActionPlans { get; set; }
@@ -80,6 +81,14 @@ public class AppDbContext : DbContext
             .HasDatabaseName("ux_crew_trainer_employees_period_employee");
         modelBuilder.Entity<CrewTrainerEmployee>().Property(c => c.EmployeeId).HasMaxLength(100);
         modelBuilder.Entity<CrewTrainerEmployee>().Property(c => c.StoreName).HasMaxLength(450);
+
+        // One payroll group per job title (matched case-insensitively by SQL Server's collation).
+        modelBuilder.Entity<JobPayrollGroup>()
+            .HasIndex(j => j.JobTitle)
+            .IsUnique()
+            .HasDatabaseName("ux_job_payroll_groups_job");
+        modelBuilder.Entity<JobPayrollGroup>().Property(j => j.JobTitle).HasMaxLength(200);
+        modelBuilder.Entity<JobPayrollGroup>().Property(j => j.PayrollGroup).HasMaxLength(200);
 
         // Per-area access configuration — one row per area, keyed by the area
         // string (same fresh-DB caveat as above).
