@@ -2092,4 +2092,27 @@
   <data name="WP_DrillFormula" xml:space="preserve"><value>احتياج التعيين = النقص + الاستقالات المتوقعة. النقص هو الناقص اليوم في الوظائف التي تقل عن خطتها (والوظيفة التي فوق خطتها لا تغطي وظيفة ناقصة)؛ والاستقالات المتوقعة هي متوسط آخر 6 أشهر الشهري.</value></data>
   <data name="WP_KpiShortage" xml:space="preserve"><value>النقص</value></data>
   <data name="WP_KpiShortageDesc" xml:space="preserve"><value>عدد الأفراد الناقصين في الوظائف التي تقل عن خطتها</value></data>
+  <data name="HF_In_Peak_T" xml:space="preserve"><value>أكثر شهر ضغطًا: {0}</value></data>
+  <data name="HF_In_Peak_D" xml:space="preserve"><value>يحتاج {0} إلى {1} تعيين، أي {2}% من كل التعيينات المعروضة.</value></data>
+  <data name="HF_In_Next_T" xml:space="preserve"><value>الأشهر الثلاثة القادمة {0} المتوسط</value></data>
+  <data name="HF_In_Next_D" xml:space="preserve"><value>المطلوب حوالي {0} تعيين شهريًا في الأشهر الثلاثة القادمة، مقابل {1} شهريًا على الفترة كلها ({2}% {3}).</value></data>
+  <data name="HF_In_Above" xml:space="preserve"><value>أعلى من</value></data>
+  <data name="HF_In_Below" xml:space="preserve"><value>أقل من</value></data>
+  <data name="HF_In_More" xml:space="preserve"><value>أكثر</value></data>
+  <data name="HF_In_Fewer" xml:space="preserve"><value>أقل</value></data>
+  <data name="HF_In_Trend_T" xml:space="preserve"><value>التعيين الشهري {0} على مدار السنة</value></data>
+  <data name="HF_In_Trend_D" xml:space="preserve"><value>من {0} ({1} تعيين) إلى {2} ({3} تعيين): {4}% {5}.</value></data>
+  <data name="HF_In_Rises" xml:space="preserve"><value>يرتفع</value></data>
+  <data name="HF_In_Falls" xml:space="preserve"><value>ينخفض</value></data>
+  <data name="HF_In_Concentration_T" xml:space="preserve"><value>أعلى {0} يستحوذون على {1}% من التعيينات</value></data>
+  <data name="HF_In_Concentration_D" xml:space="preserve"><value>{0}.</value></data>
+  <data name="HF_In_Consultant_T" xml:space="preserve"><value>الأكثر تعيينًا: {0}</value></data>
+  <data name="HF_In_Consultant_D" xml:space="preserve"><value>فروع {0} تحتاج {1} تعيين، أي {2}% من الإجمالي، موزعة على {3} فرع.</value></data>
+  <data name="HF_In_NoNeed_T" xml:space="preserve"><value>{0} فرع لا يحتاج تعيينات</value></data>
+  <data name="HF_In_NoNeed_D" xml:space="preserve"><value>هي عند التوقّع أو فوقه في كل الأشهر المعروضة.</value></data>
+  <data name="HF_In_EarlyLeavers_T" xml:space="preserve"><value>{0}% من التعيينات تعوّض المغادرين مبكرًا</value></data>
+  <data name="HF_In_EarlyLeavers_D" xml:space="preserve"><value>حوالي {0} من {1} تعيين تعوّض فقط موظفين جدد يغادرون خلال 90 يومًا (المعدل على مستوى الشركة {2}%).</value></data>
+  <data name="HF_In_NoHires_T" xml:space="preserve"><value>لا توجد تعيينات مطلوبة</value></data>
+  <data name="HF_In_NoHires_D" xml:space="preserve"><value>التوقّع مُحقَّق بالفعل في كل الأشهر المعروضة.</value></data>
+  <data name="Guide_HF_Insights" xml:space="preserve"><value>جمل بسيطة محسوبة من الجدول: أكثر شهر ضغطًا، وهل الأشهر الثلاثة القادمة أعلى أم أقل من المتوسط الشهري، وهل يرتفع التعيين الشهري أم ينخفض على مدار السنة، ومدى تركّز التعيينات، والاستشاري الذي تحتاج فروعه أكثر تعيينات، وكم تعيينًا يعوّض فقط المغادرين مبكرًا. وهي تتبع الفلاتر واختيار «عرض حسب».</value></data>
 </root>

@@ -2086,4 +2086,27 @@
   <data name="WP_DrillFormula" xml:space="preserve"><value>Hiring need = Shortage + Expected resignations. Shortage is what is missing today in the jobs that are below their plan (a job above its plan never covers a short job); Expected resignations is the monthly average of the last 6 months.</value></data>
   <data name="WP_KpiShortage" xml:space="preserve"><value>Shortage</value></data>
   <data name="WP_KpiShortageDesc" xml:space="preserve"><value>People missing in the jobs that are below their plan</value></data>
+  <data name="HF_In_Peak_T" xml:space="preserve"><value>Busiest month: {0}</value></data>
+  <data name="HF_In_Peak_D" xml:space="preserve"><value>{0} needs {1} hires, {2}% of all the hires shown.</value></data>
+  <data name="HF_In_Next_T" xml:space="preserve"><value>The next 3 months are {0} average</value></data>
+  <data name="HF_In_Next_D" xml:space="preserve"><value>About {0} hires a month are needed in the next 3 months, against {1} a month over the whole period ({2}% {3}).</value></data>
+  <data name="HF_In_Above" xml:space="preserve"><value>above</value></data>
+  <data name="HF_In_Below" xml:space="preserve"><value>below</value></data>
+  <data name="HF_In_More" xml:space="preserve"><value>more</value></data>
+  <data name="HF_In_Fewer" xml:space="preserve"><value>fewer</value></data>
+  <data name="HF_In_Trend_T" xml:space="preserve"><value>Monthly hiring {0} through the year</value></data>
+  <data name="HF_In_Trend_D" xml:space="preserve"><value>From {0} ({1} hires) to {2} ({3} hires): {4}% {5}.</value></data>
+  <data name="HF_In_Rises" xml:space="preserve"><value>rises</value></data>
+  <data name="HF_In_Falls" xml:space="preserve"><value>falls</value></data>
+  <data name="HF_In_Concentration_T" xml:space="preserve"><value>The top {0} take {1}% of the hires</value></data>
+  <data name="HF_In_Concentration_D" xml:space="preserve"><value>{0}.</value></data>
+  <data name="HF_In_Consultant_T" xml:space="preserve"><value>Most hires: {0}</value></data>
+  <data name="HF_In_Consultant_D" xml:space="preserve"><value>{0}'s stores need {1} hires, {2}% of the total, across {3} store(s).</value></data>
+  <data name="HF_In_NoNeed_T" xml:space="preserve"><value>{0} store(s) need no hires</value></data>
+  <data name="HF_In_NoNeed_D" xml:space="preserve"><value>They are at or above their projection in every month shown.</value></data>
+  <data name="HF_In_EarlyLeavers_T" xml:space="preserve"><value>{0}% of hires replace early leavers</value></data>
+  <data name="HF_In_EarlyLeavers_D" xml:space="preserve"><value>About {0} of the {1} hires only replace new employees who leave within 90 days (company-wide rate {2}%).</value></data>
+  <data name="HF_In_NoHires_T" xml:space="preserve"><value>No hires needed</value></data>
+  <data name="HF_In_NoHires_D" xml:space="preserve"><value>The projection is already met in every month shown.</value></data>
+  <data name="Guide_HF_Insights" xml:space="preserve"><value>A few plain sentences worked out from the table: the busiest month, whether the next 3 months are above or below the monthly average, whether monthly hiring rises or falls through the year, how concentrated the hiring is, the consultant whose stores need the most hires, and how many hires only replace early leavers. They follow the filters and the "View by" choice.</value></data>
 </root>
