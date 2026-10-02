@@ -86,13 +86,12 @@ BEGIN
         value NVARCHAR(MAX) NOT NULL DEFAULT ''
     );
 END
--- Seeds the recovery key hash for the key already generated and handed to
--- the admin — guarded by an existence check so re-running this script never
--- silently resets a key that's since been rotated (same intent as the
--- original ON CONFLICT DO NOTHING).
-IF NOT EXISTS (SELECT 1 FROM dbo.app_settings WHERE [key] = 'admin_recovery_key_hash')
-    INSERT INTO dbo.app_settings ([key], value)
-    VALUES ('admin_recovery_key_hash', '$2b$11$24/KLaFMtFEfWIHLPFgbsudQs/B1SN/EVztSlE7u4ff0QAMiMS.sC');
+-- The Master Recovery Key hash is intentionally NOT seeded here: a hash
+-- committed to the repo is a known/default key. With no 'admin_recovery_key_hash'
+-- row, recovery via the key is simply unavailable (UserService.VerifyRecoveryKeyAsync
+-- returns false) until the Super Admin generates one from Users → Recovery Key.
+-- This script never reads, inserts, updates or deletes that row, so an existing
+-- key keeps working until it is regenerated in the app.
 
 -- ── active_employees ──────────────────────────
 IF OBJECT_ID('dbo.active_employees', 'U') IS NULL
