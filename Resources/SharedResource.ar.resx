@@ -2295,4 +2295,5 @@
   <data name="ActLog_Clear_Done" xml:space="preserve"><value>تم حذف {0} سجل.</value></data>
   <data name="ActLog_Clear_NothingToDelete" xml:space="preserve"><value>لا توجد سجلات مطابقة لهذا الاختيار.</value></data>
   <data name="ActLog_Clear_CustomNeedDates" xml:space="preserve"><value>اختر التاريخين للفترة المخصصة.</value></data>
+  <data name="Users_LoginHistoryCairo" xml:space="preserve"><value>الأوقات بتوقيت القاهرة</value></data>
 </root>

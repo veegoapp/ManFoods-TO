@@ -578,3 +578,35 @@ public class ClearActivityHistoryGuardTests : IClassFixture<AppFactory>
         Assert.Equal(8, (await RemainingAsync()).Count);
     }
 }
+
+/// <summary>The per-user Login History page (the log icon on the Users page) shows Cairo time too.</summary>
+public class LoginHistoryCairoTimeTests : IClassFixture<AppFactory>
+{
+    private readonly AppFactory _app;
+    public LoginHistoryCairoTimeTests(AppFactory app) => _app = app;
+
+    [Fact]
+    public async Task LoginHistoryPage_ShowsDateAndTimeInCairo_NotUtc()
+    {
+        var user = await _app.AddUserAsync("history-cairo@example.com", "User");
+        await _app.SeedAsync(db =>
+        {
+            // 2026-01-15 22:30:15 UTC  =  2026-01-16 00:30:15 in Cairo (UTC+2): the DATE changes too
+            db.LoginHistories.Add(new LoginHistory { UserId = user.Id, Email = user.Email, LoggedInAt = ActivityTestHelpers.Utc("2026-01-15T22:30:15Z"), Success = true, Portal = "Home" });
+            // summer (DST, UTC+3): 2026-07-01 22:30:00 UTC = 2026-07-02 01:30:00 Cairo
+            db.LoginHistories.Add(new LoginHistory { UserId = user.Id, Email = user.Email, LoggedInAt = ActivityTestHelpers.Utc("2026-07-01T22:30:00Z"), Success = false, FailureReason = "wrong-password", Portal = "Home" });
+            return Task.CompletedTask;
+        });
+
+        var admin = await _app.AdminClientAsync();
+        var html = await (await admin.GetAsync($"/admin/dashboard/loginhistory/{user.Id}")).Content.ReadAsStringAsync();
+
+        Assert.Contains("Jan 16, 2026", html);
+        Assert.Contains("12:30:15 AM", html);
+        Assert.Contains("Jul 02, 2026", html);
+        Assert.Contains("01:30:00 AM", html);
+        Assert.DoesNotContain("Jan 15, 2026", html);     // the UTC date must not leak through
+        Assert.DoesNotContain("10:30:15 PM", html);
+        Assert.Contains("Times are shown in Cairo time", html);
+    }
+}
