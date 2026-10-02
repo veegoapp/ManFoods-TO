@@ -349,7 +349,7 @@ html, body {
     position: fixed;
     top: calc(var(--global-header-h, var(--header-h)) + 14px);
     inset-inline-end: 28px;
-    z-index: 900;
+    z-index: 250; /* below the sticky header (300) so header menus open over it */
     display: flex; align-items: center; justify-content: center;
     min-width: 42px; height: 42px; padding: 0 11px;
     border: none; border-radius: 999px;
@@ -1349,10 +1349,13 @@ html[dir="rtl"] .user-menu-panel { direction: rtl; }
 .user-menu-item:hover { background: var(--bg-2, rgba(128,128,128,.12)); }
 .user-menu-item i { font-size: 15px; color: var(--text-3); }
 .user-menu-signout, .user-menu-signout i { color: var(--danger, #DA291C); }
-/* dark mode is the default; light shows the sun */
-.user-menu-item .icon-light { display: none; }
-[data-theme="light"] .user-menu-item .icon-dark  { display: none; }
-[data-theme="light"] .user-menu-item .icon-light { display: inline-block; }
+/* The item names the mode you will switch TO: dark theme -> "Light Mode", light theme -> "Dark Mode" */
+.user-menu-item .icon-dark { display: none; }
+.user-menu-item .icon-light { display: inline-block; }
+[data-theme="light"] .user-menu-item .icon-dark  { display: inline-block; }
+[data-theme="light"] .user-menu-item .icon-light { display: none; }
+.user-menu-item i { width: 18px; text-align: center; flex-shrink: 0; }
+.user-menu-item span { flex: 1; }
 
 /* Home: slim top bar holding the bell + avatar (replaces the sidebar user card) */
 .home-topbar {

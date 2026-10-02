@@ -230,6 +230,7 @@
         themeBtn.addEventListener('click', () => {
             const next = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             body.setAttribute('data-theme', next);
+            document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('mf-theme', next);
         });
     }
