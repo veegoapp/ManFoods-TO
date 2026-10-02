@@ -726,6 +726,7 @@
   <data name="EU_SaveChanges" xml:space="preserve"><value>Save Changes</value></data>
   <data name="Role_Admin" xml:space="preserve"><value>Admin</value></data>
   <data name="Role_User" xml:space="preserve"><value>User</value></data>
+  <data name="Role_HR" xml:space="preserve"><value>HR</value></data>
   <data name="Role_HeadManager" xml:space="preserve"><value>Head Manager</value></data>
   <data name="Role_SeniorOperationConsultant" xml:space="preserve"><value>Senior Operation Consultant</value></data>
   <data name="Role_OperationDirector" xml:space="preserve"><value>Operation Director</value></data>
@@ -2170,7 +2171,7 @@
   <data name="CT_In_PlanVsRule_T" xml:space="preserve"><value>The projection plans {0} trainers than the rule asks for</value></data>
   <data name="CT_In_PlanVsRule_D" xml:space="preserve"><value>The projection has {0} trainers; the rule asks for {1} ({2} difference).</value></data>
   <data name="Set_Tab_Pages" xml:space="preserve"><value>Pages</value></data>
-  <data name="Set_Pages_Sub" xml:space="preserve"><value>Choose which pages the User interface shows. A hidden page disappears from the sidebar and cannot be opened (users are sent to the first page that is still visible). The Admin interface is not affected. At least one page must stay visible.</value></data>
+  <data name="Set_Pages_Sub" xml:space="preserve"><value>Choose which pages each role of the User interface (HR, User and the five operational roles) can see. A page that is unticked for a role disappears from that role's sidebar, cannot be opened and its data is refused; the person is sent to the first page that is still visible. Every role must keep at least one page.</value></data>
   <data name="Set_Pages_Visible" xml:space="preserve"><value>Visible</value></data>
   <data name="Set_Pages_Hidden" xml:space="preserve"><value>Hidden</value></data>
   <data name="Api_NoPageSettings" xml:space="preserve"><value>No page settings were sent.</value></data>

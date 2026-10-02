@@ -13,6 +13,7 @@ namespace MvcApp.Controllers.Api;
 [EnableRateLimiting("api")]
 [RequireAuth]
 [AccessArea(AccessAreas.ActionCenter)]
+[RequiresAnyPage("actioncenter", "stores")] // stores: the store profile shows a store's action plan
 public class StoreActionPlanApiController : ControllerBase
 {
     private readonly IStoreActionPlanService _actionPlans;

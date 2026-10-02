@@ -12,6 +12,7 @@ namespace MvcApp.Controllers.Api;
 [EnableRateLimiting("api")]
 [RequireAuth]
 [AccessArea(AccessAreas.ExitInterviews)]
+[RequiresAnyPage("exitinterviews", "comparisons", "turnover", "stores")]
 public class ExitInterviewApiController : ControllerBase
 {
     private readonly IExitInterviewService _exitInterviews;

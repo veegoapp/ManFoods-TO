@@ -4,7 +4,24 @@ namespace MvcApp.Services;
 /// covers its sub-pages (for example Stores covers the store profile).</summary>
 public static class UserPages
 {
-    public sealed record Page(string Key, string Action, string NavLabelKey);
+    /// <summary>A page of the User interface. <paramref name="UnderReview"/> marks a page that is still being
+    /// reviewed: until an Admin ticks it for a role in Settings → Pages it is hidden from every role except HR.</summary>
+    public sealed record Page(string Key, string Action, string NavLabelKey, bool UnderReview = false);
+
+    /// <summary>The reviewing role: sees pages that are still under review.</summary>
+    public const string HrRole = "HR";
+
+    /// <summary>Every role that uses the User interface (Home area), in the order Settings → Pages lists them.
+    /// Admin is not here: the Admin portal is not affected by page visibility.</summary>
+    public static readonly IReadOnlyList<string> Roles = new[]
+    {
+        HrRole, "User", "Operation_Manager", "Operation_Consultant", "Head_Manager", "Senior_Operation_Consultant", "Operation_Director",
+    };
+
+    public static bool IsKnownRole(string? role) => role != null && Roles.Contains(role);
+
+    /// <summary>Whether the page is hidden from the role when no setting has been saved for that pair.</summary>
+    public static bool HiddenByDefault(Page page, string role) => page.UnderReview && role != HrRole;
 
     public static readonly IReadOnlyList<Page> All = new[]
     {

@@ -29,7 +29,7 @@ public class DashboardController : Controller
     // Users land on the first page that is not hidden.
     public async Task<IActionResult> Index()
     {
-        var first = UserPages.FirstVisible(await _visibility.GetHiddenAsync()) ?? UserPages.All[0];
+        var first = UserPages.FirstVisible(await _visibility.GetHiddenAsync(HttpContext.Session.GetRole())) ?? UserPages.All[0];
         return RedirectToAction(first.Action);
     }
 
@@ -110,6 +110,7 @@ public class DashboardController : Controller
     // Mirrors Areas/Admin/Controllers/DashboardController.Export exactly (same IReportService
     // calls) so the shared Reports view's download buttons work under the Home area too.
     [HttpGet("home/dashboard/export")]
+    [RequiresAnyPage("reports")] // only the Reports pages link to the Excel exports
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [AccessArea(AccessAreas.Reports)]
     public async Task<IActionResult> Export(int month, int year, string reportType = "stores-overview",

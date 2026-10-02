@@ -11,6 +11,7 @@ namespace MvcApp.Controllers.Api;
 [EnableRateLimiting("api")]
 [RequireAuth]
 [AccessArea(AccessAreas.Retention)]
+[RequiresAnyPage("retention", "comparisons", "stores")]
 public class RetentionApiController : ControllerBase
 {
     private readonly IRetentionService _retention;

@@ -524,7 +524,7 @@ public class DashboardController : Controller
             ws.Cell(2, 3).Value = "Ahmed Mohamed"; ws.Cell(2, 4).Value = "Operation_Consultant";
             ws.Cell(3, 1).Value = "sara@manfoods.com"; ws.Cell(3, 2).Value = "+201098765432";
             ws.Cell(3, 3).Value = "Sara Ali"; ws.Cell(3, 4).Value = "User";
-            ws.Cell(5, 1).Value = "Assigned Name and Role are optional — leave blank and the account is created as a plain \"User\". Valid Role values: Admin, User, Operation_Manager, Operation_Consultant, Head_Manager, Senior_Operation_Consultant, Operation_Director.";
+            ws.Cell(5, 1).Value = "Assigned Name and Role are optional — leave blank and the account is created as a plain \"User\". Valid Role values: Admin, User, HR, Operation_Manager, Operation_Consultant, Head_Manager, Senior_Operation_Consultant, Operation_Director.";
             ws.Cell(5, 1).Style.Font.Italic = true;
 
             // Role column dropdown, restricted to the roles the app recognizes.

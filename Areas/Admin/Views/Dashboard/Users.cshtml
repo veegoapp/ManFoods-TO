@@ -8,6 +8,7 @@
     {
         "Admin" => L["Role_Admin"].Value,
         "User" => L["Role_User"].Value,
+        "HR" => L["Role_HR"].Value,
         "Operation_Manager" => L["Common_OperationManager"].Value,
         "Operation_Consultant" => L["Common_OperationConsultant"].Value,
         "Head_Manager" => L["Role_HeadManager"].Value,
@@ -152,7 +153,7 @@
             </div>
             <select id="usRoleFilter" class="form-select form-select-dark form-select-sm us-role-filter">
                 <option value="">@L["Users_FilterAllRoles"]</option>
-                @foreach (var r in new[] { "Admin", "User", "Operation_Manager", "Operation_Consultant", "Head_Manager", "Senior_Operation_Consultant", "Operation_Director" })
+                @foreach (var r in new[] { "Admin", "User", "HR", "Operation_Manager", "Operation_Consultant", "Head_Manager", "Senior_Operation_Consultant", "Operation_Director" })
                 {
                     <option value="@r">@RoleLabel(r)</option>
                 }

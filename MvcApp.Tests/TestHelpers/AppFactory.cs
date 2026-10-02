@@ -98,6 +98,16 @@ public sealed class AppFactory : WebApplicationFactory<AppDbContext>
         finally { _userLock.Release(); }
     }
 
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, Lazy<Task<HttpClient>>> _roleClients = new();
+
+    /// <summary>A signed-in Home-portal client for the given account, created (and signed in) once per factory.</summary>
+    public Task<HttpClient> RoleClientAsync(string email, string role) =>
+        _roleClients.GetOrAdd(email, _ => new Lazy<Task<HttpClient>>(async () =>
+        {
+            await AddUserAsync(email, role);
+            return await SignInAsync(email, AdminPassword, admin: false);
+        })).Value;
+
     public HttpClient NewClient() => CreateClient(new WebApplicationFactoryClientOptions
     {
         AllowAutoRedirect = false,

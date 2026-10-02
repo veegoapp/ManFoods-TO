@@ -17,7 +17,7 @@ public static class UserManagementPolicy
     /// <summary>The full set of role values the app recognizes.</summary>
     public static readonly IReadOnlyList<string> ValidRoles = new[]
     {
-        "Admin", "User", "Operation_Manager", "Operation_Consultant",
+        "Admin", "User", "HR", "Operation_Manager", "Operation_Consultant",
         "Head_Manager", "Senior_Operation_Consultant", "Operation_Director",
     };
 

@@ -27,6 +27,7 @@ public class WorkforcePlanningApiController : ControllerBase
 
     /// <summary>The Crew Trainers page (same access area as Workforce Planning).</summary>
     [HttpGet("crew-trainers")]
+    [RequiresAnyPage("crewtrainers")]
     public async Task<IActionResult> CrewTrainers([FromServices] ICrewTrainerService trainers, [FromQuery] int? year, [FromQuery] int? month, [FromQuery] string? store,
         [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? soc, [FromQuery] string? od)
     {
@@ -36,6 +37,7 @@ public class WorkforcePlanningApiController : ControllerBase
     }
 
     [HttpGet("hiring-forecast")]
+    [RequiresAnyPage("hiringforecast")]
     public async Task<IActionResult> HiringForecast([FromQuery] int? year, [FromQuery] string? store, [FromQuery] string? jobs,
         [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? soc, [FromQuery] string? od, [FromQuery] string? by)
     {
@@ -45,6 +47,7 @@ public class WorkforcePlanningApiController : ControllerBase
     }
 
     [HttpGet("summary")]
+    [RequiresAnyPage("workforceplanning")]
     public async Task<IActionResult> Summary([FromQuery] int? year, [FromQuery] int? month, [FromQuery] string? store, [FromQuery] string? jobs,
         [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? soc, [FromQuery] string? od)
     {
@@ -56,6 +59,7 @@ public class WorkforcePlanningApiController : ControllerBase
     /// <summary>One store's jobs for a month (projected, actual, expected resignations, hiring need): the
     /// breakdown behind the store's row in the stores table.</summary>
     [HttpGet("store-jobs")]
+    [RequiresAnyPage("workforceplanning")]
     public async Task<IActionResult> StoreJobs([FromQuery] string store, [FromQuery] int year, [FromQuery] int month, [FromQuery] string? jobs)
     {
         if (string.IsNullOrWhiteSpace(store)) return BadRequest(new { error = "Store is required." });
@@ -69,6 +73,7 @@ public class WorkforcePlanningApiController : ControllerBase
     // The two endpoints below feed the Stores and Store Profile pages, which run on the
     // Analytics area, so they follow that area's store visibility rather than this page's.
     [HttpGet("store-fill")]
+    [RequiresAnyPage("stores")]
     [AccessArea(AccessAreas.Analytics)]
     public async Task<IActionResult> StoreFill([FromQuery] int year, [FromQuery] int month, [FromQuery] string? jobs)
     {
@@ -78,6 +83,7 @@ public class WorkforcePlanningApiController : ControllerBase
     }
 
     [HttpGet("store-plan")]
+    [RequiresAnyPage("stores")]
     [AccessArea(AccessAreas.Analytics)]
     public async Task<IActionResult> StorePlan([FromQuery] string store, [FromQuery] int year, [FromQuery] int month)
     {

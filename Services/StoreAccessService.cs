@@ -65,7 +65,8 @@ public class StoreAccessService : IStoreAccessService
     // Roles with full, unrestricted access — everything else (including a
     // role string that isn't recognized at all, e.g. a Bulk Upload typo) is
     // treated as restricted and gets no store access.
-    private static readonly HashSet<string> UnrestrictedRoles = new() { "Admin", "User" };
+    // HR is treated exactly like User: every store, every employee, all areas (it exists so HR can review new pages first).
+    private static readonly HashSet<string> UnrestrictedRoles = new() { "Admin", "User", "HR" };
 
     public bool IsRestrictedRole(string role) => !UnrestrictedRoles.Contains(role);
 

@@ -164,7 +164,7 @@
         <div style="padding:0 20px 20px" id="setSevHistory"></div>
     </div>
 </div>
-<div id="setTabPages" hidden data-pages='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(MvcApp.Services.UserPages.All.Select(p => new { key = p.Key, label = L[p.NavLabelKey].Value })))' data-visible="@L["Set_Pages_Visible"]" data-hidden="@L["Set_Pages_Hidden"]">
+<div id="setTabPages" hidden data-pages='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(MvcApp.Services.UserPages.All.Select(p => new { key = p.Key, label = L[p.NavLabelKey].Value, underReview = p.UnderReview })))' data-roles='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(MvcApp.Services.UserPages.Roles.Select(r => new { key = r, label = L["Role_" + r.Replace("_", "")].Value })))' data-visible="@L["Set_Pages_Visible"]" data-hidden="@L["Set_Pages_Hidden"]">
     <p class="text-muted-custom mb-4">@L["Set_Pages_Sub"]</p>
     <div class="chart-card set-card">
         <div style="padding:12px 20px 20px" id="setPagesRows"></div>
@@ -465,25 +465,16 @@ async function setPagesInit() {
     setPagesLoaded = true;
     const el = document.getElementById('setTabPages');
     const pages = JSON.parse(el.dataset.pages || '[]');
-    let hidden = {};
+    const roles = JSON.parse(el.dataset.roles || '[]');
+    let hidden = {};   // page key → role → is hidden
     try { const r = await fetch('/api/settings/page-visibility'); if (r.ok) hidden = await r.json(); } catch { /* everything visible */ }
-    const paint = (key, visible) => {
-        const st = document.querySelector(`#setPagesRows [data-state="${key}"]`);
-        st.textContent = visible ? el.dataset.visible : el.dataset.hidden;
-        st.style.color = visible ? 'oklch(0.5 0.15 155)' : 'oklch(0.6 0.14 75)';
-    };
-    document.getElementById('setPagesRows').innerHTML = pages.map(p => {
-        const visible = !hidden[p.key];
-        return `<div class="set-rule-row" style="align-items:center">
-            <label style="min-width:0;flex:1;cursor:pointer;display:flex;gap:12px;align-items:center">
-                <input type="checkbox" data-page="${p.key}" ${visible ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--red);flex-shrink:0">
-                <span style="font-weight:700;font-size:13.5px">${setAccessEsc(p.label)}</span>
-            </label>
-            <span data-state="${p.key}" style="font-size:11px;font-weight:700;white-space:nowrap"></span>
-        </div>`;
-    }).join('');
-    pages.forEach(p => paint(p.key, !hidden[p.key]));
-    document.querySelectorAll('#setPagesRows input[type=checkbox]').forEach(cb => cb.addEventListener('change', () => paint(cb.dataset.page, cb.checked)));
+    const cell = 'padding:8px 10px;text-align:center;white-space:nowrap';
+    const head = `<tr><th style="padding:8px 10px;text-align:start"></th>${roles.map(r => `<th style="${cell};font-size:11.5px;font-weight:700">${setAccessEsc(r.label)}</th>`).join('')}</tr>`;
+    const rows = pages.map(p => `<tr style="border-top:1px solid var(--card-border)">
+        <td style="padding:8px 10px;font-weight:700;font-size:13.5px">${setAccessEsc(p.label)}${p.underReview ? ' <span style="font-size:10.5px;font-weight:700;color:oklch(0.6 0.14 75)">•</span>' : ''}</td>
+        ${roles.map(r => `<td style="${cell}"><input type="checkbox" data-page="${p.key}" data-role="${r.key}" ${(hidden[p.key] || {})[r.key] ? '' : 'checked'} style="width:18px;height:18px;accent-color:var(--red)"></td>`).join('')}
+    </tr>`).join('');
+    document.getElementById('setPagesRows').innerHTML = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
 }
 
 async function setPagesSave() {
@@ -491,7 +482,7 @@ async function setPagesSave() {
     const btn = document.getElementById('setPagesSaveBtn');
     const status = document.getElementById('setPagesStatus');
     const hidden = {};
-    document.querySelectorAll('#setPagesRows input[type=checkbox]').forEach(cb => { hidden[cb.dataset.page] = !cb.checked; });
+    document.querySelectorAll('#setPagesRows input[type=checkbox]').forEach(cb => { (hidden[cb.dataset.page] = hidden[cb.dataset.page] || {})[cb.dataset.role] = !cb.checked; });
     btn.disabled = true;
     status.textContent = setL.saving || '';
     try {

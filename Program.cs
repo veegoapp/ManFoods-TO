@@ -30,6 +30,9 @@ builder.Services.AddControllersWithViews(options =>
         // anti-forgery token, so a future action can't accidentally ship without one. Existing POST
         // actions already carry [ValidateAntiForgeryToken] and every form/fetch already sends the token.
         options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
+        // Closes the APIs/downloads behind a page that is hidden from the caller's role (Settings → Pages).
+        // Order 100: after the authentication filters.
+        options.Filters.Add<MvcApp.Filters.PageApiAccessFilter>(100);
     })
     .AddViewLocalization()
     // DataAnnotations ErrorMessage strings on the view models are resx keys,

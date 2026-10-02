@@ -11,6 +11,7 @@ namespace MvcApp.Controllers.Api;
 [EnableRateLimiting("api")]
 [RequireAuth]
 [AccessArea(AccessAreas.Analytics)] // Workforce + Turnover + Comparisons share this backend
+[RequiresAnyPage("workforce", "turnover", "comparisons", "stores")] // the pages that call its data endpoints; the Shared lookups stay open
 public class DashboardApiController : ControllerBase
 {
     private readonly IDashboardService _dashboard;

@@ -11,6 +11,7 @@ namespace MvcApp.Controllers.Api;
 [EnableRateLimiting("api")]
 [RequireAuth]
 [AccessArea(AccessAreas.NinetyDay)]
+[RequiresAnyPage("ninetyday", "comparisons", "stores")]
 public class NinetyDayTurnoverApiController : ControllerBase
 {
     private readonly INinetyDayTurnoverService _turnover;

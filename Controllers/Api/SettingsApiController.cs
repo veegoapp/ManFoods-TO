@@ -113,8 +113,8 @@ public class SettingsApiController : ControllerBase
 
     public class SavePageVisibilityRequest
     {
-        /// <summary>page key → is hidden from the User interface.</summary>
-        public Dictionary<string, bool> Hidden { get; set; } = new();
+        /// <summary>page key → role → is hidden from that role's User interface.</summary>
+        public Dictionary<string, Dictionary<string, bool>> Hidden { get; set; } = new();
     }
 
     [HttpPost("page-visibility"), ValidateAntiForgeryToken, RequireRole("Admin")]
