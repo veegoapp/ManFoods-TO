@@ -61,19 +61,6 @@
             </div>
         </a>
         <div class="admin-global-right">
-            <div class="notif-wrap" id="notifWrap">
-                <button type="button" class="notif-btn" id="notifBtn" title="@L["Notif_Title"]" data-empty-text="@L["Notif_Empty"]">
-                    <i class="bi bi-bell-fill"></i>
-                    <span class="notif-badge" id="notifBadge" hidden>0</span>
-                </button>
-                <div class="notif-panel" id="notifPanel" hidden>
-                    <div class="notif-panel-header">
-                        <span>@L["Notif_Title"]</span>
-                        <button type="button" class="notif-clear-btn" id="notifClearBtn" hidden>@L["Notif_ClearAll"]</button>
-                    </div>
-                    <div id="notifList"></div>
-                </div>
-            </div>
             <partial name="_UserMenu" model="@(userRole == "Admin" ? "Admin" : "Home")" />
         </div>
     </header>
@@ -251,7 +238,6 @@
 
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="~/js/notifications.js" asp-append-version="true"></script>
 <script>
 (function () {
     // Mobile sidebar toggle

@@ -224,6 +224,17 @@ public class AdminOnlyAreasAuthorizationTests : IClassFixture<AppFactory>
         Assert.Equal(HttpStatusCode.OK, (await user.GetAsync(url)).StatusCode);
     }
 
+    [Fact]
+    public async Task NotificationBell_IsGone_ButPagesStillRender()
+    {
+        var user = await _app.UserClientAsync();
+        Assert.Equal(HttpStatusCode.NotFound, (await user.GetAsync("/api/notifications")).StatusCode);
+        var html = await (await user.GetAsync("/home/dashboard/turnover")).Content.ReadAsStringAsync();
+        Assert.DoesNotContain("notifBtn", html);
+        Assert.DoesNotContain("notifications.js", html);
+        Assert.Contains("admin-global-right", html); // header (user menu) is still rendered
+    }
+
     [Theory]
     [InlineData("/api/dashboard/kpis?month=3&year=2026")]
     [InlineData("/api/dashboard/store-comparison?month=3&year=2026")]
@@ -235,7 +246,6 @@ public class AdminOnlyAreasAuthorizationTests : IClassFixture<AppFactory>
     [InlineData("/api/scorecard?year=2026")]
     [InlineData("/api/workforce-planning/summary?year=2026&month=3")]
     [InlineData("/api/store-action-plan/action-center/stores")]
-    [InlineData("/api/notifications")]
     [InlineData("/api/settings/color-rules/turnover-total")] // read-only thresholds every dashboard uses to colour its numbers
     public async Task User_CanStillUseTheNormalProjectApis(string url)
     {

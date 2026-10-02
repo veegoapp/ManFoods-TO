@@ -271,15 +271,6 @@
     background: linear-gradient(135deg, rgba(109,93,251,.06) 0%, rgba(167,139,250,.05) 100%);
     border-color: rgba(109,93,251,.12);
 }
-.home-notif-wrap {
-    position: absolute; top: 10px; right: 10px; left: auto;
-    inset-inline-start: auto; inset-inline-end: auto; direction: ltr;
-}
-.home-notif-wrap .notif-badge { right: -3px; left: auto; }
-.home-notif-btn { width: 30px; height: 30px; background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.3); color: #fff; font-size: 13px; }
-.home-notif-btn:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,.22); }
-[data-theme="light"] .home-notif-btn { background: rgba(109,93,251,.08); border-color: rgba(109,93,251,.2); color: var(--red); }
-[data-theme="light"] .home-notif-btn:hover { background: rgba(109,93,251,.15); }
 [data-theme="light"] .hero-name { color: var(--text); }
 [data-theme="light"] .hero-role {
     background: rgba(109,93,251,.08);

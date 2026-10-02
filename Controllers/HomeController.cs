@@ -15,5 +15,6 @@ public class HomeController : Controller
             : Redirect("/home/dashboard");
     }
 
-    public IActionResult Error() => View();
+    public IActionResult Error() =>
+        View(new MvcApp.Models.ErrorViewModel { RequestId = System.Diagnostics.Activity.Current?.Id ?? HttpContext.TraceIdentifier });
 }

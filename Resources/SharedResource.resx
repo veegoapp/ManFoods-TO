@@ -18,9 +18,6 @@
   <data name="Layout_FooterText" xml:space="preserve"><value>McDonald's Egypt Crew Insights Hub</value></data>
   <data name="Layout_DataFreshnessLabel" xml:space="preserve"><value>Last updated</value></data>
   <data name="Layout_DataFreshnessCaption" xml:space="preserve"><value>Latest uploaded reporting period</value></data>
-  <data name="Notif_Title" xml:space="preserve"><value>Notifications</value></data>
-  <data name="Notif_Empty" xml:space="preserve"><value>You're all caught up — no alerts right now.</value></data>
-  <data name="Notif_ClearAll" xml:space="preserve"><value>Clear</value></data>
 
   <!-- Page Guide -->
   <data name="Guide_TriggerLabel" xml:space="preserve"><value>Page Guide</value></data>
@@ -1401,6 +1398,7 @@
   <data name="Msg_BulkUsersCreated" xml:space="preserve"><value>Created {0} pending user(s).</value></data>
   <data name="Msg_BulkUsersSkipped" xml:space="preserve"><value> Skipped {0} (already existed): {1}</value></data>
   <data name="Msg_BulkUploadFailed" xml:space="preserve"><value>Upload failed. Please check the file format and try again.</value></data>
+  <data name="Msg_UploadUnexpectedError" xml:space="preserve"><value>Unexpected error while processing the file. Please check the file format and try again; the details were logged.</value></data>
   <data name="Msg_BulkUsersRoleMismatch" xml:space="preserve"><value>These accounts were created but their Role doesn't match their email in the latest Store Reference, so they have no store access yet — double-check the Role is correct: {0}</value></data>
   <data name="Msg_NoPendingOtps" xml:space="preserve"><value>No pending users need a default password right now.</value></data>
   <data name="Msg_IncorrectPassword" xml:space="preserve"><value>Incorrect password.</value></data>

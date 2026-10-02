@@ -102,12 +102,12 @@ public class AuthService : IAuthService
             _cache.TryGetValue(unknownKey, out int unknownFailCount);
             if (unknownFailCount >= MaxFailedAttempts)
             {
-                _logger.LogWarning("Login blocked: too many recent failed attempts for '{Email}'.", email.ToLower());
+                _logger.LogWarning("Login blocked: too many recent failed attempts for '{Email}'.", MaskEmail(email));
                 return LockedOut;
             }
 
             var reason = $"No user found for email '{email.ToLower()}'.";
-            _logger.LogWarning("Login failed: {Reason}", reason);
+            _logger.LogWarning("Login failed: no user found for '{Email}'.", MaskEmail(email));
             _cache.Set(unknownKey, unknownFailCount + 1, LockoutWindow);
             // Not logged to login_history — there's no account to attach the
             // row to, and logging it under some placeholder would let this
@@ -123,7 +123,7 @@ public class AuthService : IAuthService
         // let a flood push the owner's own sign-in history out of the retention cap.
         if (await IsBlockedAsync(user, ip))
         {
-            _logger.LogWarning("Login blocked: too many recent failed attempts for '{Email}'.", user.Email);
+            _logger.LogWarning("Login blocked: too many recent failed attempts for '{Email}'.", MaskEmail(user.Email));
             return LockedOut;
         }
 
@@ -133,7 +133,7 @@ public class AuthService : IAuthService
         if (string.IsNullOrEmpty(user.PasswordHash))
         {
             var reason = $"User '{email.ToLower()}' has no password hash set.";
-            _logger.LogWarning("Login failed: {Reason}", reason);
+            _logger.LogWarning("Login failed: '{Email}' has no password hash set.", MaskEmail(email));
             await LogAttemptAsync(user, portal, success: false, "no-password-set");
             return (null, reason, false, false);
         }
@@ -141,7 +141,7 @@ public class AuthService : IAuthService
         if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
         {
             var reason = $"Password mismatch for '{email.ToLower()}'.";
-            _logger.LogWarning("Login failed: {Reason}", reason);
+            _logger.LogWarning("Login failed: password mismatch for '{Email}'.", MaskEmail(email));
             await LogAttemptAsync(user, portal, success: false, "wrong-password");
             return (null, reason, false, false);
         }
@@ -153,13 +153,23 @@ public class AuthService : IAuthService
         if (user.MustChangePassword && user.TempPasswordExpiresAt.HasValue && user.TempPasswordExpiresAt.Value <= DateTime.UtcNow)
         {
             var reason = $"Temporary password expired for '{email.ToLower()}'.";
-            _logger.LogWarning("Login failed: {Reason}", reason);
+            _logger.LogWarning("Login failed: temporary password expired for '{Email}'.", MaskEmail(email));
             await LogAttemptAsync(user, portal, success: false, TempPasswordExpiredReason);
             return (null, reason, false, true);
         }
 
         await LogAttemptAsync(user, portal, success: true, null);
         return (user, null, false, false);
+    }
+
+    /// <summary>Log-safe form of an email (first character + domain) — enough to correlate attempts without
+    /// writing a full address, which for unknown accounts is attacker-supplied text, into the logs.</summary>
+    internal static string MaskEmail(string? email)
+    {
+        var e = (email ?? "").Trim().ToLowerInvariant();
+        var at = e.IndexOf('@');
+        if (at <= 0) return e.Length == 0 ? "(empty)" : "***";
+        return e[0] + "***" + new string(e[at..].Where(c => !char.IsControl(c)).ToArray());
     }
 
     /// <summary>Makes failures recorded before now irrelevant to the lockout check — called after a

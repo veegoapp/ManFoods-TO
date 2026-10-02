@@ -232,6 +232,12 @@ public class DashboardController : Controller
         return View("Uploads", items);
     }
 
+    // Only the deliberate validation messages (InvalidOperationException, incl. the duplicate-store one)
+    // are shown to the user; anything else (database, I/O, parser internals) gets a generic message —
+    // the full exception is already logged server-side.
+    private string UploadErrorDetail(Exception ex) =>
+        ex is InvalidOperationException ? ex.Message : _L["Msg_UploadUnexpectedError"].Value;
+
     // Redirect-after-POST (PRG) so a page reload doesn't re-trigger the
     // browser's "Confirm Form Resubmission" prompt. The success/error message
     // travels as a query-string parameter on the redirect rather than
@@ -239,7 +245,7 @@ public class DashboardController : Controller
     // to round-trip a redirect was exactly what caused uploads to fail with
     // no visible error before (see the earlier direct-render fix); a query
     // parameter has no such dependency. This app has a single admin user, so
-    // the exact exception message is shown as-is rather than a generic one.
+    // validation messages are shown as-is; unexpected errors get a generic one (see UploadErrorDetail).
     private IActionResult RedirectToUploads(string? success = null, string? error = null, string? warning = null, string tab = UploadTabs.Monthly) =>
         RedirectToAction("Uploads", new { success, error, warning, tab });
 
@@ -259,7 +265,7 @@ public class DashboardController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Period data upload failed for {Month}/{Year}", vm.Month, vm.Year);
-            return RedirectToUploads(error: string.Format(_L["Msg_UploadPeriodFailed"].Value, vm.Month, vm.Year, ex.Message));
+            return RedirectToUploads(error: string.Format(_L["Msg_UploadPeriodFailed"].Value, vm.Month, vm.Year, UploadErrorDetail(ex)));
         }
     }
 
@@ -280,7 +286,7 @@ public class DashboardController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Single file update failed for {FileType} {Month}/{Year}", vm.FileType, vm.Month, vm.Year);
-            return RedirectToUploads(error: string.Format(_L["Msg_UpdateFileFailed"].Value, vm.FileType, vm.Month, vm.Year, ex.Message));
+            return RedirectToUploads(error: string.Format(_L["Msg_UpdateFileFailed"].Value, vm.FileType, vm.Month, vm.Year, UploadErrorDetail(ex)));
         }
     }
 
@@ -297,7 +303,7 @@ public class DashboardController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exit interviews upload failed");
-            return RedirectToUploads(error: string.Format(_L["Msg_ExitUploadFailed"].Value, ex.Message), tab: UploadTabs.Exit);
+            return RedirectToUploads(error: string.Format(_L["Msg_ExitUploadFailed"].Value, UploadErrorDetail(ex)), tab: UploadTabs.Exit);
         }
     }
 
@@ -314,7 +320,7 @@ public class DashboardController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Job projection upload failed for {Year}", vm.Year);
-            return RedirectToUploads(error: string.Format(_L["Msg_JobProjUploadFailed"].Value, ex.Message), tab: UploadTabs.JobProjections);
+            return RedirectToUploads(error: string.Format(_L["Msg_JobProjUploadFailed"].Value, UploadErrorDetail(ex)), tab: UploadTabs.JobProjections);
         }
     }
 
@@ -331,7 +337,7 @@ public class DashboardController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Crew trainer upload failed for {Year}-{Month}", vm.Year, vm.Month);
-            return RedirectToUploads(error: string.Format(_L["Msg_CrewTrainerUploadFailed"].Value, ex.Message), tab: UploadTabs.JobProjections);
+            return RedirectToUploads(error: string.Format(_L["Msg_CrewTrainerUploadFailed"].Value, UploadErrorDetail(ex)), tab: UploadTabs.JobProjections);
         }
     }
 
@@ -348,7 +354,7 @@ public class DashboardController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Job payroll groups upload failed");
-            return RedirectToUploads(error: string.Format(_L["Msg_JobGroupUploadFailed"].Value, ex.Message), tab: UploadTabs.JobProjections);
+            return RedirectToUploads(error: string.Format(_L["Msg_JobGroupUploadFailed"].Value, UploadErrorDetail(ex)), tab: UploadTabs.JobProjections);
         }
     }
 

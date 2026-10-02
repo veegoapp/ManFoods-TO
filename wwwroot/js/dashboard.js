@@ -19,8 +19,7 @@ function isPeriodRangeActive() {
 }
 
 /* Localized UI strings for this file come from data-* attributes on <body>,
-   set from the resx in each area's _Layout.cshtml (same handoff pattern as
-   notifications.js). Fallbacks keep the file usable if an attribute is absent. */
+   set from the resx in each area's _Layout.cshtml. Fallbacks keep the file usable if an attribute is absent. */
 const DASH_L = document.body.dataset;
 
 function rangeFilterBadge(isRangeActive, affected) {
