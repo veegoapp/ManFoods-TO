@@ -16,12 +16,15 @@ public class DashboardService : IDashboardService
     private readonly IMemoryCache _cache;
     private readonly IStoreAccessService _storeAccess;
     private readonly IStringLocalizer<SharedResource> _L;
+    // Results keyed by filter values (KPIs, store comparison) — bounded, see FilterResultCache.
+    private readonly FilterResultCache _filterCache;
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
-    public DashboardService(AppDbContext db, IMemoryCache cache, IStoreAccessService storeAccess, IStringLocalizer<SharedResource> localizer)
+    public DashboardService(AppDbContext db, IMemoryCache cache, IStoreAccessService storeAccess, IStringLocalizer<SharedResource> localizer, FilterResultCache? filterCache = null)
     {
         _db = db;
         _cache = cache;
+        _filterCache = filterCache ?? new FilterResultCache();
         _storeAccess = storeAccess;
         _L = localizer;
     }
@@ -41,6 +44,14 @@ public class DashboardService : IDashboardService
     // Expands a from/to month-year range (inclusive) into "YYYYMM" sortable int keys.
     internal static List<int> ExpandRangeKeys(int fromMonth, int fromYear, int toMonth, int toYear)
     {
+        // Defence in depth behind ReportParameterValidationFilter: never build an unbounded key list
+        // (it becomes a SQL "IN (...)" list) or let new DateTime(...) throw for a bad month/year.
+        if (!PeriodLimits.IsValidMonth(fromMonth) || !PeriodLimits.IsValidMonth(toMonth) ||
+            !PeriodLimits.IsValidYear(fromYear) || !PeriodLimits.IsValidYear(toYear))
+            throw new ArgumentOutOfRangeException(nameof(fromMonth), "Month must be 1-12 and year within the supported range.");
+        if (PeriodLimits.SpanInMonths(fromMonth, fromYear, toMonth, toYear) > PeriodLimits.MaxRangeMonths)
+            throw new ArgumentOutOfRangeException(nameof(fromYear), $"The requested period range is longer than {PeriodLimits.MaxRangeMonths} months.");
+
         var start = new DateTime(fromYear, fromMonth, 1);
         var end = new DateTime(toYear, toMonth, 1);
         if (end < start) (start, end) = (end, start);
@@ -215,9 +226,12 @@ public class DashboardService : IDashboardService
         }
         fromMonth ??= month; fromYear ??= year;
 
-        var cacheKey = $"kpi_{fromMonth}_{fromYear}_{month}_{year}_{store}_{om}_{oc}_{soc}_{od}_{months}_{jobTitles}_{role}_{assignedName}";
-        if (_cache.TryGetValue(cacheKey, out DashboardKpiViewModel? cached) && cached != null)
-            return cached;
+        var cacheKey = FilterResultCache.BuildKey("kpi", fromMonth, fromYear, month, year,
+            FilterResultCache.NormalizeList(store), FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc),
+            FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months),
+            FilterResultCache.NormalizeList(jobTitles), role, assignedName);
+        if (_filterCache.TryGet(cacheKey, out DashboardKpiViewModel? cached))
+            return cached!;
 
         var periods = ResolvePeriods(month, year, fromMonth, fromYear, months);
         var anchor  = periods.OrderByDescending(p => p.Year * 100 + p.Month).First();
@@ -283,7 +297,7 @@ public class DashboardService : IDashboardService
             Year = anchor.Year
         };
 
-        _cache.Set(cacheKey, result, CacheDuration);
+        _filterCache.Set(cacheKey, result, CacheDuration);
         return result;
     }
 
@@ -471,9 +485,12 @@ public class DashboardService : IDashboardService
         // smart-insights) each need this exact result for the same request
         // parameters — cache it the same way GetKpisAsync is cached, so a single
         // page load computes it once instead of recomputing it 2-4x.
-        var cacheKey = $"store-comparison_{month}_{year}_{fromMonth}_{fromYear}_{om}_{oc}_{soc}_{od}_{months}_{jobTitles}_{role}_{assignedName}";
-        if (_cache.TryGetValue(cacheKey, out List<StoreComparisonRow>? cachedRows) && cachedRows != null)
-            return cachedRows;
+        var cacheKey = FilterResultCache.BuildKey("store-comparison", month, year, fromMonth, fromYear,
+            FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc),
+            FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles),
+            role, assignedName);
+        if (_filterCache.TryGet(cacheKey, out List<StoreComparisonRow>? cachedRows))
+            return cachedRows!;
 
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
         var periods = ResolvePeriods(month, year, fromMonth, fromYear, months);
@@ -566,7 +583,7 @@ public class DashboardService : IDashboardService
         if (MultiValueFilter.Split(od) is { } ods) rows = rows.Where(r => ods.Contains(r.OperationDirector));
 
         var result = rows.OrderByDescending(s => s.TurnoverRate).ToList();
-        _cache.Set(cacheKey, result, CacheDuration);
+        _filterCache.Set(cacheKey, result, CacheDuration, result.Count);
         return result;
     }
 

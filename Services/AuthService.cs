@@ -192,7 +192,7 @@ public class AuthService : IAuthService
                 Success = success,
                 FailureReason = failureReason,
                 IpAddress = ClientIp(),
-                UserAgent = http?.Request.Headers.UserAgent.ToString(),
+                UserAgent = InputLimits.Clip(http?.Request.Headers.UserAgent.ToString(), InputLimits.UserAgent),
             });
             await _db.SaveChangesAsync();
             await PruneHistoryAsync(user.Id);

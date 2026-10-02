@@ -21,6 +21,15 @@ builder.Services.AddControllersWithViews(options =>
         // so StoreAccessService can widen a restricted role's view per the admin's
         // per-area configuration.
         options.Filters.Add<MvcApp.Filters.AccessAreaFilter>();
+        // Rejects bad month/year values, over-long period ranges and oversized filter lists with a
+        // normal 400 before they reach a service (see PeriodLimits).
+        // An instance (not Add<T>()): the type-filter wrapper would ignore the filter's own Order, and this one must
+        // run after the authentication filters so an unauthenticated caller still gets the login redirect.
+        options.Filters.Add(new MvcApp.Filters.ReportParameterValidationFilter());
+        // Every state-changing (non-GET/HEAD/OPTIONS/TRACE) MVC/API request must carry a valid
+        // anti-forgery token, so a future action can't accidentally ship without one. Existing POST
+        // actions already carry [ValidateAntiForgeryToken] and every form/fetch already sends the token.
+        options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
     })
     .AddViewLocalization()
     // DataAnnotations ErrorMessage strings on the view models are resx keys,
@@ -30,6 +39,9 @@ builder.Services.AddControllersWithViews(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
+// Bounded cache for results keyed by user-typed filter values (see FilterResultCache): the
+// application-wide cache above has no size limit.
+builder.Services.AddSingleton<FilterResultCache>();
 
 builder.Services.AddAntiforgery(options =>
 {

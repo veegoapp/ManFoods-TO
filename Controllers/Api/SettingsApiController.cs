@@ -70,6 +70,8 @@ public class SettingsApiController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(request?.TextEn) || string.IsNullOrWhiteSpace(request?.TextAr))
             return BadRequest(_L["Api_BothLanguagesRequired"].Value);
+        if (InputLimits.Exceeds(request.TextEn.Trim(), InputLimits.RecommendationText) || InputLimits.Exceeds(request.TextAr.Trim(), InputLimits.RecommendationText))
+            return BadRequest(string.Format(_L["Api_TemplateTextTooLong"].Value, InputLimits.RecommendationText));
         try
         {
             await _recTemplates.SaveAsync(request.SignalCode, request.Category, request.Index, request.TextEn, request.TextAr);

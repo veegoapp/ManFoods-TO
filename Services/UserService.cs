@@ -22,6 +22,24 @@ public sealed class BulkUploadRoleForbiddenException : Exception
         Rows = rows;
 }
 
+/// <summary>
+/// Thrown by UploadBulkUsersAsync when the file itself is refused (wrong type, too big, too many
+/// rows, text too long...). <see cref="ResourceKey"/> names the localized message to show;
+/// nothing in the file is persisted.
+/// </summary>
+public sealed class BulkUploadFileRejectedException : Exception
+{
+    public string ResourceKey { get; }
+    public object[] Args { get; }
+
+    public BulkUploadFileRejectedException(string resourceKey, params object[] args)
+        : base("Bulk upload rejected: " + resourceKey)
+    {
+        ResourceKey = resourceKey;
+        Args = args;
+    }
+}
+
 public class UserService : IUserService
 {
     private readonly AppDbContext _db;
@@ -260,12 +278,26 @@ public class UserService : IUserService
 
     public IReadOnlyList<string> ValidRoles => UserManagementPolicy.ValidRoles;
 
+    /// <summary>Accounts per bulk upload. The file lists people who sign in to the portal (managers,
+    /// consultants, directors) — hundreds in practice — so this leaves wide headroom while keeping
+    /// one upload from creating an unbounded number of accounts.</summary>
+    public const int MaxBulkUploadRows = 5000;
+    // Only four short text columns: far below the 200 MB allowed for the roster workbooks.
+    private const long MaxBulkUploadUncompressedBytes = 50L * 1024 * 1024;
+
     public async Task<(int created, IReadOnlyList<string> skippedEmails, IReadOnlyList<string> roleMismatches)> UploadBulkUsersAsync(IFormFile file, string actorEmail)
     {
-        const long maxBytes = 10 * 1024 * 1024;
-        if (file.Length > maxBytes) throw new InvalidOperationException("File size exceeds the 10 MB limit.");
-        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (ext != ".xlsx" && ext != ".xls") throw new InvalidOperationException("Only Excel files (.xlsx / .xls) are allowed.");
+        // Same pre-parse checks as every other Excel upload (size, extension, file signature, and for
+        // .xlsx a sane archive) — the bulk file only holds a few columns, so its uncompressed-size
+        // allowance is much smaller than the roster uploads'.
+        var problem = await ExcelUploadGuard.CheckAsync(file, MaxBulkUploadUncompressedBytes);
+        if (problem != ExcelUploadProblem.None)
+            throw new BulkUploadFileRejectedException(problem switch
+            {
+                ExcelUploadProblem.TooLarge => "Msg_FileTooLarge",
+                ExcelUploadProblem.ExpandsTooMuch => "Msg_ExcelContentTooLarge",
+                _ => "Msg_OnlyExcelFiles",
+            });
 
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms);
@@ -273,12 +305,17 @@ public class UserService : IUserService
         using var wb = new XLWorkbook(ms);
         var ws = wb.Worksheet(1);
 
+        var lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+        if (lastRow - 1 > MaxBulkUploadRows)
+            throw new BulkUploadFileRejectedException("Msg_BulkUploadTooManyRows", MaxBulkUploadRows);
+
         var existingEmails = (await _db.Users.Select(u => u.Email).ToListAsync())
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var toAdd = new List<User>();
         var seenInFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var forbiddenAdminRows = new List<int>();
+        var tooLongRows = new List<int>();
         var skippedEmails = new List<string>();
 
         foreach (var row in ws.RowsUsed().Skip(1))
@@ -288,6 +325,8 @@ public class UserService : IUserService
             var assignedName = Col(row, ws, "Assigned Name", "AssignedName", "Name", "Display Name");
             var roleRaw = Col(row, ws, "Role", "role");
             if (string.IsNullOrWhiteSpace(email)) continue;
+            if (InputLimits.Exceeds(email, InputLimits.Email) || InputLimits.Exceeds(phone, InputLimits.Phone) || InputLimits.Exceeds(assignedName, InputLimits.PersonName))
+                { tooLongRows.Add(row.RowNumber()); continue; }
 
             // Skip accounts that already exist (by email) so re-uploading a
             // file never overwrites an activated user, and skip in-file
@@ -316,6 +355,8 @@ public class UserService : IUserService
             toAdd.Add(new User { Email = email, Phone = phone, AssignedName = assignedName, Role = role, PasswordHash = null });
         }
 
+        if (tooLongRows.Count > 0)
+            throw new BulkUploadFileRejectedException("Msg_BulkUploadTextTooLong", string.Join(", ", tooLongRows));
         if (forbiddenAdminRows.Count > 0)
             throw new BulkUploadRoleForbiddenException(forbiddenAdminRows);
 

@@ -1418,6 +1418,14 @@
   <data name="Msg_ExitUploadFailed" xml:space="preserve"><value>فشل رفع بيانات مقابلات الخروج: {0}</value></data>
   <data name="Msg_FileTooLarge" xml:space="preserve"><value>حجم الملف يتجاوز الحد الأقصى 10 ميجابايت.</value></data>
   <data name="Msg_OnlyExcelFiles" xml:space="preserve"><value>يُسمح فقط بملفات إكسيل (.xlsx / .xls).</value></data>
+  <data name="Msg_ExcelContentTooLarge" xml:space="preserve"><value>يحتوي ملف إكسيل على بيانات أكثر بكثير من المسموح به بعد فتحه. يرجى مراجعة الملف ورفع ملف أصغر.</value></data>
+  <data name="Msg_BulkUploadTooManyRows" xml:space="preserve"><value>يحتوي الملف على عدد كبير جدًا من الصفوف — الحد الأقصى {0} مستخدم في المرة الواحدة. لم تتم إضافة أي مستخدمين.</value></data>
+  <data name="Msg_BulkUploadTextTooLong" xml:space="preserve"><value>بعض القيم أطول من المسموح (البريد حتى 254 والهاتف حتى 30 والاسم حتى 200 حرف). لم تتم إضافة أي مستخدمين — صحّح الصف/الصفوف {0} وأعد الرفع.</value></data>
+  <data name="Val_FieldMaxLength" xml:space="preserve"><value>{0} أطول من المسموح (الحد الأقصى {1} حرف).</value></data>
+  <data name="Api_NoteTooLong" xml:space="preserve"><value>الملاحظة أطول من المسموح (الحد الأقصى {0} حرف). يرجى اختصارها.</value></data>
+  <data name="Api_ReasonTooLong" xml:space="preserve"><value>السبب أطول من المسموح (الحد الأقصى {0} حرف). يرجى اختصاره.</value></data>
+  <data name="Api_NameTooLong" xml:space="preserve"><value>الاسم أطول من المسموح (الحد الأقصى {0} حرف).</value></data>
+  <data name="Api_TemplateTextTooLong" xml:space="preserve"><value>النص أطول من المسموح (الحد الأقصى {0} حرف لكل لغة).</value></data>
   <data name="Msg_IssueMissingStore" xml:space="preserve"><value>{0} بدون فرع محدد</value></data>
   <data name="Msg_IssueBadHireDate" xml:space="preserve"><value>{0} بتاريخ تعيين غير مقروء</value></data>
   <data name="Msg_IssueBadResignDate" xml:space="preserve"><value>{0} بتاريخ استقالة غير مقروء</value></data>

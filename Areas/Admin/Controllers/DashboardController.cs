@@ -753,11 +753,17 @@ public class DashboardController : Controller
         {
             TempData["Error"] = string.Format(_L["Msg_BulkUploadAdminRoleForbidden"].Value, string.Join(", ", ex.Rows));
         }
+        catch (BulkUploadFileRejectedException ex)
+        {
+            TempData["Error"] = string.Format(_L[ex.ResourceKey].Value, ex.Args);
+        }
         catch { TempData["Error"] = _L["Msg_BulkUploadFailed"].Value; }
         return RedirectToAction("Users");
     }
 
-    [RequireAdminAuth]
+    // State-changing (replaces every pending user's temporary password), so POST-only and
+    // anti-forgery protected — never reachable through a link or an <img>/<iframe> GET.
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> GenerateDefaultPasswords()
     {
         var (count, bytes) = await _otp.GenerateBulkDefaultPasswordsAsync();

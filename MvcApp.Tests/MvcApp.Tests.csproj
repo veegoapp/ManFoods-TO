@@ -17,6 +17,8 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.*" />
+    <!-- Boots the real application in memory so request-pipeline behaviour (HTTP verbs, anti-forgery, filters) can be tested end to end. -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.*" />
   </ItemGroup>
 
   <ItemGroup>

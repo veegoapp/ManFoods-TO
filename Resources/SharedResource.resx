@@ -1412,6 +1412,14 @@
   <data name="Msg_ExitUploadFailed" xml:space="preserve"><value>Exit interview data upload failed: {0}</value></data>
   <data name="Msg_FileTooLarge" xml:space="preserve"><value>File size exceeds the 10 MB limit.</value></data>
   <data name="Msg_OnlyExcelFiles" xml:space="preserve"><value>Only Excel files (.xlsx / .xls) are allowed.</value></data>
+  <data name="Msg_ExcelContentTooLarge" xml:space="preserve"><value>The Excel file contains far more data than is allowed once opened. Please check the file and upload a smaller one.</value></data>
+  <data name="Msg_BulkUploadTooManyRows" xml:space="preserve"><value>The file has too many rows — at most {0} users can be uploaded at once. No users were added.</value></data>
+  <data name="Msg_BulkUploadTextTooLong" xml:space="preserve"><value>Some values are too long (email up to 254, phone up to 30, name up to 200 characters). No users were added — fix row(s) {0} and re-upload.</value></data>
+  <data name="Val_FieldMaxLength" xml:space="preserve"><value>{0} is too long (maximum {1} characters).</value></data>
+  <data name="Api_NoteTooLong" xml:space="preserve"><value>The note is too long (maximum {0} characters). Please shorten it.</value></data>
+  <data name="Api_ReasonTooLong" xml:space="preserve"><value>The reason is too long (maximum {0} characters). Please shorten it.</value></data>
+  <data name="Api_NameTooLong" xml:space="preserve"><value>The name is too long (maximum {0} characters).</value></data>
+  <data name="Api_TemplateTextTooLong" xml:space="preserve"><value>The text is too long (maximum {0} characters per language).</value></data>
   <data name="Msg_IssueMissingStore" xml:space="preserve"><value>{0} missing Store</value></data>
   <data name="Msg_IssueBadHireDate" xml:space="preserve"><value>{0} with an unreadable Hire Date</value></data>
   <data name="Msg_IssueBadResignDate" xml:space="preserve"><value>{0} with an unreadable Resignation Date</value></data>
