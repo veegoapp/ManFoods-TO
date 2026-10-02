@@ -14,6 +14,8 @@ namespace MvcApp.Controllers
             {
                 Expires = DateTimeOffset.UtcNow.AddYears(1),
                 IsEssential = true,
+                HttpOnly = true,                // only the server reads it (MfLangCookieProvider / views)
+                Secure = Request.IsHttps,       // HTTPS only when served over HTTPS; plain-HTTP dev keeps working
                 SameSite = SameSiteMode.Lax
             });
 
