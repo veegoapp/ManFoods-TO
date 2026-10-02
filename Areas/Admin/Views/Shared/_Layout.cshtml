@@ -173,6 +173,12 @@
                 <a href="/admin/dashboard/users" class="admin-nav-link @(IsActive("Users") ? "active" : "")">
                     <i class="bi bi-person-badge-fill"></i><span>@L["Nav_Users"]</span>
                 </a>
+                @if (MvcApp.Services.SuperAdminPolicy.IsSuperAdmin(userEmail))
+                {
+                    <a href="/admin/dashboard/activitylogs" class="admin-nav-link @(IsActive("ActivityLogs") ? "active" : "")">
+                        <i class="bi bi-clock-history"></i><span>@L["Nav_ActivityLogs"]</span>
+                    </a>
+                }
                 <a href="/admin/dashboard/settings" class="admin-nav-link @(IsActive("Settings") ? "active" : "")">
                     <i class="bi bi-sliders"></i><span>@L["Nav_Settings"]</span>
                 </a>

@@ -83,6 +83,25 @@ public sealed class AppFactory : WebApplicationFactory<AppDbContext>
         finally { _adminLock.Release(); }
     }
 
+    private readonly SemaphoreSlim _superLock = new(1, 1);
+    private HttpClient? _superClient;
+
+    /// <summary>One signed-in client for the Super Admin account (admin@mcd.com) — the only one allowed into Activity Logs.</summary>
+    public async Task<HttpClient> SuperAdminClientAsync()
+    {
+        await _superLock.WaitAsync();
+        try
+        {
+            if (_superClient == null)
+            {
+                await AddUserAsync(MvcApp.Services.SuperAdminPolicy.SuperAdminEmail, "Admin");
+                _superClient = await SignInAsync(MvcApp.Services.SuperAdminPolicy.SuperAdminEmail, AdminPassword, admin: true);
+            }
+            return _superClient;
+        }
+        finally { _superLock.Release(); }
+    }
+
     private readonly SemaphoreSlim _userLock = new(1, 1);
     private HttpClient? _userClient;
     public const string UserEmail = "tests-user@example.com";

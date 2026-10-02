@@ -715,3 +715,76 @@ GO
 -- migration can never recreate an account with a published password. This
 -- script no longer reads, inserts, updates or deletes any dbo.users row for
 -- those accounts; existing accounts (and their passwords) are untouched.
+
+GO
+
+-- ── activity_logs ────────────────────────────────────────────────────────
+-- Unified activity log behind the Super Admin "Activity Logs" page: sign-in attempts (including unknown accounts
+-- and blocked attempts), uploads and sensitive Admin actions. Times are UTC. By design no column can hold a
+-- password, password hash, OTP code, recovery key or token. Safe to run again.
+IF OBJECT_ID('dbo.activity_logs', 'U') IS NULL
+BEGIN
+    -- Create + backfill are one transaction: either the table exists with its history copied, or (on any error) nothing
+    -- was created and the script can simply be run again. (DbMigrator runs without a transaction of its own.)
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        CREATE TABLE dbo.activity_logs (
+            id BIGINT IDENTITY(1,1) PRIMARY KEY,
+            occurred_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+            category NVARCHAR(20) NOT NULL,          -- login | data | admin
+            action NVARCHAR(40) NOT NULL,            -- e.g. login-success, login-unknown, upload, user.create
+            success BIT NOT NULL DEFAULT 1,
+            user_email NVARCHAR(256) NULL,           -- email typed on a login attempt, or the signed-in admin
+            actor_user_id INT NULL,
+            target_user_id INT NULL,
+            ip_address NVARCHAR(64) NULL,
+            user_agent NVARCHAR(300) NULL,
+            portal NVARCHAR(20) NULL,
+            reason NVARCHAR(100) NULL,
+            details NVARCHAR(1000) NULL
+        );
+
+        -- One-time backfill from the existing history. It only runs here, i.e. when the table is created by this
+        -- run, so re-running the script never duplicates rows; the source tables are only read, never changed.
+        -- File contents (upload_logs.file_content) and OTP codes/hashes (password_reset_otps.otp_code) are not selected.
+        EXEC('
+            INSERT INTO dbo.activity_logs (occurred_at, category, action, success, user_email, actor_user_id, ip_address, user_agent, portal, reason)
+            SELECT logged_in_at, ''login'',
+                   CASE WHEN success = 1 THEN ''login-success'' ELSE ''login-failed'' END,
+                   success, LEFT(email, 256), user_id, LEFT(ip_address, 64), LEFT(user_agent, 300),
+                   NULLIF(LEFT(portal, 20), ''''), LEFT(failure_reason, 100)
+            FROM dbo.login_history;');
+
+        EXEC('
+            INSERT INTO dbo.activity_logs (occurred_at, category, action, success, user_email, details)
+            SELECT upload_date, ''data'', ''upload'', 1, LEFT(uploaded_by, 256),
+                   LEFT(file_type + ''; '' + CASE WHEN year > 0
+                                                  THEN CASE WHEN month > 0 THEN CAST(month AS VARCHAR(2)) + ''/'' + CAST(year AS VARCHAR(4)) ELSE CAST(year AS VARCHAR(4)) END
+                                                  ELSE ''all'' END, 1000)
+            FROM dbo.upload_logs;');
+
+        IF OBJECT_ID('dbo.password_reset_otps', 'U') IS NOT NULL
+            EXEC('
+                INSERT INTO dbo.activity_logs (occurred_at, category, action, success, target_user_id, details)
+                SELECT created_at, ''admin'', ''otp.generate'', CASE WHEN failed_attempts >= 5 THEN 0 ELSE 1 END, user_id, ''history (issuer not recorded)''
+                FROM dbo.password_reset_otps;');
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+
+-- Newest-first paging, date ranges, and the type / action filters all lead with occurred_at, category or action; the INCLUDE
+-- columns let the page's summary counts (success / category) be answered from the index alone.
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_activity_logs_occurred_at' AND object_id = OBJECT_ID('dbo.activity_logs'))
+    CREATE INDEX ix_activity_logs_occurred_at ON dbo.activity_logs (occurred_at DESC, id DESC) INCLUDE (success, category, action);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_activity_logs_category_occurred_at' AND object_id = OBJECT_ID('dbo.activity_logs'))
+    CREATE INDEX ix_activity_logs_category_occurred_at ON dbo.activity_logs (category, occurred_at DESC) INCLUDE (success);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_activity_logs_action_occurred_at' AND object_id = OBJECT_ID('dbo.activity_logs'))
+    CREATE INDEX ix_activity_logs_action_occurred_at ON dbo.activity_logs (action, occurred_at DESC) INCLUDE (success, category);
+GO

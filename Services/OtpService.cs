@@ -16,7 +16,7 @@ public class OtpService : IOtpService
     private readonly IAuthService _auth;
     private readonly ISessionValidationService _sessionValidation;
     private static readonly TimeSpan Expiry = TimeSpan.FromHours(24);
-    private const int MaxFailedAttempts = 5;
+    internal const int MaxFailedAttempts = 5; // also read by ActivityLogService (to label a locked-out OTP)
 
     public OtpService(AppDbContext db, IStringLocalizer<SharedResource> localizer, ILogger<OtpService> logger, IAuthService auth, ISessionValidationService sessionValidation)
     {

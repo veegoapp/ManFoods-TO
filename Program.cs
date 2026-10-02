@@ -159,6 +159,8 @@ builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IColorRulesService, ColorRulesService>();
 builder.Services.AddScoped<IRecommendationTemplateService, RecommendationTemplateService>();
 builder.Services.AddScoped<IActionPlanSeverityConfigService, ActionPlanSeverityConfigService>();
+builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
+builder.Services.AddScoped<IActivityLogWriter, ActivityLogWriter>();
 
 var app = builder.Build();
 app.UseForwardedHeaders(new ForwardedHeadersOptions

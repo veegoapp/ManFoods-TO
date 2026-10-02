@@ -20,13 +20,16 @@ public class SettingsApiController : ControllerBase
     private readonly IAccessPolicyService _accessPolicy;
     private readonly IPageVisibilityService _pageVisibility;
     private readonly IStringLocalizer<SharedResource> _L;
+    private readonly IActivityLogWriter _activity;
     public SettingsApiController(
         IColorRulesService colorRules,
         IRecommendationTemplateService recTemplates,
         IAccessPolicyService accessPolicy,
         IPageVisibilityService pageVisibility,
-        IStringLocalizer<SharedResource> localizer)
+        IStringLocalizer<SharedResource> localizer,
+        IActivityLogWriter activity)
     {
+        _activity = activity;
         _colorRules = colorRules;
         _recTemplates = recTemplates;
         _accessPolicy = accessPolicy;
@@ -103,6 +106,7 @@ public class SettingsApiController : ControllerBase
             return BadRequest(_L["Api_NoAccessSettings"].Value);
         var adminName = HttpContext.Session.GetAssignedName() ?? HttpContext.Session.GetEmail();
         await _accessPolicy.SaveAsync(request.Settings, adminName);
+        await _activity.LogAsync(new ActivityEntry { Action = Models.ActivityActions.SettingsAccessPolicy, Details = $"{request.Settings.Count} area(s) updated" });
         return Ok();
     }
 
@@ -124,6 +128,7 @@ public class SettingsApiController : ControllerBase
         var adminName = HttpContext.Session.GetAssignedName() ?? HttpContext.Session.GetEmail();
         try { await _pageVisibility.SaveAsync(request.Hidden, adminName); }
         catch (InvalidOperationException) { return BadRequest(_L["Api_NoPagesVisible"].Value); }
+        await _activity.LogAsync(new ActivityEntry { Action = Models.ActivityActions.SettingsPageVisibility, Details = $"{request.Hidden.Count} page(s) updated" });
         return Ok();
     }
 }

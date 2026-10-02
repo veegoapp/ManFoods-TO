@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using MvcApp.Extensions;
 using MvcApp.Filters;
 using MvcApp.Models.ViewModels;
+using MvcApp.Models;
 using MvcApp.Services;
 using Microsoft.Extensions.Localization;
 using MvcApp.Resources;
@@ -18,8 +19,9 @@ public class AccountController : Controller
     private readonly IOtpService _otp;
     private readonly IMemoryCache _cache;
     private readonly IStringLocalizer<SharedResource> _L;
-    public AccountController(IAuthService auth, IUserService users, IOtpService otp, IMemoryCache cache, IStringLocalizer<SharedResource> localizer)
-    { _auth = auth; _users = users; _otp = otp; _cache = cache; _L = localizer; }
+    private readonly IActivityLogWriter _activity;
+    public AccountController(IAuthService auth, IUserService users, IOtpService otp, IMemoryCache cache, IStringLocalizer<SharedResource> localizer, IActivityLogWriter activity)
+    { _auth = auth; _users = users; _otp = otp; _cache = cache; _L = localizer; _activity = activity; }
 
     [HttpGet("/adminlogin")]
     public IActionResult Login(string? setupToken)
@@ -49,6 +51,7 @@ public class AccountController : Controller
 
         if (user.Role != "Admin")
         {
+            await _activity.LogAsync(new ActivityEntry { Action = ActivityActions.LoginFailed, Success = false, UserEmail = user.Email, ActorUserId = user.Id, Portal = "Admin", Reason = "wrong-portal" });
             ModelState.AddModelError("", _L["Msg_AdminOnly"]);
             return View(vm);
         }
@@ -58,7 +61,11 @@ public class AccountController : Controller
         // one-time setup token that opens the Update Password popup — see
         // SetupPassword below. They sign in fresh once it's set.
         if (user.MustChangePassword)
+        {
+            await _activity.LogAsync(new ActivityEntry { Action = ActivityActions.LoginSuccess, UserEmail = user.Email, ActorUserId = user.Id, Portal = "Admin", Details = "temporary password accepted; password setup required" });
             return RedirectToAction("Login", new { setupToken = _cache.BeginPasswordSetup(user) });
+        }
+        await _activity.LogAsync(new ActivityEntry { Action = ActivityActions.LoginSuccess, UserEmail = user.Email, ActorUserId = user.Id, Portal = "Admin" });
 
         // Session-fixation mitigation — see SessionExtensions.BeginSessionRotation.
         var token = HttpContext.BeginSessionRotation(_cache, user.Id, user.Email, user.Role, user.AssignedName, user.MustChangePassword, PasswordFingerprint.Compute(user.PasswordHash));
@@ -94,8 +101,10 @@ public class AccountController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout()
     {
+        if (HttpContext.Session.GetUserId() != null)
+            await _activity.LogAsync(new ActivityEntry { Action = ActivityActions.Logout, Portal = "Admin" });
         HttpContext.Session.Clear();
         return Redirect("/adminlogin");
     }
@@ -111,12 +120,19 @@ public class AccountController : Controller
 
         if (!await _users.VerifyRecoveryKeyAsync(vm.RecoveryKey))
         {
+            await _activity.LogAsync(new ActivityEntry { Action = ActivityActions.RecoveryKeyUse, Success = false, UserEmail = vm.Email, Portal = "Admin", Reason = "invalid-key" });
             ModelState.AddModelError("RecoveryKey", _L["Msg_InvalidRecoveryKey"]);
             return View(vm);
         }
 
         var ok = await _users.ResetAdminPasswordAsync(vm.Email, vm.NewPassword);
-        if (!ok) { ModelState.AddModelError("Email", _L["Msg_NoAdminWithEmail"]); return View(vm); }
+        if (!ok)
+        {
+            await _activity.LogAsync(new ActivityEntry { Action = ActivityActions.RecoveryKeyUse, Success = false, UserEmail = vm.Email, Portal = "Admin", Reason = "no-such-admin" });
+            ModelState.AddModelError("Email", _L["Msg_NoAdminWithEmail"]);
+            return View(vm);
+        }
+        await _activity.LogAsync(new ActivityEntry { Action = ActivityActions.RecoveryKeyUse, UserEmail = vm.Email, Portal = "Admin", Details = "admin password reset with the recovery key" });
 
         TempData["Success"] = _L["Msg_AdminPasswordReset"].Value;
         return Redirect("/adminlogin");

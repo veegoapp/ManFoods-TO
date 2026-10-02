@@ -14,6 +14,7 @@ public class AuthService : IAuthService
     private readonly IMemoryCache _cache;
     private readonly IHttpContextAccessor _httpContext;
     private readonly ISessionValidationService _sessionValidation;
+    private readonly IActivityLogWriter? _activity;
 
     // Failed-login handling, on top of the per-IP "login" rate limiter (which caps
     // request *volume* from one IP but says nothing about which account is targeted).
@@ -47,8 +48,9 @@ public class AuthService : IAuthService
     private static string UnknownEmailFailKey(string email, string? ip) => $"login-fail-unknown:{email.Trim().ToLowerInvariant()}|{ip}";
     private static string LockoutResetKey(string email) => $"login-fail-reset:{email.Trim().ToLowerInvariant()}";
 
-    public AuthService(AppDbContext db, ILogger<AuthService> logger, IMemoryCache cache, IHttpContextAccessor httpContext, ISessionValidationService sessionValidation)
+    public AuthService(AppDbContext db, ILogger<AuthService> logger, IMemoryCache cache, IHttpContextAccessor httpContext, ISessionValidationService sessionValidation, IActivityLogWriter? activity = null)
     {
+        _activity = activity;
         _db = db;
         _logger = logger;
         _cache = cache;
@@ -64,6 +66,15 @@ public class AuthService : IAuthService
         new(() => BCrypt.Net.BCrypt.HashPassword("timing-equalizer-" + Guid.NewGuid()));
     internal static void SpendPasswordCheckTime(string? password) =>
         BCrypt.Net.BCrypt.Verify(password ?? "", TimingEqualizerHash.Value);
+
+    /// <summary>Records a refused or failed sign-in attempt in the Activity Logs — the email exactly as typed (also when no such
+    /// account exists), never the password. Best effort and independent of the visible message / lockout logic.</summary>
+    private Task LogLoginAsync(string action, string email, string portal, string reason, User? user = null) =>
+        _activity?.LogAsync(new ActivityEntry
+        {
+            Action = action, Success = false, UserEmail = email, ActorUserId = user?.Id, Portal = portal, Reason = reason,
+            UserAgent = _httpContext.HttpContext?.Request.Headers.UserAgent.ToString(),
+        }) ?? Task.CompletedTask;
 
     private string? ClientIp() => _httpContext.HttpContext?.Connection.RemoteIpAddress?.ToString();
 
@@ -112,6 +123,7 @@ public class AuthService : IAuthService
             if (unknownFailCount >= MaxFailedAttempts)
             {
                 _logger.LogWarning("Login blocked: too many recent failed attempts for '{Email}'.", MaskEmail(email));
+                await LogLoginAsync(ActivityActions.LoginBlocked, email, portal, "locked-out");
                 return LockedOut;
             }
 
@@ -119,6 +131,7 @@ public class AuthService : IAuthService
             var reason = $"No user found for email '{email.ToLower()}'.";
             _logger.LogWarning("Login failed: no user found for '{Email}'.", MaskEmail(email));
             _cache.Set(unknownKey, unknownFailCount + 1, LockoutWindow);
+            await LogLoginAsync(ActivityActions.LoginUnknown, email, portal, "unknown-account");
             // Not logged to login_history — there's no account to attach the
             // row to, and logging it under some placeholder would let this
             // page be used to probe which emails are registered.
@@ -134,6 +147,7 @@ public class AuthService : IAuthService
         if (await IsBlockedAsync(user, ip))
         {
             _logger.LogWarning("Login blocked: too many recent failed attempts for '{Email}'.", MaskEmail(user.Email));
+            await LogLoginAsync(ActivityActions.LoginBlocked, email, portal, "locked-out", user);
             return LockedOut;
         }
 
@@ -146,6 +160,7 @@ public class AuthService : IAuthService
             var reason = $"User '{email.ToLower()}' has no password hash set.";
             _logger.LogWarning("Login failed: '{Email}' has no password hash set.", MaskEmail(email));
             await LogAttemptAsync(user, portal, success: false, "no-password-set");
+            await LogLoginAsync(ActivityActions.LoginFailed, email, portal, "no-password-set", user);
             return (null, reason, false, false);
         }
 
@@ -154,6 +169,7 @@ public class AuthService : IAuthService
             var reason = $"Password mismatch for '{email.ToLower()}'.";
             _logger.LogWarning("Login failed: password mismatch for '{Email}'.", MaskEmail(email));
             await LogAttemptAsync(user, portal, success: false, "wrong-password");
+            await LogLoginAsync(ActivityActions.LoginFailed, email, portal, "wrong-password", user);
             return (null, reason, false, false);
         }
 
@@ -166,6 +182,7 @@ public class AuthService : IAuthService
             var reason = $"Temporary password expired for '{email.ToLower()}'.";
             _logger.LogWarning("Login failed: temporary password expired for '{Email}'.", MaskEmail(email));
             await LogAttemptAsync(user, portal, success: false, TempPasswordExpiredReason);
+            await LogLoginAsync(ActivityActions.LoginFailed, email, portal, TempPasswordExpiredReason, user);
             return (null, reason, false, true);
         }
 

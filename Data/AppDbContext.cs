@@ -29,6 +29,7 @@ public class AppDbContext : DbContext
     public DbSet<ActionPlanSeverityBandHistory> ActionPlanSeverityBandHistories { get; set; }
     public DbSet<SignalOccurrence> SignalOccurrences { get; set; }
     public DbSet<LoginHistory> LoginHistories { get; set; }
+    public DbSet<ActivityLog> ActivityLogs { get; set; }
     public DbSet<PageAccessConfig> PageAccessConfigs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -39,6 +40,23 @@ public class AppDbContext : DbContext
         // fresh EnsureCreated() database (e.g. local/test) — the real schema
         // change for the existing production database is scripts/migrate.sql,
         // since this app doesn't use EF Migrations.
+        // activity_logs: same column sizes and index names as scripts/migrate.sql, so a database created by EnsureCreated()
+        // matches the migrated one (and the migration's "index exists?" checks find these by name).
+        modelBuilder.Entity<ActivityLog>(e =>
+        {
+            e.Property(x => x.Category).HasMaxLength(20);
+            e.Property(x => x.Action).HasMaxLength(40);
+            e.Property(x => x.UserEmail).HasMaxLength(256);
+            e.Property(x => x.IpAddress).HasMaxLength(64);
+            e.Property(x => x.UserAgent).HasMaxLength(300);
+            e.Property(x => x.Portal).HasMaxLength(20);
+            e.Property(x => x.Reason).HasMaxLength(100);
+            e.Property(x => x.Details).HasMaxLength(1000);
+            e.HasIndex(x => new { x.OccurredAt, x.Id }).IsDescending(true, true).IncludeProperties(x => new { x.Success, x.Category, x.Action }).HasDatabaseName("ix_activity_logs_occurred_at");
+            e.HasIndex(x => new { x.Category, x.OccurredAt }).IsDescending(false, true).IncludeProperties(x => new { x.Success }).HasDatabaseName("ix_activity_logs_category_occurred_at");
+            e.HasIndex(x => new { x.Action, x.OccurredAt }).IsDescending(false, true).IncludeProperties(x => new { x.Success, x.Category }).HasDatabaseName("ix_activity_logs_action_occurred_at");
+        });
+
         modelBuilder.Entity<StoreActionPlan>()
             .HasIndex(p => p.StoreName)
             .IsUnique()
