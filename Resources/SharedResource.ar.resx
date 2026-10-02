@@ -725,7 +725,7 @@
   <data name="EU_NewPasswordNote" xml:space="preserve"><value>كلمة المرور الجديدة (اتركه فارغًا للإبقاء عليها)</value></data>
   <data name="EU_SaveChanges" xml:space="preserve"><value>حفظ التغييرات</value></data>
   <data name="Role_Admin" xml:space="preserve"><value>أدمن</value></data>
-  <data name="Role_User" xml:space="preserve"><value>مستخدم</value></data>
+  <data name="Role_User" xml:space="preserve"><value>العمليات</value></data>
   <data name="Role_HR" xml:space="preserve"><value>الموارد البشرية</value></data>
   <data name="Role_HeadManager" xml:space="preserve"><value>مدير أول المطعم</value></data>
   <data name="Role_SeniorOperationConsultant" xml:space="preserve"><value>استشاري أول العمليات</value></data>
@@ -2177,7 +2177,7 @@
   <data name="CT_In_PlanVsRule_T" xml:space="preserve"><value>التوقّع يخطط لمدربين {0} مما تطلبه القاعدة</value></data>
   <data name="CT_In_PlanVsRule_D" xml:space="preserve"><value>في التوقّع {0} مدرب؛ والقاعدة تطلب {1} (فرق {2}).</value></data>
   <data name="Set_Tab_Pages" xml:space="preserve"><value>الصفحات</value></data>
-  <data name="Set_Pages_Sub" xml:space="preserve"><value>اختر الصفحات التي يراها كل دور في واجهة المستخدم (HR وUser والأدوار التشغيلية الخمسة). الصفحة غير المعلّمة لدور تختفي من قائمته ولا يمكن فتحها ويُرفض الوصول إلى بياناتها؛ ويتم تحويل الشخص إلى أول صفحة ظاهرة. يجب أن يحتفظ كل دور بصفحة واحدة على الأقل.</value></data>
+  <data name="Set_Pages_Sub" xml:space="preserve"><value>اختر الصفحات التي يراها كل دور في واجهة المستخدم (HR والعمليات والأدوار التشغيلية الخمسة). الصفحة غير المعلّمة لدور تختفي من قائمته ولا يمكن فتحها ويُرفض الوصول إلى بياناتها؛ ويتم تحويل الشخص إلى أول صفحة ظاهرة. يجب أن يحتفظ كل دور بصفحة واحدة على الأقل.</value></data>
   <data name="Set_Pages_Visible" xml:space="preserve"><value>ظاهرة</value></data>
   <data name="Set_Pages_Hidden" xml:space="preserve"><value>مخفية</value></data>
   <data name="Api_NoPageSettings" xml:space="preserve"><value>لم يتم إرسال إعدادات الصفحات.</value></data>
