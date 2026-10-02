@@ -78,6 +78,26 @@ public sealed class AppFactory : WebApplicationFactory<AppDbContext>
         finally { _adminLock.Release(); }
     }
 
+    private readonly SemaphoreSlim _userLock = new(1, 1);
+    private HttpClient? _userClient;
+    public const string UserEmail = "tests-user@example.com";
+
+    /// <summary>One signed-in "User"-role client (Home portal) shared by a test class.</summary>
+    public async Task<HttpClient> UserClientAsync()
+    {
+        await _userLock.WaitAsync();
+        try
+        {
+            if (_userClient == null)
+            {
+                await AddUserAsync(UserEmail, "User");
+                _userClient = await SignInAsync(UserEmail, AdminPassword, admin: false);
+            }
+            return _userClient;
+        }
+        finally { _userLock.Release(); }
+    }
+
     public HttpClient NewClient() => CreateClient(new WebApplicationFactoryClientOptions
     {
         AllowAutoRedirect = false,

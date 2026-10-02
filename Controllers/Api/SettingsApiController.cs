@@ -53,7 +53,9 @@ public class SettingsApiController : ControllerBase
         return Ok();
     }
 
-    [HttpGet("recommendation-templates")]
+    // Only the Settings page's template editor reads this list (the Action Center shows already-resolved
+    // text from the server), so it is Admin-only like the rest of Settings.
+    [HttpGet("recommendation-templates"), RequireRole("Admin")]
     public async Task<IActionResult> GetRecommendationTemplates() => Ok(await _recTemplates.GetAllAsync());
 
     public class SaveRecommendationTemplateRequest
