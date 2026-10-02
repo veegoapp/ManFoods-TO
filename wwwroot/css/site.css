@@ -691,7 +691,7 @@ html, body {
    rendering solid white rows in dark mode. Reset it here, once, for all of
    them; transparent is correct in both themes since the row then just shows
    its container's own themed background. */
-.table { --bs-table-bg: transparent; --bs-table-color: var(--text); }
+.table { --bs-table-bg: transparent; --bs-table-color: var(--text); --bs-table-hover-color: var(--text); --bs-table-hover-bg: rgba(128,128,128,.12); }
 
 .table-dark-custom {
     --bs-table-bg: transparent;
