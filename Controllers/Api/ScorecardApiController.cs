@@ -11,6 +11,7 @@ namespace MvcApp.Controllers.Api;
 [EnableRateLimiting("api")]
 [RequireAuth]
 [AccessArea(AccessAreas.Scorecard)]
+[RequiresAnyPage("scorecard", "stores")] // stores: the store-leader profile
 public class ScorecardApiController : ControllerBase
 {
     private readonly IScorecardService _scorecard;

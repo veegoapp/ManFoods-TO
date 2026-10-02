@@ -11,6 +11,7 @@ namespace MvcApp.Controllers.Api;
 [EnableRateLimiting("api")]
 [RequireAuth]
 [AccessArea(AccessAreas.EarlyWarning)]
+[RequiresAnyPage("earlywarning", "stores")]
 public class EarlyWarningApiController : ControllerBase
 {
     private readonly IEarlyWarningService _earlyWarning;

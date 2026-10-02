@@ -9,8 +9,9 @@ namespace MvcApp.Filters;
 
 /// <summary>
 /// Shared base for every session-based auth filter. Confirms the session has a
-/// UserId, then re-validates its cached Role against the database via
-/// ISessionValidationService — so a deleted or role-changed user's session stops
+/// UserId (and is younger than the absolute session lifetime), then re-validates its
+/// cached Role and password stamp against the database via
+/// ISessionValidationService — so a deleted, role-changed or password-changed user's session stops
 /// working well before its natural expiry, instead of every filter re-trusting
 /// whatever was cached at login. On failure the session is cleared and treated
 /// exactly like "never logged in" (same redirect subclasses already used for
@@ -28,9 +29,18 @@ public abstract class SessionAuthFilterAttribute : Attribute, IAsyncActionFilter
             return;
         }
 
+        // Absolute maximum age, independent of activity (the idle timeout alone lets a
+        // continuously-used cookie live forever). Treated exactly like "never logged in".
+        if (session.IsPastAbsoluteLifetime(DateTimeOffset.UtcNow))
+        {
+            session.Clear();
+            context.Result = OnUnauthenticated();
+            return;
+        }
+
         var role = session.GetRole();
         var validator = context.HttpContext.RequestServices.GetRequiredService<ISessionValidationService>();
-        if (!await validator.IsValidAsync(userId.Value, role))
+        if (!await validator.IsValidAsync(userId.Value, role, session.GetPasswordFingerprint()))
         {
             session.Clear();
             context.Result = OnUnauthenticated();

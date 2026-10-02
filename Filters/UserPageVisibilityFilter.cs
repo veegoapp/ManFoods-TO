@@ -1,14 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Localization;
+using MvcApp.Extensions;
 using MvcApp.Resources;
 using MvcApp.Services;
 
 namespace MvcApp.Filters;
 
 /// <summary>Stops a User-interface page that an Admin hid (Settings → Pages) from opening: the user is sent to the
-/// first page that is still visible, with a short message. Only page views are covered (see
-/// <see cref="UserPages.KeyOfAction"/>); downloads and the APIs the pages call are not affected.</summary>
+/// first page that is still visible, with a short message. Only page views are covered here (see
+/// <see cref="UserPages.KeyOfAction"/>); the APIs and downloads behind a page are closed by
+/// <see cref="PageApiAccessFilter"/>. Visibility is per role (Settings → Pages).</summary>
 public class UserPageVisibilityFilter : IAsyncActionFilter
 {
     private readonly IPageVisibilityService _visibility;
@@ -25,7 +27,7 @@ public class UserPageVisibilityFilter : IAsyncActionFilter
         var key = UserPages.KeyOfAction(context.RouteData.Values["action"]?.ToString());
         if (key != null)
         {
-            var hidden = await _visibility.GetHiddenAsync();
+            var hidden = await _visibility.GetHiddenAsync(context.HttpContext.Session.GetRole());
             if (hidden.Contains(key) && UserPages.FirstVisible(hidden) is { } target)
             {
                 if (context.Controller is Controller c) c.TempData["Error"] = _L["Msg_PageHidden"].Value;

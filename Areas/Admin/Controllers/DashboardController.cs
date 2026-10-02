@@ -524,7 +524,7 @@ public class DashboardController : Controller
             ws.Cell(2, 3).Value = "Ahmed Mohamed"; ws.Cell(2, 4).Value = "Operation_Consultant";
             ws.Cell(3, 1).Value = "sara@manfoods.com"; ws.Cell(3, 2).Value = "+201098765432";
             ws.Cell(3, 3).Value = "Sara Ali"; ws.Cell(3, 4).Value = "User";
-            ws.Cell(5, 1).Value = "Assigned Name and Role are optional — leave blank and the account is created as a plain \"User\". Valid Role values: Admin, User, Operation_Manager, Operation_Consultant, Head_Manager, Senior_Operation_Consultant, Operation_Director.";
+            ws.Cell(5, 1).Value = "Assigned Name and Role are optional — leave blank and the account is created as a plain \"User\". Valid Role values: Admin, User, HR, Operation_Manager, Operation_Consultant, Head_Manager, Senior_Operation_Consultant, Operation_Director.";
             ws.Cell(5, 1).Style.Font.Italic = true;
 
             // Role column dropdown, restricted to the roles the app recognizes.
@@ -714,6 +714,11 @@ public class DashboardController : Controller
             ModelState.AddModelError(nameof(vm.Email), _L["Msg_SuperAdminProtected"].Value);
             return View(vm);
         }
+        if (error == "use-change-password")
+        {
+            ModelState.AddModelError(nameof(vm.Password), _L["Msg_UseChangePasswordForSelf"].Value);
+            return View(vm);
+        }
         if (updated == null) return NotFound();
         TempData["Success"] = _L["Msg_UserUpdated"].Value;
         return RedirectToAction("Users");
@@ -748,11 +753,17 @@ public class DashboardController : Controller
         {
             TempData["Error"] = string.Format(_L["Msg_BulkUploadAdminRoleForbidden"].Value, string.Join(", ", ex.Rows));
         }
+        catch (BulkUploadFileRejectedException ex)
+        {
+            TempData["Error"] = string.Format(_L[ex.ResourceKey].Value, ex.Args);
+        }
         catch { TempData["Error"] = _L["Msg_BulkUploadFailed"].Value; }
         return RedirectToAction("Users");
     }
 
-    [RequireAdminAuth]
+    // State-changing (replaces every pending user's temporary password), so POST-only and
+    // anti-forgery protected — never reachable through a link or an <img>/<iframe> GET.
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> GenerateDefaultPasswords()
     {
         var (count, bytes) = await _otp.GenerateBulkDefaultPasswordsAsync();

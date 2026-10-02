@@ -86,13 +86,12 @@ BEGIN
         value NVARCHAR(MAX) NOT NULL DEFAULT ''
     );
 END
--- Seeds the recovery key hash for the key already generated and handed to
--- the admin — guarded by an existence check so re-running this script never
--- silently resets a key that's since been rotated (same intent as the
--- original ON CONFLICT DO NOTHING).
-IF NOT EXISTS (SELECT 1 FROM dbo.app_settings WHERE [key] = 'admin_recovery_key_hash')
-    INSERT INTO dbo.app_settings ([key], value)
-    VALUES ('admin_recovery_key_hash', '$2b$11$24/KLaFMtFEfWIHLPFgbsudQs/B1SN/EVztSlE7u4ff0QAMiMS.sC');
+-- The Master Recovery Key hash is intentionally NOT seeded here: a hash
+-- committed to the repo is a known/default key. With no 'admin_recovery_key_hash'
+-- row, recovery via the key is simply unavailable (UserService.VerifyRecoveryKeyAsync
+-- returns false) until the Super Admin generates one from Users → Recovery Key.
+-- This script never reads, inserts, updates or deletes that row, so an existing
+-- key keeps working until it is regenerated in the app.
 
 -- ── active_employees ──────────────────────────
 IF OBJECT_ID('dbo.active_employees', 'U') IS NULL
@@ -668,24 +667,51 @@ BEGIN
 END
 
 -- ── page_visibility ──────────────────────────────────────────────────────
--- Pages an Admin hid from the User interface (Settings → Pages). A missing row = visible.
+-- Pages hidden from a role of the User interface (Settings → Pages): one row per page and role
+-- (HR, User and the five operational roles). A missing row = the page's default (visible, unless the
+-- page is still under review — then hidden from every role except HR).
 IF OBJECT_ID('dbo.page_visibility', 'U') IS NULL
 BEGIN
     CREATE TABLE dbo.page_visibility (
-        page_key NVARCHAR(100) NOT NULL PRIMARY KEY,
+        page_key NVARCHAR(100) NOT NULL,
+        role NVARCHAR(100) NOT NULL,
         is_hidden BIT NOT NULL DEFAULT 0,
         updated_by_name NVARCHAR(MAX) NULL,
-        updated_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+        updated_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT pk_page_visibility_page_role PRIMARY KEY (page_key, role)
     );
 END
+GO
 
--- ── seed users ────────────────────────────────
--- admin@mcd.com / 123123654  →  Admin portal
--- user@mcd.com  / 123123654  →  Home portal
-INSERT INTO dbo.users (email, phone, password_hash, role, created_at)
-SELECT v.email, v.phone, v.password_hash, v.role, SYSUTCDATETIME()
-FROM (VALUES
-    ('admin@mcd.com', '+201000000000', '$2a$11$4dMAuH6DiUfgnniQT39r1uof2UmVIJQ2vslu8qs8OwOJ7EUM1i/n6', 'Admin'),
-    ('user@mcd.com',  '+201000000001', '$2a$11$4dMAuH6DiUfgnniQT39r1uof2UmVIJQ2vslu8qs8OwOJ7EUM1i/n6', 'User')
-) AS v(email, phone, password_hash, role)
-WHERE NOT EXISTS (SELECT 1 FROM dbo.users u WHERE u.email = v.email);
+-- Existing installations: the table used to hold one row per page (the setting applied to every role).
+-- Add the role column, move the primary key to (page_key, role), and turn each old row into one row per
+-- role with the same value — so every page that is hidden today stays hidden for exactly the same people
+-- (HR included), and nothing becomes visible or hidden by this migration. Safe to run again.
+IF COL_LENGTH('dbo.page_visibility', 'role') IS NULL
+    ALTER TABLE dbo.page_visibility ADD role NVARCHAR(100) NOT NULL CONSTRAINT df_page_visibility_role DEFAULT '';
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.key_constraints WHERE parent_object_id = OBJECT_ID('dbo.page_visibility') AND type = 'PK' AND name = 'pk_page_visibility_page_role')
+BEGIN
+    DECLARE @old_pk sysname = (SELECT name FROM sys.key_constraints WHERE parent_object_id = OBJECT_ID('dbo.page_visibility') AND type = 'PK');
+    IF @old_pk IS NOT NULL EXEC('ALTER TABLE dbo.page_visibility DROP CONSTRAINT [' + @old_pk + ']');
+    ALTER TABLE dbo.page_visibility ADD CONSTRAINT pk_page_visibility_page_role PRIMARY KEY (page_key, role);
+END
+GO
+
+INSERT INTO dbo.page_visibility (page_key, role, is_hidden, updated_by_name, updated_at)
+SELECT p.page_key, r.role, p.is_hidden, p.updated_by_name, p.updated_at
+FROM dbo.page_visibility p
+CROSS JOIN (VALUES ('HR'), ('User'), ('Operation_Manager'), ('Operation_Consultant'), ('Head_Manager'),
+                   ('Senior_Operation_Consultant'), ('Operation_Director')) AS r(role)
+WHERE p.role = ''
+  AND NOT EXISTS (SELECT 1 FROM dbo.page_visibility x WHERE x.page_key = p.page_key AND x.role = r.role);
+DELETE FROM dbo.page_visibility WHERE role = '';
+GO
+
+-- ── seed users: intentionally removed ─────────
+-- This script used to insert admin@mcd.com / user@mcd.com with a known
+-- default password whenever those rows were missing. That seed is gone so a
+-- migration can never recreate an account with a published password. This
+-- script no longer reads, inserts, updates or deletes any dbo.users row for
+-- those accounts; existing accounts (and their passwords) are untouched.

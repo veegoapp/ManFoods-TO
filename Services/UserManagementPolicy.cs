@@ -17,7 +17,7 @@ public static class UserManagementPolicy
     /// <summary>The full set of role values the app recognizes.</summary>
     public static readonly IReadOnlyList<string> ValidRoles = new[]
     {
-        "Admin", "User", "Operation_Manager", "Operation_Consultant",
+        "Admin", "User", "HR", "Operation_Manager", "Operation_Consultant",
         "Head_Manager", "Senior_Operation_Consultant", "Operation_Director",
     };
 
@@ -50,6 +50,14 @@ public static class UserManagementPolicy
     /// Role is "Admin", but no other Admin/Super-Admin row.
     /// </summary>
     public static bool CanEdit(string actorEmail, User target) => CanView(actorEmail, target);
+
+    /// <summary>
+    /// Whether the actor may set `target`'s password straight from the Edit User form
+    /// (no current password asked for): anyone they may edit EXCEPT themselves — their
+    /// own password changes only through Change Password, which verifies the current one.
+    /// </summary>
+    public static bool CanSetPasswordDirectly(string actorEmail, User target) =>
+        CanEdit(actorEmail, target) && !IsSelf(actorEmail, target);
 
     /// <summary>
     /// Whether the actor may delete this account outright. Unlike CanEdit,

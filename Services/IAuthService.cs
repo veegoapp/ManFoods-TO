@@ -12,11 +12,13 @@ public interface IAuthService
     /// <summary>Sets a new password without verifying the old one — only for the
     /// forced first-login flow (a temporary/OTP-issued password), where the
     /// caller has already proven possession of the current credential by
-    /// authenticating with it to reach this session in the first place.</summary>
+    /// authenticating with it to reach this session in the first place.
+    /// Returns false (and changes nothing) unless the account is still flagged
+    /// MustChangePassword.</summary>
     Task<bool> SetPasswordAsync(int userId, string newPassword);
-    /// <summary>Clears the failed-login counter for an email, so a password that
-    /// was just reset (by the user themselves, an admin-issued OTP, or the
-    /// Super Admin recovery key) isn't still rejected by a lockout window that
-    /// was building up against the old, now-irrelevant password.</summary>
+    /// <summary>Makes earlier failed logins for an email irrelevant to the lockout
+    /// check, so a password that was just reset (by the user themselves, an
+    /// admin-issued OTP, or the Super Admin recovery key) isn't still rejected by
+    /// a lockout window that was building up against the old, now-irrelevant password.</summary>
     void ClearLockout(string email);
 }

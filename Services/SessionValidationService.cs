@@ -29,17 +29,20 @@ public class SessionValidationService : ISessionValidationService
 
     private static string CacheKey(int userId) => $"session_validate_{userId}";
 
-    public async Task<bool> IsValidAsync(int userId, string role)
+    private sealed record SessionIdentity(string Role, string PasswordFingerprint);
+
+    public async Task<bool> IsValidAsync(int userId, string role, string? passwordFingerprint)
     {
         var key = CacheKey(userId);
-        if (!_cache.TryGetValue(key, out string? currentRole))
+        if (!_cache.TryGetValue(key, out SessionIdentity? current))
         {
             // Null means "no such user" (deleted) — Role itself is a required,
             // non-null column, so a null projection can only mean a missing row.
-            currentRole = await _db.Users.Where(u => u.Id == userId).Select(u => u.Role).FirstOrDefaultAsync();
-            _cache.Set(key, currentRole, CacheDuration);
+            var row = await _db.Users.Where(u => u.Id == userId).Select(u => new { u.Role, u.PasswordHash }).FirstOrDefaultAsync();
+            current = row == null ? null : new SessionIdentity(row.Role, PasswordFingerprint.Compute(row.PasswordHash));
+            _cache.Set(key, current, CacheDuration);
         }
-        return currentRole != null && currentRole == role;
+        return current != null && current.Role == role && PasswordFingerprint.Matches(current.PasswordFingerprint, passwordFingerprint);
     }
 
     public void Invalidate(int userId) => _cache.Remove(CacheKey(userId));

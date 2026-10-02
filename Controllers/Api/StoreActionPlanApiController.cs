@@ -13,6 +13,7 @@ namespace MvcApp.Controllers.Api;
 [EnableRateLimiting("api")]
 [RequireAuth]
 [AccessArea(AccessAreas.ActionCenter)]
+[RequiresAnyPage("actioncenter", "stores")] // stores: the store profile shows a store's action plan
 public class StoreActionPlanApiController : ControllerBase
 {
     private readonly IStoreActionPlanService _actionPlans;
@@ -38,6 +39,7 @@ public class StoreActionPlanApiController : ControllerBase
     public async Task<IActionResult> AddNote(string store, [FromBody] AddNoteRequest request)
     {
         if (string.IsNullOrWhiteSpace(request?.NoteText)) return BadRequest(_L["Api_NoteTextRequired"].Value);
+        if (InputLimits.Exceeds(request.NoteText.Trim(), InputLimits.NoteText)) return BadRequest(string.Format(_L["Api_NoteTooLong"].Value, InputLimits.NoteText));
 
         var role = HttpContext.Session.GetRole();
         var email = HttpContext.Session.GetEmail();
@@ -216,6 +218,7 @@ public class StoreActionPlanApiController : ControllerBase
     [RequireRole("Admin")]
     public async Task<IActionResult> SetAssignment(string store, [FromBody] SetAssignmentRequest request)
     {
+        if (InputLimits.Exceeds(request?.AssignedToName?.Trim(), InputLimits.PersonName)) return BadRequest(string.Format(_L["Api_NameTooLong"].Value, InputLimits.PersonName));
         var role = HttpContext.Session.GetRole();
         var success = await _actionPlans.SetAssignmentAsync(store, request?.AssignedToName, request?.TargetResolutionDate, role);
         if (!success) return BadRequest(_L["Api_NoActivePlan"].Value);
@@ -227,6 +230,7 @@ public class StoreActionPlanApiController : ControllerBase
     [RequireRole("Admin")]
     public async Task<IActionResult> ManualClose(string store, [FromBody] ManualCloseRequest request)
     {
+        if (InputLimits.Exceeds(request?.Reason?.Trim(), InputLimits.CloseReason)) return BadRequest(string.Format(_L["Api_ReasonTooLong"].Value, InputLimits.CloseReason));
         var role = HttpContext.Session.GetRole();
         var closedByName = HttpContext.Session.GetAssignedName() ?? HttpContext.Session.GetEmail() ?? "";
 

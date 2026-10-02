@@ -725,7 +725,8 @@
   <data name="EU_NewPasswordNote" xml:space="preserve"><value>New Password (leave blank to keep)</value></data>
   <data name="EU_SaveChanges" xml:space="preserve"><value>Save Changes</value></data>
   <data name="Role_Admin" xml:space="preserve"><value>Admin</value></data>
-  <data name="Role_User" xml:space="preserve"><value>User</value></data>
+  <data name="Role_User" xml:space="preserve"><value>Operation</value></data>
+  <data name="Role_HR" xml:space="preserve"><value>HR</value></data>
   <data name="Role_HeadManager" xml:space="preserve"><value>Head Manager</value></data>
   <data name="Role_SeniorOperationConsultant" xml:space="preserve"><value>Senior Operation Consultant</value></data>
   <data name="Role_OperationDirector" xml:space="preserve"><value>Operation Director</value></data>
@@ -1395,6 +1396,7 @@
   <data name="Msg_RoleForbidden" xml:space="preserve"><value>Only the Super Admin can create or promote to an Admin account.</value></data>
   <data name="Msg_BulkUploadAdminRoleForbidden" xml:space="preserve"><value>Only the Super Admin can create Admin accounts. No users were added — remove or change the Role in row(s) {0} and re-upload.</value></data>
   <data name="Msg_SuperAdminProtected" xml:space="preserve"><value>The Super Admin account's role and email cannot be changed, and it cannot be deleted.</value></data>
+  <data name="Msg_UseChangePasswordForSelf" xml:space="preserve"><value>Use the Change Password page to change your own password.</value></data>
   <data name="Msg_SelectFile" xml:space="preserve"><value>Please select a file.</value></data>
   <data name="Msg_BulkUsersCreated" xml:space="preserve"><value>Created {0} pending user(s).</value></data>
   <data name="Msg_BulkUsersSkipped" xml:space="preserve"><value> Skipped {0} (already existed): {1}</value></data>
@@ -1411,6 +1413,14 @@
   <data name="Msg_ExitUploadFailed" xml:space="preserve"><value>Exit interview data upload failed: {0}</value></data>
   <data name="Msg_FileTooLarge" xml:space="preserve"><value>File size exceeds the 10 MB limit.</value></data>
   <data name="Msg_OnlyExcelFiles" xml:space="preserve"><value>Only Excel files (.xlsx / .xls) are allowed.</value></data>
+  <data name="Msg_ExcelContentTooLarge" xml:space="preserve"><value>The Excel file contains far more data than is allowed once opened. Please check the file and upload a smaller one.</value></data>
+  <data name="Msg_BulkUploadTooManyRows" xml:space="preserve"><value>The file has too many rows — at most {0} users can be uploaded at once. No users were added.</value></data>
+  <data name="Msg_BulkUploadTextTooLong" xml:space="preserve"><value>Some values are too long (email up to 254, phone up to 30, name up to 200 characters). No users were added — fix row(s) {0} and re-upload.</value></data>
+  <data name="Val_FieldMaxLength" xml:space="preserve"><value>{0} is too long (maximum {1} characters).</value></data>
+  <data name="Api_NoteTooLong" xml:space="preserve"><value>The note is too long (maximum {0} characters). Please shorten it.</value></data>
+  <data name="Api_ReasonTooLong" xml:space="preserve"><value>The reason is too long (maximum {0} characters). Please shorten it.</value></data>
+  <data name="Api_NameTooLong" xml:space="preserve"><value>The name is too long (maximum {0} characters).</value></data>
+  <data name="Api_TemplateTextTooLong" xml:space="preserve"><value>The text is too long (maximum {0} characters per language).</value></data>
   <data name="Msg_IssueMissingStore" xml:space="preserve"><value>{0} missing Store</value></data>
   <data name="Msg_IssueBadHireDate" xml:space="preserve"><value>{0} with an unreadable Hire Date</value></data>
   <data name="Msg_IssueBadResignDate" xml:space="preserve"><value>{0} with an unreadable Resignation Date</value></data>
@@ -2161,7 +2171,7 @@
   <data name="CT_In_PlanVsRule_T" xml:space="preserve"><value>The projection plans {0} trainers than the rule asks for</value></data>
   <data name="CT_In_PlanVsRule_D" xml:space="preserve"><value>The projection has {0} trainers; the rule asks for {1} ({2} difference).</value></data>
   <data name="Set_Tab_Pages" xml:space="preserve"><value>Pages</value></data>
-  <data name="Set_Pages_Sub" xml:space="preserve"><value>Choose which pages the User interface shows. A hidden page disappears from the sidebar and cannot be opened (users are sent to the first page that is still visible). The Admin interface is not affected. At least one page must stay visible.</value></data>
+  <data name="Set_Pages_Sub" xml:space="preserve"><value>Choose which pages each role of the User interface (HR, Operation and the five operational roles) can see. A page that is unticked for a role disappears from that role's sidebar, cannot be opened and its data is refused; the person is sent to the first page that is still visible. Every role must keep at least one page.</value></data>
   <data name="Set_Pages_Visible" xml:space="preserve"><value>Visible</value></data>
   <data name="Set_Pages_Hidden" xml:space="preserve"><value>Hidden</value></data>
   <data name="Api_NoPageSettings" xml:space="preserve"><value>No page settings were sent.</value></data>

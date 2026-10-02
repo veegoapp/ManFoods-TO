@@ -22,6 +22,24 @@ public sealed class BulkUploadRoleForbiddenException : Exception
         Rows = rows;
 }
 
+/// <summary>
+/// Thrown by UploadBulkUsersAsync when the file itself is refused (wrong type, too big, too many
+/// rows, text too long...). <see cref="ResourceKey"/> names the localized message to show;
+/// nothing in the file is persisted.
+/// </summary>
+public sealed class BulkUploadFileRejectedException : Exception
+{
+    public string ResourceKey { get; }
+    public object[] Args { get; }
+
+    public BulkUploadFileRejectedException(string resourceKey, params object[] args)
+        : base("Bulk upload rejected: " + resourceKey)
+    {
+        ResourceKey = resourceKey;
+        Args = args;
+    }
+}
+
 public class UserService : IUserService
 {
     private readonly AppDbContext _db;
@@ -99,7 +117,10 @@ public class UserService : IUserService
         var role = UserManagementPolicy.NormalizeRole(vm.Role)!;
         if (!UserManagementPolicy.CanAssignRole(actorEmail, role)) return (null, "role-forbidden", null);
 
-        var email = vm.Email.ToLower();
+        // Trimmed: SuperAdminPolicy.IsSuperAdmin trims before comparing, so an address like
+        // " admin@mcd.com" (stored with a leading space, which a SQL equality check does
+        // not treat as a duplicate) must never be accepted as a distinct account.
+        var email = vm.Email.Trim().ToLower();
         if (await _db.Users.AnyAsync(u => u.Email == email))
             return (null, "duplicate-email", null);
 
@@ -129,6 +150,12 @@ public class UserService : IUserService
         var user = await _db.Users.FindAsync(id);
         if (user == null || !UserManagementPolicy.CanEdit(actorEmail, user)) return (null, null);
 
+        // Setting a password here needs no current password, so it is only for resetting
+        // SOMEONE ELSE's — a person changes their own through Change Password, which asks
+        // for the current one (otherwise a hijacked admin session could set a new password).
+        if (!string.IsNullOrEmpty(vm.Password) && !UserManagementPolicy.CanSetPasswordDirectly(actorEmail, user))
+            return (null, "use-change-password");
+
         if (!UserManagementPolicy.IsValidRole(vm.Role)) return (null, "invalid-role");
         var role = UserManagementPolicy.NormalizeRole(vm.Role)!;
         if (!UserManagementPolicy.CanChangeRole(actorEmail, user, role)) return (null, "role-forbidden");
@@ -136,12 +163,13 @@ public class UserService : IUserService
         if (user.Role == "Admin" && role != "Admin" && await IsLastAdminAsync())
             return (null, "last-admin");
 
-        var email = vm.Email.ToLower();
+        var email = vm.Email.Trim().ToLower();
         if (!UserManagementPolicy.CanChangeEmail(user, email)) return (null, "super-admin-protected");
         if (email != user.Email && await _db.Users.AnyAsync(u => u.Id != id && u.Email == email))
             return (null, "duplicate-email");
 
         var roleChanged = user.Role != role;
+        var passwordChanged = !string.IsNullOrEmpty(vm.Password);
         user.Email = email;
         user.Phone = vm.Phone;
         user.AssignedName = vm.AssignedName?.Trim() ?? "";
@@ -152,12 +180,13 @@ public class UserService : IUserService
             user.TempPasswordExpiresAt = null;
         }
         await _db.SaveChangesAsync();
-        // IsValidAsync only ever rejects a session over a Role mismatch (see
-        // SessionValidationService), so only a role change can actually flip
-        // that check — invalidating on every edit (email, phone, name,
-        // password) just forced an extra DB round trip on the edited
-        // account's next request for no behavioral difference.
-        if (roleChanged) _sessionValidation.Invalidate(id);
+        // IsValidAsync only rejects a session over a Role mismatch or a changed password
+        // (see SessionValidationService), so only those two edits can flip that check —
+        // invalidating on every edit (email, phone, name) just forced an extra DB round
+        // trip on the edited account's next request for no behavior difference. A reset
+        // password ends every session the account already had open.
+        if (roleChanged || passwordChanged) _sessionValidation.Invalidate(id);
+        if (passwordChanged) _auth.ClearLockout(user.Email);
         return (ToVm(user), null);
     }
 
@@ -206,6 +235,7 @@ public class UserService : IUserService
         user.MustChangePassword = false;
         user.TempPasswordExpiresAt = null;
         await _db.SaveChangesAsync();
+        _sessionValidation.Invalidate(user.Id);
         _auth.ClearLockout(user.Email);
         return true;
     }
@@ -248,12 +278,26 @@ public class UserService : IUserService
 
     public IReadOnlyList<string> ValidRoles => UserManagementPolicy.ValidRoles;
 
+    /// <summary>Accounts per bulk upload. The file lists people who sign in to the portal (managers,
+    /// consultants, directors) — hundreds in practice — so this leaves wide headroom while keeping
+    /// one upload from creating an unbounded number of accounts.</summary>
+    public const int MaxBulkUploadRows = 5000;
+    // Only four short text columns: far below the 200 MB allowed for the roster workbooks.
+    private const long MaxBulkUploadUncompressedBytes = 50L * 1024 * 1024;
+
     public async Task<(int created, IReadOnlyList<string> skippedEmails, IReadOnlyList<string> roleMismatches)> UploadBulkUsersAsync(IFormFile file, string actorEmail)
     {
-        const long maxBytes = 10 * 1024 * 1024;
-        if (file.Length > maxBytes) throw new InvalidOperationException("File size exceeds the 10 MB limit.");
-        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (ext != ".xlsx" && ext != ".xls") throw new InvalidOperationException("Only Excel files (.xlsx / .xls) are allowed.");
+        // Same pre-parse checks as every other Excel upload (size, extension, file signature, and for
+        // .xlsx a sane archive) — the bulk file only holds a few columns, so its uncompressed-size
+        // allowance is much smaller than the roster uploads'.
+        var problem = await ExcelUploadGuard.CheckAsync(file, MaxBulkUploadUncompressedBytes);
+        if (problem != ExcelUploadProblem.None)
+            throw new BulkUploadFileRejectedException(problem switch
+            {
+                ExcelUploadProblem.TooLarge => "Msg_FileTooLarge",
+                ExcelUploadProblem.ExpandsTooMuch => "Msg_ExcelContentTooLarge",
+                _ => "Msg_OnlyExcelFiles",
+            });
 
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms);
@@ -261,12 +305,17 @@ public class UserService : IUserService
         using var wb = new XLWorkbook(ms);
         var ws = wb.Worksheet(1);
 
+        var lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+        if (lastRow - 1 > MaxBulkUploadRows)
+            throw new BulkUploadFileRejectedException("Msg_BulkUploadTooManyRows", MaxBulkUploadRows);
+
         var existingEmails = (await _db.Users.Select(u => u.Email).ToListAsync())
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var toAdd = new List<User>();
         var seenInFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var forbiddenAdminRows = new List<int>();
+        var tooLongRows = new List<int>();
         var skippedEmails = new List<string>();
 
         foreach (var row in ws.RowsUsed().Skip(1))
@@ -276,6 +325,8 @@ public class UserService : IUserService
             var assignedName = Col(row, ws, "Assigned Name", "AssignedName", "Name", "Display Name");
             var roleRaw = Col(row, ws, "Role", "role");
             if (string.IsNullOrWhiteSpace(email)) continue;
+            if (InputLimits.Exceeds(email, InputLimits.Email) || InputLimits.Exceeds(phone, InputLimits.Phone) || InputLimits.Exceeds(assignedName, InputLimits.PersonName))
+                { tooLongRows.Add(row.RowNumber()); continue; }
 
             // Skip accounts that already exist (by email) so re-uploading a
             // file never overwrites an activated user, and skip in-file
@@ -304,6 +355,8 @@ public class UserService : IUserService
             toAdd.Add(new User { Email = email, Phone = phone, AssignedName = assignedName, Role = role, PasswordHash = null });
         }
 
+        if (tooLongRows.Count > 0)
+            throw new BulkUploadFileRejectedException("Msg_BulkUploadTextTooLong", string.Join(", ", tooLongRows));
         if (forbiddenAdminRows.Count > 0)
             throw new BulkUploadRoleForbiddenException(forbiddenAdminRows);
 

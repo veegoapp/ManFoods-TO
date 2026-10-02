@@ -1,6 +1,7 @@
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpCtx
 @inject Microsoft.Extensions.Localization.IStringLocalizer<MvcApp.Resources.SharedResource> L
 @inject MvcApp.Services.IDataFreshnessService DataFreshness
+@inject MvcApp.Services.IPageVisibilityService PageVis
 @{
     var session      = HttpCtx.HttpContext?.Session;
     var userEmail    = session?.GetString("Email") ?? "";
@@ -19,6 +20,9 @@
     var switchLang   = isRtl ? "en" : "ar";
     var __area       = ViewContext.RouteData.Values["area"]?.ToString();
     var __areaPrefix = string.Equals(__area, "Home", StringComparison.OrdinalIgnoreCase) ? "/home" : "/admin";
+    // This layout also serves the User (Home) portal. Pages an Admin hid for this person's role in Settings → Pages
+    // are left out of the sidebar; the Admin portal always shows everything.
+    var hiddenPages = userRole == "Admin" ? new HashSet<string>() : await PageVis.GetHiddenAsync(userRole);
     var latestDataPeriod = await DataFreshness.GetLatestDataPeriodAsync();
     var latestDataPeriodLabel = latestDataPeriod is null
         ? ""
@@ -78,63 +82,105 @@
     <!-- ══ SIDEBAR ════════════════════════════════════════ -->
     <aside class="admin-sidebar" id="adminSidebar">
         <nav class="admin-sidebar-nav">
-            <a href="@__areaPrefix/dashboard/workforce" class="admin-nav-link @(IsActive("Workforce") ? "active" : "")">
-                <i class="bi bi-people-fill"></i><span>@L["Nav_Workforce"]</span>
-            </a>
-            <a href="@__areaPrefix/dashboard/workforceplanning" class="admin-nav-link @(IsActive("WorkforcePlanning") ? "active" : "")">
-                <i class="bi bi-diagram-3-fill"></i><span>@L["Nav_WorkforcePlanning"]</span>
-            </a>
-            <a href="@__areaPrefix/dashboard/hiringforecast" class="admin-nav-link @(IsActive("HiringForecast") ? "active" : "")">
-                <i class="bi bi-person-plus-fill"></i><span>@L["Nav_HiringForecast"]</span>
-            </a>
-            <a href="@__areaPrefix/dashboard/crewtrainers" class="admin-nav-link @(IsActive("CrewTrainers") ? "active" : "")">
-                <i class="bi bi-mortarboard-fill"></i><span>@L["Nav_CrewTrainers"]</span>
-            </a>
-            <a href="@__areaPrefix/dashboard/turnover" class="admin-nav-link @(IsActive("Turnover") ? "active" : "")">
-                <i class="bi bi-pie-chart-fill"></i><span>@L["Nav_Turnover"]</span>
-            </a>
-            <a href="@__areaPrefix/dashboard/ninetydayturnover" class="admin-nav-link @(IsActive("NinetyDayTurnover") ? "active" : "")">
-                <i class="bi bi-hourglass-split"></i><span>@L["Nav_NinetyDay"]</span>
-            </a>
-            <a href="@__areaPrefix/dashboard/comparisons" class="admin-nav-link @(IsActive("Comparisons") ? "active" : "")">
-                <i class="bi bi-arrow-left-right"></i><span>@L["Nav_Comparisons"]</span>
-            </a>
-            <a href="@__areaPrefix/dashboard/retention" class="admin-nav-link @(IsActive("Retention") ? "active" : "")">
-                <i class="bi bi-graph-up-arrow"></i><span>@L["Nav_Retention"]</span>
-            </a>
-            <a href="@__areaPrefix/dashboard/exitinterviews" class="admin-nav-link @(IsActive("ExitInterviews") ? "active" : "")">
-                <i class="bi bi-chat-square-text-fill"></i><span>@L["Nav_ExitInterviews"]</span>
-            </a>
-            <a href="@__areaPrefix/dashboard/earlywarning" class="admin-nav-link @(IsActive("EarlyWarning") ? "active" : "")">
-                <i class="bi bi-exclamation-diamond-fill"></i><span>@L["Nav_EarlyWarning"]</span>
-            </a>
-            <a href="@__areaPrefix/dashboard/scorecard" class="admin-nav-link @(IsActive("Scorecard") ? "active" : "")">
-                <i class="bi bi-award-fill"></i><span>@L["Nav_Scorecard"]</span>
-            </a>
-            @{ var acSectionActive = IsActive("ActionCenter") || IsActive("ActionCenterDetail") || IsActive("ActionPlanGuide"); }
-            <a href="@__areaPrefix/dashboard/actioncenter" class="admin-nav-link @(acSectionActive ? "active" : "")">
-                <i class="bi bi-bullseye"></i><span>@L["Nav_ActionCenter"]</span>
-            </a>
-            @if (acSectionActive)
+            @if (!hiddenPages.Contains("workforce"))
             {
-                <div class="admin-nav-submenu">
-                    <a href="@__areaPrefix/dashboard/actionplanguide" class="admin-nav-sublink @(IsActive("ActionPlanGuide") ? "active" : "")">
-                        <i class="bi bi-book-half"></i><span>@L["Nav_ActionPlanGuide"]</span>
-                    </a>
-                </div>
+                <a href="@__areaPrefix/dashboard/workforce" class="admin-nav-link @(IsActive("Workforce") ? "active" : "")">
+                    <i class="bi bi-people-fill"></i><span>@L["Nav_Workforce"]</span>
+                </a>
             }
-            <a href="@__areaPrefix/dashboard/stores" class="admin-nav-link @(IsActive("Stores") ? "active" : "")">
-                <i class="bi bi-shop"></i><span>@L["Nav_Stores"]</span>
-            </a>
+            @if (!hiddenPages.Contains("workforceplanning"))
+            {
+                <a href="@__areaPrefix/dashboard/workforceplanning" class="admin-nav-link @(IsActive("WorkforcePlanning") ? "active" : "")">
+                    <i class="bi bi-diagram-3-fill"></i><span>@L["Nav_WorkforcePlanning"]</span>
+                </a>
+            }
+            @if (!hiddenPages.Contains("hiringforecast"))
+            {
+                <a href="@__areaPrefix/dashboard/hiringforecast" class="admin-nav-link @(IsActive("HiringForecast") ? "active" : "")">
+                    <i class="bi bi-person-plus-fill"></i><span>@L["Nav_HiringForecast"]</span>
+                </a>
+            }
+            @if (!hiddenPages.Contains("crewtrainers"))
+            {
+                <a href="@__areaPrefix/dashboard/crewtrainers" class="admin-nav-link @(IsActive("CrewTrainers") ? "active" : "")">
+                    <i class="bi bi-mortarboard-fill"></i><span>@L["Nav_CrewTrainers"]</span>
+                </a>
+            }
+            @if (!hiddenPages.Contains("turnover"))
+            {
+                <a href="@__areaPrefix/dashboard/turnover" class="admin-nav-link @(IsActive("Turnover") ? "active" : "")">
+                    <i class="bi bi-pie-chart-fill"></i><span>@L["Nav_Turnover"]</span>
+                </a>
+            }
+            @if (!hiddenPages.Contains("ninetyday"))
+            {
+                <a href="@__areaPrefix/dashboard/ninetydayturnover" class="admin-nav-link @(IsActive("NinetyDayTurnover") ? "active" : "")">
+                    <i class="bi bi-hourglass-split"></i><span>@L["Nav_NinetyDay"]</span>
+                </a>
+            }
+            @if (!hiddenPages.Contains("comparisons"))
+            {
+                <a href="@__areaPrefix/dashboard/comparisons" class="admin-nav-link @(IsActive("Comparisons") ? "active" : "")">
+                    <i class="bi bi-arrow-left-right"></i><span>@L["Nav_Comparisons"]</span>
+                </a>
+            }
+            @if (!hiddenPages.Contains("retention"))
+            {
+                <a href="@__areaPrefix/dashboard/retention" class="admin-nav-link @(IsActive("Retention") ? "active" : "")">
+                    <i class="bi bi-graph-up-arrow"></i><span>@L["Nav_Retention"]</span>
+                </a>
+            }
+            @if (!hiddenPages.Contains("exitinterviews"))
+            {
+                <a href="@__areaPrefix/dashboard/exitinterviews" class="admin-nav-link @(IsActive("ExitInterviews") ? "active" : "")">
+                    <i class="bi bi-chat-square-text-fill"></i><span>@L["Nav_ExitInterviews"]</span>
+                </a>
+            }
+            @if (!hiddenPages.Contains("earlywarning"))
+            {
+                <a href="@__areaPrefix/dashboard/earlywarning" class="admin-nav-link @(IsActive("EarlyWarning") ? "active" : "")">
+                    <i class="bi bi-exclamation-diamond-fill"></i><span>@L["Nav_EarlyWarning"]</span>
+                </a>
+            }
+            @if (!hiddenPages.Contains("scorecard"))
+            {
+                <a href="@__areaPrefix/dashboard/scorecard" class="admin-nav-link @(IsActive("Scorecard") ? "active" : "")">
+                    <i class="bi bi-award-fill"></i><span>@L["Nav_Scorecard"]</span>
+                </a>
+            }
+            @{ var acSectionActive = IsActive("ActionCenter") || IsActive("ActionCenterDetail") || IsActive("ActionPlanGuide"); }
+            @if (!hiddenPages.Contains("actioncenter"))
+            {
+                <a href="@__areaPrefix/dashboard/actioncenter" class="admin-nav-link @(acSectionActive ? "active" : "")">
+                    <i class="bi bi-bullseye"></i><span>@L["Nav_ActionCenter"]</span>
+                </a>
+                @if (acSectionActive)
+                {
+                    <div class="admin-nav-submenu">
+                        <a href="@__areaPrefix/dashboard/actionplanguide" class="admin-nav-sublink @(IsActive("ActionPlanGuide") ? "active" : "")">
+                            <i class="bi bi-book-half"></i><span>@L["Nav_ActionPlanGuide"]</span>
+                        </a>
+                    </div>
+                }
+            }
+            @if (!hiddenPages.Contains("stores"))
+            {
+                <a href="@__areaPrefix/dashboard/stores" class="admin-nav-link @(IsActive("Stores") ? "active" : "")">
+                    <i class="bi bi-shop"></i><span>@L["Nav_Stores"]</span>
+                </a>
+            }
             @if (userRole == "Admin")
             {
                 <a href="/admin/dashboard/uploads" class="admin-nav-link @(IsActive("Uploads") ? "active" : "")">
                     <i class="bi bi-cloud-upload-fill"></i><span>@L["Nav_DataManagement"]</span>
                 </a>
             }
-            <a href="@__areaPrefix/dashboard/reports" class="admin-nav-link @(IsActive("Reports") ? "active" : "")">
-                <i class="bi bi-file-earmark-bar-graph-fill"></i><span>@L["Nav_Reports"]</span>
-            </a>
+            @if (!hiddenPages.Contains("reports"))
+            {
+                <a href="@__areaPrefix/dashboard/reports" class="admin-nav-link @(IsActive("Reports") ? "active" : "")">
+                    <i class="bi bi-file-earmark-bar-graph-fill"></i><span>@L["Nav_Reports"]</span>
+                </a>
+            }
             @if (userRole == "Admin")
             {
                 <a href="/admin/dashboard/users" class="admin-nav-link @(IsActive("Users") ? "active" : "")">

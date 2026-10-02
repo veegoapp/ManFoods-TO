@@ -20,7 +20,8 @@ public class EarlyWarningService : IEarlyWarningService
     // detection loop, ~200 stores) reran this every time with an identical
     // result. Caching it separately, keyed only by months/year, turns ~200
     // redundant full ActiveEmployees pulls into one.
-    private static string CandidatesCacheKey(string? months, int? year) => $"early-warning:candidates_{months}_{year}";
+    private static string CandidatesCacheKey(string? months, int? year) =>
+        FilterResultCache.BuildKey("early-warning:candidates", FilterResultCache.NormalizeMonths(months), year);
 
     // Same problem as LoadActiveCandidatesAsync above: these two full-table
     // reads (ExitInterviews, StoreReferences) don't vary by store/role, but sat
@@ -44,12 +45,15 @@ public class EarlyWarningService : IEarlyWarningService
     private readonly IStoreAccessService _storeAccess;
     private readonly IMemoryCache _cache;
     private readonly IHttpContextAccessor _httpContext;
-    public EarlyWarningService(AppDbContext db, IStoreAccessService storeAccess, IMemoryCache cache, IHttpContextAccessor httpContext)
+    // The watch-list and candidate results are keyed by request filters — bounded, see FilterResultCache.
+    private readonly FilterResultCache _filterCache;
+    public EarlyWarningService(AppDbContext db, IStoreAccessService storeAccess, IMemoryCache cache, IHttpContextAccessor httpContext, FilterResultCache? filterCache = null)
     {
         _db = db;
         _storeAccess = storeAccess;
         _cache = cache;
         _httpContext = httpContext;
+        _filterCache = filterCache ?? new FilterResultCache();
     }
 
     private List<string>? RequestedJobs =>
@@ -152,7 +156,7 @@ public class EarlyWarningService : IEarlyWarningService
     private async Task<(List<ActiveCandidate> Candidates, int Month, int Year)> LoadActiveCandidatesAsync(string? months, int? year)
     {
         var candidatesCacheKey = CandidatesCacheKey(months, year);
-        if (_cache.TryGetValue(candidatesCacheKey, out (List<ActiveCandidate> Candidates, int Month, int Year) cached))
+        if (_filterCache.TryGet(candidatesCacheKey, out (List<ActiveCandidate> Candidates, int Month, int Year) cached))
             return cached;
 
         var periods = await _db.ActiveEmployees
@@ -163,7 +167,7 @@ public class EarlyWarningService : IEarlyWarningService
         if (periods.Count == 0)
         {
             var empty = (new List<ActiveCandidate>(), 0, 0);
-            _cache.Set(candidatesCacheKey, empty, WatchlistCacheDuration);
+            _filterCache.Set(candidatesCacheKey, empty, WatchlistCacheDuration);
             return empty;
         }
 
@@ -205,7 +209,7 @@ public class EarlyWarningService : IEarlyWarningService
             .ToList();
 
         var result = (candidates, anchor.Month, anchor.Year);
-        _cache.Set(candidatesCacheKey, result, WatchlistCacheDuration);
+        _filterCache.Set(candidatesCacheKey, result, WatchlistCacheDuration, candidates.Count);
         return result;
     }
 
@@ -492,9 +496,12 @@ public class EarlyWarningService : IEarlyWarningService
         string? store, string role, string? assignedName, string? months = null, int? year = null,
         string? om = null, string? oc = null, string? soc = null, string? od = null)
     {
-        var cacheKey = $"early-warning:watchlist_{store}_{role}_{assignedName}_{months}_{year}_{om}_{oc}_{soc}_{od}_{string.Join(',', RequestedJobs ?? new())}";
-        if (_cache.TryGetValue(cacheKey, out List<EarlyWarningItem>? cachedWatchlist) && cachedWatchlist != null)
-            return cachedWatchlist;
+        var cacheKey = FilterResultCache.BuildKey("early-warning:watchlist", FilterResultCache.NormalizeList(store), role, assignedName,
+            FilterResultCache.NormalizeMonths(months), year, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc),
+            FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od),
+            FilterResultCache.NormalizeList(string.Join(',', RequestedJobs ?? new())));
+        if (_filterCache.TryGet(cacheKey, out List<EarlyWarningItem>? cachedWatchlist))
+            return cachedWatchlist!;
 
         // ── Load raw data ─────────────────────────────────────────────────────
         var historical = await LoadHistoricalRecordsAsync();
@@ -697,7 +704,7 @@ public class EarlyWarningService : IEarlyWarningService
         }
 
         var watchlist = result.OrderByDescending(r => r.RiskScore).ThenBy(r => r.TenureDays).ToList();
-        _cache.Set(cacheKey, watchlist, WatchlistCacheDuration);
+        _filterCache.Set(cacheKey, watchlist, WatchlistCacheDuration, watchlist.Count);
         return watchlist;
     }
 

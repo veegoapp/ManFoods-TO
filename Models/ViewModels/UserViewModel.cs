@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using MvcApp.Services;
 
 namespace MvcApp.Models.ViewModels;
 
@@ -27,14 +28,17 @@ public class CreateUserViewModel
 {
     [Required]
     [EmailAddress]
+    [MaxLength(InputLimits.Email, ErrorMessage = "Val_FieldMaxLength")]
     public string Email { get; set; } = "";
 
     [Required]
+    [MaxLength(InputLimits.Phone, ErrorMessage = "Val_FieldMaxLength")]
     public string Phone { get; set; } = "";
 
     /// <summary>Shown across the portal instead of the email (Action Center notes,
     /// the Home-area header) — optional, but strongly recommended for any
     /// store-restricted role.</summary>
+    [MaxLength(InputLimits.PersonName, ErrorMessage = "Val_FieldMaxLength")]
     public string? AssignedName { get; set; }
 
     [Required]
@@ -67,11 +71,14 @@ public class EditUserViewModel
 
     [Required]
     [EmailAddress]
+    [MaxLength(InputLimits.Email, ErrorMessage = "Val_FieldMaxLength")]
     public string Email { get; set; } = "";
 
     [Required]
+    [MaxLength(InputLimits.Phone, ErrorMessage = "Val_FieldMaxLength")]
     public string Phone { get; set; } = "";
 
+    [MaxLength(InputLimits.PersonName, ErrorMessage = "Val_FieldMaxLength")]
     public string? AssignedName { get; set; }
 
     [StrongPassword]

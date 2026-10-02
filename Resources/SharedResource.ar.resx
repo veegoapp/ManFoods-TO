@@ -725,7 +725,8 @@
   <data name="EU_NewPasswordNote" xml:space="preserve"><value>كلمة المرور الجديدة (اتركه فارغًا للإبقاء عليها)</value></data>
   <data name="EU_SaveChanges" xml:space="preserve"><value>حفظ التغييرات</value></data>
   <data name="Role_Admin" xml:space="preserve"><value>أدمن</value></data>
-  <data name="Role_User" xml:space="preserve"><value>مستخدم</value></data>
+  <data name="Role_User" xml:space="preserve"><value>العمليات</value></data>
+  <data name="Role_HR" xml:space="preserve"><value>الموارد البشرية</value></data>
   <data name="Role_HeadManager" xml:space="preserve"><value>مدير أول المطعم</value></data>
   <data name="Role_SeniorOperationConsultant" xml:space="preserve"><value>استشاري أول العمليات</value></data>
   <data name="Role_OperationDirector" xml:space="preserve"><value>مدير أول التشغيل</value></data>
@@ -1401,6 +1402,7 @@
   <data name="Msg_RoleForbidden" xml:space="preserve"><value>فقط المسؤول الأعلى (Super Admin) يمكنه إنشاء حساب مسؤول أو ترقية مستخدم إليه.</value></data>
   <data name="Msg_BulkUploadAdminRoleForbidden" xml:space="preserve"><value>فقط المسؤول الأعلى (Super Admin) يمكنه إنشاء حسابات مسؤولين. لم تتم إضافة أي مستخدمين — يرجى إزالة أو تغيير الدور في الصف/الصفوف {0} ثم إعادة الرفع.</value></data>
   <data name="Msg_SuperAdminProtected" xml:space="preserve"><value>لا يمكن تغيير دور أو بريد حساب المسؤول الأعلى (Super Admin)، ولا يمكن حذفه.</value></data>
+  <data name="Msg_UseChangePasswordForSelf" xml:space="preserve"><value>لتغيير كلمة المرور الخاصة بك استخدم صفحة تغيير كلمة المرور.</value></data>
   <data name="Msg_SelectFile" xml:space="preserve"><value>يرجى اختيار ملف.</value></data>
   <data name="Msg_BulkUsersCreated" xml:space="preserve"><value>تم إنشاء {0} مستخدم قيد التفعيل.</value></data>
   <data name="Msg_BulkUsersSkipped" xml:space="preserve"><value> تم تخطي {0} (موجود مسبقًا): {1}</value></data>
@@ -1417,6 +1419,14 @@
   <data name="Msg_ExitUploadFailed" xml:space="preserve"><value>فشل رفع بيانات مقابلات الخروج: {0}</value></data>
   <data name="Msg_FileTooLarge" xml:space="preserve"><value>حجم الملف يتجاوز الحد الأقصى 10 ميجابايت.</value></data>
   <data name="Msg_OnlyExcelFiles" xml:space="preserve"><value>يُسمح فقط بملفات إكسيل (.xlsx / .xls).</value></data>
+  <data name="Msg_ExcelContentTooLarge" xml:space="preserve"><value>يحتوي ملف إكسيل على بيانات أكثر بكثير من المسموح به بعد فتحه. يرجى مراجعة الملف ورفع ملف أصغر.</value></data>
+  <data name="Msg_BulkUploadTooManyRows" xml:space="preserve"><value>يحتوي الملف على عدد كبير جدًا من الصفوف — الحد الأقصى {0} مستخدم في المرة الواحدة. لم تتم إضافة أي مستخدمين.</value></data>
+  <data name="Msg_BulkUploadTextTooLong" xml:space="preserve"><value>بعض القيم أطول من المسموح (البريد حتى 254 والهاتف حتى 30 والاسم حتى 200 حرف). لم تتم إضافة أي مستخدمين — صحّح الصف/الصفوف {0} وأعد الرفع.</value></data>
+  <data name="Val_FieldMaxLength" xml:space="preserve"><value>{0} أطول من المسموح (الحد الأقصى {1} حرف).</value></data>
+  <data name="Api_NoteTooLong" xml:space="preserve"><value>الملاحظة أطول من المسموح (الحد الأقصى {0} حرف). يرجى اختصارها.</value></data>
+  <data name="Api_ReasonTooLong" xml:space="preserve"><value>السبب أطول من المسموح (الحد الأقصى {0} حرف). يرجى اختصاره.</value></data>
+  <data name="Api_NameTooLong" xml:space="preserve"><value>الاسم أطول من المسموح (الحد الأقصى {0} حرف).</value></data>
+  <data name="Api_TemplateTextTooLong" xml:space="preserve"><value>النص أطول من المسموح (الحد الأقصى {0} حرف لكل لغة).</value></data>
   <data name="Msg_IssueMissingStore" xml:space="preserve"><value>{0} بدون فرع محدد</value></data>
   <data name="Msg_IssueBadHireDate" xml:space="preserve"><value>{0} بتاريخ تعيين غير مقروء</value></data>
   <data name="Msg_IssueBadResignDate" xml:space="preserve"><value>{0} بتاريخ استقالة غير مقروء</value></data>
@@ -2167,7 +2177,7 @@
   <data name="CT_In_PlanVsRule_T" xml:space="preserve"><value>التوقّع يخطط لمدربين {0} مما تطلبه القاعدة</value></data>
   <data name="CT_In_PlanVsRule_D" xml:space="preserve"><value>في التوقّع {0} مدرب؛ والقاعدة تطلب {1} (فرق {2}).</value></data>
   <data name="Set_Tab_Pages" xml:space="preserve"><value>الصفحات</value></data>
-  <data name="Set_Pages_Sub" xml:space="preserve"><value>اختر الصفحات التي تظهر في واجهة المستخدم. الصفحة المخفية تختفي من القائمة الجانبية ولا يمكن فتحها (يُحوَّل المستخدم إلى أول صفحة ظاهرة). واجهة الأدمن لا تتأثر. يجب أن تبقى صفحة واحدة على الأقل ظاهرة.</value></data>
+  <data name="Set_Pages_Sub" xml:space="preserve"><value>اختر الصفحات التي يراها كل دور في واجهة المستخدم (HR والعمليات والأدوار التشغيلية الخمسة). الصفحة غير المعلّمة لدور تختفي من قائمته ولا يمكن فتحها ويُرفض الوصول إلى بياناتها؛ ويتم تحويل الشخص إلى أول صفحة ظاهرة. يجب أن يحتفظ كل دور بصفحة واحدة على الأقل.</value></data>
   <data name="Set_Pages_Visible" xml:space="preserve"><value>ظاهرة</value></data>
   <data name="Set_Pages_Hidden" xml:space="preserve"><value>مخفية</value></data>
   <data name="Api_NoPageSettings" xml:space="preserve"><value>لم يتم إرسال إعدادات الصفحات.</value></data>

@@ -156,6 +156,7 @@ public class StoreActionPlanService : IStoreActionPlanService
         string storeName, string role, string? email, int authorUserId, string authorName, string noteText)
     {
         if (string.IsNullOrWhiteSpace(noteText)) return (false, "Note text is required.", null);
+        if (InputLimits.Exceeds(noteText.Trim(), InputLimits.NoteText)) return (false, $"Note is too long (maximum {InputLimits.NoteText} characters).", null);
 
         var effectiveRole = await _actionPlanRoles.GetEffectiveRoleAsync(storeName);
         if (effectiveRole == null || role != effectiveRole) return (false, "Not permitted to add notes.", null);
@@ -1165,6 +1166,7 @@ public class StoreActionPlanService : IStoreActionPlanService
     {
         if (role != "Admin") return (false, "Only an Admin can manually close a plan.");
         if (string.IsNullOrWhiteSpace(reason)) return (false, "A reason is required.");
+        if (InputLimits.Exceeds(reason.Trim(), InputLimits.CloseReason)) return (false, $"Reason is too long (maximum {InputLimits.CloseReason} characters).");
         var plan = await _db.StoreActionPlans.FirstOrDefaultAsync(p => p.StoreName == storeName && p.Status == "Active");
         if (plan == null) return (false, "No active plan for this store.");
 

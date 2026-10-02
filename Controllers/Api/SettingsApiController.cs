@@ -53,7 +53,9 @@ public class SettingsApiController : ControllerBase
         return Ok();
     }
 
-    [HttpGet("recommendation-templates")]
+    // Only the Settings page's template editor reads this list (the Action Center shows already-resolved
+    // text from the server), so it is Admin-only like the rest of Settings.
+    [HttpGet("recommendation-templates"), RequireRole("Admin")]
     public async Task<IActionResult> GetRecommendationTemplates() => Ok(await _recTemplates.GetAllAsync());
 
     public class SaveRecommendationTemplateRequest
@@ -70,6 +72,8 @@ public class SettingsApiController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(request?.TextEn) || string.IsNullOrWhiteSpace(request?.TextAr))
             return BadRequest(_L["Api_BothLanguagesRequired"].Value);
+        if (InputLimits.Exceeds(request.TextEn.Trim(), InputLimits.RecommendationText) || InputLimits.Exceeds(request.TextAr.Trim(), InputLimits.RecommendationText))
+            return BadRequest(string.Format(_L["Api_TemplateTextTooLong"].Value, InputLimits.RecommendationText));
         try
         {
             await _recTemplates.SaveAsync(request.SignalCode, request.Category, request.Index, request.TextEn, request.TextAr);
@@ -109,8 +113,8 @@ public class SettingsApiController : ControllerBase
 
     public class SavePageVisibilityRequest
     {
-        /// <summary>page key → is hidden from the User interface.</summary>
-        public Dictionary<string, bool> Hidden { get; set; } = new();
+        /// <summary>page key → role → is hidden from that role's User interface.</summary>
+        public Dictionary<string, Dictionary<string, bool>> Hidden { get; set; } = new();
     }
 
     [HttpPost("page-visibility"), ValidateAntiForgeryToken, RequireRole("Admin")]

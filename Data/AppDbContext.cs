@@ -95,7 +95,8 @@ public class AppDbContext : DbContext
         // Per-area access configuration — one row per area, keyed by the area
         // string (same fresh-DB caveat as above).
         modelBuilder.Entity<PageAccessConfig>().HasKey(p => p.AreaKey);
-        modelBuilder.Entity<PageVisibility>().HasKey(p => p.PageKey);
+        modelBuilder.Entity<PageVisibility>().HasKey(p => new { p.PageKey, p.Role });
+        modelBuilder.Entity<PageVisibility>().Property(p => p.Role).HasMaxLength(100);
         modelBuilder.Entity<PageVisibility>().Property(p => p.PageKey).HasMaxLength(100);
 
         // SQL Server's DATETIME2 (unlike Npgsql's TIMESTAMPTZ) has no concept of

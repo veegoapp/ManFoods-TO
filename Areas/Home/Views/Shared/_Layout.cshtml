@@ -17,7 +17,7 @@
     bool IsActive(string seg) => currentPath.Contains(seg, StringComparison.OrdinalIgnoreCase);
 
     string RoleLabel(string r) => string.IsNullOrEmpty(r) ? "" : L["Role_" + r.Replace("_", "")].Value;
-    var hiddenPages = await PageVis.GetHiddenAsync(); // pages an Admin hid in Settings → Pages
+    var hiddenPages = await PageVis.GetHiddenAsync(userRole); // pages an Admin hid for this role in Settings → Pages
     var latestDataPeriod = await DataFreshness.GetLatestDataPeriodAsync();
     var latestDataPeriodLabel = latestDataPeriod is null
         ? ""
