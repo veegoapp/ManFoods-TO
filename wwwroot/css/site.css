@@ -1362,3 +1362,40 @@ html[dir="rtl"] .user-menu-panel { direction: rtl; }
 html[dir="rtl"] .home-topbar { justify-content: flex-start; }
 .home-topbar .notif-badge { right: -3px; left: auto; }
 @media (max-width: 760px) { .home-topbar { padding: 10px 14px 0; } }
+
+/* ══ PAGE LOADER (fries carton) ═══════════════════════ */
+.pl-host { position: relative; min-height: 480px; }
+.page-loader {
+    position: absolute; inset: 0; z-index: 60;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding-top: 12vh; gap: 6px;
+    background: var(--bg, #fff); transition: opacity .35s ease;
+}
+.page-loader.pl-hide { opacity: 0; pointer-events: none; }
+.page-loader-art { width: min(190px, 60vw); height: auto; display: block; }
+.page-loader-text { font-size: 13px; font-weight: 600; color: var(--text-3, #888); letter-spacing: .3px; }
+.pl-fry { animation: plUp 3.4s ease-in-out infinite; }
+.pl-fry-0 { animation-name: plUp0; }
+.pl-fry-1 { animation-name: plUp1; }
+.pl-fry-2 { animation-name: plUp2; }
+.pl-fry-3 { animation-name: plUp3; }
+.pl-fry-4 { animation-name: plUp4; }
+.pl-fry-5 { animation-name: plUp5; }
+.pl-fry-6 { animation-name: plUp6; }
+.pl-fry-7 { animation-name: plUp7; }
+.pl-fry-8 { animation-name: plUp8; }
+.pl-fry-9 { animation-name: plUp9; }
+.pl-fry-10 { animation-name: plUp10; }
+@keyframes plUp0{0%,4.0%{transform:translateY(700px)}12.0%{transform:translateY(-16px)}16.0%{transform:translateY(0)}84%{transform:translateY(0)}94%,100%{transform:translateY(700px)}}
+@keyframes plUp1{0%,7.1%{transform:translateY(700px)}15.1%{transform:translateY(-16px)}19.1%{transform:translateY(0)}84%{transform:translateY(0)}94%,100%{transform:translateY(700px)}}
+@keyframes plUp2{0%,10.2%{transform:translateY(700px)}18.2%{transform:translateY(-16px)}22.2%{transform:translateY(0)}84%{transform:translateY(0)}94%,100%{transform:translateY(700px)}}
+@keyframes plUp3{0%,13.3%{transform:translateY(700px)}21.3%{transform:translateY(-16px)}25.3%{transform:translateY(0)}84%{transform:translateY(0)}94%,100%{transform:translateY(700px)}}
+@keyframes plUp4{0%,16.4%{transform:translateY(700px)}24.4%{transform:translateY(-16px)}28.4%{transform:translateY(0)}84%{transform:translateY(0)}94%,100%{transform:translateY(700px)}}
+@keyframes plUp5{0%,19.5%{transform:translateY(700px)}27.5%{transform:translateY(-16px)}31.5%{transform:translateY(0)}84%{transform:translateY(0)}94%,100%{transform:translateY(700px)}}
+@keyframes plUp6{0%,22.5%{transform:translateY(700px)}30.5%{transform:translateY(-16px)}34.5%{transform:translateY(0)}84%{transform:translateY(0)}94%,100%{transform:translateY(700px)}}
+@keyframes plUp7{0%,25.6%{transform:translateY(700px)}33.6%{transform:translateY(-16px)}37.6%{transform:translateY(0)}84%{transform:translateY(0)}94%,100%{transform:translateY(700px)}}
+@keyframes plUp8{0%,28.7%{transform:translateY(700px)}36.7%{transform:translateY(-16px)}40.7%{transform:translateY(0)}84%{transform:translateY(0)}94%,100%{transform:translateY(700px)}}
+@keyframes plUp9{0%,31.8%{transform:translateY(700px)}39.8%{transform:translateY(-16px)}43.8%{transform:translateY(0)}84%{transform:translateY(0)}94%,100%{transform:translateY(700px)}}
+@keyframes plUp10{0%,34.9%{transform:translateY(700px)}42.9%{transform:translateY(-16px)}46.9%{transform:translateY(0)}84%{transform:translateY(0)}94%,100%{transform:translateY(700px)}}
+.pl-fry { transform-box: view-box; }
+@media (prefers-reduced-motion: reduce) { .pl-fry { animation: none !important; } }
