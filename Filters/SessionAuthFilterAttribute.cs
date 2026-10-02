@@ -47,9 +47,10 @@ public abstract class SessionAuthFilterAttribute : Attribute, IAsyncActionFilter
             return;
         }
 
-        var denied = OnRoleCheck(role);
+        var denied = OnRoleCheck(role) ?? OnSessionCheck(session);
         if (denied != null)
         {
+            await RecordDeniedAsync(context);
             context.Result = denied;
             return;
         }
@@ -69,6 +70,30 @@ public abstract class SessionAuthFilterAttribute : Attribute, IAsyncActionFilter
 
     /// <summary>Optional extra role check, run only once the session is confirmed to still match the database. Return null to allow.</summary>
     protected virtual IActionResult? OnRoleCheck(string role) => null;
+
+    /// <summary>Optional extra check on the confirmed session itself (for example "is this the Super Admin account"),
+    /// run after <see cref="OnRoleCheck"/>. Return null to allow.</summary>
+    protected virtual IActionResult? OnSessionCheck(ISession session) => null;
+
+    // A signed-in caller who is refused (wrong role, not the Super Admin) is recorded in the Activity Logs. Best effort:
+    // logging can never change the outcome — the caller is refused exactly as before.
+    private static async Task RecordDeniedAsync(ActionExecutingContext context)
+    {
+        try
+        {
+            var writer = context.HttpContext.RequestServices.GetService<IActivityLogWriter>();
+            if (writer == null) return;
+            var request = context.HttpContext.Request;
+            await writer.LogAsync(new ActivityEntry
+            {
+                Action = Models.ActivityActions.AccessDenied,
+                Success = false,
+                Reason = "forbidden",
+                Details = $"{request.Method} {request.Path}",   // path only — never the query string
+            });
+        }
+        catch { /* never let logging affect the refusal */ }
+    }
 
     /// <summary>Optional forced-redirect check for an account still on a
     /// system-generated temporary password (session.GetMustChangePassword()) —

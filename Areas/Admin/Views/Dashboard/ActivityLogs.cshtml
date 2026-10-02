@@ -1,0 +1,346 @@
+@{
+    ViewData["Title"] = L["Page_ActivityLogs"].Value;
+}
+
+<style>
+.al-toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin-bottom:16px; }
+.al-field { display:flex; flex-direction:column; gap:4px; }
+.al-field label { font-size:11px; color:var(--text-3); font-weight:600; }
+.al-search { min-width:220px; }
+.al-row { cursor:pointer; }
+.al-row:hover { background:var(--bg-2); }
+.al-details-row td { background:var(--bg-2); }
+.al-details { display:grid; grid-template-columns:max-content 1fr; gap:4px 18px; font-size:12.5px; margin:0; }
+.al-details dt { color:var(--text-3); font-weight:600; }
+.al-details dd { margin:0; word-break:break-word; color:var(--text); }
+.al-desc { max-width:360px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.al-pager { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:14px; }
+.al-note { font-size:12px; color:var(--text-3); margin-top:14px; }
+.al-busy { opacity:.55; pointer-events:none; }
+</style>
+
+<div class="page-header">
+    <div><h1 class="page-title">@L["Page_ActivityLogs"]</h1><p class="page-subtitle">@L["Page_ActivityLogsSub"]</p></div>
+    <div>
+        <button type="button" id="alClearOpen" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash3 me-1"></i>@L["ActLog_Clear_Button"]</button>
+    </div>
+</div>
+@Html.AntiForgeryToken()
+<div id="alNotice" class="alert-banner alert-success-banner" hidden></div>
+
+<div class="kpi-grid mb-4">
+    <div class="kpi-card">
+        <div class="kpi-icon"><i class="bi bi-list-check"></i></div>
+        <div class="kpi-value" id="alKpiTotal">–</div>
+        <div class="kpi-label">@L["ActLog_KpiTotal"]</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="color:var(--success)"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="kpi-value" id="alKpiSuccess">–</div>
+        <div class="kpi-label">@L["ActLog_KpiSuccessful"]</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="color:var(--danger)"><i class="bi bi-x-circle-fill"></i></div>
+        <div class="kpi-value" id="alKpiFailed">–</div>
+        <div class="kpi-label">@L["ActLog_KpiFailed"]</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="color:var(--info)"><i class="bi bi-shield-lock-fill"></i></div>
+        <div class="kpi-value" id="alKpiAdmin">–</div>
+        <div class="kpi-label">@L["ActLog_KpiAdminActions"]</div>
+        <div class="kpi-desc">@L["ActLog_KpiAdminActionsDesc"]</div>
+    </div>
+</div>
+
+<div class="card-dark">
+    <form id="alFilters" class="al-toolbar" autocomplete="off">
+        <div class="al-field al-search">
+            <label for="alSearch">@L["ActLog_FilterUser"]</label>
+            <input type="search" id="alSearch" class="form-control form-control-dark form-control-sm" maxlength="100" placeholder="@L["ActLog_SearchPlaceholder"]" autocapitalize="none" spellcheck="false"/>
+        </div>
+        <div class="al-field">
+            <label for="alAction">@L["ActLog_FilterAction"]</label>
+            <select id="alAction" class="form-select form-select-dark form-select-sm">
+                <option value="">@L["ActLog_AllActions"]</option>
+                @foreach (var key in MvcApp.Services.ActivityLogService.ActionFilters.Keys)
+                {
+                    <option value="@key">@L["ActLog_Flt_" + key]</option>
+                }
+            </select>
+        </div>
+        <div class="al-field">
+            <label for="alStatus">@L["ActLog_FilterResult"]</label>
+            <select id="alStatus" class="form-select form-select-dark form-select-sm">
+                <option value="">@L["Common_All"]</option>
+                <option value="success">@L["ActLog_Success"]</option>
+                <option value="failed">@L["ActLog_Failed"]</option>
+            </select>
+        </div>
+        <div class="al-field">
+            <label for="alFrom">@L["Common_From"]</label>
+            <input type="date" id="alFrom" class="form-control form-control-dark form-control-sm"/>
+        </div>
+        <div class="al-field">
+            <label for="alTo">@L["Common_To"]</label>
+            <input type="date" id="alTo" class="form-control form-control-dark form-control-sm"/>
+        </div>
+        <div class="al-field">
+            <label>&nbsp;</label>
+            <button type="button" id="alReset" class="btn btn-outline-secondary btn-sm">@L["Common_ResetFilters"]</button>
+        </div>
+    </form>
+
+    <div id="alError" class="alert-banner alert-error-banner" hidden></div>
+    <div id="alUnavailable" class="alert-banner alert-warning-banner" hidden>@L["ActLog_Unavailable"]</div>
+
+    <div class="table-responsive" id="alTableWrap">
+        <table class="table table-dark-custom">
+            <thead>
+                <tr>
+                    <th>@L["ActLog_ColDateTime"]</th>
+                    <th>@L["ActLog_ColUser"]</th>
+                    <th>@L["ActLog_ColAction"]</th>
+                    <th>@L["ActLog_ColResult"]</th>
+                    <th>@L["ActLog_ColTarget"]</th>
+                    <th>@L["Users_IpAddress"]</th>
+                    <th>@L["ActLog_ColDescription"]</th>
+                </tr>
+            </thead>
+            <tbody id="alBody"></tbody>
+        </table>
+    </div>
+    <div id="alEmpty" class="empty-state" hidden><i class="bi bi-clock-history"></i><p>@L["ActLog_Empty"]</p></div>
+
+    <div class="al-pager">
+        <span class="text-muted-custom small" id="alCount"></span>
+        <ul class="pagination pagination-sm mb-0" style="gap:4px">
+            <li class="page-item" id="alPrevItem"><a class="page-link page-link-dm" href="#" id="alPrev" aria-label="@L["ActLog_Prev"]"><i class="bi bi-chevron-left"></i></a></li>
+            <li class="page-item disabled"><span class="page-link page-link-dm" id="alPageLabel"></span></li>
+            <li class="page-item" id="alNextItem"><a class="page-link page-link-dm" href="#" id="alNext" aria-label="@L["ActLog_Next"]"><i class="bi bi-chevron-right"></i></a></li>
+        </ul>
+    </div>
+    <p class="al-note" id="alCapped" hidden>@L["ActLog_Capped"]</p>
+    <p class="al-note"><i class="bi bi-info-circle me-1"></i>@L["ActLog_Note"]</p>
+</div>
+
+<div id="alModal" class="al-modal" hidden role="dialog" aria-modal="true" aria-labelledby="alModalTitle">
+    <div class="al-modal-card">
+        <h5 id="alModalTitle" class="mb-3"><i class="bi bi-trash3 me-2"></i>@L["ActLog_Clear_Title"]</h5>
+
+        <div id="alStep1">
+            <div class="al-field mb-3">
+                <label>@L["ActLog_Clear_Range"]</label>
+                @foreach (var r in new[] { "last-hour", "last-24h", "last-7d", "last-4w", "custom", "all" })
+                {
+                    <label class="al-radio"><input type="radio" name="alRange" value="@r" @(r == "last-24h" ? "checked" : "")/> @L["ActLog_Clear_Range_" + r.Replace('-', '_')]</label>
+                }
+                <div id="alCustom" class="d-flex gap-2 mt-2" hidden>
+                    <input type="date" id="alClearFrom" class="form-control form-control-dark form-control-sm"/>
+                    <input type="date" id="alClearTo" class="form-control form-control-dark form-control-sm"/>
+                </div>
+            </div>
+            <div class="al-field mb-3">
+                <label for="alClearTypes">@L["ActLog_Clear_Types"]</label>
+                <select id="alClearTypes" class="form-select form-select-dark form-select-sm">
+                    @foreach (var t in new[] { "all", "login", "data", "admin" })
+                    {
+                        <option value="@t">@L["ActLog_Clear_Types_" + t]</option>
+                    }
+                </select>
+            </div>
+            <div id="alStep1Error" class="text-danger small mb-2" hidden></div>
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-al-close>@L["ActLog_Clear_Cancel"]</button>
+                <button type="button" id="alContinue" class="btn btn-primary btn-sm">@L["ActLog_Clear_Continue"]</button>
+            </div>
+        </div>
+
+        <div id="alStep2" hidden>
+            <h6 class="text-danger">@L["ActLog_Clear_ConfirmTitle"]</h6>
+            <p id="alConfirmText" class="small"></p>
+            <div class="al-field mb-2" id="alPasswordWrap">
+                <label for="alPassword">@L["ActLog_Clear_Password"]</label>
+                <input type="password" id="alPassword" class="form-control form-control-dark form-control-sm" autocomplete="current-password"/>
+            </div>
+            <div id="alStep2Error" class="text-danger small mb-2" hidden></div>
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" id="alBack" class="btn btn-outline-secondary btn-sm">@L["ActLog_Clear_Back"]</button>
+                <button type="button" id="alDelete" class="btn btn-danger btn-sm">@L["ActLog_Clear_Delete"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.al-modal { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:2000; padding:16px; }
+.al-modal[hidden] { display:none; }
+.al-modal-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; padding:22px; width:100%; max-width:460px; box-shadow:0 12px 40px rgba(0,0,0,.3); }
+.al-radio { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:400; color:var(--text); margin:2px 0; }
+</style>
+
+<style>
+.page-link-dm { background:var(--card-bg); border-color:var(--card-border); color:var(--text-2); border-radius:6px !important; }
+.page-link-dm:hover { background:var(--bg-2); color:var(--text); }
+[dir="rtl"] .page-link-dm .bi-chevron-left,
+[dir="rtl"] .page-link-dm .bi-chevron-right { transform:scaleX(-1); display:inline-block; }
+</style>
+
+<script>
+(function () {
+    // Everything coming from the server is inserted with textContent (file names / emails are user-controlled).
+    const LOADING_ERR = @Json.Serialize(L["ActLog_LoadFailed"].Value);
+    const PAGE_OF = @Json.Serialize(L["ActLog_PageOf"].Value);        // "Page {0} of {1}"
+    const COUNT_TXT = @Json.Serialize(L["ActLog_ShowingCount"].Value); // "{0} activities"
+    const lang = document.documentElement.lang || 'en';
+    const T = {
+        confirm: @Json.Serialize(L["ActLog_Clear_ConfirmText"].Value), periodAll: @Json.Serialize(L["ActLog_Clear_PeriodAll"].Value),
+        periodBetween: @Json.Serialize(L["ActLog_Clear_PeriodBetween"].Value), done: @Json.Serialize(L["ActLog_Clear_Done"].Value),
+        nothing: @Json.Serialize(L["ActLog_Clear_NothingToDelete"].Value), needDates: @Json.Serialize(L["ActLog_Clear_CustomNeedDates"].Value),
+        generic: @Json.Serialize(L["ActLog_LoadFailed"].Value),
+        types: { all: @Json.Serialize(L["ActLog_Clear_Types_all"].Value), login: @Json.Serialize(L["ActLog_Clear_Types_login"].Value), data: @Json.Serialize(L["ActLog_Clear_Types_data"].Value), admin: @Json.Serialize(L["ActLog_Clear_Types_admin"].Value) },
+    };
+    const $ = id => document.getElementById(id);
+    const state = { page: 1 };
+    let reqId = 0, timer = null;
+
+    const fill = (tpl, ...a) => tpl.replace(/\{(\d)\}/g, (_, i) => a[+i]);
+
+    function el(tag, text, cls) { const e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; }
+
+    function badge(ok, label) {
+        const b = el('span', label, 'role-badge');
+        b.style.background = ok ? 'var(--success-bg)' : 'var(--danger-bg)';
+        b.style.color = ok ? 'var(--success)' : 'var(--danger)';
+        return b;
+    }
+
+    function query() {
+        const p = new URLSearchParams();
+        const s = $('alSearch').value.trim(); if (s) p.set('search', s);
+        if ($('alAction').value) p.set('action', $('alAction').value);
+        if ($('alStatus').value) p.set('status', $('alStatus').value);
+        // Calendar days in Cairo time (yyyy-MM-dd) — the server turns them into UTC instants.
+        if ($('alFrom').value) p.set('from', $('alFrom').value);
+        if ($('alTo').value) p.set('to', $('alTo').value);
+        p.set('page', state.page);
+        return p;
+    }
+
+    function render(data) {
+        $('alUnavailable').hidden = !data.unavailable;
+        $('alKpiTotal').textContent = data.summary.total;
+        $('alKpiSuccess').textContent = data.summary.successful;
+        $('alKpiFailed').textContent = data.summary.failed;
+        $('alKpiAdmin').textContent = data.summary.adminActions;
+
+        const body = $('alBody'); body.replaceChildren();
+        $('alEmpty').hidden = data.items.length > 0;
+        $('alTableWrap').hidden = data.items.length === 0;
+
+        data.items.forEach(item => {
+            const tr = el('tr', null, 'al-row'); tr.tabIndex = 0; tr.setAttribute('aria-expanded', 'false');
+            // Cairo time, formatted by the server — the viewer's device clock/zone is never used.
+            tr.append(el('td', item.timeDisplay), el('td', item.user), el('td', item.actionLabel));
+            const res = el('td'); res.append(badge(item.success, item.resultLabel)); tr.append(res);
+            tr.append(el('td', item.target || '—', 'text-muted-custom'), el('td', item.ip || '—', 'text-muted-custom'));
+            const desc = el('td', item.description, 'text-muted-custom small al-desc'); desc.title = item.description; tr.append(desc);
+
+            let open = null;
+            const toggle = () => {
+                if (open) { open.remove(); open = null; tr.setAttribute('aria-expanded', 'false'); return; }
+                const dr = el('tr', null, 'al-details-row'); const td = el('td'); td.colSpan = 7;
+                const dl = el('dl', null, 'al-details');
+                item.details.forEach(d => { dl.append(el('dt', d.label), el('dd', d.value)); });
+                td.append(dl); dr.append(td); tr.after(dr); open = dr; tr.setAttribute('aria-expanded', 'true');
+            };
+            tr.addEventListener('click', toggle);
+            tr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+            body.append(tr);
+        });
+
+        state.page = data.page;
+        $('alCount').textContent = fill(COUNT_TXT, data.totalItems);
+        $('alPageLabel').textContent = fill(PAGE_OF, data.page, data.totalPages);
+        $('alPrevItem').classList.toggle('disabled', data.page <= 1);
+        $('alNextItem').classList.toggle('disabled', data.page >= data.totalPages);
+        $('alCapped').hidden = !data.capped;
+    }
+
+    async function load() {
+        const id = ++reqId;
+        $('alTableWrap').classList.add('al-busy');
+        try {
+            const res = await fetch('/api/activity-logs?' + query().toString(), { headers: { 'Accept': 'application/json' } });
+            if (id !== reqId) return;
+            if (!res.ok) throw new Error(res.status);
+            $('alError').hidden = true;
+            render(await res.json());
+        } catch (e) {
+            if (id !== reqId) return;
+            $('alError').textContent = LOADING_ERR; $('alError').hidden = false;
+        } finally {
+            if (id === reqId) $('alTableWrap').classList.remove('al-busy');
+        }
+    }
+
+    const reload = () => { state.page = 1; load(); };
+    $('alSearch').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(reload, 350); });
+    ['alAction', 'alStatus', 'alFrom', 'alTo'].forEach(id => $(id).addEventListener('change', reload));
+    $('alFilters').addEventListener('submit', e => { e.preventDefault(); reload(); });
+    $('alReset').addEventListener('click', () => { $('alFilters').reset(); reload(); });
+    $('alPrev').addEventListener('click', e => { e.preventDefault(); if (state.page > 1) { state.page--; load(); } });
+    $('alNext').addEventListener('click', e => { e.preventDefault(); state.page++; load(); });
+
+
+    // ── Clear History (Super Admin; the server re-checks identity, verifies the password and decides what is deleted) ──
+    const tokenOf = () => document.querySelector('input[name="__RequestVerificationToken"]').value;
+    const modal = $('alModal');
+    const show = (id, on) => { $(id).hidden = !on; };
+    function selection() {
+        const range = document.querySelector('input[name="alRange"]:checked').value;
+        const sel = { range, types: $('alClearTypes').value };
+        if (range === 'custom') { sel.fromDay = $('alClearFrom').value || null; sel.toDay = $('alClearTo').value || null; }
+        return sel;
+    }
+    function toBody(sel, password) { const b = { range: sel.range, types: sel.types, fromDay: sel.fromDay, toDay: sel.toDay }; if (password != null) b.password = password; return b; }
+    async function post(url, body) {
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': tokenOf() }, body: JSON.stringify(body) });
+        let data = null; try { data = await res.json(); } catch { }
+        return { ok: res.ok, status: res.status, data };
+    }
+    function openModal() {
+        $('alPassword').value = ''; show('alStep1Error', false); show('alStep2Error', false);
+        show('alStep1', true); show('alStep2', false); modal.hidden = false;
+    }
+    function closeModal() { $('alPassword').value = ''; modal.hidden = true; }
+    $('alClearOpen').addEventListener('click', openModal);
+    modal.querySelectorAll('[data-al-close]').forEach(b => b.addEventListener('click', closeModal));
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+    document.querySelectorAll('input[name="alRange"]').forEach(r => r.addEventListener('change', () => { $('alCustom').hidden = document.querySelector('input[name="alRange"]:checked').value !== 'custom'; }));
+
+    $('alContinue').addEventListener('click', async () => {
+        const sel = selection(); const err = $('alStep1Error'); err.hidden = true;
+        if (sel.range === 'custom' && (!sel.fromDay || !sel.toDay)) { err.textContent = T.needDates; err.hidden = false; return; }
+        const r = await post('/api/activity-logs/clear/preview', toBody(sel));
+        if (!r.ok) { err.textContent = (r.data && r.data.error) || T.generic; err.hidden = false; return; }
+        const period = r.data.fromDisplay ? fill(T.periodBetween, r.data.fromDisplay, r.data.toDisplay) : T.periodAll;
+        $('alConfirmText').textContent = r.data.count === 0 ? T.nothing : fill(T.confirm, r.data.count, period, T.types[r.data.types] || r.data.types);
+        $('alDelete').disabled = r.data.count === 0; $('alPasswordWrap').hidden = r.data.count === 0;
+        show('alStep2Error', false); $('alPassword').value = '';
+        show('alStep1', false); show('alStep2', true); $('alPassword').focus();
+    });
+    $('alBack').addEventListener('click', () => { $('alPassword').value = ''; show('alStep2', false); show('alStep1', true); });
+    $('alDelete').addEventListener('click', async () => {
+        const err = $('alStep2Error'); err.hidden = true;
+        const r = await post('/api/activity-logs/clear', toBody(selection(), $('alPassword').value));
+        $('alPassword').value = '';
+        if (!r.ok) { err.textContent = (r.data && r.data.error) || T.generic; err.hidden = false; return; }
+        closeModal();
+        const n = $('alNotice'); n.textContent = fill(T.done, r.data.deleted); n.hidden = false;
+        reload();
+    });
+
+    load();
+})();
+</script>

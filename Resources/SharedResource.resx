@@ -2175,4 +2175,119 @@
   <data name="Api_NoPageSettings" xml:space="preserve"><value>No page settings were sent.</value></data>
   <data name="Api_NoPagesVisible" xml:space="preserve"><value>At least one page must stay visible.</value></data>
   <data name="Msg_PageHidden" xml:space="preserve"><value>That page is not available. You were taken to another page.</value></data>
+  <data name="Nav_ActivityLogs" xml:space="preserve"><value>Activity Logs</value></data>
+  <data name="Page_ActivityLogs" xml:space="preserve"><value>Activity Logs</value></data>
+  <data name="Page_ActivityLogsSub" xml:space="preserve"><value>Sign-ins, uploads and admin actions recorded by the portal (Cairo time)</value></data>
+  <data name="ActLog_KpiTotal" xml:space="preserve"><value>Total Activities</value></data>
+  <data name="ActLog_KpiSuccessful" xml:space="preserve"><value>Successful</value></data>
+  <data name="ActLog_KpiFailed" xml:space="preserve"><value>Failed</value></data>
+  <data name="ActLog_KpiAdminActions" xml:space="preserve"><value>Admin Actions</value></data>
+  <data name="ActLog_KpiAdminActionsDesc" xml:space="preserve"><value>Uploads and admin operations</value></data>
+  <data name="ActLog_FilterUser" xml:space="preserve"><value>User</value></data>
+  <data name="ActLog_SearchPlaceholder" xml:space="preserve"><value>Search by email…</value></data>
+  <data name="ActLog_FilterAction" xml:space="preserve"><value>Action</value></data>
+  <data name="ActLog_AllActions" xml:space="preserve"><value>All actions</value></data>
+  <data name="ActLog_FilterResult" xml:space="preserve"><value>Result</value></data>
+  <data name="ActLog_Success" xml:space="preserve"><value>Success</value></data>
+  <data name="ActLog_Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="ActLog_ColDateTime" xml:space="preserve"><value>Date / Time (Cairo)</value></data>
+  <data name="ActLog_ColUser" xml:space="preserve"><value>User / Admin</value></data>
+  <data name="ActLog_ColAction" xml:space="preserve"><value>Action</value></data>
+  <data name="ActLog_ColResult" xml:space="preserve"><value>Result</value></data>
+  <data name="ActLog_ColTarget" xml:space="preserve"><value>Target User</value></data>
+  <data name="ActLog_ColDescription" xml:space="preserve"><value>Description</value></data>
+  <data name="ActLog_CairoTime" xml:space="preserve"><value>Cairo time</value></data>
+  <data name="ActLog_Reason" xml:space="preserve"><value>Reason</value></data>
+  <data name="ActLog_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="ActLog_Empty" xml:space="preserve"><value>No activity matches these filters.</value></data>
+  <data name="ActLog_Prev" xml:space="preserve"><value>Previous page</value></data>
+  <data name="ActLog_Next" xml:space="preserve"><value>Next page</value></data>
+  <data name="ActLog_PageOf" xml:space="preserve"><value>Page {0} of {1}</value></data>
+  <data name="ActLog_ShowingCount" xml:space="preserve"><value>{0} activities</value></data>
+  <data name="ActLog_Capped" xml:space="preserve"><value>Showing the most recent activities only — narrow the date range to see older ones.</value></data>
+  <data name="ActLog_LoadFailed" xml:space="preserve"><value>Could not load the activity logs. Please try again.</value></data>
+  <data name="ActLog_Unavailable" xml:space="preserve"><value>The activity log table has not been created yet — apply the database migration (scripts/migrate.sql) first.</value></data>
+  <data name="ActLog_Note" xml:space="preserve"><value>Recorded from the moment this feature was deployed (earlier sign-ins, uploads and OTPs were copied in by the migration). Passwords, OTP codes, recovery keys and tokens are never stored.</value></data>
+  <data name="ActLog_Act_login_success" xml:space="preserve"><value>Login</value></data>
+  <data name="ActLog_Act_login_failed" xml:space="preserve"><value>Failed Login</value></data>
+  <data name="ActLog_Act_login_unknown" xml:space="preserve"><value>Unknown Account Login</value></data>
+  <data name="ActLog_Act_login_blocked" xml:space="preserve"><value>Blocked Login</value></data>
+  <data name="ActLog_Act_logout" xml:space="preserve"><value>Logout</value></data>
+  <data name="ActLog_Act_upload" xml:space="preserve"><value>Upload</value></data>
+  <data name="ActLog_Act_upload_log_delete" xml:space="preserve"><value>Delete Upload Log</value></data>
+  <data name="ActLog_Act_user_create" xml:space="preserve"><value>Create User</value></data>
+  <data name="ActLog_Act_user_update" xml:space="preserve"><value>Edit User</value></data>
+  <data name="ActLog_Act_user_delete" xml:space="preserve"><value>Delete User</value></data>
+  <data name="ActLog_Act_role_change" xml:space="preserve"><value>Role Change</value></data>
+  <data name="ActLog_Act_user_bulk_upload" xml:space="preserve"><value>Bulk User Upload</value></data>
+  <data name="ActLog_Act_password_generate" xml:space="preserve"><value>Temporary Password</value></data>
+  <data name="ActLog_Act_password_generate_bulk" xml:space="preserve"><value>Temporary Passwords (bulk)</value></data>
+  <data name="ActLog_Act_otp_generate" xml:space="preserve"><value>Generate OTP</value></data>
+  <data name="ActLog_Act_otp_generate_admin" xml:space="preserve"><value>Generate Admin OTP</value></data>
+  <data name="ActLog_Act_recovery_key_regenerate" xml:space="preserve"><value>Regenerate Recovery Key</value></data>
+  <data name="ActLog_Act_recovery_key_use" xml:space="preserve"><value>Recovery Key Used</value></data>
+  <data name="ActLog_Act_settings_access_policy" xml:space="preserve"><value>Access Policy Changed</value></data>
+  <data name="ActLog_Act_settings_page_visibility" xml:space="preserve"><value>Page Visibility Changed</value></data>
+  <data name="ActLog_Act_activity_logs_clear" xml:space="preserve"><value>Clear History</value></data>
+  <data name="ActLog_Act_access_denied" xml:space="preserve"><value>Unauthorized / Blocked Admin Action</value></data>
+  <data name="ActLog_Flt_login" xml:space="preserve"><value>Login</value></data>
+  <data name="ActLog_Flt_failed-login" xml:space="preserve"><value>Failed Login</value></data>
+  <data name="ActLog_Flt_unknown-login" xml:space="preserve"><value>Unknown Account Login</value></data>
+  <data name="ActLog_Flt_blocked-login" xml:space="preserve"><value>Blocked Login</value></data>
+  <data name="ActLog_Flt_logout" xml:space="preserve"><value>Logout</value></data>
+  <data name="ActLog_Flt_upload" xml:space="preserve"><value>Upload</value></data>
+  <data name="ActLog_Flt_create-user" xml:space="preserve"><value>Create User</value></data>
+  <data name="ActLog_Flt_edit-user" xml:space="preserve"><value>Edit User</value></data>
+  <data name="ActLog_Flt_delete-user" xml:space="preserve"><value>Delete User</value></data>
+  <data name="ActLog_Flt_role-change" xml:space="preserve"><value>Role Change</value></data>
+  <data name="ActLog_Flt_password" xml:space="preserve"><value>Temporary Password</value></data>
+  <data name="ActLog_Flt_otp" xml:space="preserve"><value>OTP</value></data>
+  <data name="ActLog_Flt_recovery-key" xml:space="preserve"><value>Recovery Key</value></data>
+  <data name="ActLog_Flt_settings" xml:space="preserve"><value>Settings Changes</value></data>
+  <data name="ActLog_Flt_clear-history" xml:space="preserve"><value>Clear History</value></data>
+  <data name="ActLog_Flt_denied" xml:space="preserve"><value>Unauthorized / Blocked Admin Action</value></data>
+  <data name="ActLog_Reason_wrong_password" xml:space="preserve"><value>Wrong password</value></data>
+  <data name="ActLog_Reason_no_password_set" xml:space="preserve"><value>No password set yet</value></data>
+  <data name="ActLog_Reason_temp_password_expired" xml:space="preserve"><value>Temporary password expired</value></data>
+  <data name="ActLog_Reason_locked_out" xml:space="preserve"><value>Too many failed attempts (blocked)</value></data>
+  <data name="ActLog_Reason_unknown_account" xml:space="preserve"><value>No account with this email</value></data>
+  <data name="ActLog_Reason_wrong_portal" xml:space="preserve"><value>Wrong portal for this account</value></data>
+  <data name="ActLog_Reason_not_super_admin" xml:space="preserve"><value>Not the Super Admin</value></data>
+  <data name="ActLog_Reason_incorrect_password" xml:space="preserve"><value>Incorrect password</value></data>
+  <data name="ActLog_Reason_last_admin" xml:space="preserve"><value>Cannot change the last Admin</value></data>
+  <data name="ActLog_Reason_super_admin_protected" xml:space="preserve"><value>Super Admin account is protected</value></data>
+  <data name="ActLog_Reason_invalid_key" xml:space="preserve"><value>Invalid recovery key</value></data>
+  <data name="ActLog_Reason_no_such_admin" xml:space="preserve"><value>No Admin with this email</value></data>
+  <data name="ActLog_Reason_forbidden" xml:space="preserve"><value>Access refused</value></data>
+  <data name="ActLog_Reason_upload_failed" xml:space="preserve"><value>Upload failed</value></data>
+  <data name="ActLog_Reason_invalid_file" xml:space="preserve"><value>File rejected (invalid)</value></data>
+  <data name="ActLog_Clear_Button" xml:space="preserve"><value>Clear History</value></data>
+  <data name="ActLog_Clear_Title" xml:space="preserve"><value>Clear Activity History</value></data>
+  <data name="ActLog_Clear_Range" xml:space="preserve"><value>Time range</value></data>
+  <data name="ActLog_Clear_Range_last_hour" xml:space="preserve"><value>Last hour</value></data>
+  <data name="ActLog_Clear_Range_last_24h" xml:space="preserve"><value>Last 24 hours</value></data>
+  <data name="ActLog_Clear_Range_last_7d" xml:space="preserve"><value>Last 7 days</value></data>
+  <data name="ActLog_Clear_Range_last_4w" xml:space="preserve"><value>Last 4 weeks</value></data>
+  <data name="ActLog_Clear_Range_custom" xml:space="preserve"><value>Custom range</value></data>
+  <data name="ActLog_Clear_Range_all" xml:space="preserve"><value>All time</value></data>
+  <data name="ActLog_Clear_Types" xml:space="preserve"><value>Types of logs</value></data>
+  <data name="ActLog_Clear_Types_all" xml:space="preserve"><value>All Activity Logs</value></data>
+  <data name="ActLog_Clear_Types_login" xml:space="preserve"><value>Login Logs</value></data>
+  <data name="ActLog_Clear_Types_data" xml:space="preserve"><value>Upload Logs</value></data>
+  <data name="ActLog_Clear_Types_admin" xml:space="preserve"><value>Admin Actions</value></data>
+  <data name="ActLog_Clear_Continue" xml:space="preserve"><value>Continue</value></data>
+  <data name="ActLog_Clear_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ActLog_Clear_Back" xml:space="preserve"><value>Back</value></data>
+  <data name="ActLog_Clear_ConfirmTitle" xml:space="preserve"><value>Confirm deletion</value></data>
+  <data name="ActLog_Clear_ConfirmText" xml:space="preserve"><value>You are about to permanently delete {0} log entries — {1} — type: {2}. This cannot be undone.</value></data>
+  <data name="ActLog_Clear_PeriodAll" xml:space="preserve"><value>all time</value></data>
+  <data name="ActLog_Clear_PeriodBetween" xml:space="preserve"><value>from {0} to {1} (Cairo time)</value></data>
+  <data name="ActLog_Clear_Password" xml:space="preserve"><value>Enter your current password to confirm</value></data>
+  <data name="ActLog_Clear_Delete" xml:space="preserve"><value>Delete permanently</value></data>
+  <data name="ActLog_Clear_WrongPassword" xml:space="preserve"><value>Incorrect password. Nothing was deleted.</value></data>
+  <data name="ActLog_Clear_Invalid" xml:space="preserve"><value>Invalid selection.</value></data>
+  <data name="ActLog_Clear_Done" xml:space="preserve"><value>Deleted {0} log entries.</value></data>
+  <data name="ActLog_Clear_NothingToDelete" xml:space="preserve"><value>No log entries match this selection.</value></data>
+  <data name="ActLog_Clear_CustomNeedDates" xml:space="preserve"><value>Choose both dates for a custom range.</value></data>
+  <data name="Users_LoginHistoryCairo" xml:space="preserve"><value>Times are shown in Cairo time</value></data>
 </root>

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MvcApp.Extensions;
 using MvcApp.Filters;
+using MvcApp.Models;
 using MvcApp.Services;
 using Microsoft.Extensions.Localization;
 using MvcApp.Resources;
@@ -23,9 +24,11 @@ public class DashboardController : Controller
     private readonly IBackgroundJobTracker _jobTracker;
     private readonly ILogger<DashboardController> _logger;
     private readonly IStringLocalizer<SharedResource> _L;
+    private readonly IActivityLogWriter _activity;
 
-    public DashboardController(IUploadService uploads, IUserService users, IDashboardService dashboard, IStoreService stores, IOtpService otp, IReportService reports, IWorkforcePlanningService planning, IBackgroundJobTracker jobTracker, ILogger<DashboardController> logger, IStringLocalizer<SharedResource> localizer)
+    public DashboardController(IUploadService uploads, IUserService users, IDashboardService dashboard, IStoreService stores, IOtpService otp, IReportService reports, IWorkforcePlanningService planning, IBackgroundJobTracker jobTracker, ILogger<DashboardController> logger, IStringLocalizer<SharedResource> localizer, IActivityLogWriter activity)
     {
+        _activity = activity;
         _uploads = uploads;
         _users = users;
         _dashboard = dashboard;
@@ -260,11 +263,13 @@ public class DashboardController : Controller
         {
             var email = HttpContext.Session.GetEmail();
             var (_, msg, _, warning) = await _uploads.UploadPeriodDataAsync(vm.ActiveEmployeesFile, vm.ResignationsFile, vm.StoreReferenceFile, vm.Month, vm.Year, email);
+            await LogUploadAsync("active_employees+resignations+store_reference", $"{vm.Month}/{vm.Year}", true);
             return RedirectToUploads(success: msg, warning: warning);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Period data upload failed for {Month}/{Year}", vm.Month, vm.Year);
+            await LogUploadAsync("active_employees+resignations+store_reference", $"{vm.Month}/{vm.Year}", false, ex);
             return RedirectToUploads(error: string.Format(_L["Msg_UploadPeriodFailed"].Value, vm.Month, vm.Year, UploadErrorDetail(ex)));
         }
     }
@@ -281,11 +286,13 @@ public class DashboardController : Controller
         {
             var email = HttpContext.Session.GetEmail();
             var (_, msg, warning) = await _uploads.UpdateSingleFileAsync(vm.FileType, vm.Month, vm.Year, vm.File, email);
+            await LogUploadAsync(vm.FileType, $"{vm.Month}/{vm.Year}", true);
             return RedirectToUploads(success: msg, warning: warning);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Single file update failed for {FileType} {Month}/{Year}", vm.FileType, vm.Month, vm.Year);
+            await LogUploadAsync(vm.FileType, $"{vm.Month}/{vm.Year}", false, ex);
             return RedirectToUploads(error: string.Format(_L["Msg_UpdateFileFailed"].Value, vm.FileType, vm.Month, vm.Year, UploadErrorDetail(ex)));
         }
     }
@@ -298,11 +305,13 @@ public class DashboardController : Controller
         {
             var email = HttpContext.Session.GetEmail();
             var (_, msg, _) = await _uploads.UploadExitInterviewsAsync(vm.File, email);
+            await LogUploadAsync("exit_interviews", "current", true);
             return RedirectToUploads(success: msg, tab: UploadTabs.Exit);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exit interviews upload failed");
+            await LogUploadAsync("exit_interviews", "current", false, ex);
             return RedirectToUploads(error: string.Format(_L["Msg_ExitUploadFailed"].Value, UploadErrorDetail(ex)), tab: UploadTabs.Exit);
         }
     }
@@ -315,11 +324,13 @@ public class DashboardController : Controller
         {
             var email = HttpContext.Session.GetEmail();
             var (_, msg, _, warning) = await _uploads.UploadJobProjectionsAsync(vm.File, vm.Year, email);
+            await LogUploadAsync("job_projections", $"{vm.Year}", true);
             return RedirectToUploads(success: msg, warning: warning, tab: UploadTabs.JobProjections);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Job projection upload failed for {Year}", vm.Year);
+            await LogUploadAsync("job_projections", $"{vm.Year}", false, ex);
             return RedirectToUploads(error: string.Format(_L["Msg_JobProjUploadFailed"].Value, UploadErrorDetail(ex)), tab: UploadTabs.JobProjections);
         }
     }
@@ -332,11 +343,13 @@ public class DashboardController : Controller
         {
             var email = HttpContext.Session.GetEmail();
             var (_, msg, _, warning) = await _uploads.UploadCrewTrainersAsync(vm.File, vm.Year, vm.Month, email);
+            await LogUploadAsync("crew_trainers", $"{vm.Month}/{vm.Year}", true);
             return RedirectToUploads(success: msg, warning: warning, tab: UploadTabs.JobProjections);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Crew trainer upload failed for {Year}-{Month}", vm.Year, vm.Month);
+            await LogUploadAsync("crew_trainers", $"{vm.Month}/{vm.Year}", false, ex);
             return RedirectToUploads(error: string.Format(_L["Msg_CrewTrainerUploadFailed"].Value, UploadErrorDetail(ex)), tab: UploadTabs.JobProjections);
         }
     }
@@ -349,11 +362,13 @@ public class DashboardController : Controller
         {
             var email = HttpContext.Session.GetEmail();
             var (_, msg, _, warning) = await _uploads.UploadJobPayrollGroupsAsync(vm.File, email);
+            await LogUploadAsync("job_payroll_groups", "all", true);
             return RedirectToUploads(success: msg, warning: warning, tab: UploadTabs.JobProjections);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Job payroll groups upload failed");
+            await LogUploadAsync("job_payroll_groups", "all", false, ex);
             return RedirectToUploads(error: string.Format(_L["Msg_JobGroupUploadFailed"].Value, UploadErrorDetail(ex)), tab: UploadTabs.JobProjections);
         }
     }
@@ -631,19 +646,36 @@ public class DashboardController : Controller
     public async Task<IActionResult> DeleteUploadLog(int id, string tab = UploadTabs.Monthly)
     {
         await _uploads.DeleteLogAsync(id);
-        Audit("upload-log.delete", $"upload log id {id}");
+        await AuditAsync(ActivityActions.UploadLogDelete, $"upload log id {id}");
         TempData["Success"] = _L["Msg_UploadLogDeleted"].Value;
         return RedirectToAction("Uploads", new { tab = UploadTabs.Normalize(tab) });
     }
 
-    // Audit trail for sensitive Admin actions (account and credential changes), written to the application
-    // log in the same style as OtpService's "generated a password-reset OTP" line. Only who did what to which
-    // user id — never a password, OTP, recovery key or any other secret.
-    private void Audit(string action, string detail) =>
+    // Audit trail for sensitive Admin actions (account and credential changes): written to the application log
+    // (same style as OtpService's "generated a password-reset OTP" line) and to the Activity Logs table. Only who did
+    // what to which user id — never a password, OTP, recovery key or any other secret.
+    private async Task AuditAsync(string action, string detail, int? targetUserId = null)
+    {
         _logger.LogInformation("AdminAudit {Action} by admin '{Admin}': {Detail}", action, HttpContext.Session.GetEmail(), detail);
+        await _activity.LogAsync(new ActivityEntry { Action = action, Success = true, TargetUserId = targetUserId, Details = detail });
+    }
 
-    private void AuditDenied(string action, string detail) =>
+    private async Task AuditDeniedAsync(string action, string reason, string detail, int? targetUserId = null)
+    {
         _logger.LogWarning("AdminAudit {Action} DENIED for admin '{Admin}': {Detail}", action, HttpContext.Session.GetEmail(), detail);
+        await _activity.LogAsync(new ActivityEntry { Action = action, Success = false, TargetUserId = targetUserId, Reason = reason, Details = detail });
+    }
+
+    /// <summary>Records one upload (file type + period only — never the file name or content).</summary>
+    private Task LogUploadAsync(string fileType, string period, bool success, Exception? error = null) =>
+        _activity.LogAsync(new ActivityEntry
+        {
+            Action = ActivityActions.Upload, Success = success, Details = $"{fileType}; {period}",
+            Reason = success ? null : error is InvalidOperationException ? "invalid-file" : "upload-failed",
+        });
+
+    [RequireAdminAuth, RequireSuperAdmin]
+    public IActionResult ActivityLogs() => View();
 
     [RequireAdminAuth]
     public async Task<IActionResult> Users()
@@ -675,7 +707,7 @@ public class DashboardController : Controller
             ModelState.AddModelError(nameof(vm.Role), _L["Msg_RoleForbidden"].Value);
             return View(vm);
         }
-        Audit("user.create", $"new user id {created!.Id}, role {created.Role}");
+        await AuditAsync(ActivityActions.UserCreate, $"new user id {created!.Id}, role {created.Role}", created.Id);
         TempData["Success"] = _L["Msg_UserCreated"].Value;
         // Shown once on the Users page — the generated temporary password
         // never appears again after this redirect.
@@ -705,6 +737,7 @@ public class DashboardController : Controller
     {
         vm.Id = id;
         if (!ModelState.IsValid) return View(vm);
+        var roleBefore = (await _users.GetByIdAsync(id, HttpContext.Session.GetEmail()))?.Role;
         var (updated, error) = await _users.UpdateAsync(id, vm, HttpContext.Session.GetEmail());
         if (error == "last-admin")
         {
@@ -737,7 +770,9 @@ public class DashboardController : Controller
             return View(vm);
         }
         if (updated == null) return NotFound();
-        Audit("user.update", $"user id {id}, role now {updated.Role}");
+        await AuditAsync(ActivityActions.UserUpdate, $"user id {id}, role now {updated.Role}", id);
+        if (roleBefore != null && !string.Equals(roleBefore, updated.Role, StringComparison.Ordinal))
+            await AuditAsync(ActivityActions.RoleChange, $"{roleBefore} -> {updated.Role}", id);
         TempData["Success"] = _L["Msg_UserUpdated"].Value;
         return RedirectToAction("Users");
     }
@@ -746,8 +781,8 @@ public class DashboardController : Controller
     public async Task<IActionResult> DeleteUser(int id)
     {
         var (success, error) = await _users.DeleteAsync(id, HttpContext.Session.GetEmail());
-        if (success) Audit("user.delete", $"user id {id}");
-        else if (error is "last-admin" or "super-admin-protected") AuditDenied("user.delete", $"user id {id}, reason {error}");
+        if (success) await AuditAsync(ActivityActions.UserDelete, $"user id {id}", id);
+        else if (error is "last-admin" or "super-admin-protected") await AuditDeniedAsync(ActivityActions.UserDelete, error, $"user id {id}, reason {error}", id);
         TempData[success ? "Success" : "Error"] = error switch
         {
             "last-admin" => _L["Msg_LastAdminDelete"].Value,
@@ -764,7 +799,7 @@ public class DashboardController : Controller
         try
         {
             var (created, skippedEmails, roleMismatches) = await _users.UploadBulkUsersAsync(vm.File, HttpContext.Session.GetEmail());
-            Audit("user.bulk-upload", $"{created} created, {skippedEmails.Count} skipped");
+            await AuditAsync(ActivityActions.UserBulkUpload, $"{created} created, {skippedEmails.Count} skipped");
             TempData["Success"] = string.Format(_L["Msg_BulkUsersCreated"].Value, created) +
                 (skippedEmails.Count > 0 ? string.Format(_L["Msg_BulkUsersSkipped"].Value, skippedEmails.Count, string.Join(", ", skippedEmails)) : "");
             if (roleMismatches.Count > 0)
@@ -789,7 +824,7 @@ public class DashboardController : Controller
     {
         var (count, bytes) = await _otp.GenerateBulkDefaultPasswordsAsync();
         if (count == 0) { TempData["Error"] = _L["Msg_NoPendingOtps"].Value; return RedirectToAction("Users"); }
-        Audit("password.generate-bulk", $"{count} users");
+        await AuditAsync(ActivityActions.PasswordGenerateBulk, $"{count} users");
         return File(bytes,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"Default_Passwords_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx");
@@ -800,7 +835,7 @@ public class DashboardController : Controller
     {
         var (password, message) = await _otp.GenerateSingleDefaultPasswordAsync(id);
         if (password == null) return NotFound();
-        Audit("password.generate", $"user id {id}");
+        await AuditAsync(ActivityActions.PasswordGenerate, $"user id {id}", id);
         // "message" is the same welcome/portal-link/credentials wording as the
         // bulk Excel's SMS Message column — used by the Users page's Outlook
         // "send credentials" button to pre-fill the email body.
@@ -812,7 +847,7 @@ public class DashboardController : Controller
     {
         var otp = await _otp.GenerateSingleOtpAsync(id);
         if (otp == null) return NotFound();
-        Audit("otp.generate", $"user id {id}");
+        await AuditAsync(ActivityActions.OtpGenerate, $"user id {id}", id);
         return Json(new { otp });
     }
 
@@ -825,7 +860,7 @@ public class DashboardController : Controller
         var requestingEmail = HttpContext.Session.GetEmail();
         if (!SuperAdminPolicy.IsSuperAdmin(requestingEmail))
         {
-            AuditDenied("otp.generate-admin", $"user id {id}, not the Super Admin");
+            await AuditDeniedAsync(ActivityActions.OtpGenerateAdmin, "not-super-admin", $"user id {id}, not the Super Admin", id);
             return Json(new { error = _L["Msg_AdminOtpNotPermitted"].Value });
         }
 
@@ -846,17 +881,17 @@ public class DashboardController : Controller
         // of a misleading "incorrect password".
         if (!SuperAdminPolicy.IsSuperAdmin(email))
         {
-            AuditDenied("recovery-key.regenerate", "not the Super Admin");
+            await AuditDeniedAsync(ActivityActions.RecoveryKeyRegenerate, "not-super-admin", "not the Super Admin");
             return Json(new { error = _L["Msg_SuperAdminOnly"].Value });
         }
 
         var key = await _users.RegenerateRecoveryKeyAsync(email, password);
         if (key == null)
         {
-            AuditDenied("recovery-key.regenerate", "incorrect password");
+            await AuditDeniedAsync(ActivityActions.RecoveryKeyRegenerate, "incorrect-password", "incorrect password");
             return Json(new { error = _L["Msg_IncorrectPassword"].Value });
         }
-        Audit("recovery-key.regenerate", "new key issued");
+        await AuditAsync(ActivityActions.RecoveryKeyRegenerate, "new key issued");
         return Json(new { key });
     }
 }
