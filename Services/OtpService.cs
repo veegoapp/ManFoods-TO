@@ -124,6 +124,7 @@ public class OtpService : IOtpService
         ws.Column(4).Width = 55;
         ws.Rows().AdjustToContents();
 
+        ExcelExportGuard.Neutralize(wb);   // a temporary password may start with = + - @ — keep it exactly as is, but as plain text
         using var stream = new MemoryStream();
         wb.SaveAs(stream);
         return (results.Count, stream.ToArray());
