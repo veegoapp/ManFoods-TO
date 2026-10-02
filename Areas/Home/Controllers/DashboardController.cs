@@ -101,6 +101,7 @@ public class DashboardController : Controller
     {
         using (wb)
         {
+            ExcelExportGuard.Neutralize(wb);   // formula-injection protection for text cells (see ExcelExportGuard)
             using var stream = new MemoryStream();
             wb.SaveAs(stream);
             return File(stream.ToArray(), XlsxContentType, fileName);
