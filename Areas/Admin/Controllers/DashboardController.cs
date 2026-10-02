@@ -821,6 +821,7 @@ public class DashboardController : Controller
     // State-changing (replaces every pending user's temporary password), so POST-only and
     // anti-forgery protected — never reachable through a link or an <img>/<iframe> GET.
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]   // the response carries a credential: never cache it
     public async Task<IActionResult> GenerateDefaultPasswords()
     {
         var (count, bytes) = await _otp.GenerateBulkDefaultPasswordsAsync();
@@ -832,6 +833,7 @@ public class DashboardController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]   // the response carries a credential: never cache it
     public async Task<IActionResult> GenerateDefaultPassword(int id)
     {
         var (password, message) = await _otp.GenerateSingleDefaultPasswordAsync(id);
@@ -844,6 +846,7 @@ public class DashboardController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]   // the response carries a credential: never cache it
     public async Task<IActionResult> GenerateOtp(int id)
     {
         var otp = await _otp.GenerateSingleOtpAsync(id);
@@ -856,6 +859,7 @@ public class DashboardController : Controller
     // account. Ordinary Admins never see the Master Recovery Key and use
     // this OTP (via /adminlogin/forgotpassword) instead when locked out.
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]   // the response carries a credential: never cache it
     public async Task<IActionResult> GenerateAdminOtp(int id)
     {
         var requestingEmail = HttpContext.Session.GetEmail();

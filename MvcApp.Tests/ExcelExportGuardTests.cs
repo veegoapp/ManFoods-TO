@@ -1,6 +1,7 @@
 using System.Net;
 using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using MvcApp.Models;
 using MvcApp.Services;
 using MvcApp.Tests.TestHelpers;
@@ -143,5 +144,64 @@ public class ExcelExportGuardTests : IClassFixture<AppFactory>
         Assert.True(job.Style.IncludeQuotePrefix);
         // the report's own formulas, if any, are still formulas
         Assert.DoesNotContain(cells.Where(c => c.HasFormula), c => c.Style.IncludeQuotePrefix);
+    }
+}
+
+/// <summary>Responses that carry a temporary password or an OTP must never be stored by a browser or a proxy cache.</summary>
+public class CredentialResponsesAreNotCachedTests : IClassFixture<AppFactory>
+{
+    private readonly AppFactory _app;
+    public CredentialResponsesAreNotCachedTests(AppFactory app) => _app = app;
+
+    private static async Task<HttpResponseMessage> PostAsync(HttpClient admin, string path, Dictionary<string, string> form)
+    {
+        form["__RequestVerificationToken"] = await AppFactory.GetFormTokenAsync(admin, "/admin/dashboard/users");
+        return await admin.PostAsync(path, new FormUrlEncodedContent(form));
+    }
+
+    private static void AssertNoStore(HttpResponseMessage response, string what)
+    {
+        var cache = string.Join(",", response.Headers.GetValues("Cache-Control"));
+        Assert.True(cache.Contains("no-store", StringComparison.OrdinalIgnoreCase), $"{what}: Cache-Control was '{cache}'");
+        Assert.Contains("no-cache", response.Headers.GetValues("Pragma"));
+    }
+
+    [Fact]
+    public async Task SingleTemporaryPassword_AndTheBulkPasswordsFile_AreNoStore_AndStillWorkAsBefore()
+    {
+        var admin = await _app.AdminClientAsync();
+        var pending = await _app.AddUserAsync("nostore-pending@example.com", "User", passwordHashOverride: null);
+
+        var single = await PostAsync(admin, "/admin/dashboard/generatedefaultpassword", new() { ["id"] = pending.Id.ToString() });
+        Assert.Equal(HttpStatusCode.OK, single.StatusCode);
+        AssertNoStore(single, "generatedefaultpassword");
+        Assert.Equal("application/json", single.Content.Headers.ContentType?.MediaType);
+        Assert.True(System.Text.Json.JsonDocument.Parse(await single.Content.ReadAsStringAsync()).RootElement.TryGetProperty("password", out _));
+
+        var bulk = await PostAsync(admin, "/admin/dashboard/generatedefaultpasswords", new());
+        Assert.Equal(HttpStatusCode.OK, bulk.StatusCode);
+        AssertNoStore(bulk, "generatedefaultpasswords");
+        Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", bulk.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("PK", System.Text.Encoding.ASCII.GetString((await bulk.Content.ReadAsByteArrayAsync())[..2]));
+    }
+
+    // generateotp / generateadminotp delete the previous OTP with ExecuteDelete, which the in-memory test database does not
+    // support, so they are checked on the endpoint's declared cache policy (the same attribute the other two carry).
+    [Theory]
+    [InlineData("GenerateDefaultPassword")]
+    [InlineData("GenerateDefaultPasswords")]
+    [InlineData("GenerateOtp")]
+    [InlineData("GenerateAdminOtp")]
+    public void EveryCredentialReturningAdminAction_DeclaresNoStore(string action)
+    {
+        var endpoints = _app.Services.GetServices<Microsoft.AspNetCore.Routing.EndpointDataSource>().SelectMany(s => s.Endpoints)
+            .Where(e => e.Metadata.GetMetadata<Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor>() is { } d
+                        && d.ControllerName == "Dashboard" && d.ActionName == action && d.RouteValues["area"] == "Admin")
+            .ToList();
+        var endpoint = Assert.Single(endpoints);
+        var cache = endpoint.Metadata.GetMetadata<Microsoft.AspNetCore.Mvc.ResponseCacheAttribute>();
+        Assert.NotNull(cache);
+        Assert.True(cache!.NoStore);
+        Assert.Equal(Microsoft.AspNetCore.Mvc.ResponseCacheLocation.None, cache.Location);
     }
 }
