@@ -1395,6 +1395,7 @@
   <data name="Msg_RoleForbidden" xml:space="preserve"><value>Only the Super Admin can create or promote to an Admin account.</value></data>
   <data name="Msg_BulkUploadAdminRoleForbidden" xml:space="preserve"><value>Only the Super Admin can create Admin accounts. No users were added — remove or change the Role in row(s) {0} and re-upload.</value></data>
   <data name="Msg_SuperAdminProtected" xml:space="preserve"><value>The Super Admin account's role and email cannot be changed, and it cannot be deleted.</value></data>
+  <data name="Msg_UseChangePasswordForSelf" xml:space="preserve"><value>Use the Change Password page to change your own password.</value></data>
   <data name="Msg_SelectFile" xml:space="preserve"><value>Please select a file.</value></data>
   <data name="Msg_BulkUsersCreated" xml:space="preserve"><value>Created {0} pending user(s).</value></data>
   <data name="Msg_BulkUsersSkipped" xml:space="preserve"><value> Skipped {0} (already existed): {1}</value></data>

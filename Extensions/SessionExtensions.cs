@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace MvcApp.Extensions;
@@ -9,13 +10,34 @@ public static class SessionExtensions
     /// has to delete this exact cookie) stay in sync from one source.</summary>
     public const string SessionCookieName = "wicrewsession";
 
-    public static void SetUserSession(this ISession session, int userId, string email, string role, string? assignedName, bool mustChangePassword)
+    /// <summary>Absolute maximum session age, counted from login and never extended by
+    /// activity (the 1-hour idle timeout in Program.cs still applies on top). 12 hours
+    /// covers a full working day in one sign-in, while a session cookie that is kept
+    /// alive by regular use can no longer live forever.</summary>
+    public static readonly TimeSpan AbsoluteLifetime = TimeSpan.FromHours(12);
+
+    public static void SetUserSession(this ISession session, int userId, string email, string role, string? assignedName, bool mustChangePassword, string passwordFingerprint)
     {
         session.SetInt32("UserId", userId);
         session.SetString("Email", email);
         session.SetString("Role", role);
         session.SetString("AssignedName", assignedName ?? "");
         session.SetInt32("MustChangePassword", mustChangePassword ? 1 : 0);
+        session.SetString("PasswordFingerprint", passwordFingerprint);
+        session.SetString("LoginAt", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture));
+    }
+
+    /// <summary>The PasswordFingerprint of the password this session was opened (or last
+    /// re-stamped, after the owner's own password change) with.</summary>
+    public static string? GetPasswordFingerprint(this ISession session) => session.GetString("PasswordFingerprint");
+    public static void SetPasswordFingerprint(this ISession session, string fingerprint) => session.SetString("PasswordFingerprint", fingerprint);
+
+    /// <summary>True once the session is older than <see cref="AbsoluteLifetime"/>; a session
+    /// with no (or an unreadable) login stamp is treated as expired.</summary>
+    public static bool IsPastAbsoluteLifetime(this ISession session, DateTimeOffset now)
+    {
+        if (!long.TryParse(session.GetString("LoginAt"), NumberStyles.None, CultureInfo.InvariantCulture, out var loginAtSeconds)) return true;
+        return now - DateTimeOffset.FromUnixTimeSeconds(loginAtSeconds) > AbsoluteLifetime;
     }
 
     public static int? GetUserId(this ISession session) => session.GetInt32("UserId");
@@ -38,7 +60,7 @@ public static class SessionExtensions
     public static bool GetMustChangePassword(this ISession session) => session.GetInt32("MustChangePassword") == 1;
     public static void SetMustChangePassword(this ISession session, bool value) => session.SetInt32("MustChangePassword", value ? 1 : 0);
 
-    private record struct PendingLogin(int UserId, string Email, string Role, string? AssignedName, bool MustChangePassword);
+    private record struct PendingLogin(int UserId, string Email, string Role, string? AssignedName, bool MustChangePassword, string PasswordFingerprint);
     private const string PendingLoginPrefix = "pending-login:";
 
     /// <summary>
@@ -56,7 +78,7 @@ public static class SessionExtensions
     /// CompleteSessionRotation below writes the identity into that new
     /// session. Returns the one-time token to redirect with.
     /// </summary>
-    public static string BeginSessionRotation(this HttpContext context, IMemoryCache cache, int userId, string email, string role, string? assignedName, bool mustChangePassword)
+    public static string BeginSessionRotation(this HttpContext context, IMemoryCache cache, int userId, string email, string role, string? assignedName, bool mustChangePassword, string passwordFingerprint)
     {
         // Deliberately does NOT touch context.Session (no Clear()/Set* call):
         // doing so would mark the old session dirty and could race the
@@ -67,8 +89,8 @@ public static class SessionExtensions
         // it was attacker-fixed.
         context.Response.Cookies.Delete(SessionCookieName, new CookieOptions { Path = "/" });
 
-        var token = Guid.NewGuid().ToString("N");
-        cache.Set(PendingLoginPrefix + token, new PendingLogin(userId, email, role, assignedName, mustChangePassword), TimeSpan.FromSeconds(60));
+        var token = SecureToken.Create();
+        cache.Set(PendingLoginPrefix + token, new PendingLogin(userId, email, role, assignedName, mustChangePassword, passwordFingerprint), TimeSpan.FromSeconds(60));
         return token;
     }
 
@@ -81,7 +103,7 @@ public static class SessionExtensions
         var key = PendingLoginPrefix + token;
         if (!cache.TryGetValue(key, out PendingLogin pending)) return false;
         cache.Remove(key);
-        context.Session.SetUserSession(pending.UserId, pending.Email, pending.Role, pending.AssignedName, pending.MustChangePassword);
+        context.Session.SetUserSession(pending.UserId, pending.Email, pending.Role, pending.AssignedName, pending.MustChangePassword, pending.PasswordFingerprint);
         return true;
     }
 }

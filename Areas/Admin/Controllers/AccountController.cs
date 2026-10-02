@@ -61,7 +61,7 @@ public class AccountController : Controller
             return RedirectToAction("Login", new { setupToken = _cache.BeginPasswordSetup(user) });
 
         // Session-fixation mitigation — see SessionExtensions.BeginSessionRotation.
-        var token = HttpContext.BeginSessionRotation(_cache, user.Id, user.Email, user.Role, user.AssignedName, user.MustChangePassword);
+        var token = HttpContext.BeginSessionRotation(_cache, user.Id, user.Email, user.Role, user.AssignedName, user.MustChangePassword, PasswordFingerprint.Compute(user.PasswordHash));
         return RedirectToAction("CompleteLogin", new { token });
     }
 
@@ -152,6 +152,7 @@ public class AccountController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    [EnableRateLimiting("login")]
     [RequireAdminAuth]
     public async Task<IActionResult> ChangePassword(ChangePasswordViewModel vm)
     {

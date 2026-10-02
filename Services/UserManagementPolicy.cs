@@ -52,6 +52,14 @@ public static class UserManagementPolicy
     public static bool CanEdit(string actorEmail, User target) => CanView(actorEmail, target);
 
     /// <summary>
+    /// Whether the actor may set `target`'s password straight from the Edit User form
+    /// (no current password asked for): anyone they may edit EXCEPT themselves — their
+    /// own password changes only through Change Password, which verifies the current one.
+    /// </summary>
+    public static bool CanSetPasswordDirectly(string actorEmail, User target) =>
+        CanEdit(actorEmail, target) && !IsSelf(actorEmail, target);
+
+    /// <summary>
     /// Whether the actor may delete this account outright. Unlike CanEdit,
     /// there is no self-exception — a normal Admin can never delete their
     /// own or any other Admin account — and the Super Admin account can

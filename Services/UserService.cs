@@ -99,7 +99,10 @@ public class UserService : IUserService
         var role = UserManagementPolicy.NormalizeRole(vm.Role)!;
         if (!UserManagementPolicy.CanAssignRole(actorEmail, role)) return (null, "role-forbidden", null);
 
-        var email = vm.Email.ToLower();
+        // Trimmed: SuperAdminPolicy.IsSuperAdmin trims before comparing, so an address like
+        // " admin@mcd.com" (stored with a leading space, which a SQL equality check does
+        // not treat as a duplicate) must never be accepted as a distinct account.
+        var email = vm.Email.Trim().ToLower();
         if (await _db.Users.AnyAsync(u => u.Email == email))
             return (null, "duplicate-email", null);
 
@@ -129,6 +132,12 @@ public class UserService : IUserService
         var user = await _db.Users.FindAsync(id);
         if (user == null || !UserManagementPolicy.CanEdit(actorEmail, user)) return (null, null);
 
+        // Setting a password here needs no current password, so it is only for resetting
+        // SOMEONE ELSE's — a person changes their own through Change Password, which asks
+        // for the current one (otherwise a hijacked admin session could set a new password).
+        if (!string.IsNullOrEmpty(vm.Password) && !UserManagementPolicy.CanSetPasswordDirectly(actorEmail, user))
+            return (null, "use-change-password");
+
         if (!UserManagementPolicy.IsValidRole(vm.Role)) return (null, "invalid-role");
         var role = UserManagementPolicy.NormalizeRole(vm.Role)!;
         if (!UserManagementPolicy.CanChangeRole(actorEmail, user, role)) return (null, "role-forbidden");
@@ -136,12 +145,13 @@ public class UserService : IUserService
         if (user.Role == "Admin" && role != "Admin" && await IsLastAdminAsync())
             return (null, "last-admin");
 
-        var email = vm.Email.ToLower();
+        var email = vm.Email.Trim().ToLower();
         if (!UserManagementPolicy.CanChangeEmail(user, email)) return (null, "super-admin-protected");
         if (email != user.Email && await _db.Users.AnyAsync(u => u.Id != id && u.Email == email))
             return (null, "duplicate-email");
 
         var roleChanged = user.Role != role;
+        var passwordChanged = !string.IsNullOrEmpty(vm.Password);
         user.Email = email;
         user.Phone = vm.Phone;
         user.AssignedName = vm.AssignedName?.Trim() ?? "";
@@ -152,12 +162,13 @@ public class UserService : IUserService
             user.TempPasswordExpiresAt = null;
         }
         await _db.SaveChangesAsync();
-        // IsValidAsync only ever rejects a session over a Role mismatch (see
-        // SessionValidationService), so only a role change can actually flip
-        // that check — invalidating on every edit (email, phone, name,
-        // password) just forced an extra DB round trip on the edited
-        // account's next request for no behavioral difference.
-        if (roleChanged) _sessionValidation.Invalidate(id);
+        // IsValidAsync only rejects a session over a Role mismatch or a changed password
+        // (see SessionValidationService), so only those two edits can flip that check —
+        // invalidating on every edit (email, phone, name) just forced an extra DB round
+        // trip on the edited account's next request for no behavior difference. A reset
+        // password ends every session the account already had open.
+        if (roleChanged || passwordChanged) _sessionValidation.Invalidate(id);
+        if (passwordChanged) _auth.ClearLockout(user.Email);
         return (ToVm(user), null);
     }
 
@@ -206,6 +217,7 @@ public class UserService : IUserService
         user.MustChangePassword = false;
         user.TempPasswordExpiresAt = null;
         await _db.SaveChangesAsync();
+        _sessionValidation.Invalidate(user.Id);
         _auth.ClearLockout(user.Email);
         return true;
     }

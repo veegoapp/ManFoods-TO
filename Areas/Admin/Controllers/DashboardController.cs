@@ -714,6 +714,11 @@ public class DashboardController : Controller
             ModelState.AddModelError(nameof(vm.Email), _L["Msg_SuperAdminProtected"].Value);
             return View(vm);
         }
+        if (error == "use-change-password")
+        {
+            ModelState.AddModelError(nameof(vm.Password), _L["Msg_UseChangePasswordForSelf"].Value);
+            return View(vm);
+        }
         if (updated == null) return NotFound();
         TempData["Success"] = _L["Msg_UserUpdated"].Value;
         return RedirectToAction("Users");

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
@@ -13,18 +14,23 @@ public class OtpService : IOtpService
     private readonly IStringLocalizer<SharedResource> _L;
     private readonly ILogger<OtpService> _logger;
     private readonly IAuthService _auth;
+    private readonly ISessionValidationService _sessionValidation;
     private static readonly TimeSpan Expiry = TimeSpan.FromHours(24);
     private const int MaxFailedAttempts = 5;
 
-    public OtpService(AppDbContext db, IStringLocalizer<SharedResource> localizer, ILogger<OtpService> logger, IAuthService auth)
+    public OtpService(AppDbContext db, IStringLocalizer<SharedResource> localizer, ILogger<OtpService> logger, IAuthService auth, ISessionValidationService sessionValidation)
     {
         _db = db;
         _L = localizer;
         _logger = logger;
         _auth = auth;
+        _sessionValidation = sessionValidation;
     }
 
-    private static string GenerateCode() => Random.Shared.Next(0, 1_000_000).ToString("D6");
+    // CSPRNG, not Random.Shared: an OTP is a credential, so it must not be predictable
+    // from earlier outputs of a general-purpose generator. Same format as before —
+    // always exactly 6 digits, leading zeros kept.
+    internal static string GenerateCode() => RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
 
     // Portal link and welcome wording for the ready-to-send SMS Message
     // column in the "Generate Default Passwords" export — kept in English
@@ -82,6 +88,8 @@ public class OtpService : IOtpService
         }
 
         if (results.Count > 0) await _db.SaveChangesAsync();
+        // New passwords were set, so any session still open on the old ones must end.
+        foreach (var user in pendingUsers) _sessionValidation.Invalidate(user.Id);
 
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet("Default Passwords");
@@ -132,6 +140,7 @@ public class OtpService : IOtpService
         user.MustChangePassword = true;
         user.TempPasswordExpiresAt = expiresAtUtc;
         await _db.SaveChangesAsync();
+        _sessionValidation.Invalidate(user.Id);
         // Same wording as the bulk Excel's SMS Message column (BuildSmsMessage) —
         // single source of truth for the welcome/portal-link/credentials text.
         return (password, BuildSmsMessage(user.Email, password, expiresAtUtc));
@@ -188,6 +197,8 @@ public class OtpService : IOtpService
         user.TempPasswordExpiresAt = null;
         otp.IsUsed = true;
         await _db.SaveChangesAsync();
+        _sessionValidation.Invalidate(user.Id);
+        _auth.ClearLockout(user.Email);
         return (true, _L["Msg_PasswordSetSuccess"].Value);
     }
 
@@ -253,6 +264,7 @@ public class OtpService : IOtpService
         user.TempPasswordExpiresAt = null;
         otp.IsUsed = true;
         await _db.SaveChangesAsync();
+        _sessionValidation.Invalidate(user.Id);
         _auth.ClearLockout(user.Email);
 
         _logger.LogInformation("Admin '{Email}' (user id {UserId}) reset their password via a Super-Admin-issued OTP.", user.Email, user.Id);

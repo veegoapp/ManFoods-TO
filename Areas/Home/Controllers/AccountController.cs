@@ -61,7 +61,7 @@ public class AccountController : Controller
         // Session-fixation mitigation: hand the authenticated identity off
         // via a one-time token rather than writing it into whatever session
         // this request arrived with — see SessionExtensions.BeginSessionRotation.
-        var token = HttpContext.BeginSessionRotation(_cache, user.Id, user.Email, user.Role, user.AssignedName, user.MustChangePassword);
+        var token = HttpContext.BeginSessionRotation(_cache, user.Id, user.Email, user.Role, user.AssignedName, user.MustChangePassword, PasswordFingerprint.Compute(user.PasswordHash));
         return RedirectToAction("CompleteLogin", new { token });
     }
 
@@ -125,6 +125,7 @@ public class AccountController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    [EnableRateLimiting("login")]
     [RequireUserAuth]
     public async Task<IActionResult> ChangePassword(ChangePasswordViewModel vm)
     {

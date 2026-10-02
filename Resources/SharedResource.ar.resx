@@ -1401,6 +1401,7 @@
   <data name="Msg_RoleForbidden" xml:space="preserve"><value>فقط المسؤول الأعلى (Super Admin) يمكنه إنشاء حساب مسؤول أو ترقية مستخدم إليه.</value></data>
   <data name="Msg_BulkUploadAdminRoleForbidden" xml:space="preserve"><value>فقط المسؤول الأعلى (Super Admin) يمكنه إنشاء حسابات مسؤولين. لم تتم إضافة أي مستخدمين — يرجى إزالة أو تغيير الدور في الصف/الصفوف {0} ثم إعادة الرفع.</value></data>
   <data name="Msg_SuperAdminProtected" xml:space="preserve"><value>لا يمكن تغيير دور أو بريد حساب المسؤول الأعلى (Super Admin)، ولا يمكن حذفه.</value></data>
+  <data name="Msg_UseChangePasswordForSelf" xml:space="preserve"><value>لتغيير كلمة المرور الخاصة بك استخدم صفحة تغيير كلمة المرور.</value></data>
   <data name="Msg_SelectFile" xml:space="preserve"><value>يرجى اختيار ملف.</value></data>
   <data name="Msg_BulkUsersCreated" xml:space="preserve"><value>تم إنشاء {0} مستخدم قيد التفعيل.</value></data>
   <data name="Msg_BulkUsersSkipped" xml:space="preserve"><value> تم تخطي {0} (موجود مسبقًا): {1}</value></data>

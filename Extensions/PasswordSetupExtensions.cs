@@ -19,7 +19,7 @@ public static class PasswordSetupExtensions
 
     public static string BeginPasswordSetup(this IMemoryCache cache, User user)
     {
-        var token = Guid.NewGuid().ToString("N");
+        var token = SecureToken.Create();
         cache.Set(Prefix + token, (user.Id, user.Email), Expiry);
         return token;
     }
