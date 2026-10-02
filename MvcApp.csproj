@@ -10,13 +10,15 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <!-- Transitive via ClosedXML; the 6.0.0 it pulls in has known High advisories (GHSA-f32c-w444-8ppv, GHSA-qj66-m88j-hmgj). Patch-level pin, same major. -->
+    <PackageReference Include="System.IO.Packaging" Version="6.0.2" />
     <PackageReference Include="ClosedXML" Version="0.102.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.*" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.*">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.20" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.20">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.20" />
   </ItemGroup>
 
   <ItemGroup>

@@ -16,9 +16,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.20" />
     <!-- Boots the real application in memory so request-pipeline behaviour (HTTP verbs, anti-forgery, filters) can be tested end to end. -->
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.20" />
   </ItemGroup>
 
   <ItemGroup>
