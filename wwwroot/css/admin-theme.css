@@ -298,7 +298,6 @@ body.admin-theme .empty-state { color: var(--text-3); }
     display: flex; flex-direction: row; direction: ltr;
     align-items: center; gap: 18px;
 }
-.admin-global-right .notif-badge { right: -3px; left: auto; }
 .admin-global-logo { display: flex; align-items: center; justify-content: center; }
 .admin-global-logo img { height: var(--global-logo-h); width: auto; object-fit: contain; }
 
@@ -314,9 +313,6 @@ html[dir="rtl"] .admin-global-brand > div:last-child {
 }
 html[dir="rtl"] .admin-global-right {
     right: auto; left: 32px;
-}
-html[dir="rtl"] .admin-global-right .notif-badge {
-    right: auto; left: -3px;
 }
 
 .admin-body { display: flex; flex: 1; min-height: 0; gap: 20px; }

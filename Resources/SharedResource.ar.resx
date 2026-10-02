@@ -18,9 +18,6 @@
   <data name="Layout_FooterText" xml:space="preserve"><value>McDonald's Egypt Crew Insights Hub</value></data>
   <data name="Layout_DataFreshnessLabel" xml:space="preserve"><value>آخر تحديث</value></data>
   <data name="Layout_DataFreshnessCaption" xml:space="preserve"><value>آخر فترة بيانات تم رفعها</value></data>
-  <data name="Notif_Title" xml:space="preserve"><value>التنبيهات</value></data>
-  <data name="Notif_Empty" xml:space="preserve"><value>مفيش تنبيهات دلوقتي — كل حاجة تمام.</value></data>
-  <data name="Notif_ClearAll" xml:space="preserve"><value>مسح</value></data>
 
   <!-- Page Guide -->
   <data name="Guide_TriggerLabel" xml:space="preserve"><value>دليل الصفحة</value></data>

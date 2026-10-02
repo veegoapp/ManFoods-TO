@@ -83,7 +83,7 @@ public class PerRolePageAccessTests : IClassFixture<AppFactory>
         foreach (var page in UserPages.All)
             Assert.Equal(HttpStatusCode.OK, (await hr.GetAsync(PageUrl(page.Key))).StatusCode);
         foreach (var url in new[] { "/api/dashboard/kpis?month=3&year=2026", "/api/early-warning/watchlist?year=2026", "/api/exit-interviews/comments",
-                                    "/api/retention/milestones", "/api/store-action-plan/action-center/stores", "/api/notifications", "/api/settings/color-rules/turnover-total" })
+                                    "/api/retention/milestones", "/api/store-action-plan/action-center/stores", "/api/settings/color-rules/turnover-total" })
             Assert.Equal(HttpStatusCode.OK, (await hr.GetAsync(url)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await hr.GetAsync("/home/dashboard/export?reportType=turnover")).StatusCode);
     }
