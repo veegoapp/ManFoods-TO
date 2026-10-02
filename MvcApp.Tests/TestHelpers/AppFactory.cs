@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using MvcApp.Data;
 using MvcApp.Models;
 using Xunit;
@@ -21,8 +22,12 @@ public sealed class AppFactory : WebApplicationFactory<AppDbContext>
     public const string AdminPassword = "Admin-Password-123!";
     private readonly string _databaseName = Guid.NewGuid().ToString();
 
+    /// <summary>Every log line the hosted app writes (for tests that assert on audit/security logging).</summary>
+    public CapturingLoggerProvider Logs { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.ConfigureLogging(l => l.AddProvider(Logs));
         builder.ConfigureTestServices(services =>
         {
             // Drop the SQL Server registration of AppDbContext (and its options), then use an in-memory database.

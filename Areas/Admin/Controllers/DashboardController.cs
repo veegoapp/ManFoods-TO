@@ -631,9 +631,19 @@ public class DashboardController : Controller
     public async Task<IActionResult> DeleteUploadLog(int id, string tab = UploadTabs.Monthly)
     {
         await _uploads.DeleteLogAsync(id);
+        Audit("upload-log.delete", $"upload log id {id}");
         TempData["Success"] = _L["Msg_UploadLogDeleted"].Value;
         return RedirectToAction("Uploads", new { tab = UploadTabs.Normalize(tab) });
     }
+
+    // Audit trail for sensitive Admin actions (account and credential changes), written to the application
+    // log in the same style as OtpService's "generated a password-reset OTP" line. Only who did what to which
+    // user id — never a password, OTP, recovery key or any other secret.
+    private void Audit(string action, string detail) =>
+        _logger.LogInformation("AdminAudit {Action} by admin '{Admin}': {Detail}", action, HttpContext.Session.GetEmail(), detail);
+
+    private void AuditDenied(string action, string detail) =>
+        _logger.LogWarning("AdminAudit {Action} DENIED for admin '{Admin}': {Detail}", action, HttpContext.Session.GetEmail(), detail);
 
     [RequireAdminAuth]
     public async Task<IActionResult> Users()
@@ -665,6 +675,7 @@ public class DashboardController : Controller
             ModelState.AddModelError(nameof(vm.Role), _L["Msg_RoleForbidden"].Value);
             return View(vm);
         }
+        Audit("user.create", $"new user id {created!.Id}, role {created.Role}");
         TempData["Success"] = _L["Msg_UserCreated"].Value;
         // Shown once on the Users page — the generated temporary password
         // never appears again after this redirect.
@@ -726,6 +737,7 @@ public class DashboardController : Controller
             return View(vm);
         }
         if (updated == null) return NotFound();
+        Audit("user.update", $"user id {id}, role now {updated.Role}");
         TempData["Success"] = _L["Msg_UserUpdated"].Value;
         return RedirectToAction("Users");
     }
@@ -734,6 +746,8 @@ public class DashboardController : Controller
     public async Task<IActionResult> DeleteUser(int id)
     {
         var (success, error) = await _users.DeleteAsync(id, HttpContext.Session.GetEmail());
+        if (success) Audit("user.delete", $"user id {id}");
+        else if (error is "last-admin" or "super-admin-protected") AuditDenied("user.delete", $"user id {id}, reason {error}");
         TempData[success ? "Success" : "Error"] = error switch
         {
             "last-admin" => _L["Msg_LastAdminDelete"].Value,
@@ -750,6 +764,7 @@ public class DashboardController : Controller
         try
         {
             var (created, skippedEmails, roleMismatches) = await _users.UploadBulkUsersAsync(vm.File, HttpContext.Session.GetEmail());
+            Audit("user.bulk-upload", $"{created} created, {skippedEmails.Count} skipped");
             TempData["Success"] = string.Format(_L["Msg_BulkUsersCreated"].Value, created) +
                 (skippedEmails.Count > 0 ? string.Format(_L["Msg_BulkUsersSkipped"].Value, skippedEmails.Count, string.Join(", ", skippedEmails)) : "");
             if (roleMismatches.Count > 0)
@@ -774,6 +789,7 @@ public class DashboardController : Controller
     {
         var (count, bytes) = await _otp.GenerateBulkDefaultPasswordsAsync();
         if (count == 0) { TempData["Error"] = _L["Msg_NoPendingOtps"].Value; return RedirectToAction("Users"); }
+        Audit("password.generate-bulk", $"{count} users");
         return File(bytes,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"Default_Passwords_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx");
@@ -784,6 +800,7 @@ public class DashboardController : Controller
     {
         var (password, message) = await _otp.GenerateSingleDefaultPasswordAsync(id);
         if (password == null) return NotFound();
+        Audit("password.generate", $"user id {id}");
         // "message" is the same welcome/portal-link/credentials wording as the
         // bulk Excel's SMS Message column — used by the Users page's Outlook
         // "send credentials" button to pre-fill the email body.
@@ -795,6 +812,7 @@ public class DashboardController : Controller
     {
         var otp = await _otp.GenerateSingleOtpAsync(id);
         if (otp == null) return NotFound();
+        Audit("otp.generate", $"user id {id}");
         return Json(new { otp });
     }
 
@@ -805,7 +823,11 @@ public class DashboardController : Controller
     public async Task<IActionResult> GenerateAdminOtp(int id)
     {
         var requestingEmail = HttpContext.Session.GetEmail();
-        if (!SuperAdminPolicy.IsSuperAdmin(requestingEmail)) return Json(new { error = _L["Msg_AdminOtpNotPermitted"].Value });
+        if (!SuperAdminPolicy.IsSuperAdmin(requestingEmail))
+        {
+            AuditDenied("otp.generate-admin", $"user id {id}, not the Super Admin");
+            return Json(new { error = _L["Msg_AdminOtpNotPermitted"].Value });
+        }
 
         var otp = await _otp.GenerateAdminResetOtpAsync(id, requestingEmail);
         if (otp == null) return NotFound();
@@ -822,10 +844,19 @@ public class DashboardController : Controller
         // UserService.RegenerateRecoveryKeyAsync enforces this too (defense
         // in depth); this just gives ordinary Admins a clear message instead
         // of a misleading "incorrect password".
-        if (!SuperAdminPolicy.IsSuperAdmin(email)) return Json(new { error = _L["Msg_SuperAdminOnly"].Value });
+        if (!SuperAdminPolicy.IsSuperAdmin(email))
+        {
+            AuditDenied("recovery-key.regenerate", "not the Super Admin");
+            return Json(new { error = _L["Msg_SuperAdminOnly"].Value });
+        }
 
         var key = await _users.RegenerateRecoveryKeyAsync(email, password);
-        if (key == null) return Json(new { error = _L["Msg_IncorrectPassword"].Value });
+        if (key == null)
+        {
+            AuditDenied("recovery-key.regenerate", "incorrect password");
+            return Json(new { error = _L["Msg_IncorrectPassword"].Value });
+        }
+        Audit("recovery-key.regenerate", "new key issued");
         return Json(new { key });
     }
 }
