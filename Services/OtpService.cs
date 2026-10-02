@@ -174,13 +174,13 @@ public class OtpService : IOtpService
         // account" apart from "account exists but nothing to reset right
         // now", which would otherwise let this form be used to enumerate
         // registered emails/phones.
-        if (user == null) return (false, _L["Msg_NoActiveOtp"].Value);
+        if (user == null) { AuthService.SpendPasswordCheckTime(otpCode); return (false, _L["Msg_NoActiveOtp"].Value); }
 
         var otp = await _db.PasswordResetOtps
             .Where(o => o.UserId == user.Id && !o.IsUsed && o.ExpiresAt > DateTime.UtcNow)
             .OrderByDescending(o => o.CreatedAt)
             .FirstOrDefaultAsync();
-        if (otp == null) return (false, _L["Msg_NoActiveOtp"].Value);
+        if (otp == null) { AuthService.SpendPasswordCheckTime(otpCode); return (false, _L["Msg_NoActiveOtp"].Value); }
 
         if (!BCrypt.Net.BCrypt.Verify(otpCode.Trim(), otp.OtpCode))
         {
@@ -241,13 +241,13 @@ public class OtpService : IOtpService
         // the static helper) so this path can never touch that account, and
         // reuses the same generic "no active OTP" message as the User flow to
         // avoid leaking account existence.
-        if (user == null || SuperAdminPolicy.IsSuperAdmin(user.Email)) return (false, _L["Msg_NoActiveOtp"].Value);
+        if (user == null || SuperAdminPolicy.IsSuperAdmin(user.Email)) { AuthService.SpendPasswordCheckTime(otpCode); return (false, _L["Msg_NoActiveOtp"].Value); }
 
         var otp = await _db.PasswordResetOtps
             .Where(o => o.UserId == user.Id && !o.IsUsed && o.ExpiresAt > DateTime.UtcNow)
             .OrderByDescending(o => o.CreatedAt)
             .FirstOrDefaultAsync();
-        if (otp == null) return (false, _L["Msg_NoActiveOtp"].Value);
+        if (otp == null) { AuthService.SpendPasswordCheckTime(otpCode); return (false, _L["Msg_NoActiveOtp"].Value); }
 
         if (!BCrypt.Net.BCrypt.Verify(otpCode.Trim(), otp.OtpCode))
         {

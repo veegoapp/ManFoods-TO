@@ -56,6 +56,15 @@ public class AuthService : IAuthService
         _sessionValidation = sessionValidation;
     }
 
+    // A made-up or password-less account would otherwise skip BCrypt entirely and answer in a few
+    // milliseconds while a real account takes ~100+ ms — enough to tell them apart by timing alone.
+    // This hash is computed once with the same (default) work factor the app uses for every real
+    // hash, and checked on those paths purely to spend the same time; the result is ignored.
+    private static readonly Lazy<string> TimingEqualizerHash =
+        new(() => BCrypt.Net.BCrypt.HashPassword("timing-equalizer-" + Guid.NewGuid()));
+    internal static void SpendPasswordCheckTime(string? password) =>
+        BCrypt.Net.BCrypt.Verify(password ?? "", TimingEqualizerHash.Value);
+
     private string? ClientIp() => _httpContext.HttpContext?.Connection.RemoteIpAddress?.ToString();
 
     private static readonly (User? User, string? FailReason, bool IsLockedOut, bool IsTempPasswordExpired) LockedOut =
@@ -106,6 +115,7 @@ public class AuthService : IAuthService
                 return LockedOut;
             }
 
+            SpendPasswordCheckTime(password);
             var reason = $"No user found for email '{email.ToLower()}'.";
             _logger.LogWarning("Login failed: no user found for '{Email}'.", MaskEmail(email));
             _cache.Set(unknownKey, unknownFailCount + 1, LockoutWindow);
@@ -132,6 +142,7 @@ public class AuthService : IAuthService
         // BCrypt.Verify throw on a null/empty hash.
         if (string.IsNullOrEmpty(user.PasswordHash))
         {
+            SpendPasswordCheckTime(password);
             var reason = $"User '{email.ToLower()}' has no password hash set.";
             _logger.LogWarning("Login failed: '{Email}' has no password hash set.", MaskEmail(email));
             await LogAttemptAsync(user, portal, success: false, "no-password-set");
