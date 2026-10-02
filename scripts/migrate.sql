@@ -679,13 +679,9 @@ BEGIN
     );
 END
 
--- ── seed users ────────────────────────────────
--- admin@mcd.com / 123123654  →  Admin portal
--- user@mcd.com  / 123123654  →  Home portal
-INSERT INTO dbo.users (email, phone, password_hash, role, created_at)
-SELECT v.email, v.phone, v.password_hash, v.role, SYSUTCDATETIME()
-FROM (VALUES
-    ('admin@mcd.com', '+201000000000', '$2a$11$4dMAuH6DiUfgnniQT39r1uof2UmVIJQ2vslu8qs8OwOJ7EUM1i/n6', 'Admin'),
-    ('user@mcd.com',  '+201000000001', '$2a$11$4dMAuH6DiUfgnniQT39r1uof2UmVIJQ2vslu8qs8OwOJ7EUM1i/n6', 'User')
-) AS v(email, phone, password_hash, role)
-WHERE NOT EXISTS (SELECT 1 FROM dbo.users u WHERE u.email = v.email);
+-- ── seed users: intentionally removed ─────────
+-- This script used to insert admin@mcd.com / user@mcd.com with a known
+-- default password whenever those rows were missing. That seed is gone so a
+-- migration can never recreate an account with a published password. This
+-- script no longer reads, inserts, updates or deletes any dbo.users row for
+-- those accounts; existing accounts (and their passwords) are untouched.
