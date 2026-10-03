@@ -404,6 +404,9 @@ html, body {
     background: var(--bg-2); color: var(--text);
     border-inline-start: 1px solid var(--card-border);
 }
+/* Arabic: the drawer opens from the physical left (offcanvas-start, see _PageGuide.cshtml), away from the
+   right-hand sidebar, so its border faces the page on the right-hand side instead. */
+html[dir="rtl"] .page-guide-panel { border-inline-start: 0; border-inline-end: 1px solid var(--card-border); }
 /* Guide layout is always LTR (see _PageGuide.cshtml); Arabic text still
    reads right-to-left within it, so right-align the copy explicitly. */
 .page-guide-text-ar .page-guide-overview,
@@ -1203,8 +1206,6 @@ html[dir="rtl"] .page-guide-orb {
     direction: ltr;
     left: 32px !important;
     right: auto !important;
-    inset-inline-start: auto !important;
-    inset-inline-end: auto !important;
     top: calc(var(--global-header-h, var(--header-h)) + 8px) !important;
 }
 
