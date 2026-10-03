@@ -52,6 +52,9 @@ public class UploadService : IUploadService
         _cache.Remove(RetentionService.EmployeeCohortsCacheKey);
         _cache.Remove(EarlyWarningService.HistoricalRecordsCacheKey);
         _cache.Remove(EarlyWarningService.ResignedEmployeeIdsCacheKey);
+        _cache.Remove(DashboardService.AvailablePeriodsCacheKey);
+        FilterResultCache.InvalidateAll(); // dashboard filter lists / KPI / store-comparison results
+        DataFreshnessService.InvalidateCache();
     }
 
     // Runs detection in its own DI scope on a background task instead of on the
@@ -1169,6 +1172,7 @@ public class UploadService : IUploadService
                 await tx.CommitAsync();
                 StoreAccessService.InvalidateCache();
                 WorkforcePlanningService.InvalidateCache(); // the consultant shown per store comes from this file
+                FilterResultCache.InvalidateAll(); // OM/OC/SOC/OD filter lists come from this file
                 FireAndForgetDetection(month, year, string.Format(_L["Msg_JobStoreReference"].Value, new DateTime(year, month, 1).ToString("MMMM yyyy")));
                 var storeWarning = await BuildUnmatchedRoleEmailWarningAsync(storeRecords);
                 return (true, string.Format(_L["Msg_UpdatedStoreReference"].Value, new DateTime(year, month, 1).ToString("MMMM yyyy"), storeRecords.Count), storeWarning);

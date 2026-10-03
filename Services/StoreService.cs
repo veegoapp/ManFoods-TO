@@ -8,16 +8,26 @@ public class StoreService : IStoreService
 {
     private readonly AppDbContext _db;
     private readonly IStoreAccessService _storeAccess;
+    // Results keyed by (month, year, role, user) — bounded, see FilterResultCache. UploadService bumps its
+    // data version whenever the store reference changes, so uploads show up immediately.
+    private readonly FilterResultCache _filterCache;
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
-    public StoreService(AppDbContext db, IStoreAccessService storeAccess)
+    public StoreService(AppDbContext db, IStoreAccessService storeAccess, FilterResultCache? filterCache = null)
     {
         _db = db;
         _storeAccess = storeAccess;
+        _filterCache = filterCache ?? new FilterResultCache();
     }
 
     public async Task<List<StoreReference>> GetStoresAsync(int? month, int? year, string role, string? assignedName)
     {
-        var q = _db.StoreReferences.AsQueryable();
+        // Called on page opens and every period change; with no month/year it reads the whole table.
+        var cacheKey = FilterResultCache.BuildKey("stores", month, year, role, assignedName);
+        if (_filterCache.TryGet(cacheKey, out List<StoreReference>? cached))
+            return new List<StoreReference>(cached!);
+
+        var q = _db.StoreReferences.AsNoTracking();
         if (month.HasValue) q = q.Where(s => s.Month == month);
         if (year.HasValue) q = q.Where(s => s.Year == year);
 
@@ -29,6 +39,8 @@ public class StoreService : IStoreService
         var accessible = await _storeAccess.GetAccessibleStoreNamesAsync(role, assignedName);
         if (accessible != null) q = q.Where(s => accessible.Contains(s.StoreName));
 
-        return await q.OrderBy(s => s.StoreName).ToListAsync();
+        var stores = await q.OrderBy(s => s.StoreName).ToListAsync();
+        _filterCache.Set(cacheKey, stores, CacheDuration, stores.Count);
+        return new List<StoreReference>(stores);
     }
 }

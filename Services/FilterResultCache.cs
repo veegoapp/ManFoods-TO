@@ -21,6 +21,12 @@ public sealed class FilterResultCache
 
     private readonly MemoryCache _cache;
 
+    // Bumped by UploadService whenever uploaded data changes. It is part of every key built by
+    // BuildKey, so all filter-keyed results computed from the old data stop matching at once (they
+    // simply age out of the bounded cache) instead of being served stale until their TTL ends.
+    private static int _dataVersion;
+    public static void InvalidateAll() => Interlocked.Increment(ref _dataVersion);
+
     public FilterResultCache(long sizeLimit = DefaultSizeLimit) =>
         _cache = new MemoryCache(new MemoryCacheOptions { SizeLimit = sizeLimit });
 
@@ -79,7 +85,7 @@ public sealed class FilterResultCache
     /// on how long the request's filter values were.</summary>
     public static string BuildKey(string prefix, params object?[] parts)
     {
-        var joined = string.Join('\u001f', parts.Select(p => p?.ToString() ?? ""));
+        var joined = Volatile.Read(ref _dataVersion) + "\u001f" + string.Join('\u001f', parts.Select(p => p?.ToString() ?? ""));
         return prefix + ":" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(joined)));
     }
 }
