@@ -20,15 +20,13 @@ public class UploadService : IUploadService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IBackgroundJobTracker _jobTracker;
     private readonly IMemoryCache _cache;
-    private readonly FilterResultCache _filterCache;
     private readonly ILogger<UploadService> _logger;
     private readonly IStringLocalizer<SharedResource> _L;
 
     private static readonly HashSet<string> PeriodFileTypes = new() { "active_employees", "resignations", "store_reference" };
 
-    public UploadService(AppDbContext db, IStoreAccessService storeAccess, IServiceScopeFactory scopeFactory, IBackgroundJobTracker jobTracker, IMemoryCache cache, ILogger<UploadService> logger, IStringLocalizer<SharedResource> localizer, FilterResultCache? filterCache = null)
+    public UploadService(AppDbContext db, IStoreAccessService storeAccess, IServiceScopeFactory scopeFactory, IBackgroundJobTracker jobTracker, IMemoryCache cache, ILogger<UploadService> logger, IStringLocalizer<SharedResource> localizer)
     {
-        _filterCache = filterCache ?? new FilterResultCache();
         _db = db;
         _storeAccess = storeAccess;
         _scopeFactory = scopeFactory;
@@ -54,9 +52,6 @@ public class UploadService : IUploadService
         _cache.Remove(RetentionService.EmployeeCohortsCacheKey);
         _cache.Remove(EarlyWarningService.HistoricalRecordsCacheKey);
         _cache.Remove(EarlyWarningService.ResignedEmployeeIdsCacheKey);
-        _cache.Remove(DashboardService.AvailablePeriodsCacheKey);
-        _filterCache.InvalidateAll(); // dashboard filter lists / KPI / store-comparison results
-        DataFreshnessService.InvalidateCache();
     }
 
     // Runs detection in its own DI scope on a background task instead of on the
@@ -590,7 +585,6 @@ public class UploadService : IUploadService
         var now = DateTime.UtcNow;
         _db.UploadLogs.Add(new UploadLog { FileType = "exit_interviews", FileName = file.FileName, Month = now.Month, Year = now.Year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
         await _db.SaveChangesAsync();
-        _filterCache.InvalidateAll(); // exit-interview results are cached per filter/user
 
         var missingStore = parsed.Count(p => string.IsNullOrWhiteSpace(p.Row.Store));
         var message = missingStore > 0
@@ -1175,8 +1169,6 @@ public class UploadService : IUploadService
                 await tx.CommitAsync();
                 StoreAccessService.InvalidateCache();
                 WorkforcePlanningService.InvalidateCache(); // the consultant shown per store comes from this file
-                _filterCache.InvalidateAll(); // OM/OC/SOC/OD filter lists come from this file
-                DataFreshnessService.InvalidateCache(); // the layout's "latest data period" includes store_reference uploads
                 FireAndForgetDetection(month, year, string.Format(_L["Msg_JobStoreReference"].Value, new DateTime(year, month, 1).ToString("MMMM yyyy")));
                 var storeWarning = await BuildUnmatchedRoleEmailWarningAsync(storeRecords);
                 return (true, string.Format(_L["Msg_UpdatedStoreReference"].Value, new DateTime(year, month, 1).ToString("MMMM yyyy"), storeRecords.Count), storeWarning);

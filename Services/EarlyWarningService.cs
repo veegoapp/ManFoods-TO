@@ -20,8 +20,8 @@ public class EarlyWarningService : IEarlyWarningService
     // detection loop, ~200 stores) reran this every time with an identical
     // result. Caching it separately, keyed only by months/year, turns ~200
     // redundant full ActiveEmployees pulls into one.
-    private string CandidatesCacheKey(string? months, int? year) =>
-        _filterCache.KeyFor("early-warning:candidates", FilterResultCache.NormalizeMonths(months), year);
+    private static string CandidatesCacheKey(string? months, int? year) =>
+        FilterResultCache.BuildKey("early-warning:candidates", FilterResultCache.NormalizeMonths(months), year);
 
     // Same problem as LoadActiveCandidatesAsync above: these two full-table
     // reads (ExitInterviews, StoreReferences) don't vary by store/role, but sat
@@ -496,10 +496,7 @@ public class EarlyWarningService : IEarlyWarningService
         string? store, string role, string? assignedName, string? months = null, int? year = null,
         string? om = null, string? oc = null, string? soc = null, string? od = null)
     {
-        // Keyed on the caller's accessible-store scope (area-aware) and the cache's data/access-rules version too —
-        // see AccessScopeKey / FilterResultCache.InvalidateAll.
-        var accessScope = await AccessScopeKey.ForAsync(_storeAccess, role, assignedName);
-        var cacheKey = _filterCache.KeyFor("early-warning:watchlist", accessScope, FilterResultCache.NormalizeList(store), role, assignedName,
+        var cacheKey = FilterResultCache.BuildKey("early-warning:watchlist", FilterResultCache.NormalizeList(store), role, assignedName,
             FilterResultCache.NormalizeMonths(months), year, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc),
             FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od),
             FilterResultCache.NormalizeList(string.Join(',', RequestedJobs ?? new())));

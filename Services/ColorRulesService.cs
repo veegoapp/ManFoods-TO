@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using MvcApp.Data;
 using MvcApp.Models;
 using MvcApp.Models.ViewModels;
@@ -73,15 +72,8 @@ public class ColorRulesService : IColorRulesService
         },
     };
 
-    // Rules are read by every page that colors a rate but only change when an admin saves them
-    // (SaveRulesAsync evicts the entry), so they are cached instead of re-read per request.
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
-
     private readonly AppDbContext _db;
-    private readonly IMemoryCache _cache;
-    public ColorRulesService(AppDbContext db, IMemoryCache cache) { _db = db; _cache = cache; }
-
-    private static string CacheKeyFor(string metric) => $"color-rules:{metric.ToLowerInvariant()}";
+    public ColorRulesService(AppDbContext db) { _db = db; }
 
     private static string KeyFor(string metric) => $"color_rules_{metric.ToLower()}";
 
@@ -89,25 +81,18 @@ public class ColorRulesService : IColorRulesService
     {
         if (!Defaults.TryGetValue(metric, out var fallback)) return new List<ColorRule>();
 
-        var cacheKey = CacheKeyFor(metric);
-        if (_cache.TryGetValue(cacheKey, out List<ColorRule>? cached) && cached != null) return cached;
-
         var setting = await _db.AppSettings.FindAsync(KeyFor(metric));
-        var result = fallback;
-        if (setting != null && !string.IsNullOrWhiteSpace(setting.Value))
-        {
-            try
-            {
-                var rules = JsonSerializer.Deserialize<List<ColorRule>>(setting.Value);
-                if (rules != null && rules.Count > 0) result = rules;
-            }
-            catch (JsonException)
-            {
-            }
-        }
+        if (setting == null || string.IsNullOrWhiteSpace(setting.Value)) return fallback;
 
-        _cache.Set(cacheKey, result, CacheDuration);
-        return result;
+        try
+        {
+            var rules = JsonSerializer.Deserialize<List<ColorRule>>(setting.Value);
+            return (rules != null && rules.Count > 0) ? rules : fallback;
+        }
+        catch (JsonException)
+        {
+            return fallback;
+        }
     }
 
     public async Task SaveRulesAsync(string metric, List<ColorRule> rules)
@@ -120,6 +105,5 @@ public class ColorRulesService : IColorRulesService
         if (setting == null) _db.AppSettings.Add(new AppSetting { Key = key, Value = json });
         else setting.Value = json;
         await _db.SaveChangesAsync();
-        _cache.Remove(CacheKeyFor(metric));
     }
 }
