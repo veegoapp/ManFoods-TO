@@ -142,6 +142,8 @@
      data-oc-title="@L["Common_OperationConsultants"]" data-od-title="@L["Common_OperationDirectors"]" data-om-title="@L["Common_OperationManagers"]" data-soc-title="@L["Common_SeniorOperationConsultants"]"
      data-oc-sub="@L["HF_GrpSubOc"]" data-od-sub="@L["HF_GrpSubOd"]" data-om-sub="@L["HF_GrpSubOm"]" data-soc-sub="@L["HF_GrpSubSoc"]" data-col-name="@L["Common_Name"]" data-col-stores="@L["Common_Stores"]"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie_light.min.js"></script>
+<script src="~/js/page-loader.js" asp-append-version="true"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="~/js/chart-colors.js" asp-append-version="true"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -181,6 +183,7 @@ async function hfLoad() {
     if (hfState.job) q.set('jobs', hfState.job);
     ['oc', 'om', 'soc', 'od'].forEach(k => { if (hfState[k]) q.set(k, hfState[k]); });
     let d;
+    const done = PageLoader.begin();
     try {
         const r = await fetch('/api/workforce-planning/hiring-forecast?' + q);
         if (!r.ok) throw new Error();
@@ -188,6 +191,8 @@ async function hfLoad() {
     } catch {
         document.getElementById('hfEmpty').hidden = false;
         return;
+    } finally {
+        done();
     }
     hfData = d;
     const show = d.hasData && d.hasRoster;
