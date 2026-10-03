@@ -5,7 +5,7 @@
    The animation appears centered in the page body (the area below the header, as seen before any scrolling, and it stays there while scrolling) and only after a short delay, so fast
    (cached) responses never flash it. Overlapping begin() calls share one overlay. */
 (function () {
-    const SHOW_DELAY_MS = 800;       // responses faster than this (the cached, "fast" opens) never show the animation
+    const SHOW_DELAY_MS = 400;       // responses faster than this (the cached, "fast" opens) never show the animation
     const OFFSET_DOWN_PX = 110;    // about 3 cm below the exact center of the page body
     const SIZE_PX = 180;           // width of the animation; its canvas is 4:3
     const ANIMATION_PATH = '/lottie/loading.json';
