@@ -161,6 +161,16 @@
             background: rgba(0,0,0,.55); align-items: center; justify-content: center; padding: 16px;
         }
         .setup-modal-backdrop .login-card { max-width: 420px; width: 100%; margin: 0; animation: none; }
+
+        /* Slightly more compact login card (size only; nothing else changes). Scoped to .login-container so the
+           "Update Password" popup, a .login-card outside the container, keeps its size. */
+        .login-container { max-width: 372px; }
+        .login-container .login-card { padding: 34px 30px 28px; }
+        .login-container .logo-wrap img { width: 60px; }
+        .login-container .divider { margin: 18px 0 14px; }
+        .login-container .field-wrap { margin-bottom: 13px; }
+        .login-container .field-wrap input { height: 42px; }
+        .login-container .btn-signin { min-height: 44px; }
     </style>
 </head>
 <body class="login-body">
