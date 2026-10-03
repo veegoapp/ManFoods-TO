@@ -50,10 +50,11 @@ public class PageVisibilityService : IPageVisibilityService
         return result;
     }
 
-    public async Task SaveAsync(Dictionary<string, Dictionary<string, bool>> hidden, string? adminName)
+    public async Task<List<string>> SaveAsync(Dictionary<string, Dictionary<string, bool>> hidden, string? adminName)
     {
         // The result for every page and role: what was sent, else what it was before.
         var current = await GetAllAsync();
+        var before = current.ToDictionary(p => p.Key, p => new Dictionary<string, bool>(p.Value));
         foreach (var (pageKey, byRole) in hidden)
         {
             if (!current.TryGetValue(pageKey, out var row)) continue;
@@ -63,6 +64,12 @@ public class PageVisibilityService : IPageVisibilityService
         foreach (var role in UserPages.Roles)
             if (_pages.All(p => current[p.Key][role]))
                 throw new InvalidOperationException("At least one page must stay visible for every role.");
+
+        var changes = new List<string>();
+        foreach (var page in _pages)
+            foreach (var role in UserPages.Roles)
+                if (before[page.Key][role] != current[page.Key][role])
+                    changes.Add($"{page.Key} / {role}: {(before[page.Key][role] ? "hidden" : "visible")} → {(current[page.Key][role] ? "hidden" : "visible")}");
 
         var now = DateTime.UtcNow;
         var existing = (await _db.PageVisibilities.ToListAsync()).ToDictionary(r => (r.PageKey.ToLowerInvariant(), r.Role));
@@ -79,5 +86,6 @@ public class PageVisibilityService : IPageVisibilityService
         }
         await _db.SaveChangesAsync();
         foreach (var role in UserPages.Roles) _cache.Remove(CacheKeyPrefix + role);
+        return changes;
     }
 }
