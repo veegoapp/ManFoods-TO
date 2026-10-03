@@ -2290,4 +2290,12 @@
   <data name="ActLog_Clear_NothingToDelete" xml:space="preserve"><value>No log entries match this selection.</value></data>
   <data name="ActLog_Clear_CustomNeedDates" xml:space="preserve"><value>Choose both dates for a custom range.</value></data>
   <data name="Users_LoginHistoryCairo" xml:space="preserve"><value>Times are shown in Cairo time</value></data>
+  <data name="HF_GrpSubOc" xml:space="preserve"><value>Hires needed per month by consultant</value></data>
+  <data name="HF_GrpSubOd" xml:space="preserve"><value>Hires needed per month by director</value></data>
+  <data name="HF_GrpSubOm" xml:space="preserve"><value>Hires needed per month by manager</value></data>
+  <data name="HF_GrpSubSoc" xml:space="preserve"><value>Hires needed per month by senior consultant</value></data>
+  <data name="CT_GrpSubOc" xml:space="preserve"><value>Trainers against the rule and the plan by consultant</value></data>
+  <data name="CT_GrpSubOd" xml:space="preserve"><value>Trainers against the rule and the plan by director</value></data>
+  <data name="CT_GrpSubOm" xml:space="preserve"><value>Trainers against the rule and the plan by manager</value></data>
+  <data name="CT_GrpSubSoc" xml:space="preserve"><value>Trainers against the rule and the plan by senior consultant</value></data>
 </root>

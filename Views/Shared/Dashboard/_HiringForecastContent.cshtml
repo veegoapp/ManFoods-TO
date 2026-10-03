@@ -128,6 +128,7 @@
         </div>
         <div class="hf-legend mt-2">@L["HF_Legend"]</div>
     </div>
+    <div id="hfGroups" class="d-flex flex-column gap-3 mt-3"></div>
 </div>
 
 <div id="hfL" hidden
@@ -137,7 +138,9 @@
      data-job="@L["WP_ColJob"]" data-payroll="@L["HF_ByPayroll"]"
      data-all-months="@L["HF_AllMonths"]" data-k-month="@L["HF_KpiMonth"]" data-k-month-d="@L["HF_KpiMonthDesc"]" data-k-share="@L["HF_KpiShare"]" data-k-share-d="@L["HF_KpiShareDesc"]" data-k-from="@L["HF_KpiFrom"]" data-k-from-d="@L["HF_KpiFromDesc"]" data-k-store-m="@L["HF_KpiStoreMonth"]" data-k-store-m-d="@L["HF_KpiStoreMonthDesc"]"
      data-store="@L["WP_ColStore"]" data-oc="@L["Common_OperationConsultant"]" data-total="@L["HF_Total"]" data-forecast="@L["HF_Forecast"]" data-roster="@L["HF_Roster"]"
-     data-note="@L["HF_Note"]" data-note-none="@L["HF_NoteNoRoster"]" data-no-rows="@L["Common_NoData"]"></div>
+     data-note="@L["HF_Note"]" data-note-none="@L["HF_NoteNoRoster"]" data-no-rows="@L["Common_NoData"]"
+     data-oc-title="@L["Common_OperationConsultants"]" data-od-title="@L["Common_OperationDirectors"]" data-om-title="@L["Common_OperationManagers"]" data-soc-title="@L["Common_SeniorOperationConsultants"]"
+     data-oc-sub="@L["HF_GrpSubOc"]" data-od-sub="@L["HF_GrpSubOd"]" data-om-sub="@L["HF_GrpSubOm"]" data-soc-sub="@L["HF_GrpSubSoc"]" data-col-name="@L["Common_Name"]" data-col-stores="@L["Common_Stores"]"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="~/js/chart-colors.js" asp-append-version="true"></script>
@@ -215,6 +218,7 @@ async function hfLoad() {
     hfRenderInsights(d);
     hfRenderChart(d);
     hfRender();
+    hfRenderGroups();
 }
 
 // Headline numbers, all derived from the matrix the server already returned.
@@ -421,6 +425,60 @@ function hfRender() {
     document.getElementById('hfFoot').innerHTML = `<td>${sapEscape(hfL.total)}</td>${d.by === 'store' ? '<td></td>' : ''}`
         + d.monthTotals.map((v, i) => `<td class="num">${modes[i] === 'none' ? '—' : v}</td>`).join('')
         + `<td class="num">${d.grandTotal}</td>`;
+}
+
+/* Per-leader roll-ups: the same rounded store-month hires added up under each store's leader (always by store). */
+const HF_GROUP_DEFS = [
+    { key: 'byOperationConsultant', id: 'Oc', icon: 'bi-person-badge', color: 'oklch(0.5 0.18 25)' },
+    { key: 'byOperationDirector', id: 'Od', icon: 'bi-person-workspace', color: 'oklch(0.5 0.18 250)' },
+    { key: 'byOperationManager', id: 'Om', icon: 'bi-person-gear', color: 'oklch(0.6 0.16 25)' },
+    { key: 'bySeniorOperationConsultant', id: 'Soc', icon: 'bi-person-vcard', color: 'oklch(0.55 0.2 300)' },
+];
+const hfGroupSort = {};
+HF_GROUP_DEFS.forEach(g => { hfGroupSort[g.key] = { key: 'total', dir: 'desc' }; });
+
+function hfRenderGroups() {
+    const d = hfData, modes = d.monthModes;
+    const host = document.getElementById('hfGroups');
+    host.innerHTML = HF_GROUP_DEFS.map(g => `
+        <div class="chart-card p-0" style="overflow:hidden">
+            <div class="chart-header stat-card-header">
+                <span class="stat-card-icon" style="--icon-color:${g.color}"><i class="bi ${g.icon}"></i></span>
+                <div><h6 class="mb-0">${sapEscape(hfL[g.id.toLowerCase() + 'Title'])}</h6><p class="mb-0">${sapEscape(hfL[g.id.toLowerCase() + 'Sub'])}</p></div>
+            </div>
+            <div class="hf-wrap"><table class="hf-table"><thead><tr id="hfGrpHead${g.id}"></tr></thead><tbody id="hfGrpBody${g.id}"></tbody><tfoot><tr id="hfGrpFoot${g.id}"></tr></tfoot></table></div>
+        </div>`).join('');
+    HF_GROUP_DEFS.forEach(g => {
+        const state = hfGroupSort[g.key];
+        const th = (key, label, cls, sub) => `<th class="sortable ${cls || ''}" data-sort="${key}">${sapEscape(label)}<i class="bi"></i>${sub ? `<span class="hf-tag">${sapEscape(sub)}</span>` : ''}</th>`;
+        const head = document.getElementById('hfGrpHead' + g.id);
+        let h = th('name', hfL.colName) + th('stores', hfL.colStores, 'num');
+        for (let i = 0; i < 12; i++) h += th('m' + i, hfMonthName(i + 1), 'num', modes[i] === 'none' ? '' : modes[i] === 'forecast' ? hfL.forecast : hfL.roster);
+        head.innerHTML = h + th('total', hfL.total, 'num hf-total');
+        head.querySelectorAll('th.sortable').forEach(el => {
+            const on = el.dataset.sort === state.key;
+            el.classList.toggle('sorted', on);
+            el.querySelector('i').className = 'bi ' + (on && state.dir === 'asc' ? 'bi-caret-up-fill' : 'bi-caret-down-fill');
+            el.addEventListener('click', () => { state.dir = state.key === el.dataset.sort && state.dir === 'asc' ? 'desc' : 'asc'; state.key = el.dataset.sort; hfRenderGroups(); });
+        });
+        const all = d[g.key] || [];
+        const val = state.key === 'name' ? (r => r.store) : state.key === 'stores' ? (r => r.storeCount) : hfVal[state.key];
+        const sign = state.dir === 'asc' ? 1 : -1;
+        const rows = [...all].sort((a, b) => { const x = val(a), y = val(b); const c = typeof x === 'string' ? x.localeCompare(y, undefined, { numeric: true }) : x - y; return (c || a.store.localeCompare(b.store)) * sign; });
+        const max = Math.max(1, ...all.flatMap(r => r.months));
+        const cell = (v, mode) => mode === 'none'
+            ? '<td class="num hf-zero">—</td>'
+            : `<td class="num ${v === 0 ? 'hf-zero' : ''}" style="${v > 0 ? `background:oklch(0.6 0.2 25 / ${(0.08 + 0.5 * v / max).toFixed(2)})` : ''}">${v}</td>`;
+        document.getElementById('hfGrpBody' + g.id).innerHTML = rows.length ? rows.map(r =>
+            `<tr><td class="fw-semibold">${sapEscape(r.store)}</td><td class="num">${r.storeCount}</td>`
+            + r.months.map((v, i) => cell(v, modes[i])).join('')
+            + `<td class="num hf-total">${r.total}</td></tr>`).join('')
+            : `<tr><td colspan="15" class="text-center py-3 text-muted">${sapEscape(hfL.noRows)}</td></tr>`;
+        const sums = Array.from({ length: 12 }, (_, i) => all.reduce((t, r) => t + r.months[i], 0));
+        document.getElementById('hfGrpFoot' + g.id).innerHTML = all.length
+            ? `<td>${sapEscape(hfL.total)}</td><td></td>` + sums.map((v, i) => `<td class="num">${modes[i] === 'none' ? '—' : v}</td>`).join('') + `<td class="num">${all.reduce((t, r) => t + r.total, 0)}</td>`
+            : '';
+    });
 }
 
 document.getElementById('hfBy').addEventListener('change', e => { hfState.by = e.target.value; hfLoad(); });

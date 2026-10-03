@@ -146,6 +146,8 @@ public class HiringForecastRowDto
     /// <summary>Hires needed in each month, January first (12 values; 0 when the month has no projection).</summary>
     public int[] Months { get; set; } = new int[12];
     public int Total { get; set; }
+    /// <summary>Stores behind the row (only filled on the per-leader roll-ups).</summary>
+    public int StoreCount { get; set; }
 }
 
 /// <summary>The Hiring Forecast: hires needed per store per month for a year.</summary>
@@ -174,6 +176,11 @@ public class HiringForecastDto
     /// <summary>Per month (January first): "actual" (roster exists), "forecast" (simulated) or "none" (no projection).</summary>
     public string[] MonthModes { get; set; } = Enumerable.Repeat("none", 12).ToArray();
     public List<HiringForecastRowDto> Rows { get; set; } = new();
+    /// <summary>Per-leader roll-ups of the same store-month hires (always by store, whatever <see cref="By"/> is).</summary>
+    public List<HiringForecastRowDto> ByOperationConsultant { get; set; } = new();
+    public List<HiringForecastRowDto> BySeniorOperationConsultant { get; set; } = new();
+    public List<HiringForecastRowDto> ByOperationDirector { get; set; } = new();
+    public List<HiringForecastRowDto> ByOperationManager { get; set; } = new();
     public int[] MonthTotals { get; set; } = new int[12];
     public int GrandTotal { get; set; }
 }
@@ -183,6 +190,9 @@ public class CrewTrainerStoreDto
 {
     public string Store { get; set; } = "";
     public string OperationConsultant { get; set; } = "";
+    public string OperationManager { get; set; } = "";
+    public string SeniorOperationConsultant { get; set; } = "";
+    public string OperationDirector { get; set; } = "";
     /// <summary>Crew Trainer + Hourly Paid Crew Trainer in the projection.</summary>
     public int Projected { get; set; }
     /// <summary>Trainers on the roster (from the trainer list).</summary>
@@ -194,6 +204,19 @@ public class CrewTrainerStoreDto
     /// <summary>Trainers the rule asks for: crew level ÷ 6, rounded to the nearest whole number (half up).</summary>
     public int Required { get; set; }
     /// <summary>Actual − required (negative = short of trainers, positive = over).</summary>
+    public int GapRule { get; set; }
+}
+
+/// <summary>One leader on the Crew Trainers page: the store rows under them added up.</summary>
+public class CrewTrainerGroupDto
+{
+    public string Name { get; set; } = "";
+    public int StoreCount { get; set; }
+    public int Projected { get; set; }
+    public int Actual { get; set; }
+    public int Gap { get; set; }
+    public int CrewLevel { get; set; }
+    public int Required { get; set; }
     public int GapRule { get; set; }
 }
 
@@ -241,6 +264,10 @@ public class CrewTrainerDto
     public CrewTrainerKpiDto Kpis { get; set; } = new();
     public List<PlanningTrendPointDto> Trend { get; set; } = new();
     public List<CrewTrainerStoreDto> ByStore { get; set; } = new();
+    public List<CrewTrainerGroupDto> ByOperationConsultant { get; set; } = new();
+    public List<CrewTrainerGroupDto> BySeniorOperationConsultant { get; set; } = new();
+    public List<CrewTrainerGroupDto> ByOperationDirector { get; set; } = new();
+    public List<CrewTrainerGroupDto> ByOperationManager { get; set; } = new();
     /// <summary>False when there is no earlier list to compare with.</summary>
     public bool HasPrevious { get; set; }
     public int PreviousYear { get; set; }

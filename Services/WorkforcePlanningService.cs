@@ -712,10 +712,12 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             _ => data.Stores[store],
         };
         var byStore = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase);
+        var storeMonths = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase); // always per store, for the leader roll-ups
         foreach (var kv in projected)
         {
             var (store, job) = kv.Key;
             var rowKey = RowKey(store, job);
+            var storeAcc = storeMonths.TryGetValue(data.Stores[store].Trim(), out var sm) ? sm : (storeMonths[data.Stores[store].Trim()] = new double[12]);
             var acc = byStore.TryGetValue(rowKey, out var existing) ? existing : (byStore[rowKey] = new double[12]);
             double? prev = null;
             for (int mon = 1; mon <= 12; mon++)
@@ -744,6 +746,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                     prev = before + net;
                 }
                 acc[mon - 1] += hires * gross;
+                storeAcc[mon - 1] += hires * gross;
             }
         }
 
@@ -759,6 +762,26 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             dto.GrandTotal += row.Total;
             dto.Rows.Add(row);
         }
+
+        // Per-leader roll-ups: the same rounded store-month cells added up under each store's leader.
+        List<HiringForecastRowDto> RollUpLeaders(Func<Leaders, string> pick)
+        {
+            var groups = new Dictionary<string, HiringForecastRowDto>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kv in storeMonths)
+            {
+                if (!leaders.TryGetValue(kv.Key, out var lead)) continue;
+                var name = (pick(lead) ?? "").Trim();
+                if (name.Length == 0) continue;
+                if (!groups.TryGetValue(name, out var g)) groups[name] = g = new HiringForecastRowDto { Store = name };
+                g.StoreCount++;
+                for (int i = 0; i < 12; i++) { var n = RoundNeed(kv.Value[i]); g.Months[i] += n; g.Total += n; }
+            }
+            return groups.Values.OrderByDescending(g => g.Total).ThenBy(g => g.Store, StringComparer.OrdinalIgnoreCase).ToList();
+        }
+        dto.ByOperationConsultant = RollUpLeaders(l => l.Oc);
+        dto.BySeniorOperationConsultant = RollUpLeaders(l => l.Soc);
+        dto.ByOperationDirector = RollUpLeaders(l => l.Od);
+        dto.ByOperationManager = RollUpLeaders(l => l.Om);
         for (int mon = 1; mon <= 12; mon++)
             dto.MonthModes[mon - 1] = !projMonths.Contains(mon) ? "none" : actualMonths.Contains(mon) ? "actual" : (baseline / 100 < y || actualMonths.Count > 0) ? "forecast" : "none";
         return dto;

@@ -139,6 +139,8 @@
         </div>
     </div>
 
+    <div id="ctGroups" class="d-flex flex-column gap-3 mb-3"></div>
+
     <div class="chart-card">
         <div class="chart-header"><h6>@L["CT_MovementTitle"]</h6><p id="ctMoveSub"></p></div>
         <div class="row g-3" id="ctMove"></div>
@@ -153,7 +155,9 @@
      data-k-rule="@L["CT_KRule"]" data-k-rule-d="@L["CT_KRuleDesc"]" data-k-crew="@L["CT_KCrew"]" data-k-crew-d="@L["CT_KCrewDesc"]"
      data-k-plan="@L["CT_KPlan"]" data-k-plan-d="@L["CT_KPlanDesc"]" data-k-res="@L["CT_KResigned"]" data-k-res-d="@L["CT_KResignedDesc"]"
      data-entered="@L["CT_Entered"]" data-left="@L["CT_Left"]" data-move-sub="@L["CT_MoveSub"]" data-no-prev="@L["CT_NoPrevious"]" data-none="@L["CT_NoneMoved"]"
-     data-resigned="@L["CT_StResigned"]" data-active="@L["CT_StActive"]" data-gone="@L["CT_StGone"]" data-name="@L["Common_Name"]"></div>
+     data-resigned="@L["CT_StResigned"]" data-active="@L["CT_StActive"]" data-gone="@L["CT_StGone"]" data-name="@L["Common_Name"]"
+     data-oc-title="@L["Common_OperationConsultants"]" data-od-title="@L["Common_OperationDirectors"]" data-om-title="@L["Common_OperationManagers"]" data-soc-title="@L["Common_SeniorOperationConsultants"]"
+     data-oc-sub="@L["CT_GrpSubOc"]" data-od-sub="@L["CT_GrpSubOd"]" data-om-sub="@L["CT_GrpSubOm"]" data-soc-sub="@L["CT_GrpSubSoc"]"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="~/js/chart-colors.js" asp-append-version="true"></script>
@@ -227,7 +231,7 @@ async function ctLoad() {
 
     document.getElementById('ctNoPlan').hidden = d.hasProjection;
     document.getElementById('ctNoCrew').hidden = d.hasCrewLevelJobs;
-    ctRenderKpis(d); ctRenderInsights(d); ctRenderChart(d); ctRenderCompare(d); ctRenderStores(); ctRenderMovement(d);
+    ctRenderKpis(d); ctRenderInsights(d); ctRenderChart(d); ctRenderCompare(d); ctRenderStores(); ctRenderGroups(); ctRenderMovement(d);
 }
 
 function ctRenderKpis(d) {
@@ -380,6 +384,55 @@ function ctRenderStores() {
             <td class="num">${d.hasProjection ? r.projected : '—'}</td><td class="num ${d.hasProjection ? ctGapClass(r.gap) : ''}">${d.hasProjection ? ctGapText(r.gap) : '—'}</td>
             <td>${rule ? `<span class="ct-pill ${CT_ST_PILL[ctStatus(r)]}">${sapEscape(ctStLabel(ctStatus(r)))}</span>` : '—'}</td></tr>`).join('')
         : `<tr><td colspan="9" class="text-center py-3 text-muted">${sapEscape(ctL.noRows)}</td></tr>`;
+}
+
+/* Per-leader roll-ups of the store rows (the server adds them up; blank leaders are left out). */
+const CT_GROUP_DEFS = [
+    { key: 'byOperationConsultant', id: 'Oc', icon: 'bi-person-badge', color: 'oklch(0.5 0.18 25)' },
+    { key: 'byOperationDirector', id: 'Od', icon: 'bi-person-workspace', color: 'oklch(0.5 0.18 250)' },
+    { key: 'byOperationManager', id: 'Om', icon: 'bi-person-gear', color: 'oklch(0.6 0.16 25)' },
+    { key: 'bySeniorOperationConsultant', id: 'Soc', icon: 'bi-person-vcard', color: 'oklch(0.55 0.2 300)' },
+];
+const ctGroupSort = {};
+CT_GROUP_DEFS.forEach(g => { ctGroupSort[g.key] = { key: 'gapRule', dir: 'asc' }; });
+const ctGroupVal = {
+    name: r => r.name, stores: r => r.storeCount, crew: r => r.crewLevel, required: r => r.required, actual: r => r.actual,
+    gapRule: r => r.gapRule, projected: r => r.projected, gapPlan: r => r.gap, status: r => CT_ST_ORDER[ctStatus(r)],
+};
+
+function ctRenderGroups() {
+    const d = ctData, rule = d.hasCrewLevelJobs;
+    const host = document.getElementById('ctGroups');
+    host.innerHTML = CT_GROUP_DEFS.map(g => `
+        <div class="chart-card p-0" style="overflow:hidden">
+            <div class="chart-header stat-card-header">
+                <span class="stat-card-icon" style="--icon-color:${g.color}"><i class="bi ${g.icon}"></i></span>
+                <div><h6 class="mb-0">${sapEscape(ctL[g.id.toLowerCase() + 'Title'])}</h6><p class="mb-0">${sapEscape(ctL[g.id.toLowerCase() + 'Sub'])}</p></div>
+            </div>
+            <div class="ct-wrap"><table class="ct-table"><thead><tr id="ctGrpHead${g.id}"></tr></thead><tbody id="ctGrpBody${g.id}"></tbody></table></div>
+        </div>`).join('');
+    CT_GROUP_DEFS.forEach(g => {
+        const state = ctGroupSort[g.key];
+        const th = (key, label, cls) => `<th class="sortable ${cls || ''}" data-sort="${key}">${sapEscape(label)}<i class="bi"></i></th>`;
+        const head = document.getElementById('ctGrpHead' + g.id);
+        head.innerHTML = th('name', ctL.name) + th('stores', ctL.colStores, 'num') + th('crew', ctL.crew, 'num') + th('required', ctL.required.replace('{0}', d.crewPerTrainer), 'num')
+            + th('actual', ctL.actual, 'num') + th('gapRule', ctL.gapRule, 'num') + th('projected', ctL.projected, 'num') + th('gapPlan', ctL.gapPlan, 'num') + th('status', ctL.colStatus);
+        head.querySelectorAll('th.sortable').forEach(el => {
+            const on = el.dataset.sort === state.key;
+            el.classList.toggle('sorted', on);
+            el.querySelector('i').className = 'bi ' + (on && state.dir === 'asc' ? 'bi-caret-up-fill' : 'bi-caret-down-fill');
+            el.addEventListener('click', () => { state.dir = state.key === el.dataset.sort && state.dir === 'asc' ? 'desc' : 'asc'; state.key = el.dataset.sort; ctRenderGroups(); });
+        });
+        const val = ctGroupVal[state.key], sign = state.dir === 'asc' ? 1 : -1;
+        const rows = [...(d[g.key] || [])].sort((a, b) => { const x = val(a), y = val(b); const c = typeof x === 'string' ? x.localeCompare(y, undefined, { numeric: true }) : x - y; return (c || a.name.localeCompare(b.name)) * sign; });
+        document.getElementById('ctGrpBody' + g.id).innerHTML = rows.length ? rows.map(r =>
+            `<tr><td class="fw-semibold">${sapEscape(r.name)}</td><td class="num">${r.storeCount}</td>
+                <td class="num">${rule ? r.crewLevel : '—'}</td><td class="num">${rule ? r.required : '—'}</td><td class="num">${r.actual}</td>
+                <td class="num ${rule ? ctGapClass(r.gapRule) : ''}">${rule ? ctGapText(r.gapRule) : '—'}</td>
+                <td class="num">${d.hasProjection ? r.projected : '—'}</td><td class="num ${d.hasProjection ? ctGapClass(r.gap) : ''}">${d.hasProjection ? ctGapText(r.gap) : '—'}</td>
+                <td>${rule ? `<span class="ct-pill ${CT_ST_PILL[ctStatus(r)]}">${sapEscape(ctStLabel(ctStatus(r)))}</span>` : '—'}</td></tr>`).join('')
+            : `<tr><td colspan="9" class="text-center py-3 text-muted">${sapEscape(ctL.noRows)}</td></tr>`;
+    });
 }
 
 function ctRenderMovement(d) {
