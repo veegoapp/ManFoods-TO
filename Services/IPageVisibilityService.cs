@@ -10,6 +10,7 @@ public interface IPageVisibilityService
 
     /// <summary>Saves which pages are hidden from which roles (page key → role → hidden; anything not sent keeps its
     /// current value; unknown pages and roles are ignored). Every role must keep at least one visible page,
-    /// otherwise <see cref="InvalidOperationException"/> is thrown and nothing is saved.</summary>
-    Task SaveAsync(Dictionary<string, Dictionary<string, bool>> hidden, string? adminName);
+    /// otherwise <see cref="InvalidOperationException"/> is thrown and nothing is saved. Returns one line per
+    /// page and role whose value actually changed (for the Activity Log), empty when nothing changed.</summary>
+    Task<List<string>> SaveAsync(Dictionary<string, Dictionary<string, bool>> hidden, string? adminName);
 }

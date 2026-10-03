@@ -21,6 +21,7 @@ public interface IAccessPolicyService
     Task<Dictionary<string, bool>> GetAllAsync();
 
     /// <summary>Persists the given area → is-restricted settings. Only known areas
-    /// are written; unknown keys are ignored.</summary>
-    Task SaveAsync(Dictionary<string, bool> settings, string? adminName);
+    /// are written; unknown keys are ignored. Returns one line per area whose value actually changed
+    /// (for the Activity Log), empty when nothing changed.</summary>
+    Task<List<string>> SaveAsync(Dictionary<string, bool> settings, string? adminName);
 }

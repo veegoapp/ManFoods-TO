@@ -60,8 +60,13 @@ public class AccessPolicyService : IAccessPolicyService
             StringComparer.OrdinalIgnoreCase);
     }
 
-    public async Task SaveAsync(Dictionary<string, bool> settings, string? adminName)
+    public async Task<List<string>> SaveAsync(Dictionary<string, bool> settings, string? adminName)
     {
+        var before = await GetAllAsync();
+        var changes = new List<string>();
+        foreach (var area in AccessAreas.All)
+            if (settings.TryGetValue(area, out var wanted) && before[area] != wanted)
+                changes.Add($"{area}: {Scope(before[area])} → {Scope(wanted)}");
         var now = DateTime.UtcNow;
         var existing = await _db.PageAccessConfigs.ToListAsync();
         var byKey = existing.ToDictionary(r => r.AreaKey, StringComparer.OrdinalIgnoreCase);
@@ -86,5 +91,8 @@ public class AccessPolicyService : IAccessPolicyService
 
         await _db.SaveChangesAsync();
         _cache.Remove(CacheKey);
+        return changes;
     }
+
+    private static string Scope(bool restricted) => restricted ? "own stores" : "all stores";
 }

@@ -105,8 +105,8 @@ public class SettingsApiController : ControllerBase
         if (request?.Settings == null || request.Settings.Count == 0)
             return BadRequest(_L["Api_NoAccessSettings"].Value);
         var adminName = HttpContext.Session.GetAssignedName() ?? HttpContext.Session.GetEmail();
-        await _accessPolicy.SaveAsync(request.Settings, adminName);
-        await _activity.LogAsync(new ActivityEntry { Action = Models.ActivityActions.SettingsAccessPolicy, Details = $"{request.Settings.Count} area(s) updated" });
+        var changes = await _accessPolicy.SaveAsync(request.Settings, adminName);
+        await _activity.LogAsync(new ActivityEntry { Action = Models.ActivityActions.SettingsAccessPolicy, Details = changes.Count == 0 ? "no changes" : string.Join("; ", changes) });
         return Ok();
     }
 
@@ -126,9 +126,10 @@ public class SettingsApiController : ControllerBase
     {
         if (request?.Hidden == null || request.Hidden.Count == 0) return BadRequest(_L["Api_NoPageSettings"].Value);
         var adminName = HttpContext.Session.GetAssignedName() ?? HttpContext.Session.GetEmail();
-        try { await _pageVisibility.SaveAsync(request.Hidden, adminName); }
+        List<string> changes;
+        try { changes = await _pageVisibility.SaveAsync(request.Hidden, adminName); }
         catch (InvalidOperationException) { return BadRequest(_L["Api_NoPagesVisible"].Value); }
-        await _activity.LogAsync(new ActivityEntry { Action = Models.ActivityActions.SettingsPageVisibility, Details = $"{request.Hidden.Count} page(s) updated" });
+        await _activity.LogAsync(new ActivityEntry { Action = Models.ActivityActions.SettingsPageVisibility, Details = changes.Count == 0 ? "no changes" : string.Join("; ", changes) });
         return Ok();
     }
 }
