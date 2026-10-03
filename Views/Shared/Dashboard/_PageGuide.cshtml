@@ -2,7 +2,8 @@
 @{
     var offcanvasId = $"pageGuide-{Model.PageKey}";
     // The guide's own layout (trigger, drawer, icons) always stays LTR regardless of
-    // site language — only the text inside is translated and right-aligned for Arabic.
+    // site language — only the text inside is translated and right-aligned for Arabic. In Arabic the drawer
+    // opens from the left (away from the right-hand sidebar), next to the trigger under the avatar.
     var isArabicText = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
     var textAlignClass = isArabicText ? "page-guide-text-ar" : "";
 }
@@ -15,7 +16,7 @@
     <span class="page-guide-orb-label">@L["Guide_TriggerLabel"]</span>
 </button>
 
-<div class="offcanvas offcanvas-end page-guide-panel" dir="ltr" tabindex="-1"
+<div class="offcanvas @(isArabicText ? "offcanvas-start" : "offcanvas-end") page-guide-panel" dir="ltr" tabindex="-1"
      data-bs-backdrop="false" data-bs-scroll="true"
      id="@offcanvasId" aria-labelledby="@(offcanvasId)-label">
     <div class="offcanvas-header">
