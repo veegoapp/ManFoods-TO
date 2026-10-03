@@ -19,9 +19,6 @@ public class DashboardService : IDashboardService
     // Results keyed by filter values (KPIs, store comparison) — bounded, see FilterResultCache.
     private readonly FilterResultCache _filterCache;
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
-    // Fixed-key cache of the (Month, Year) periods that have roster data; evicted by UploadService
-    // when a period file is uploaded/deleted. Read on every page open and by several filters.
-    public const string AvailablePeriodsCacheKey = "dashboard:roster-periods";
 
     public DashboardService(AppDbContext db, IMemoryCache cache, IStoreAccessService storeAccess, IStringLocalizer<SharedResource> localizer, FilterResultCache? filterCache = null)
     {
@@ -43,49 +40,6 @@ public class DashboardService : IDashboardService
     // though the access check itself no longer scopes by them.
     private Task<List<string>?> GetAccessibleStoresAsync(string role, string? assignedName, int? month, int? year) =>
         _storeAccess.GetAccessibleStoreNamesAsync(role, assignedName);
-
-    // All (Month, Year) periods present in ActiveEmployees, oldest first. One DISTINCT scan of the big
-    // table is cached instead of re-run for every page open / filter change.
-    private async Task<List<(int Month, int Year)>> GetRosterPeriodsAsync()
-    {
-        if (_cache.TryGetValue(AvailablePeriodsCacheKey, out List<(int Month, int Year)>? cached) && cached != null)
-            return cached;
-        var rows = await _db.ActiveEmployees
-            .Select(e => new { e.Month, e.Year })
-            .Distinct()
-            .OrderBy(p => p.Year).ThenBy(p => p.Month)
-            .ToListAsync();
-        var periods = rows.Select(r => (r.Month, r.Year)).ToList();
-        _cache.Set(AvailablePeriodsCacheKey, periods, CacheDuration);
-        return periods;
-    }
-
-    // Filter-dropdown lists depend only on (list kind, month, year, who is asking). They are re-requested on
-    // every period change and page open, so they go in the bounded filter cache (data changes bump its
-    // version — see FilterResultCache.InvalidateAll).
-    private async Task<List<string>> CachedFilterListAsync(string kind, int? month, int? year, string role, string? assignedName, Func<Task<List<string>>> load)
-    {
-        var scope = await AccessScopeKey.ForAsync(_storeAccess, role, assignedName);
-        var key = _filterCache.KeyFor("filter-list:" + kind, month, year, role, assignedName, scope);
-        if (_filterCache.TryGet(key, out List<string>? cached)) return cached!;
-        var list = await load();
-        _filterCache.Set(key, list, CacheDuration, list.Count);
-        return list;
-    }
-
-    // Results of the chart/table endpoints, keyed by every filter value plus role and user (so a restricted
-    // user never gets another user's rows) in the bounded FilterResultCache. Several filter changes and page
-    // opens ask for the same combination; an upload bumps the key's data version (FilterResultCache.InvalidateAll).
-    private async Task<T> CachedResultAsync<T>(string kind, string role, string? assignedName, object?[] keyParts, Func<Task<T>> load, Func<T, int>? sizeOf = null)
-    {
-        // The accessible-store scope (area-aware) is part of the key: see AccessScopeKey.
-        var scope = await AccessScopeKey.ForAsync(_storeAccess, role, assignedName);
-        var key = _filterCache.KeyFor("dash:" + kind, keyParts.Append(scope).ToArray());
-        if (_filterCache.TryGet(key, out T? cached)) return cached!;
-        var result = await load();
-        _filterCache.Set(key, result, CacheDuration, sizeOf?.Invoke(result) ?? 20);
-        return result;
-    }
 
     // Expands a from/to month-year range (inclusive) into "YYYYMM" sortable int keys.
     internal static List<int> ExpandRangeKeys(int fromMonth, int fromYear, int toMonth, int toYear)
@@ -190,10 +144,7 @@ public class DashboardService : IDashboardService
                 .Max(x => x.Year * 100 + x.Month))
             .ToListAsync();
 
-    public Task<List<string>> GetOperationManagersAsync(int? month, int? year, string role, string? assignedName) =>
-        CachedFilterListAsync("om", month, year, role, assignedName, () => LoadOperationManagersAsync(month, year, role, assignedName));
-
-    private async Task<List<string>> LoadOperationManagersAsync(int? month, int? year, string role, string? assignedName)
+    public async Task<List<string>> GetOperationManagersAsync(int? month, int? year, string role, string? assignedName)
     {
         var q = _db.StoreReferences.AsQueryable();
         if (month.HasValue) q = q.Where(s => s.Month == month);
@@ -206,10 +157,7 @@ public class DashboardService : IDashboardService
             .Select(s => s.OperationManager).Distinct().OrderBy(s => s).ToListAsync();
     }
 
-    public Task<List<string>> GetOperationConsultantsAsync(int? month, int? year, string role, string? assignedName) =>
-        CachedFilterListAsync("oc", month, year, role, assignedName, () => LoadOperationConsultantsAsync(month, year, role, assignedName));
-
-    private async Task<List<string>> LoadOperationConsultantsAsync(int? month, int? year, string role, string? assignedName)
+    public async Task<List<string>> GetOperationConsultantsAsync(int? month, int? year, string role, string? assignedName)
     {
         var q = _db.StoreReferences.AsQueryable();
         if (month.HasValue) q = q.Where(s => s.Month == month);
@@ -220,10 +168,7 @@ public class DashboardService : IDashboardService
             .Select(s => s.OperationConsultant).Distinct().OrderBy(s => s).ToListAsync();
     }
 
-    public Task<List<string>> GetSeniorOperationConsultantsAsync(int? month, int? year, string role, string? assignedName) =>
-        CachedFilterListAsync("soc", month, year, role, assignedName, () => LoadSeniorOperationConsultantsAsync(month, year, role, assignedName));
-
-    private async Task<List<string>> LoadSeniorOperationConsultantsAsync(int? month, int? year, string role, string? assignedName)
+    public async Task<List<string>> GetSeniorOperationConsultantsAsync(int? month, int? year, string role, string? assignedName)
     {
         var q = _db.StoreReferences.AsQueryable();
         if (month.HasValue) q = q.Where(s => s.Month == month);
@@ -234,10 +179,7 @@ public class DashboardService : IDashboardService
             .Select(s => s.SeniorOperationConsultant).Distinct().OrderBy(s => s).ToListAsync();
     }
 
-    public Task<List<string>> GetOperationDirectorsAsync(int? month, int? year, string role, string? assignedName) =>
-        CachedFilterListAsync("od", month, year, role, assignedName, () => LoadOperationDirectorsAsync(month, year, role, assignedName));
-
-    private async Task<List<string>> LoadOperationDirectorsAsync(int? month, int? year, string role, string? assignedName)
+    public async Task<List<string>> GetOperationDirectorsAsync(int? month, int? year, string role, string? assignedName)
     {
         var q = _db.StoreReferences.AsQueryable();
         if (month.HasValue) q = q.Where(s => s.Month == month);
@@ -248,10 +190,7 @@ public class DashboardService : IDashboardService
             .Select(s => s.OperationDirector).Distinct().OrderBy(s => s).ToListAsync();
     }
 
-    public Task<List<string>> GetJobTitlesAsync(int? month, int? year, string role, string? assignedName) =>
-        CachedFilterListAsync("jobs", month, year, role, assignedName, () => LoadJobTitlesAsync(month, year, role, assignedName));
-
-    private async Task<List<string>> LoadJobTitlesAsync(int? month, int? year, string role, string? assignedName)
+    public async Task<List<string>> GetJobTitlesAsync(int? month, int? year, string role, string? assignedName)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
         var active = _db.ActiveEmployees.AsQueryable();
@@ -268,8 +207,8 @@ public class DashboardService : IDashboardService
             active = active.Where(e => accessible.Contains(e.Store));
             resignations = resignations.Where(e => accessible.Contains(e.Store));
         }
-        var activeJobs = await active.Where(e => e.JobTitle != "").Select(e => e.JobTitle).Distinct().ToListAsync();
-        var resignedJobs = await resignations.Where(e => e.JobTitle != "").Select(e => e.JobTitle).Distinct().ToListAsync();
+        var activeJobs = await active.Where(e => e.JobTitle != "").Select(e => e.JobTitle).ToListAsync();
+        var resignedJobs = await resignations.Where(e => e.JobTitle != "").Select(e => e.JobTitle).ToListAsync();
         return activeJobs.Concat(resignedJobs).Distinct().OrderBy(s => s).ToList();
     }
 
@@ -287,11 +226,10 @@ public class DashboardService : IDashboardService
         }
         fromMonth ??= month; fromYear ??= year;
 
-        var accessScope = await AccessScopeKey.ForAsync(_storeAccess, role, assignedName);
-        var cacheKey = _filterCache.KeyFor("kpi", fromMonth, fromYear, month, year,
+        var cacheKey = FilterResultCache.BuildKey("kpi", fromMonth, fromYear, month, year,
             FilterResultCache.NormalizeList(store), FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc),
             FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months),
-            FilterResultCache.NormalizeList(jobTitles), role, assignedName, accessScope);
+            FilterResultCache.NormalizeList(jobTitles), role, assignedName);
         if (_filterCache.TryGet(cacheKey, out DashboardKpiViewModel? cached))
             return cached!;
 
@@ -303,36 +241,35 @@ public class DashboardService : IDashboardService
         var stores = MultiValueFilter.Split(store);
         var jobs = MultiValueFilter.Split(jobTitles);
 
-        // One grouped query for the headcount of every period and one count for the resignations,
-        // instead of two queries per period (a long range used to cost 2 x N round trips).
-        var periodKeysForCounts = periods.Select(p => p.Year * 100 + p.Month).ToList();
+        var headcountsPerPeriod = new List<int>();
+        var totalResignations = 0;
 
-        // Role-based store access is ALWAYS applied (never bypassed by an
-        // explicit store/om/oc selection) — the explicit filter, when present,
-        // narrows further on top of it. Final population = accessible ∩ explicit.
-        var empQ = _db.ActiveEmployees.Where(e => periodKeysForCounts.Contains(e.Year * 100 + e.Month));
-        if (accessible != null) empQ = empQ.Where(e => accessible.Contains(e.Store));
-        if (stores != null) empQ = empQ.Where(e => stores.Contains(e.Store));
-        else if (omOcStores != null) empQ = empQ.Where(e => omOcStores.Contains(e.Store));
-        if (jobs != null) empQ = empQ.Where(e => jobs.Contains(e.JobTitle));
+        foreach (var p in periods)
+        {
+            // Role-based store access is ALWAYS applied (never bypassed by an
+            // explicit store/om/oc selection) — the explicit filter, when present,
+            // narrows further on top of it. Final population = accessible ∩ explicit.
+            var empQ = _db.ActiveEmployees.Where(e => e.Month == p.Month && e.Year == p.Year);
+            if (accessible != null) empQ = empQ.Where(e => accessible.Contains(e.Store));
+            if (stores != null) empQ = empQ.Where(e => stores.Contains(e.Store));
+            else if (omOcStores != null) empQ = empQ.Where(e => omOcStores.Contains(e.Store));
+            if (jobs != null) empQ = empQ.Where(e => jobs.Contains(e.JobTitle));
 
-        var headcountRows = await empQ.GroupBy(e => new { e.Year, e.Month })
-            .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() })
-            .ToListAsync();
-        var headcountByKey = headcountRows.ToDictionary(r => r.Year * 100 + r.Month, r => r.Count);
-        // Periods with no rows still count as a 0 in the average, as before.
-        var headcountsPerPeriod = periodKeysForCounts.Select(k => headcountByKey.GetValueOrDefault(k)).ToList();
+            var hc = await empQ.CountAsync();
+            headcountsPerPeriod.Add(hc);
 
-        var resQ = _db.Resignations.Where(r => periodKeysForCounts.Contains(r.Year * 100 + r.Month));
-        if (accessible != null) resQ = resQ.Where(r => accessible.Contains(r.Store));
-        if (stores != null) resQ = resQ.Where(r => stores.Contains(r.Store));
-        else if (omOcStores != null) resQ = resQ.Where(r => omOcStores.Contains(r.Store));
-        if (jobs != null) resQ = resQ.Where(r => jobs.Contains(r.JobTitle));
-        var totalResignations = await resQ.CountAsync();
+            var resQ = _db.Resignations.Where(r => r.Month == p.Month && r.Year == p.Year);
+            if (accessible != null) resQ = resQ.Where(r => accessible.Contains(r.Store));
+            if (stores != null) resQ = resQ.Where(r => stores.Contains(r.Store));
+            else if (omOcStores != null) resQ = resQ.Where(r => omOcStores.Contains(r.Store));
+            if (jobs != null) resQ = resQ.Where(r => jobs.Contains(r.JobTitle));
+            totalResignations += await resQ.CountAsync();
+        }
 
         // New Hires: strictly HireDate-driven across the resolved periods — no
         // roster-diffing against the prior month's active list.
-        var newHireQ = NewHiresQuery(periodKeysForCounts);
+        var periodKeys = periods.Select(p => p.Year * 100 + p.Month).ToList();
+        var newHireQ = NewHiresQuery(periodKeys);
         if (accessible != null) newHireQ = newHireQ.Where(e => accessible.Contains(e.Store));
         if (stores != null) newHireQ = newHireQ.Where(e => stores.Contains(e.Store));
         else if (omOcStores != null) newHireQ = newHireQ.Where(e => omOcStores.Contains(e.Store));
@@ -364,12 +301,7 @@ public class DashboardService : IDashboardService
         return result;
     }
 
-    public Task<List<ChartDataItem>> GetTurnoverByJobTitleAsync(int? month, int? year, string? store, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("TurnoverByJobTitle", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
-            () => GetTurnoverByJobTitleUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetTurnoverByJobTitleUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
+    public async Task<List<ChartDataItem>> GetTurnoverByJobTitleAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
@@ -394,12 +326,7 @@ public class DashboardService : IDashboardService
             .ToListAsync();
     }
 
-    public Task<List<ChartDataItem>> GetTurnoverByPayrollGroupAsync(int? month, int? year, string? store, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("TurnoverByPayrollGroup", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
-            () => GetTurnoverByPayrollGroupUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetTurnoverByPayrollGroupUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
+    public async Task<List<ChartDataItem>> GetTurnoverByPayrollGroupAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
@@ -428,12 +355,7 @@ public class DashboardService : IDashboardService
             .ToList();
     }
 
-    public Task<List<ChartDataItem>> GetTurnoverByTenureAsync(int? month, int? year, string? store, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("TurnoverByTenure", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
-            () => GetTurnoverByTenureUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetTurnoverByTenureUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
+    public async Task<List<ChartDataItem>> GetTurnoverByTenureAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
@@ -483,26 +405,29 @@ public class DashboardService : IDashboardService
         List<(int Month, int Year)> periods, List<string>? accessible, List<string>? stores, List<string>? omOcStores, List<string>? jobs,
         Expression<Func<ActiveEmployee, string>> keySelector, bool excludeEmptyKey)
     {
-        // Range = sum over periods, which is exactly one GROUP BY over the rows of all the periods —
-        // a single query instead of one per period.
-        var keys = periods.Select(p => p.Year * 100 + p.Month).ToList();
         var totals = new Dictionary<string, int>();
-        var q = _db.ActiveEmployees.Where(e => keys.Contains(e.Year * 100 + e.Month));
-        if (accessible != null) q = q.Where(e => accessible.Contains(e.Store));
-        if (stores != null) q = q.Where(e => stores.Contains(e.Store));
-        else if (omOcStores != null) q = q.Where(e => omOcStores.Contains(e.Store));
-        if (jobs != null) q = q.Where(e => jobs.Contains(e.JobTitle));
-
-        // Group and count server-side instead of pulling every matching
-        // ActiveEmployee row (all columns) over the wire just to group by
-        // one field in C# — same result, far less data transferred.
-        var grouped = await q.GroupBy(keySelector)
-            .Select(g => new { Key = g.Key, Count = g.Count() })
-            .ToListAsync();
-        foreach (var group in grouped)
+        foreach (var p in periods)
         {
-            if (excludeEmptyKey && string.IsNullOrEmpty(group.Key)) continue;
-            totals[group.Key] = totals.GetValueOrDefault(group.Key) + group.Count;
+            var q = _db.ActiveEmployees.Where(e => e.Month == p.Month && e.Year == p.Year);
+            if (accessible != null) q = q.Where(e => accessible.Contains(e.Store));
+            if (stores != null) q = q.Where(e => stores.Contains(e.Store));
+            else if (omOcStores != null) q = q.Where(e => omOcStores.Contains(e.Store));
+            if (jobs != null) q = q.Where(e => jobs.Contains(e.JobTitle));
+
+            // Group and count server-side instead of pulling every matching
+            // ActiveEmployee row (all columns) over the wire just to group by
+            // one field in C# — same result, far less data transferred per
+            // period (was the single biggest source of slow page loads once
+            // Neon was swapped for a remote SQL Server with less network
+            // headroom: this one query alone was taking 6+ seconds).
+            var grouped = await q.GroupBy(keySelector)
+                .Select(g => new { Key = g.Key, Count = g.Count() })
+                .ToListAsync();
+            foreach (var group in grouped)
+            {
+                if (excludeEmptyKey && string.IsNullOrEmpty(group.Key)) continue;
+                totals[group.Key] = totals.GetValueOrDefault(group.Key) + group.Count;
+            }
         }
 
         return totals
@@ -510,12 +435,7 @@ public class DashboardService : IDashboardService
             .ToList();
     }
 
-    public Task<List<ChartDataItem>> GetGenderBreakdownAsync(int? month, int? year, string? store, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("GenderBreakdown", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
-            () => GetGenderBreakdownUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetGenderBreakdownUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
+    public async Task<List<ChartDataItem>> GetGenderBreakdownAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
@@ -550,10 +470,12 @@ public class DashboardService : IDashboardService
 
     public async Task<List<PeriodItem>> GetAvailablePeriodsAsync()
     {
-        return (await GetRosterPeriodsAsync())
+        return await _db.ActiveEmployees
+            .Select(e => new { e.Month, e.Year })
+            .Distinct()
             .OrderByDescending(p => p.Year).ThenByDescending(p => p.Month)
             .Select(p => new PeriodItem { Month = p.Month, Year = p.Year })
-            .ToList();
+            .ToListAsync();
     }
 
     public async Task<List<StoreComparisonRow>> GetStoreComparisonAsync(int month, int year, string role, string? assignedName,
@@ -563,11 +485,10 @@ public class DashboardService : IDashboardService
         // smart-insights) each need this exact result for the same request
         // parameters — cache it the same way GetKpisAsync is cached, so a single
         // page load computes it once instead of recomputing it 2-4x.
-        var accessScope = await AccessScopeKey.ForAsync(_storeAccess, role, assignedName);
-        var cacheKey = _filterCache.KeyFor("store-comparison", month, year, fromMonth, fromYear,
+        var cacheKey = FilterResultCache.BuildKey("store-comparison", month, year, fromMonth, fromYear,
             FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc),
             FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles),
-            role, assignedName, accessScope);
+            role, assignedName);
         if (_filterCache.TryGet(cacheKey, out List<StoreComparisonRow>? cachedRows))
             return cachedRows!;
 
@@ -666,12 +587,7 @@ public class DashboardService : IDashboardService
         return result;
     }
 
-    public Task<OcOmAnalysisResult> GetOcOmAnalysisAsync(int month, int year, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("OcOmAnalysis", role, assignedName, new object?[] { month, year, role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
-            () => GetOcOmAnalysisUncachedAsync(month, year, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles));
-
-    private async Task<OcOmAnalysisResult> GetOcOmAnalysisUncachedAsync(int month, int year, string role, string? assignedName,
+    public async Task<OcOmAnalysisResult> GetOcOmAnalysisAsync(int month, int year, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null)
     {
         var stores = await GetStoreComparisonAsync(month, year, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles);
@@ -751,12 +667,7 @@ public class DashboardService : IDashboardService
     /// equivalent immediately-prior window (same length) — the Turnover
     /// page's "Trend" KPI card. Reuses the same weighted-average-headcount
     /// rate math as GetStoreComparisonAsync/GetSmartInsightsAsync.</summary>
-    public Task<TurnoverTrendResult> GetTurnoverTrendAsync(int month, int year, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("TurnoverTrend", role, assignedName, new object?[] { month, year, role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
-            () => GetTurnoverTrendUncachedAsync(month, year, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles));
-
-    private async Task<TurnoverTrendResult> GetTurnoverTrendUncachedAsync(int month, int year, string role, string? assignedName,
+    public async Task<TurnoverTrendResult> GetTurnoverTrendAsync(int month, int year, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null)
     {
         var current = await GetStoreComparisonAsync(month, year, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles);
@@ -776,12 +687,7 @@ public class DashboardService : IDashboardService
         };
     }
 
-    public Task<List<SmartInsightItem>> GetSmartInsightsAsync(int month, int year, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("SmartInsights", role, assignedName, new object?[] { month, year, role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
-            () => GetSmartInsightsUncachedAsync(month, year, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
-
-    private async Task<List<SmartInsightItem>> GetSmartInsightsUncachedAsync(int month, int year, string role, string? assignedName,
+    public async Task<List<SmartInsightItem>> GetSmartInsightsAsync(int month, int year, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null)
     {
         var insights = new List<SmartInsightItem>();
@@ -923,11 +829,7 @@ public class DashboardService : IDashboardService
         return insights;
     }
 
-    public Task<List<StoreBreakdown>> GetPerStoreTurnoverAsync(int month, int year, string role, string? assignedName) =>
-        CachedResultAsync("PerStoreTurnover", role, assignedName, new object?[] { month, year, role, assignedName },
-            () => GetPerStoreTurnoverUncachedAsync(month, year, role, assignedName), r => r.Count);
-
-    private async Task<List<StoreBreakdown>> GetPerStoreTurnoverUncachedAsync(int month, int year, string role, string? assignedName)
+    public async Task<List<StoreBreakdown>> GetPerStoreTurnoverAsync(int month, int year, string role, string? assignedName)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
 
@@ -982,17 +884,17 @@ public class DashboardService : IDashboardService
             .ToList();
     }
 
-    public Task<TrendMatrixResult> GetTrendMatrixAsync(string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, int? sinceYear = null, string? months = null, string? jobTitles = null, string? store = null) =>
-        CachedResultAsync("TrendMatrix", role, assignedName, new object?[] { role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), sinceYear, FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles), FilterResultCache.NormalizeList(store) },
-            () => GetTrendMatrixUncachedAsync(role, assignedName, om, oc, soc, od, sinceYear, months, jobTitles, store));
-
-    private async Task<TrendMatrixResult> GetTrendMatrixUncachedAsync(string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, int? sinceYear = null, string? months = null, string? jobTitles = null, string? store = null)
+    public async Task<TrendMatrixResult> GetTrendMatrixAsync(string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, int? sinceYear = null, string? months = null, string? jobTitles = null, string? store = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, null, null);
         var jobs = MultiValueFilter.Split(jobTitles);
 
         // All available periods ordered chronologically
-        var periods = (await GetRosterPeriodsAsync()).Select(p => new { p.Month, p.Year }).ToList();
+        var periods = await _db.ActiveEmployees
+            .Select(e => new { e.Month, e.Year })
+            .Distinct()
+            .OrderBy(p => p.Year).ThenBy(p => p.Month)
+            .ToListAsync();
 
         if (sinceYear.HasValue)
             periods = periods.Where(p => p.Year >= sinceYear.Value).ToList();
@@ -1092,12 +994,7 @@ public class DashboardService : IDashboardService
     // Snapshots of who currently works here, as opposed to the Turnover-page
     // methods above which describe who resigned.
 
-    public Task<List<ChartDataItem>> GetHeadcountByJobTitleAsync(int? month, int? year, string? store, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("HeadcountByJobTitle", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
-            () => GetHeadcountByJobTitleUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetHeadcountByJobTitleUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
+    public async Task<List<ChartDataItem>> GetHeadcountByJobTitleAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
@@ -1125,12 +1022,7 @@ public class DashboardService : IDashboardService
             .ToList();
     }
 
-    public Task<List<ChartDataItem>> GetHeadcountByPayrollGroupAsync(int? month, int? year, string? store, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("HeadcountByPayrollGroup", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
-            () => GetHeadcountByPayrollGroupUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetHeadcountByPayrollGroupUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
+    public async Task<List<ChartDataItem>> GetHeadcountByPayrollGroupAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
@@ -1172,12 +1064,7 @@ public class DashboardService : IDashboardService
         ("2+ years", 730, int.MaxValue),
     };
 
-    public Task<List<ChartDataItem>> GetHeadcountByTenureAsync(int? month, int? year, string? store, string role, string? assignedName,
-        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("HeadcountByTenure", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
-            () => GetHeadcountByTenureUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetHeadcountByTenureUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
+    public async Task<List<ChartDataItem>> GetHeadcountByTenureAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
@@ -1206,19 +1093,18 @@ public class DashboardService : IDashboardService
         // composition breakdowns above, rather than anchoring on a single
         // (e.g. latest) month.
         var totals = new Dictionary<string, int>();
-        var tenureKeys = periods.Select(p => p.Year * 100 + p.Month).ToList();
-        var tq = _db.ActiveEmployees.Where(e => tenureKeys.Contains(e.Year * 100 + e.Month) && e.HireDate != null);
-        if (accessible != null) tq = tq.Where(e => accessible.Contains(e.Store));
-        if (stores != null) tq = tq.Where(e => stores.Contains(e.Store));
-        else if (omOcStores != null) tq = tq.Where(e => omOcStores.Contains(e.Store));
-        if (MultiValueFilter.Split(jobTitles) is { } jobs) tq = tq.Where(e => jobs.Contains(e.JobTitle));
-
-        // One query for the hire dates of every period (instead of one per period), bucketed per period below.
-        var hireRows = await tq.Select(e => new { e.Year, e.Month, HireDate = e.HireDate!.Value }).ToListAsync();
-        foreach (var periodGroup in hireRows.GroupBy(r => (r.Year, r.Month)))
+        foreach (var p in periods)
         {
-            var asOf = new DateOnly(periodGroup.Key.Year, periodGroup.Key.Month, DateTime.DaysInMonth(periodGroup.Key.Year, periodGroup.Key.Month));
-            var hireDates = periodGroup.Select(r => r.HireDate).ToList();
+            var q = _db.ActiveEmployees.Where(e => e.Month == p.Month && e.Year == p.Year && e.HireDate != null);
+            if (accessible != null) q = q.Where(e => accessible.Contains(e.Store));
+            if (stores != null) q = q.Where(e => stores.Contains(e.Store));
+            else if (omOcStores != null) q = q.Where(e => omOcStores.Contains(e.Store));
+            if (MultiValueFilter.Split(jobTitles) is { } jobs) q = q.Where(e => jobs.Contains(e.JobTitle));
+
+            var hireDates = await q.Select(e => e.HireDate!.Value).ToListAsync();
+            if (hireDates.Count == 0) continue;
+
+            var asOf = new DateOnly(p.Year, p.Month, DateTime.DaysInMonth(p.Year, p.Month));
             foreach (var b in HeadcountTenureBuckets)
             {
                 var count = hireDates.Count(hd => (asOf.DayNumber - hd.DayNumber) >= b.Min && (asOf.DayNumber - hd.DayNumber) < b.Max);
@@ -1233,74 +1119,34 @@ public class DashboardService : IDashboardService
             .ToList();
     }
 
-    public Task<List<ChartDataItem>> GetHeadcountTrendAsync(string? store, string role, string? assignedName, string? om, string? oc, string? soc, string? od, int? sinceYear, string? jobTitles = null) =>
-        CachedResultAsync("HeadcountTrend", role, assignedName, new object?[] { FilterResultCache.NormalizeList(store), role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), sinceYear, FilterResultCache.NormalizeList(jobTitles) },
-            () => GetHeadcountTrendUncachedAsync(store, role, assignedName, om, oc, soc, od, sinceYear, jobTitles), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetHeadcountTrendUncachedAsync(string? store, string role, string? assignedName, string? om, string? oc, string? soc, string? od, int? sinceYear, string? jobTitles = null)
+    public async Task<List<ChartDataItem>> GetHeadcountTrendAsync(string? store, string role, string? assignedName, string? om, string? oc, string? soc, string? od, int? sinceYear, string? jobTitles = null)
     {
-        var periods = (await GetRosterPeriodsAsync()).Select(p => new { p.Month, p.Year }).ToList();
+        var periods = await _db.ActiveEmployees
+            .Select(e => new { e.Month, e.Year })
+            .Distinct()
+            .OrderBy(p => p.Year).ThenBy(p => p.Month)
+            .ToListAsync();
         if (sinceYear.HasValue) periods = periods.Where(p => p.Year >= sinceYear.Value).ToList();
-        if (periods.Count == 0) return new List<ChartDataItem>();
 
         var accessible = await GetAccessibleStoresAsync(role, assignedName, null, null);
         var stores = MultiValueFilter.Split(store);
-        var jobs = MultiValueFilter.Split(jobTitles);
-        var periodKeys = periods.Select(p => p.Year * 100 + p.Month).ToList();
 
-        var q = _db.ActiveEmployees.Where(e => periodKeys.Contains(e.Year * 100 + e.Month));
-        if (accessible != null) q = q.Where(e => accessible.Contains(e.Store));
-        if (stores != null) q = q.Where(e => stores.Contains(e.Store));
-        if (jobs != null) q = q.Where(e => jobs.Contains(e.JobTitle));
-
-        // OM/OC/SOC/OD are resolved as-of each period, so (when no explicit store is chosen) load the
-        // matching store names for ALL periods in one query instead of one query per period.
-        var oms = MultiValueFilter.Split(om);
-        var ocs = MultiValueFilter.Split(oc);
-        var socs = MultiValueFilter.Split(soc);
-        var ods = MultiValueFilter.Split(od);
-        Dictionary<int, HashSet<string>>? omOcByPeriod = null;
-        if (stores == null && (oms != null || ocs != null || socs != null || ods != null))
+        var result = new List<ChartDataItem>();
+        foreach (var p in periods)
         {
-            var sr = _db.StoreReferences.Where(s => periodKeys.Contains(s.Year * 100 + s.Month));
-            if (oms != null) sr = sr.Where(s => oms.Contains(s.OperationManager));
-            if (ocs != null) sr = sr.Where(s => ocs.Contains(s.OperationConsultant));
-            if (socs != null) sr = sr.Where(s => socs.Contains(s.SeniorOperationConsultant));
-            if (ods != null) sr = sr.Where(s => ods.Contains(s.OperationDirector));
-            var refs = await sr.Select(s => new { s.StoreName, s.Month, s.Year }).Distinct().ToListAsync();
-            omOcByPeriod = refs.GroupBy(r => r.Year * 100 + r.Month)
-                .ToDictionary(g => g.Key, g => g.Select(r => r.StoreName).ToHashSet());
-        }
+            var q = _db.ActiveEmployees.Where(e => e.Month == p.Month && e.Year == p.Year);
+            if (accessible != null) q = q.Where(e => accessible.Contains(e.Store));
+            if (stores != null) q = q.Where(e => stores.Contains(e.Store));
+            else if (await GetStoresForOmOcAsync(p.Month, p.Year, om, oc, soc, od) is { } omOcStores) q = q.Where(e => omOcStores.Contains(e.Store));
+            if (MultiValueFilter.Split(jobTitles) is { } jobs) q = q.Where(e => jobs.Contains(e.JobTitle));
 
-        Dictionary<int, int> countByPeriod;
-        if (omOcByPeriod == null)
-        {
-            var rows = await q.GroupBy(e => new { e.Year, e.Month })
-                .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() })
-                .ToListAsync();
-            countByPeriod = rows.ToDictionary(r => r.Year * 100 + r.Month, r => r.Count);
+            var count = await q.CountAsync();
+            result.Add(new ChartDataItem { Label = $"{p.Year:D4}-{p.Month:D2}", Value = count });
         }
-        else
-        {
-            var rows = await q.GroupBy(e => new { e.Year, e.Month, e.Store })
-                .Select(g => new { g.Key.Year, g.Key.Month, g.Key.Store, Count = g.Count() })
-                .ToListAsync();
-            countByPeriod = rows
-                .Where(r => omOcByPeriod.TryGetValue(r.Year * 100 + r.Month, out var set) && set.Contains(r.Store))
-                .GroupBy(r => r.Year * 100 + r.Month)
-                .ToDictionary(g => g.Key, g => g.Sum(r => r.Count));
-        }
-
-        return periods
-            .Select(p => new ChartDataItem { Label = $"{p.Year:D4}-{p.Month:D2}", Value = countByPeriod.GetValueOrDefault(p.Year * 100 + p.Month) })
-            .ToList();
+        return result;
     }
 
-    public Task<List<StoreHeadcountRow>> GetStoreHeadcountBreakdownAsync(int month, int year, string role, string? assignedName, string? om, string? oc, string? soc, string? od, string? jobTitles = null) =>
-        CachedResultAsync("StoreHeadcountBreakdown", role, assignedName, new object?[] { month, year, role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeList(jobTitles) },
-            () => GetStoreHeadcountBreakdownUncachedAsync(month, year, role, assignedName, om, oc, soc, od, jobTitles), r => r.Count);
-
-    private async Task<List<StoreHeadcountRow>> GetStoreHeadcountBreakdownUncachedAsync(int month, int year, string role, string? assignedName, string? om, string? oc, string? soc, string? od, string? jobTitles = null)
+    public async Task<List<StoreHeadcountRow>> GetStoreHeadcountBreakdownAsync(int month, int year, string role, string? assignedName, string? om, string? oc, string? soc, string? od, string? jobTitles = null)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
         var omOcStores = await GetStoresForOmOcAsync(month, year, om, oc, soc, od);
@@ -1334,11 +1180,7 @@ public class DashboardService : IDashboardService
             .ToList();
     }
 
-    public Task<List<StoreLeaderTrackingRow>> GetStoreLeaderTrackingAsync(string store, string role, string? assignedName) =>
-        CachedResultAsync("StoreLeaderTracking", role, assignedName, new object?[] { store, role, assignedName }, // one exact store name, not a CSV
-            () => GetStoreLeaderTrackingUncachedAsync(store, role, assignedName), r => r.Count);
-
-    private async Task<List<StoreLeaderTrackingRow>> GetStoreLeaderTrackingUncachedAsync(string store, string role, string? assignedName)
+    public async Task<List<StoreLeaderTrackingRow>> GetStoreLeaderTrackingAsync(string store, string role, string? assignedName)
     {
         var accessible = await GetAccessibleStoresAsync(role, assignedName, null, null);
         if (accessible != null && !accessible.Contains(store)) return new List<StoreLeaderTrackingRow>();

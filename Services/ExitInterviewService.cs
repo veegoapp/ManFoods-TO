@@ -13,39 +13,13 @@ public class ExitInterviewService : IExitInterviewService
     private readonly AppDbContext _db;
     private readonly IStoreAccessService _storeAccess;
     private readonly IStringLocalizer<SharedResource> _L;
-    private readonly FilterResultCache _filterCache;
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
-    public ExitInterviewService(AppDbContext db, IStoreAccessService storeAccess, IStringLocalizer<SharedResource> localizer, FilterResultCache? filterCache = null)
+    public ExitInterviewService(AppDbContext db, IStoreAccessService storeAccess, IStringLocalizer<SharedResource> localizer)
     {
         _db = db;
         _storeAccess = storeAccess;
         _L = localizer;
-        _filterCache = filterCache ?? new FilterResultCache();
     }
-
-    // Every exit-interview endpoint re-reads (and re-filters) the whole ExitInterviews table on each page open
-    // and filter change. Results are cached per filter + role + user in the bounded FilterResultCache; the
-    // key carries the data version, which UploadService bumps after an exit-interview (or store/period) upload.
-    private async Task<T> CachedAsync<T>(string kind, string? role, string? assignedName, object?[] keyParts, Func<Task<T>> load, Func<T, int>? sizeOf = null)
-    {
-        // role == null: caller-independent result (not filtered by the caller's stores). Otherwise the
-        // accessible-store scope (area-aware, see AccessScopeKey) is part of the key.
-        var scope = role == null ? "GLOBAL" : await AccessScopeKey.ForAsync(_storeAccess, role, assignedName);
-        var key = _filterCache.KeyFor("exit:" + kind, keyParts.Append(scope).ToArray());
-        if (_filterCache.TryGet(key, out T? cached)) return cached!;
-        var result = await load();
-        _filterCache.Set(key, result, CacheDuration, sizeOf?.Invoke(result) ?? 20);
-        return result;
-    }
-
-    private static string FilterKey(ExitInterviewFilter f) => string.Join('\u001f', new object?[]
-    {
-        FilterResultCache.NormalizeList(f.Store), f.StoreLeader, FilterResultCache.NormalizeList(f.OperationConsultant),
-        FilterResultCache.NormalizeList(f.OperationManager), FilterResultCache.NormalizeList(f.SeniorOperationConsultant),
-        FilterResultCache.NormalizeList(f.OperationDirector), f.Year, FilterResultCache.NormalizeMonths(f.Months),
-        FilterResultCache.NormalizeList(f.Jobs),
-    });
 
     private async Task<IQueryable<ExitInterview>> ApplyFilterAsync(IQueryable<ExitInterview> q, ExitInterviewFilter filter, string role, string? assignedName)
     {
@@ -136,11 +110,7 @@ public class ExitInterviewService : IExitInterviewService
         return 0;
     }
 
-    public Task<List<PeriodItem>> GetAvailablePeriodsAsync() =>
-        CachedAsync("AvailablePeriods", null, null, new object?[] {  },
-            () => GetAvailablePeriodsUncachedAsync(), r => r.Count);
-
-    private async Task<List<PeriodItem>> GetAvailablePeriodsUncachedAsync()
+    public async Task<List<PeriodItem>> GetAvailablePeriodsAsync()
     {
         var hasAny = await _db.ExitInterviews.AnyAsync();
         if (!hasAny) return new List<PeriodItem>();
@@ -165,11 +135,7 @@ public class ExitInterviewService : IExitInterviewService
         return periods;
     }
 
-    public Task<ExitInterviewFilterOptions> GetFilterOptionsAsync(string role, string? assignedName) =>
-        CachedAsync("FilterOptions", role, assignedName, new object?[] { role, assignedName },
-            () => GetFilterOptionsUncachedAsync(role, assignedName));
-
-    private async Task<ExitInterviewFilterOptions> GetFilterOptionsUncachedAsync(string role, string? assignedName)
+    public async Task<ExitInterviewFilterOptions> GetFilterOptionsAsync(string role, string? assignedName)
     {
         var rows = await (await ApplyFilterAsync(_db.ExitInterviews.AsNoTracking(), new ExitInterviewFilter(), role, assignedName))
             .Select(e => new { e.Store, e.StoreLeader, e.OperationConsultant, e.OperationManager })
@@ -187,64 +153,32 @@ public class ExitInterviewService : IExitInterviewService
         };
     }
 
-    public Task<List<ChartDataItem>> GetReasonsForLeavingAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
-        CachedAsync("ReasonsForLeaving", role, assignedName, new object?[] { FilterKey(filter), role, assignedName },
-            () => GetReasonsForLeavingUncachedAsync(filter, role, assignedName), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetReasonsForLeavingUncachedAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
+    public async Task<List<ChartDataItem>> GetReasonsForLeavingAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
         GroupCount(await FilteredAsync(filter, role, assignedName, e => e.ReasonForLeaving));
 
-    public Task<List<ChartDataItem>> GetWouldReturnAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
-        CachedAsync("WouldReturn", role, assignedName, new object?[] { FilterKey(filter), role, assignedName },
-            () => GetWouldReturnUncachedAsync(filter, role, assignedName), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetWouldReturnUncachedAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
+    public async Task<List<ChartDataItem>> GetWouldReturnAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
         GroupCount(await FilteredAsync(filter, role, assignedName, e => e.WouldReturn));
 
-    public Task<List<ChartDataItem>> GetOverallExperienceAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
-        CachedAsync("OverallExperience", role, assignedName, new object?[] { FilterKey(filter), role, assignedName },
-            () => GetOverallExperienceUncachedAsync(filter, role, assignedName), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetOverallExperienceUncachedAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
+    public async Task<List<ChartDataItem>> GetOverallExperienceAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
         GroupCount(await FilteredAsync(filter, role, assignedName, e => e.OverallExperience));
 
-    public Task<List<ChartDataItem>> GetWorkloadConditionAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
-        CachedAsync("WorkloadCondition", role, assignedName, new object?[] { FilterKey(filter), role, assignedName },
-            () => GetWorkloadConditionUncachedAsync(filter, role, assignedName), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetWorkloadConditionUncachedAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
+    public async Task<List<ChartDataItem>> GetWorkloadConditionAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
         GroupCount(await FilteredAsync(filter, role, assignedName, e => e.WorkloadCondition));
 
-    public Task<List<ChartDataItem>> GetTrainingAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
-        CachedAsync("Training", role, assignedName, new object?[] { FilterKey(filter), role, assignedName },
-            () => GetTrainingUncachedAsync(filter, role, assignedName), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetTrainingUncachedAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
+    public async Task<List<ChartDataItem>> GetTrainingAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
         GroupCount(await FilteredAsync(filter, role, assignedName, e => e.Training));
 
-    public Task<List<ChartDataItem>> GetFairTreatmentAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
-        CachedAsync("FairTreatment", role, assignedName, new object?[] { FilterKey(filter), role, assignedName },
-            () => GetFairTreatmentUncachedAsync(filter, role, assignedName), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetFairTreatmentUncachedAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
+    public async Task<List<ChartDataItem>> GetFairTreatmentAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
         GroupCount(await FilteredAsync(filter, role, assignedName, e => e.FairTreatment));
 
-    public Task<List<ChartDataItem>> GetWorkPressureReasonAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
-        CachedAsync("WorkPressureReason", role, assignedName, new object?[] { FilterKey(filter), role, assignedName },
-            () => GetWorkPressureReasonUncachedAsync(filter, role, assignedName), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetWorkPressureReasonUncachedAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
+    public async Task<List<ChartDataItem>> GetWorkPressureReasonAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
         GroupCount(await FilteredAsync(filter, role, assignedName, e => e.WorkPressureReasonText ?? ""));
 
     /// <summary>Per-store negativity for every engagement driver, keyed stably
     /// (HealthKeys.Driver*). "Negative" uses the same Sentiment() mapping as the
     /// rest of this service (answer classified as -1). Only stores with at least
     /// one exit response appear.</summary>
-    public Task<Dictionary<string, List<HealthDriverDto>>> GetStoreEngagementProfilesAsync(string role, string? assignedName) =>
-        CachedAsync("StoreEngagementProfiles", role, assignedName, new object?[] { role, assignedName },
-            () => GetStoreEngagementProfilesUncachedAsync(role, assignedName), r => r.Count);
-
-    private async Task<Dictionary<string, List<HealthDriverDto>>> GetStoreEngagementProfilesUncachedAsync(string role, string? assignedName)
+    public async Task<Dictionary<string, List<HealthDriverDto>>> GetStoreEngagementProfilesAsync(string role, string? assignedName)
     {
         var rows = await (await ApplyFilterAsync(_db.ExitInterviews.AsNoTracking(), new ExitInterviewFilter(), role, assignedName))
             .Select(e => new StoreDriverRow
@@ -322,11 +256,7 @@ public class ExitInterviewService : IExitInterviewService
         public string UsePersonalAbilities { get; set; } = "";
     }
 
-    public Task<List<EngagementDriverItem>> GetEngagementDriversAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
-        CachedAsync("EngagementDrivers", role, assignedName, new object?[] { FilterKey(filter), role, assignedName },
-            () => GetEngagementDriversUncachedAsync(filter, role, assignedName), r => r.Count);
-
-    private async Task<List<EngagementDriverItem>> GetEngagementDriversUncachedAsync(ExitInterviewFilter filter, string role, string? assignedName)
+    public async Task<List<EngagementDriverItem>> GetEngagementDriversAsync(ExitInterviewFilter filter, string role, string? assignedName)
     {
         var rows = await FilteredAsync(filter, role, assignedName, e => new EngagementDriverRow
         {
@@ -368,11 +298,7 @@ public class ExitInterviewService : IExitInterviewService
         return result.OrderBy(d => d.PositivePercent).ToList();
     }
 
-    public Task<ExitSentimentSummary> GetSentimentSummaryAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
-        CachedAsync("SentimentSummary", role, assignedName, new object?[] { FilterKey(filter), role, assignedName },
-            () => GetSentimentSummaryUncachedAsync(filter, role, assignedName));
-
-    private async Task<ExitSentimentSummary> GetSentimentSummaryUncachedAsync(ExitInterviewFilter filter, string role, string? assignedName)
+    public async Task<ExitSentimentSummary> GetSentimentSummaryAsync(ExitInterviewFilter filter, string role, string? assignedName)
     {
         var rows = await FilteredAsync(filter, role, assignedName, e => new { e.WouldReturn, e.OverallExperience });
         // Sentiment is derived from WouldReturn + OverallExperience, but
@@ -395,11 +321,7 @@ public class ExitInterviewService : IExitInterviewService
         public string OverallExperience { get; set; } = "";
     }
 
-    public Task<Dictionary<string, ExitSentimentSummary>> GetSentimentSummariesByDimensionAsync(string dimension, IReadOnlyCollection<string> names, string role, string? assignedName) =>
-        CachedAsync("SentimentSummariesByDimension", role, assignedName, new object?[] { dimension, string.Join("\u001f", names.OrderBy(v => v, StringComparer.Ordinal)), role, assignedName },
-            () => GetSentimentSummariesByDimensionUncachedAsync(dimension, names, role, assignedName), r => r.Count);
-
-    private async Task<Dictionary<string, ExitSentimentSummary>> GetSentimentSummariesByDimensionUncachedAsync(
+    public async Task<Dictionary<string, ExitSentimentSummary>> GetSentimentSummariesByDimensionAsync(
         string dimension, IReadOnlyCollection<string> names, string role, string? assignedName)
     {
         if (names.Count == 0) return new Dictionary<string, ExitSentimentSummary>();
@@ -468,11 +390,7 @@ public class ExitInterviewService : IExitInterviewService
         public DateTime? SubmittedAt { get; set; }
     }
 
-    public Task<List<ExitInterviewCommentItem>> GetCommentsAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
-        CachedAsync("Comments", role, assignedName, new object?[] { FilterKey(filter), role, assignedName },
-            () => GetCommentsUncachedAsync(filter, role, assignedName), r => r.Count);
-
-    private async Task<List<ExitInterviewCommentItem>> GetCommentsUncachedAsync(ExitInterviewFilter filter, string role, string? assignedName)
+    public async Task<List<ExitInterviewCommentItem>> GetCommentsAsync(ExitInterviewFilter filter, string role, string? assignedName)
     {
         var rows = await FilteredAsync(filter, role, assignedName, e => new CommentRow
         {
@@ -518,11 +436,7 @@ public class ExitInterviewService : IExitInterviewService
         return result.OrderByDescending(c => c.SubmittedAt).ToList();
     }
 
-    public Task<List<ChartDataItem>> GetByJobTitleAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
-        CachedAsync("ByJobTitle", role, assignedName, new object?[] { FilterKey(filter), role, assignedName },
-            () => GetByJobTitleUncachedAsync(filter, role, assignedName), r => r.Count);
-
-    private async Task<List<ChartDataItem>> GetByJobTitleUncachedAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
+    public async Task<List<ChartDataItem>> GetByJobTitleAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
         GroupCount(await FilteredAsync(filter, role, assignedName, e => e.JobTitle));
 
     private static bool IsYes(string answer)
@@ -531,11 +445,7 @@ public class ExitInterviewService : IExitInterviewService
         return a is "yes" or "y" or "true" or "نعم";
     }
 
-    public Task<List<ExitReasonTrendPoint>> GetReasonsTrendAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
-        CachedAsync("ReasonsTrend", role, assignedName, new object?[] { FilterKey(filter), role, assignedName },
-            () => GetReasonsTrendUncachedAsync(filter, role, assignedName), r => r.Count);
-
-    private async Task<List<ExitReasonTrendPoint>> GetReasonsTrendUncachedAsync(ExitInterviewFilter filter, string role, string? assignedName)
+    public async Task<List<ExitReasonTrendPoint>> GetReasonsTrendAsync(ExitInterviewFilter filter, string role, string? assignedName)
     {
         // Always full history — same rule as other trend charts elsewhere in the
         // app — so the filter's own Year/Months selection is dropped here while
@@ -565,11 +475,7 @@ public class ExitInterviewService : IExitInterviewService
             .ToList();
     }
 
-    public Task<List<ExitReasonReturnItem>> GetReasonVsWouldReturnAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
-        CachedAsync("ReasonVsWouldReturn", role, assignedName, new object?[] { FilterKey(filter), role, assignedName },
-            () => GetReasonVsWouldReturnUncachedAsync(filter, role, assignedName), r => r.Count);
-
-    private async Task<List<ExitReasonReturnItem>> GetReasonVsWouldReturnUncachedAsync(ExitInterviewFilter filter, string role, string? assignedName)
+    public async Task<List<ExitReasonReturnItem>> GetReasonVsWouldReturnAsync(ExitInterviewFilter filter, string role, string? assignedName)
     {
         var rows = await FilteredAsync(filter, role, assignedName, e => new { e.ReasonForLeaving, e.WouldReturn });
         var valid = rows.Where(r => !string.IsNullOrWhiteSpace(r.ReasonForLeaving)).ToList();
