@@ -35,9 +35,11 @@ public class ScorecardService : IScorecardService
     // query (RequestedJobs), not passed in, so it is part of every key. Uploads bump the data version.
     private static readonly TimeSpan ResultCacheDuration = TimeSpan.FromMinutes(5);
 
-    private async Task<T> CachedAsync<T>(string kind, object?[] keyParts, Func<Task<T>> load, Func<T, int>? sizeOf = null)
+    private async Task<T> CachedAsync<T>(string kind, string role, string? assignedName, object?[] keyParts, Func<Task<T>> load, Func<T, int>? sizeOf = null)
     {
-        var key = FilterResultCache.BuildKey("scorecard:" + kind, keyParts);
+        // The accessible-store scope (area-aware) is part of the key: see AccessScopeKey.
+        var scope = await AccessScopeKey.ForAsync(_storeAccess, role, assignedName);
+        var key = _filterCache.KeyFor("scorecard:" + kind, keyParts.Append(scope).ToArray());
         if (_filterCache.TryGet(key, out T? cached)) return cached!;
         var result = await load();
         _filterCache.Set(key, result, ResultCacheDuration, sizeOf?.Invoke(result) ?? 20);
@@ -213,7 +215,7 @@ public class ScorecardService : IScorecardService
     }
 
     public Task<List<ScorecardRow>> GetScorecardAsync(string dimension, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, int? year = null) =>
-        CachedAsync("Scorecard", new object?[] { dimension, role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), year, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
+        CachedAsync("Scorecard", role, assignedName, new object?[] { dimension, role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), year, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
             () => GetScorecardUncachedAsync(dimension, role, assignedName, om, oc, soc, od, months, year), r => r.Count);
 
     private async Task<List<ScorecardRow>> GetScorecardUncachedAsync(string dimension, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, int? year = null)
@@ -287,7 +289,7 @@ public class ScorecardService : IScorecardService
     }
 
     public Task<List<string>> GetLeaderNamesAsync(string role, string? assignedName) =>
-        CachedAsync("LeaderNames", new object?[] { role, assignedName, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
+        CachedAsync("LeaderNames", role, assignedName, new object?[] { role, assignedName, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
             () => GetLeaderNamesUncachedAsync(role, assignedName), r => r.Count);
 
     private async Task<List<string>> GetLeaderNamesUncachedAsync(string role, string? assignedName)
@@ -299,7 +301,7 @@ public class ScorecardService : IScorecardService
     }
 
     public Task<StoreLeaderProfileViewModel> GetLeaderProfileAsync(string leaderName, string role, string? assignedName, string? months = null, int? year = null, string dimension = "leader") =>
-        CachedAsync("LeaderProfile", new object?[] { leaderName, role, assignedName, FilterResultCache.NormalizeMonths(months), year, dimension, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
+        CachedAsync("LeaderProfile", role, assignedName, new object?[] { leaderName, role, assignedName, FilterResultCache.NormalizeMonths(months), year, dimension, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
             () => GetLeaderProfileUncachedAsync(leaderName, role, assignedName, months, year, dimension));
 
     private async Task<StoreLeaderProfileViewModel> GetLeaderProfileUncachedAsync(string leaderName, string role, string? assignedName, string? months = null, int? year = null, string dimension = "leader")
@@ -338,7 +340,7 @@ public class ScorecardService : IScorecardService
     }
 
     public Task<List<LeaderHistoryRow>> GetLeaderHistoryAsync(string leaderName, string role, string? assignedName, string? months = null, int? year = null, string dimension = "leader") =>
-        CachedAsync("LeaderHistory", new object?[] { leaderName, role, assignedName, FilterResultCache.NormalizeMonths(months), year, dimension, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
+        CachedAsync("LeaderHistory", role, assignedName, new object?[] { leaderName, role, assignedName, FilterResultCache.NormalizeMonths(months), year, dimension, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
             () => GetLeaderHistoryUncachedAsync(leaderName, role, assignedName, months, year, dimension), r => r.Count);
 
     private async Task<List<LeaderHistoryRow>> GetLeaderHistoryUncachedAsync(string leaderName, string role, string? assignedName, string? months = null, int? year = null, string dimension = "leader")
@@ -418,7 +420,7 @@ public class ScorecardService : IScorecardService
     }
 
     public Task<ScorecardRollupResult> GetRollupAsync(string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, int? year = null) =>
-        CachedAsync("Rollup", new object?[] { role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), year, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
+        CachedAsync("Rollup", role, assignedName, new object?[] { role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), year, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
             () => GetRollupUncachedAsync(role, assignedName, om, oc, soc, od, months, year));
 
     private async Task<ScorecardRollupResult> GetRollupUncachedAsync(string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, int? year = null)

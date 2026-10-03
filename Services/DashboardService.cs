@@ -65,7 +65,8 @@ public class DashboardService : IDashboardService
     // version — see FilterResultCache.InvalidateAll).
     private async Task<List<string>> CachedFilterListAsync(string kind, int? month, int? year, string role, string? assignedName, Func<Task<List<string>>> load)
     {
-        var key = FilterResultCache.BuildKey("filter-list:" + kind, month, year, role, assignedName);
+        var scope = await AccessScopeKey.ForAsync(_storeAccess, role, assignedName);
+        var key = _filterCache.KeyFor("filter-list:" + kind, month, year, role, assignedName, scope);
         if (_filterCache.TryGet(key, out List<string>? cached)) return cached!;
         var list = await load();
         _filterCache.Set(key, list, CacheDuration, list.Count);
@@ -75,9 +76,11 @@ public class DashboardService : IDashboardService
     // Results of the chart/table endpoints, keyed by every filter value plus role and user (so a restricted
     // user never gets another user's rows) in the bounded FilterResultCache. Several filter changes and page
     // opens ask for the same combination; an upload bumps the key's data version (FilterResultCache.InvalidateAll).
-    private async Task<T> CachedResultAsync<T>(string kind, object?[] keyParts, Func<Task<T>> load, Func<T, int>? sizeOf = null)
+    private async Task<T> CachedResultAsync<T>(string kind, string role, string? assignedName, object?[] keyParts, Func<Task<T>> load, Func<T, int>? sizeOf = null)
     {
-        var key = FilterResultCache.BuildKey("dash:" + kind, keyParts);
+        // The accessible-store scope (area-aware) is part of the key: see AccessScopeKey.
+        var scope = await AccessScopeKey.ForAsync(_storeAccess, role, assignedName);
+        var key = _filterCache.KeyFor("dash:" + kind, keyParts.Append(scope).ToArray());
         if (_filterCache.TryGet(key, out T? cached)) return cached!;
         var result = await load();
         _filterCache.Set(key, result, CacheDuration, sizeOf?.Invoke(result) ?? 20);
@@ -284,10 +287,11 @@ public class DashboardService : IDashboardService
         }
         fromMonth ??= month; fromYear ??= year;
 
-        var cacheKey = FilterResultCache.BuildKey("kpi", fromMonth, fromYear, month, year,
+        var accessScope = await AccessScopeKey.ForAsync(_storeAccess, role, assignedName);
+        var cacheKey = _filterCache.KeyFor("kpi", fromMonth, fromYear, month, year,
             FilterResultCache.NormalizeList(store), FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc),
             FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months),
-            FilterResultCache.NormalizeList(jobTitles), role, assignedName);
+            FilterResultCache.NormalizeList(jobTitles), role, assignedName, accessScope);
         if (_filterCache.TryGet(cacheKey, out DashboardKpiViewModel? cached))
             return cached!;
 
@@ -362,7 +366,7 @@ public class DashboardService : IDashboardService
 
     public Task<List<ChartDataItem>> GetTurnoverByJobTitleAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("TurnoverByJobTitle", new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
+        CachedResultAsync("TurnoverByJobTitle", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
             () => GetTurnoverByJobTitleUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
 
     private async Task<List<ChartDataItem>> GetTurnoverByJobTitleUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
@@ -392,7 +396,7 @@ public class DashboardService : IDashboardService
 
     public Task<List<ChartDataItem>> GetTurnoverByPayrollGroupAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("TurnoverByPayrollGroup", new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
+        CachedResultAsync("TurnoverByPayrollGroup", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
             () => GetTurnoverByPayrollGroupUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
 
     private async Task<List<ChartDataItem>> GetTurnoverByPayrollGroupUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
@@ -426,7 +430,7 @@ public class DashboardService : IDashboardService
 
     public Task<List<ChartDataItem>> GetTurnoverByTenureAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("TurnoverByTenure", new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
+        CachedResultAsync("TurnoverByTenure", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
             () => GetTurnoverByTenureUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
 
     private async Task<List<ChartDataItem>> GetTurnoverByTenureUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
@@ -508,7 +512,7 @@ public class DashboardService : IDashboardService
 
     public Task<List<ChartDataItem>> GetGenderBreakdownAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("GenderBreakdown", new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
+        CachedResultAsync("GenderBreakdown", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
             () => GetGenderBreakdownUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
 
     private async Task<List<ChartDataItem>> GetGenderBreakdownUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
@@ -559,10 +563,11 @@ public class DashboardService : IDashboardService
         // smart-insights) each need this exact result for the same request
         // parameters — cache it the same way GetKpisAsync is cached, so a single
         // page load computes it once instead of recomputing it 2-4x.
-        var cacheKey = FilterResultCache.BuildKey("store-comparison", month, year, fromMonth, fromYear,
+        var accessScope = await AccessScopeKey.ForAsync(_storeAccess, role, assignedName);
+        var cacheKey = _filterCache.KeyFor("store-comparison", month, year, fromMonth, fromYear,
             FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc),
             FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles),
-            role, assignedName);
+            role, assignedName, accessScope);
         if (_filterCache.TryGet(cacheKey, out List<StoreComparisonRow>? cachedRows))
             return cachedRows!;
 
@@ -663,7 +668,7 @@ public class DashboardService : IDashboardService
 
     public Task<OcOmAnalysisResult> GetOcOmAnalysisAsync(int month, int year, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("OcOmAnalysis", new object?[] { month, year, role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
+        CachedResultAsync("OcOmAnalysis", role, assignedName, new object?[] { month, year, role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
             () => GetOcOmAnalysisUncachedAsync(month, year, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles));
 
     private async Task<OcOmAnalysisResult> GetOcOmAnalysisUncachedAsync(int month, int year, string role, string? assignedName,
@@ -748,7 +753,7 @@ public class DashboardService : IDashboardService
     /// rate math as GetStoreComparisonAsync/GetSmartInsightsAsync.</summary>
     public Task<TurnoverTrendResult> GetTurnoverTrendAsync(int month, int year, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("TurnoverTrend", new object?[] { month, year, role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
+        CachedResultAsync("TurnoverTrend", role, assignedName, new object?[] { month, year, role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
             () => GetTurnoverTrendUncachedAsync(month, year, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles));
 
     private async Task<TurnoverTrendResult> GetTurnoverTrendUncachedAsync(int month, int year, string role, string? assignedName,
@@ -773,7 +778,7 @@ public class DashboardService : IDashboardService
 
     public Task<List<SmartInsightItem>> GetSmartInsightsAsync(int month, int year, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("SmartInsights", new object?[] { month, year, role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
+        CachedResultAsync("SmartInsights", role, assignedName, new object?[] { month, year, role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
             () => GetSmartInsightsUncachedAsync(month, year, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
 
     private async Task<List<SmartInsightItem>> GetSmartInsightsUncachedAsync(int month, int year, string role, string? assignedName,
@@ -919,7 +924,7 @@ public class DashboardService : IDashboardService
     }
 
     public Task<List<StoreBreakdown>> GetPerStoreTurnoverAsync(int month, int year, string role, string? assignedName) =>
-        CachedResultAsync("PerStoreTurnover", new object?[] { month, year, role, assignedName },
+        CachedResultAsync("PerStoreTurnover", role, assignedName, new object?[] { month, year, role, assignedName },
             () => GetPerStoreTurnoverUncachedAsync(month, year, role, assignedName), r => r.Count);
 
     private async Task<List<StoreBreakdown>> GetPerStoreTurnoverUncachedAsync(int month, int year, string role, string? assignedName)
@@ -978,7 +983,7 @@ public class DashboardService : IDashboardService
     }
 
     public Task<TrendMatrixResult> GetTrendMatrixAsync(string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, int? sinceYear = null, string? months = null, string? jobTitles = null, string? store = null) =>
-        CachedResultAsync("TrendMatrix", new object?[] { role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), sinceYear, FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles), FilterResultCache.NormalizeList(store) },
+        CachedResultAsync("TrendMatrix", role, assignedName, new object?[] { role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), sinceYear, FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles), FilterResultCache.NormalizeList(store) },
             () => GetTrendMatrixUncachedAsync(role, assignedName, om, oc, soc, od, sinceYear, months, jobTitles, store));
 
     private async Task<TrendMatrixResult> GetTrendMatrixUncachedAsync(string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, int? sinceYear = null, string? months = null, string? jobTitles = null, string? store = null)
@@ -1089,7 +1094,7 @@ public class DashboardService : IDashboardService
 
     public Task<List<ChartDataItem>> GetHeadcountByJobTitleAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("HeadcountByJobTitle", new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
+        CachedResultAsync("HeadcountByJobTitle", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
             () => GetHeadcountByJobTitleUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
 
     private async Task<List<ChartDataItem>> GetHeadcountByJobTitleUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
@@ -1122,7 +1127,7 @@ public class DashboardService : IDashboardService
 
     public Task<List<ChartDataItem>> GetHeadcountByPayrollGroupAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("HeadcountByPayrollGroup", new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
+        CachedResultAsync("HeadcountByPayrollGroup", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
             () => GetHeadcountByPayrollGroupUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
 
     private async Task<List<ChartDataItem>> GetHeadcountByPayrollGroupUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
@@ -1169,7 +1174,7 @@ public class DashboardService : IDashboardService
 
     public Task<List<ChartDataItem>> GetHeadcountByTenureAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null) =>
-        CachedResultAsync("HeadcountByTenure", new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
+        CachedResultAsync("HeadcountByTenure", role, assignedName, new object?[] { month, year, FilterResultCache.NormalizeList(store), role, assignedName, fromMonth, fromYear, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), FilterResultCache.NormalizeList(jobTitles) },
             () => GetHeadcountByTenureUncachedAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobTitles), r => r.Count);
 
     private async Task<List<ChartDataItem>> GetHeadcountByTenureUncachedAsync(int? month, int? year, string? store, string role, string? assignedName,
@@ -1229,7 +1234,7 @@ public class DashboardService : IDashboardService
     }
 
     public Task<List<ChartDataItem>> GetHeadcountTrendAsync(string? store, string role, string? assignedName, string? om, string? oc, string? soc, string? od, int? sinceYear, string? jobTitles = null) =>
-        CachedResultAsync("HeadcountTrend", new object?[] { FilterResultCache.NormalizeList(store), role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), sinceYear, FilterResultCache.NormalizeList(jobTitles) },
+        CachedResultAsync("HeadcountTrend", role, assignedName, new object?[] { FilterResultCache.NormalizeList(store), role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), sinceYear, FilterResultCache.NormalizeList(jobTitles) },
             () => GetHeadcountTrendUncachedAsync(store, role, assignedName, om, oc, soc, od, sinceYear, jobTitles), r => r.Count);
 
     private async Task<List<ChartDataItem>> GetHeadcountTrendUncachedAsync(string? store, string role, string? assignedName, string? om, string? oc, string? soc, string? od, int? sinceYear, string? jobTitles = null)
@@ -1292,7 +1297,7 @@ public class DashboardService : IDashboardService
     }
 
     public Task<List<StoreHeadcountRow>> GetStoreHeadcountBreakdownAsync(int month, int year, string role, string? assignedName, string? om, string? oc, string? soc, string? od, string? jobTitles = null) =>
-        CachedResultAsync("StoreHeadcountBreakdown", new object?[] { month, year, role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeList(jobTitles) },
+        CachedResultAsync("StoreHeadcountBreakdown", role, assignedName, new object?[] { month, year, role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeList(jobTitles) },
             () => GetStoreHeadcountBreakdownUncachedAsync(month, year, role, assignedName, om, oc, soc, od, jobTitles), r => r.Count);
 
     private async Task<List<StoreHeadcountRow>> GetStoreHeadcountBreakdownUncachedAsync(int month, int year, string role, string? assignedName, string? om, string? oc, string? soc, string? od, string? jobTitles = null)
@@ -1330,7 +1335,7 @@ public class DashboardService : IDashboardService
     }
 
     public Task<List<StoreLeaderTrackingRow>> GetStoreLeaderTrackingAsync(string store, string role, string? assignedName) =>
-        CachedResultAsync("StoreLeaderTracking", new object?[] { store, role, assignedName }, // one exact store name, not a CSV
+        CachedResultAsync("StoreLeaderTracking", role, assignedName, new object?[] { store, role, assignedName }, // one exact store name, not a CSV
             () => GetStoreLeaderTrackingUncachedAsync(store, role, assignedName), r => r.Count);
 
     private async Task<List<StoreLeaderTrackingRow>> GetStoreLeaderTrackingUncachedAsync(string store, string role, string? assignedName)
