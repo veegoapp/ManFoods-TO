@@ -9,14 +9,16 @@ public class AccessPolicyService : IAccessPolicyService
 {
     private readonly AppDbContext _db;
     private readonly IMemoryCache _cache;
+    private readonly FilterResultCache _filterCache;
 
     private const string CacheKey = "access-policy:map";
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
 
-    public AccessPolicyService(AppDbContext db, IMemoryCache cache)
+    public AccessPolicyService(AppDbContext db, IMemoryCache cache, FilterResultCache? filterCache = null)
     {
         _db = db;
         _cache = cache;
+        _filterCache = filterCache ?? new FilterResultCache();
     }
 
     private async Task<Dictionary<string, bool>> LoadAsync()
@@ -91,6 +93,9 @@ public class AccessPolicyService : IAccessPolicyService
 
         await _db.SaveChangesAsync();
         _cache.Remove(CacheKey);
+        // Changing which areas are open changes which stores a restricted role sees, so every cached filter
+        // result (computed under the old policy) is dropped now rather than served until its TTL ends.
+        _filterCache.InvalidateAll();
         return changes;
     }
 

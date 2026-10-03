@@ -17,15 +17,33 @@ public class ScorecardService : IScorecardService
     private readonly IExitInterviewService _exitInterviews;
     private readonly IStoreAccessService _storeAccess;
     private readonly IMemoryCache _cache;
+    private readonly FilterResultCache _filterCache;
     private readonly IHttpContextAccessor _httpContext;
 
-    public ScorecardService(AppDbContext db, IExitInterviewService exitInterviews, IStoreAccessService storeAccess, IMemoryCache cache, IHttpContextAccessor httpContext)
+    public ScorecardService(AppDbContext db, IExitInterviewService exitInterviews, IStoreAccessService storeAccess, IMemoryCache cache, IHttpContextAccessor httpContext, FilterResultCache? filterCache = null)
     {
+        _filterCache = filterCache ?? new FilterResultCache();
         _db = db;
         _exitInterviews = exitInterviews;
         _storeAccess = storeAccess;
         _cache = cache;
         _httpContext = httpContext;
+    }
+
+    // Scorecard pages re-run these (heavy) aggregations on every filter change. Results are cached per
+    // filter + role + user in the bounded FilterResultCache. The "jobs" filter is read from the request
+    // query (RequestedJobs), not passed in, so it is part of every key. Uploads bump the data version.
+    private static readonly TimeSpan ResultCacheDuration = TimeSpan.FromMinutes(5);
+
+    private async Task<T> CachedAsync<T>(string kind, string role, string? assignedName, object?[] keyParts, Func<Task<T>> load, Func<T, int>? sizeOf = null)
+    {
+        // The accessible-store scope (area-aware) is part of the key: see AccessScopeKey.
+        var scope = await AccessScopeKey.ForAsync(_storeAccess, role, assignedName);
+        var key = _filterCache.KeyFor("scorecard:" + kind, keyParts.Append(scope).ToArray());
+        if (_filterCache.TryGet(key, out T? cached)) return cached!;
+        var result = await load();
+        _filterCache.Set(key, result, ResultCacheDuration, sizeOf?.Invoke(result) ?? 20);
+        return result;
     }
 
     private List<string>? RequestedJobs =>
@@ -196,7 +214,11 @@ public class ScorecardService : IScorecardService
         return RequestedJobs is { } jobs ? records.Where(r => jobs.Contains(r.JobTitle)).ToList() : records;
     }
 
-    public async Task<List<ScorecardRow>> GetScorecardAsync(string dimension, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, int? year = null)
+    public Task<List<ScorecardRow>> GetScorecardAsync(string dimension, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, int? year = null) =>
+        CachedAsync("Scorecard", role, assignedName, new object?[] { dimension, role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), year, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
+            () => GetScorecardUncachedAsync(dimension, role, assignedName, om, oc, soc, od, months, year), r => r.Count);
+
+    private async Task<List<ScorecardRow>> GetScorecardUncachedAsync(string dimension, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, int? year = null)
     {
         // Resolve once so both aggregates and the historical period window use
         // the same effective year (latest data year when caller passes no year).
@@ -266,7 +288,11 @@ public class ScorecardService : IScorecardService
         return result.OrderByDescending(r => r.TurnoverRate).ToList();
     }
 
-    public async Task<List<string>> GetLeaderNamesAsync(string role, string? assignedName)
+    public Task<List<string>> GetLeaderNamesAsync(string role, string? assignedName) =>
+        CachedAsync("LeaderNames", role, assignedName, new object?[] { role, assignedName, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
+            () => GetLeaderNamesUncachedAsync(role, assignedName), r => r.Count);
+
+    private async Task<List<string>> GetLeaderNamesUncachedAsync(string role, string? assignedName)
     {
         var q = _db.StoreReferences.Where(s => s.StoreLeader != "");
         var accessible = await _storeAccess.GetAccessibleStoreNamesAsync(role, assignedName);
@@ -274,7 +300,11 @@ public class ScorecardService : IScorecardService
         return await q.Select(s => s.StoreLeader).Distinct().OrderBy(s => s).ToListAsync();
     }
 
-    public async Task<StoreLeaderProfileViewModel> GetLeaderProfileAsync(string leaderName, string role, string? assignedName, string? months = null, int? year = null, string dimension = "leader")
+    public Task<StoreLeaderProfileViewModel> GetLeaderProfileAsync(string leaderName, string role, string? assignedName, string? months = null, int? year = null, string dimension = "leader") =>
+        CachedAsync("LeaderProfile", role, assignedName, new object?[] { leaderName, role, assignedName, FilterResultCache.NormalizeMonths(months), year, dimension, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
+            () => GetLeaderProfileUncachedAsync(leaderName, role, assignedName, months, year, dimension));
+
+    private async Task<StoreLeaderProfileViewModel> GetLeaderProfileUncachedAsync(string leaderName, string role, string? assignedName, string? months = null, int? year = null, string dimension = "leader")
     {
         dimension = NormalizeProfileDimension(dimension);
         var profile = new StoreLeaderProfileViewModel { Name = leaderName };
@@ -309,7 +339,11 @@ public class ScorecardService : IScorecardService
         return profile;
     }
 
-    public async Task<List<LeaderHistoryRow>> GetLeaderHistoryAsync(string leaderName, string role, string? assignedName, string? months = null, int? year = null, string dimension = "leader")
+    public Task<List<LeaderHistoryRow>> GetLeaderHistoryAsync(string leaderName, string role, string? assignedName, string? months = null, int? year = null, string dimension = "leader") =>
+        CachedAsync("LeaderHistory", role, assignedName, new object?[] { leaderName, role, assignedName, FilterResultCache.NormalizeMonths(months), year, dimension, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
+            () => GetLeaderHistoryUncachedAsync(leaderName, role, assignedName, months, year, dimension), r => r.Count);
+
+    private async Task<List<LeaderHistoryRow>> GetLeaderHistoryUncachedAsync(string leaderName, string role, string? assignedName, string? months = null, int? year = null, string dimension = "leader")
     {
         if (string.IsNullOrWhiteSpace(leaderName)) return new List<LeaderHistoryRow>();
         dimension = NormalizeProfileDimension(dimension);
@@ -385,7 +419,11 @@ public class ScorecardService : IScorecardService
         return result;
     }
 
-    public async Task<ScorecardRollupResult> GetRollupAsync(string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, int? year = null)
+    public Task<ScorecardRollupResult> GetRollupAsync(string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, int? year = null) =>
+        CachedAsync("Rollup", role, assignedName, new object?[] { role, assignedName, FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc), FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months), year, FilterResultCache.NormalizeList(_httpContext.HttpContext?.Request.Query["jobs"].ToString()) },
+            () => GetRollupUncachedAsync(role, assignedName, om, oc, soc, od, months, year));
+
+    private async Task<ScorecardRollupResult> GetRollupUncachedAsync(string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, int? year = null)
     {
         var result = new ScorecardRollupResult();
         var leaderAggregates = await BuildNameAggregatesAsync("leader", role, assignedName, om, oc, soc, od, months, year);

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Caching.Memory;
@@ -20,6 +21,19 @@ public sealed class FilterResultCache
     public const long DefaultSizeLimit = 50_000;
 
     private readonly MemoryCache _cache;
+
+    // Bumped (InvalidateAll) whenever data or access rules change — UploadService on uploads/deletes,
+    // AccessPolicyService when the Super Admin saves the access policy. KeyFor() folds the current version into
+    // the key, so every result computed under the old data/rules stops matching at once (it simply ages out of
+    // the bounded cache) instead of being served until its TTL ends. The key is built BEFORE the result is
+    // loaded, so a load that straddles an invalidation is stored under the OLD version and never served after it.
+    // The version is per instance (this class is a DI singleton), so tests with their own cache don't interfere.
+    private int _version;
+    public void InvalidateAll() => Interlocked.Increment(ref _version);
+
+    /// <summary>Like <see cref="BuildKey"/>, plus this cache's current data/access-rules version.</summary>
+    public string KeyFor(string prefix, params object?[] parts) =>
+        BuildKey(prefix + "@v" + Volatile.Read(ref _version), parts);
 
     public FilterResultCache(long sizeLimit = DefaultSizeLimit) =>
         _cache = new MemoryCache(new MemoryCacheOptions { SizeLimit = sizeLimit });
@@ -75,11 +89,12 @@ public sealed class FilterResultCache
         return string.Join(',', months);
     }
 
-    /// <summary>A fixed-length key from a prefix and the key parts, so the key size no longer depends
-    /// on how long the request's filter values were.</summary>
+    /// <summary>A fixed-length key from a prefix and the key parts, so the key size no longer depends on how long
+    /// the request's filter values were. The current UI culture is folded in too: cached
+    /// results carry localized labels, so a language switch must not be served the other language's entry.</summary>
     public static string BuildKey(string prefix, params object?[] parts)
     {
-        var joined = string.Join('\u001f', parts.Select(p => p?.ToString() ?? ""));
+        var joined = CultureInfo.CurrentUICulture.Name + "\u001f" + string.Join('\u001f', parts.Select(p => p?.ToString() ?? ""));
         return prefix + ":" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(joined)));
     }
 }
