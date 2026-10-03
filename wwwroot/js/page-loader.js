@@ -6,6 +6,7 @@
    (cached) responses never flash it. Overlapping begin() calls share one overlay. */
 (function () {
     const SHOW_DELAY_MS = 800;       // responses faster than this (the cached, "fast" opens) never show the animation
+    const OFFSET_DOWN_PX = 110;    // about 3 cm below the exact center of the page body
     const SIZE_PX = 180;           // width of the animation; its canvas is 4:3
     const ANIMATION_PATH = '/lottie/loading.json';
 
@@ -17,7 +18,7 @@
         st.id = 'pageLoaderStyle';
         st.textContent =
             '.page-loader{position:absolute;inset:0;z-index:50;background:var(--bg,#fff);opacity:.92}' +
-            '.page-loader-inner{position:sticky;top:calc(var(--header-h,64px) + (100vh - var(--header-h,64px)) / 2 - ' + (SIZE_PX * 0.375) + 'px);margin:0 auto;' +
+            '.page-loader-inner{position:sticky;top:calc(var(--header-h,64px) + (100vh - var(--header-h,64px)) / 2 - ' + (SIZE_PX * 0.375 - OFFSET_DOWN_PX) + 'px);margin:0 auto;' +
             'width:' + SIZE_PX + 'px;height:' + (SIZE_PX * 0.75) + 'px}';
         document.head.appendChild(st);
     }
