@@ -425,6 +425,35 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task HiringForecast_LeaderRollUps_AddUpTheStoreMonthsAndSkipBlankLeaders()
+    {
+        var db = await LeadershipDb();
+        Proj(db, 1, "9 | Z", "Crew", 4); Active(db, 1, "9 | Z", "Crew", 1); // no store reference: no leader at all
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null);
+
+        // A needs 2, B 0, C 3, D 0 (and Z 3, with no leader); Amy leads A+B, Bob leads C.
+        var amy = Assert.Single(dto.ByOperationConsultant, r => r.Store == "Amy");
+        Assert.Equal(2, amy.StoreCount); Assert.Equal(2, amy.Months[0]); Assert.Equal(2, amy.Total);
+        Assert.Equal(3, Assert.Single(dto.ByOperationConsultant, r => r.Store == "Bob").Total);
+        Assert.Equal(new[] { "Bob", "Amy" }, dto.ByOperationConsultant.Select(r => r.Store));   // biggest need first
+        Assert.Equal(new[] { "Mona" }, dto.ByOperationManager.Select(r => r.Store));
+        Assert.Equal(5, dto.ByOperationManager[0].Total);
+        Assert.Equal(new[] { "Eve", "Dan" }, dto.ByOperationDirector.Select(r => r.Store));
+        Assert.Equal(new[] { "Sue", "Sam" }, dto.BySeniorOperationConsultant.Select(r => r.Store));
+        Assert.All(new[] { dto.ByOperationConsultant, dto.ByOperationManager, dto.ByOperationDirector, dto.BySeniorOperationConsultant },
+            g => Assert.Equal(5, g.Sum(r => r.Total)));                                          // the leaderless store is not in any roll-up
+        Assert.Equal(8, dto.GrandTotal);
+
+        // Same figures whatever the main table is grouped by, and the filters narrow them like the table.
+        var byJob = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null, by: "job");
+        Assert.Equal(dto.ByOperationConsultant.Select(r => (r.Store, r.Total)), byJob.ByOperationConsultant.Select(r => (r.Store, r.Total)));
+        var onlyAmy = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null, oc: "Amy");
+        Assert.Equal("Amy", Assert.Single(onlyAmy.ByOperationConsultant).Store);
+    }
+
+    [Fact]
     public async Task HiringForecast_PastMonthUsesNeedFormula_FutureMonthsAreSimulated()
     {
         var db = NewDb();
@@ -937,6 +966,36 @@ public class CrewTrainerServiceTests
         Assert.Equal(7, b.CrewLevel); Assert.Equal(1, b.Required); Assert.Equal(0, b.Actual); Assert.Equal(-1, b.GapRule);
         Assert.Equal("2 | B", dto.ByStore[0].Store);                                             // the store most short of trainers (by the rule) comes first
         Assert.Equal(21, dto.Kpis.CrewLevel); Assert.Equal(3, dto.Kpis.Required); Assert.Equal(2, dto.Kpis.Actual); Assert.Equal(-1, dto.Kpis.GapRule);
+    }
+
+    [Fact]
+    public async Task LeaderRollUps_AddUpTheStoreRows_AndSkipBlankLeaders()
+    {
+        var db = NewDb();
+        db.JobHeadcountProjections.Add(new JobHeadcountProjection { Year = 2026, Month = 2, StoreName = "1 | A", JobTitle = "Crew Trainer", ProjectedHeadcount = 3 });
+        db.JobHeadcountProjections.Add(new JobHeadcountProjection { Year = 2026, Month = 2, StoreName = "2 | B", JobTitle = "Crew Trainer", ProjectedHeadcount = 1 });
+        db.JobHeadcountProjections.Add(new JobHeadcountProjection { Year = 2026, Month = 2, StoreName = "3 | C", JobTitle = "Crew Trainer", ProjectedHeadcount = 2 });
+        db.JobPayrollGroups.Add(new JobPayrollGroup { JobTitle = "Crew", PayrollGroup = "Manfoods Company", IsCrewLevel = true });
+        for (int i = 1; i <= 12; i++) Person(db, 2, "a" + i, "1 | A");
+        Trainer(db, 2, "a1", "1 | A");
+        for (int i = 1; i <= 6; i++) Person(db, 2, "b" + i, "2 | B");
+        Trainer(db, 2, "b1", "2 | B");
+        Person(db, 2, "c1", "3 | C");
+        db.StoreReferences.AddRange(
+            new StoreReference { Year = 2026, Month = 2, StoreName = "1 | A", OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+            new StoreReference { Year = 2026, Month = 2, StoreName = "2 | B", OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" });
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 2, null, "Admin", null);
+
+        var amy = Assert.Single(dto.ByOperationConsultant);                                       // store C has no leader: skipped
+        Assert.Equal("Amy", amy.Name); Assert.Equal(2, amy.StoreCount);
+        Assert.Equal(4, amy.Projected); Assert.Equal(2, amy.Actual); Assert.Equal(-2, amy.Gap);
+        Assert.Equal(16, amy.CrewLevel); Assert.Equal(3, amy.Required); Assert.Equal(-1, amy.GapRule);
+        Assert.Equal("Mona", Assert.Single(dto.ByOperationManager).Name);
+        Assert.Equal("Dan", Assert.Single(dto.ByOperationDirector).Name);
+        Assert.Equal("Sam", Assert.Single(dto.BySeniorOperationConsultant).Name);
+        Assert.Equal(3, dto.ByStore.Count);
     }
 
     [Fact]

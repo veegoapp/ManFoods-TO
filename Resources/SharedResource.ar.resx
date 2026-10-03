@@ -2296,4 +2296,12 @@
   <data name="ActLog_Clear_NothingToDelete" xml:space="preserve"><value>لا توجد سجلات مطابقة لهذا الاختيار.</value></data>
   <data name="ActLog_Clear_CustomNeedDates" xml:space="preserve"><value>اختر التاريخين للفترة المخصصة.</value></data>
   <data name="Users_LoginHistoryCairo" xml:space="preserve"><value>الأوقات بتوقيت القاهرة</value></data>
+  <data name="HF_GrpSubOc" xml:space="preserve"><value>الاحتياج الشهري للتعيين حسب الاستشاري</value></data>
+  <data name="HF_GrpSubOd" xml:space="preserve"><value>الاحتياج الشهري للتعيين حسب المدير الأول</value></data>
+  <data name="HF_GrpSubOm" xml:space="preserve"><value>الاحتياج الشهري للتعيين حسب المدير</value></data>
+  <data name="HF_GrpSubSoc" xml:space="preserve"><value>الاحتياج الشهري للتعيين حسب الاستشاري الأول</value></data>
+  <data name="CT_GrpSubOc" xml:space="preserve"><value>المدربون مقابل القاعدة والخطة حسب الاستشاري</value></data>
+  <data name="CT_GrpSubOd" xml:space="preserve"><value>المدربون مقابل القاعدة والخطة حسب المدير الأول</value></data>
+  <data name="CT_GrpSubOm" xml:space="preserve"><value>المدربون مقابل القاعدة والخطة حسب المدير</value></data>
+  <data name="CT_GrpSubSoc" xml:space="preserve"><value>المدربون مقابل القاعدة والخطة حسب الاستشاري الأول</value></data>
 </root>

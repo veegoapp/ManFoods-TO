@@ -72,6 +72,17 @@ public class CrewTrainerService : ICrewTrainerService
         return rows.GroupBy(r => r.EmployeeId).Select(g => (g.Key, g.First().Store)).ToList();
     });
 
+    /// <summary>Adds the store rows up per leader (blank leaders skipped), most short of trainers first.</summary>
+    private static List<CrewTrainerGroupDto> RollUp(List<CrewTrainerStoreDto> stores, Func<CrewTrainerStoreDto, string> leader) =>
+        stores.Where(r => !string.IsNullOrWhiteSpace(leader(r)))
+            .GroupBy(r => leader(r).Trim(), StringComparer.OrdinalIgnoreCase)
+            .Select(g => new CrewTrainerGroupDto
+            {
+                Name = g.Key, StoreCount = g.Count(), Projected = g.Sum(r => r.Projected), Actual = g.Sum(r => r.Actual), Gap = g.Sum(r => r.Gap),
+                CrewLevel = g.Sum(r => r.CrewLevel), Required = g.Sum(r => r.Required), GapRule = g.Sum(r => r.GapRule),
+            })
+            .OrderBy(r => r.GapRule).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
+
     public async Task<CrewTrainerDto> GetAsync(int? year, int? month, string? stores, string role, string? assignedName,
         string? om = null, string? oc = null, string? soc = null, string? od = null)
     {
@@ -107,7 +118,11 @@ public class CrewTrainerService : ICrewTrainerService
             var isTrainer = trainerJobNames.Contains(job);
             if (!isTrainer && !crewJobs.Contains(job)) continue;
             var key = r.Store.Trim();
-            if (!byStore.TryGetValue(key, out var row)) byStore[key] = row = new CrewTrainerStoreDto { Store = r.Store, OperationConsultant = r.OperationConsultant };
+            if (!byStore.TryGetValue(key, out var row)) byStore[key] = row = new CrewTrainerStoreDto
+            {
+                Store = r.Store, OperationConsultant = r.OperationConsultant, OperationManager = r.OperationManager,
+                SeniorOperationConsultant = r.SeniorOperationConsultant, OperationDirector = r.OperationDirector,
+            };
             if (isTrainer) { row.Projected += r.Projected; row.Actual += r.Actual ?? 0; }
             else row.CrewLevel += r.Actual ?? 0;
         }
@@ -119,6 +134,10 @@ public class CrewTrainerService : ICrewTrainerService
         }
         dto.ByStore = byStore.Values.OrderBy(r => r.GapRule).ThenBy(r => r.Store, StringComparer.OrdinalIgnoreCase).ToList(); // most short of trainers first
         dto.HasProjection = dto.ByStore.Any(r => r.Projected > 0);
+        dto.ByOperationConsultant = RollUp(dto.ByStore, r => r.OperationConsultant);
+        dto.BySeniorOperationConsultant = RollUp(dto.ByStore, r => r.SeniorOperationConsultant);
+        dto.ByOperationDirector = RollUp(dto.ByStore, r => r.OperationDirector);
+        dto.ByOperationManager = RollUp(dto.ByStore, r => r.OperationManager);
         var universe = new HashSet<string>(dto.ByStore.Select(r => r.Store.Trim()), StringComparer.OrdinalIgnoreCase);
 
         var resigned = (await GetResignedAsync(dto.Year, dto.Month)).Count(r => universe.Contains((r.Store ?? "").Trim()));
