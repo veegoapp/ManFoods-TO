@@ -655,6 +655,31 @@ html[dir="rtl"] .page-guide-panel { border-inline-start: 0; border-inline-end: 1
 .stat-card-header h6 { margin: 0 0 1px; }
 .stat-card-header p  { margin: 0; }
 
+/* Person icon for the OC / OD / OM / SOC breakdown cards: the same person glyph for every role, a coloured side bar
+   and a small role badge (data-role) in the corner tell them apart. The colours live here, in one place. */
+.role-icon-oc  { --icon-color: #DA291C; }
+.role-icon-od  { --icon-color: #0891B2; }
+.role-icon-om  { --icon-color: #EA7A00; }
+.role-icon-soc { --icon-color: #7C3AED; }
+.stat-card-header .stat-card-icon.role-icon {
+    position: relative; width: 42px; height: 42px; border-radius: 10px; font-size: 20px;
+    background: var(--card-bg);
+    box-shadow: 0 0 0 1px var(--card-border), 0 2px 6px rgba(20,24,40,.06);
+}
+.stat-card-icon.role-icon::before {
+    content: ""; position: absolute; inset-inline-start: -1px; top: 8px; bottom: 8px; width: 4px;
+    border-radius: 0 4px 4px 0; background: var(--icon-color);
+}
+[dir="rtl"] .stat-card-icon.role-icon::before { border-radius: 4px 0 0 4px; }
+.stat-card-icon.role-icon::after {
+    content: attr(data-role); position: absolute; inset-inline-end: -7px; bottom: -7px;
+    min-width: 20px; height: 17px; padding: 0 4px; border-radius: 6px;
+    background: var(--icon-color); color: #fff;
+    font-size: 9.5px; font-weight: 800; letter-spacing: .3px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 2px var(--card-bg);
+}
+
 /* Tells the user, per chart/table, whether the selected From→To period
    range is reflected there or not — only shown while a range is active. */
 .range-filter-badge {
