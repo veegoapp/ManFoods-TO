@@ -391,10 +391,10 @@ function ctRenderStores() {
 
 /* Per-leader roll-ups of the store rows (the server adds them up; blank leaders are left out). */
 const CT_GROUP_DEFS = [
-    { key: 'byOperationConsultant', id: 'Oc', icon: 'bi-person-badge', color: 'oklch(0.5 0.18 25)' },
-    { key: 'byOperationDirector', id: 'Od', icon: 'bi-person-workspace', color: 'oklch(0.5 0.18 250)' },
-    { key: 'byOperationManager', id: 'Om', icon: 'bi-person-gear', color: 'oklch(0.6 0.16 25)' },
-    { key: 'bySeniorOperationConsultant', id: 'Soc', icon: 'bi-person-vcard', color: 'oklch(0.55 0.2 300)' },
+    { key: 'byOperationConsultant', id: 'Oc', role: 'oc', abbr: 'OC' },
+    { key: 'byOperationDirector', id: 'Od', role: 'od', abbr: 'OD' },
+    { key: 'byOperationManager', id: 'Om', role: 'om', abbr: 'OM' },
+    { key: 'bySeniorOperationConsultant', id: 'Soc', role: 'soc', abbr: 'SOC' },
 ];
 const ctGroupSort = {};
 CT_GROUP_DEFS.forEach(g => { ctGroupSort[g.key] = { key: 'gapRule', dir: 'asc' }; });
@@ -409,7 +409,7 @@ function ctRenderGroups() {
     host.innerHTML = CT_GROUP_DEFS.map(g => `
         <div class="chart-card p-0" style="overflow:hidden">
             <div class="chart-header stat-card-header">
-                <span class="stat-card-icon" style="--icon-color:${g.color}"><i class="bi ${g.icon}"></i></span>
+                <span class="stat-card-icon role-icon role-icon-${g.role}" data-role="${g.abbr}"><i class="bi bi-person-fill"></i></span>
                 <div><h6 class="mb-0">${sapEscape(ctL[g.id.toLowerCase() + 'Title'])}</h6><p class="mb-0">${sapEscape(ctL[g.id.toLowerCase() + 'Sub'])}</p></div>
             </div>
             <div class="ct-wrap"><table class="ct-table"><thead><tr id="ctGrpHead${g.id}"></tr></thead><tbody id="ctGrpBody${g.id}"></tbody></table></div>

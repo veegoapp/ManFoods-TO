@@ -512,10 +512,10 @@ const wpMarkSortedHeader = () => wpMarkSorted(document.getElementById('wpStoreHe
 /* ── By Operation Consultant / Director / Manager / Senior Consultant ──────────
    Same figures as the stores table, rolled up by the person responsible for the stores. */
 const WP_GROUP_DEFS = [
-    { key: 'byOperationConsultant', id: 'Oc', icon: 'bi-person-badge', color: 'oklch(0.5 0.18 25)' },
-    { key: 'byOperationDirector', id: 'Od', icon: 'bi-person-workspace', color: 'oklch(0.5 0.18 250)' },
-    { key: 'byOperationManager', id: 'Om', icon: 'bi-person-gear', color: 'oklch(0.6 0.16 25)' },
-    { key: 'bySeniorOperationConsultant', id: 'Soc', icon: 'bi-person-vcard', color: 'oklch(0.55 0.2 300)' },
+    { key: 'byOperationConsultant', id: 'Oc', role: 'oc', abbr: 'OC' },
+    { key: 'byOperationDirector', id: 'Od', role: 'od', abbr: 'OD' },
+    { key: 'byOperationManager', id: 'Om', role: 'om', abbr: 'OM' },
+    { key: 'bySeniorOperationConsultant', id: 'Soc', role: 'soc', abbr: 'SOC' },
 ];
 const wpGroupSort = {};
 const wpTh = (key, label, cls) => `<th class="sortable px-3 py-2 ${cls || ''}" data-sort="${key}">${sapEscape(label)}<i class="bi"></i></th>`;
@@ -527,7 +527,7 @@ function wpBuildGroups() {
     host.innerHTML = WP_GROUP_DEFS.map(g => `
         <div class="chart-card p-0" style="overflow:hidden">
             <div class="chart-header stat-card-header">
-                <span class="stat-card-icon" style="--icon-color:${g.color}"><i class="bi ${g.icon}"></i></span>
+                <span class="stat-card-icon role-icon role-icon-${g.role}" data-role="${g.abbr}"><i class="bi bi-person-fill"></i></span>
                 <div><h6 class="mb-0">${sapEscape(wpL[g.id.toLowerCase() + 'Title'])}</h6><p class="mb-0">${sapEscape(wpL[g.id.toLowerCase() + 'Sub'])}</p></div>
             </div>
             <div class="table-responsive wp-group-wrap">
