@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Caching.Memory;
@@ -81,11 +82,12 @@ public sealed class FilterResultCache
         return string.Join(',', months);
     }
 
-    /// <summary>A fixed-length key from a prefix and the key parts, so the key size no longer depends
-    /// on how long the request's filter values were.</summary>
+    /// <summary>A fixed-length key from a prefix and the key parts, so the key size no longer depends on how long
+    /// the request's filter values were. The data version and the current UI culture are folded in too: cached
+    /// results carry localized labels, so a language switch must not be served the other language's entry.</summary>
     public static string BuildKey(string prefix, params object?[] parts)
     {
-        var joined = Volatile.Read(ref _dataVersion) + "\u001f" + string.Join('\u001f', parts.Select(p => p?.ToString() ?? ""));
+        var joined = Volatile.Read(ref _dataVersion) + "\u001f" + CultureInfo.CurrentUICulture.Name + "\u001f" + string.Join('\u001f', parts.Select(p => p?.ToString() ?? ""));
         return prefix + ":" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(joined)));
     }
 }

@@ -588,6 +588,7 @@ public class UploadService : IUploadService
         var now = DateTime.UtcNow;
         _db.UploadLogs.Add(new UploadLog { FileType = "exit_interviews", FileName = file.FileName, Month = now.Month, Year = now.Year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
         await _db.SaveChangesAsync();
+        FilterResultCache.InvalidateAll(); // exit-interview results are cached per filter/user
 
         var missingStore = parsed.Count(p => string.IsNullOrWhiteSpace(p.Row.Store));
         var message = missingStore > 0
