@@ -2,7 +2,7 @@
    Used by Workforce Planning, Hiring Forecast and Crew Trainers:
        const done = PageLoader.begin();   // before the request
        try { ... await fetch(...) ... } finally { done(); }
-   The animation appears centered in the page body (.page-content) and only after a short delay, so fast
+   The animation appears centered in the page body (the area below the header, as seen before any scrolling, and it stays there while scrolling) and only after a short delay, so fast
    (cached) responses never flash it. Overlapping begin() calls share one overlay. */
 (function () {
     const SHOW_DELAY_MS = 150;
@@ -17,7 +17,7 @@
         st.id = 'pageLoaderStyle';
         st.textContent =
             '.page-loader{position:absolute;inset:0;z-index:50;background:var(--bg,#fff);opacity:.92}' +
-            '.page-loader-inner{position:sticky;top:calc(50vh - ' + (SIZE_PX * 0.375) + 'px);margin:0 auto;' +
+            '.page-loader-inner{position:sticky;top:calc(var(--header-h,64px) + (100vh - var(--header-h,64px)) / 2 - ' + (SIZE_PX * 0.375) + 'px);margin:0 auto;' +
             'width:' + SIZE_PX + 'px;height:' + (SIZE_PX * 0.75) + 'px}';
         document.head.appendChild(st);
     }
