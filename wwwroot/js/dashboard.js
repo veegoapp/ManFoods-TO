@@ -29,8 +29,9 @@ function rangeFilterBadge(isRangeActive, affected) {
         : '<span class="range-filter-badge range-filter-badge-off"><i class="bi bi-dash-circle"></i>' + (DASH_L.rangeBadgeOff || '') + '</span>';
 }
 
-async function fetchJson(url) {
-    const r = await fetch(url);
+// `signal` is optional: loadAll() passes one so a superseded data request can be cancelled.
+async function fetchJson(url, signal) {
+    const r = await fetch(url, signal ? { signal } : undefined);
     return r.ok ? r.json() : [];
 }
 
@@ -201,7 +202,7 @@ function updateJobFilterLabel() {
 async function loadKpis() {
     const kpiEl = document.getElementById('kpiCards');
     if (!kpiEl) return;
-    const data = await fetchJson('/api/dashboard/kpis?' + buildQuery());
+    const data = await fetchJson('/api/dashboard/kpis?' + buildQuery(), dataSignal);
 
     kpiEl.innerHTML = `
         <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-people-fill"></i></div><div class="kpi-value">${data.totalHeadcount||0}</div><div class="kpi-label">${DASH_L.kpiHeadcount || ''}</div></div>
@@ -221,9 +222,9 @@ function mkChart(ref, id, cfg) {
 async function loadCharts() {
     const q = buildQuery();
     const [jobTitle, tenure, gender] = await Promise.all([
-        fetchJson('/api/dashboard/turnover-by-job-title?' + q),
-        fetchJson('/api/dashboard/turnover-by-tenure?' + q),
-        fetchJson('/api/dashboard/gender-breakdown?' + q),
+        fetchJson('/api/dashboard/turnover-by-job-title?' + q, dataSignal),
+        fetchJson('/api/dashboard/turnover-by-tenure?' + q, dataSignal),
+        fetchJson('/api/dashboard/gender-breakdown?' + q, dataSignal),
     ]);
 
     const jobTitleLabels = jobTitle.map(d=>d.label);
@@ -248,7 +249,38 @@ async function loadCharts() {
     });
 }
 
-async function loadAll() { await Promise.all([loadKpis(), loadCharts()]); }
+// Filters are often changed several times in a row (picking a few jobs, flipping through periods).
+// Rather than firing the KPI + chart requests for every intermediate state, wait for the changes to
+// settle (LOAD_ALL_DEBOUNCE_MS) and cancel any request still in flight for a superseded state, so only
+// the final selection reaches the server. Every caller still awaits loadAll() as before.
+const LOAD_ALL_DEBOUNCE_MS = 350;
+let dataSignal;
+let loadAllTimer = null;
+let loadAllAbort = null;
+let loadAllWaiters = [];
+
+function loadAll() {
+    return new Promise(resolve => {
+        loadAllWaiters.push(resolve);
+        clearTimeout(loadAllTimer);
+        loadAllTimer = setTimeout(runLoadAll, LOAD_ALL_DEBOUNCE_MS);
+    });
+}
+
+async function runLoadAll() {
+    const waiters = loadAllWaiters;
+    loadAllWaiters = [];
+    if (loadAllAbort) loadAllAbort.abort();
+    loadAllAbort = new AbortController();
+    dataSignal = loadAllAbort.signal;
+    try {
+        await Promise.all([loadKpis(), loadCharts()]);
+    } catch (e) {
+        if (!(e && e.name === 'AbortError')) throw e; // a cancelled (superseded) load is expected
+    } finally {
+        waiters.forEach(resolve => resolve());
+    }
+}
 
 async function resetFilters() {
     storeFilter = ''; omFilter = ''; ocFilter = ''; socFilter = ''; odFilter = ''; jobFilter = [];
