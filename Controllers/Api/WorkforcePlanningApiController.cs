@@ -25,8 +25,9 @@ public class WorkforcePlanningApiController : ControllerBase
         _cache = cache;
     }
 
-    /// <summary>The Crew Trainers page (same access area as Workforce Planning).</summary>
+    /// <summary>The Crew Trainers page (its own access area).</summary>
     [HttpGet("crew-trainers")]
+    [AccessArea(AccessAreas.CrewTrainers)]
     [RequiresAnyPage("crewtrainers")]
     public async Task<IActionResult> CrewTrainers([FromServices] ICrewTrainerService trainers, [FromQuery] int? year, [FromQuery] int? month, [FromQuery] string? store,
         [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? soc, [FromQuery] string? od)
@@ -37,6 +38,7 @@ public class WorkforcePlanningApiController : ControllerBase
     }
 
     [HttpGet("hiring-forecast")]
+    [AccessArea(AccessAreas.HiringForecast)]
     [RequiresAnyPage("hiringforecast")]
     public async Task<IActionResult> HiringForecast([FromQuery] int? year, [FromQuery] string? store, [FromQuery] string? jobs,
         [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? soc, [FromQuery] string? od, [FromQuery] string? by)

@@ -2304,4 +2304,8 @@
   <data name="CT_GrpSubOd" xml:space="preserve"><value>المدربون مقابل القاعدة والخطة حسب المدير الأول</value></data>
   <data name="CT_GrpSubOm" xml:space="preserve"><value>المدربون مقابل القاعدة والخطة حسب المدير</value></data>
   <data name="CT_GrpSubSoc" xml:space="preserve"><value>المدربون مقابل القاعدة والخطة حسب الاستشاري الأول</value></data>
+  <data name="Set_Access_Area_hiring_forecast" xml:space="preserve"><value>توقعات التوظيف</value></data>
+  <data name="Set_Access_Desc_hiring_forecast" xml:space="preserve"><value>صفحة توقعات التوظيف (الاحتياج الشهري للتعيين).</value></data>
+  <data name="Set_Access_Area_crew_trainers" xml:space="preserve"><value>مدربو الطاقم</value></data>
+  <data name="Set_Access_Desc_crew_trainers" xml:space="preserve"><value>صفحة مدربي الطاقم (المدربون مقابل الخطة وقاعدة مدرب لكل 6).</value></data>
 </root>
