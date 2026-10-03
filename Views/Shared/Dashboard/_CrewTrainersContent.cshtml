@@ -159,6 +159,8 @@
      data-oc-title="@L["Common_OperationConsultants"]" data-od-title="@L["Common_OperationDirectors"]" data-om-title="@L["Common_OperationManagers"]" data-soc-title="@L["Common_SeniorOperationConsultants"]"
      data-oc-sub="@L["CT_GrpSubOc"]" data-od-sub="@L["CT_GrpSubOd"]" data-om-sub="@L["CT_GrpSubOm"]" data-soc-sub="@L["CT_GrpSubSoc"]"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie_light.min.js"></script>
+<script src="~/js/page-loader.js" asp-append-version="true"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="~/js/chart-colors.js" asp-append-version="true"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -209,11 +211,12 @@ async function ctLoad() {
     if (ctState.store) q.set('store', ctState.store);
     ['oc', 'om', 'soc', 'od'].forEach(k => { if (ctState[k]) q.set(k, ctState[k]); });
     let d;
+    const done = PageLoader.begin();
     try {
         const r = await fetch('/api/workforce-planning/crew-trainers?' + q);
         if (!r.ok) throw new Error();
         d = await r.json();
-    } catch { document.getElementById('ctEmpty').hidden = false; return; }
+    } catch { document.getElementById('ctEmpty').hidden = false; return; } finally { done(); }
     ctData = d;
     document.getElementById('ctEmpty').hidden = d.hasData;
     document.getElementById('ctBody').hidden = !d.hasData;

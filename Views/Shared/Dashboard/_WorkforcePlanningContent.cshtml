@@ -210,6 +210,8 @@
      data-drill-title="@L["WP_DrillTitle"]" data-drill-formula="@L["WP_DrillFormula"]" data-drill-loading="@L["WP_DrillLoading"]" data-drill-hint="@L["WP_DrillHint"]" data-col-job="@L["WP_ColJob"]" data-total="@L["HF_Total"]"
      data-error="@L["Common_NoData"]"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie_light.min.js"></script>
+<script src="~/js/page-loader.js" asp-append-version="true"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="~/js/chart-colors.js" asp-append-version="true"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -274,6 +276,7 @@ async function wpLoad() {
     if (wpState.job) q.set('jobs', wpState.job);
     ['oc', 'om', 'soc', 'od'].forEach(k => { if (wpState[k]) q.set(k, wpState[k]); });
     let d;
+    const done = PageLoader.begin();
     try {
         const r = await fetch('/api/workforce-planning/summary?' + q);
         if (!r.ok) throw new Error();
@@ -281,6 +284,8 @@ async function wpLoad() {
     } catch {
         document.getElementById('wpEmpty').hidden = false;
         return;
+    } finally {
+        done();
     }
     wpData = d;
     wpStoreJobs.clear(); // the filters or the period may have changed the figures
