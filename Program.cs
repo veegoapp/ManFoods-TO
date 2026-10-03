@@ -1,3 +1,4 @@
+using MvcApp.Diagnostics;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
@@ -121,7 +122,10 @@ builder.Services.AddSession(options =>
 
 var connectionString = BuildConnectionString();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddPerfDiagnostics();
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
+{
+    options.AddInterceptors(sp.GetRequiredService<MvcApp.Diagnostics.PerfDbInterceptor>(), sp.GetRequiredService<MvcApp.Diagnostics.PerfConnectionInterceptor>());
     options.UseSqlServer(connectionString, sql =>
         // Action-plan detection (Services/StoreActionPlanService.cs) issues many
         // sequential per-store queries in a single background job after every
@@ -129,7 +133,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         // low latency and started hitting "Execution Timeout Expired" against
         // MonsterASP's higher round-trip latency — raise it so a single slow
         // command doesn't fail the whole run.
-        sql.CommandTimeout(120)));
+        sql.CommandTimeout(120));
+});
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
@@ -163,6 +168,7 @@ builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 builder.Services.AddScoped<IActivityLogWriter, ActivityLogWriter>();
 
 var app = builder.Build();
+app.UsePerfDiagnostics();
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor,
