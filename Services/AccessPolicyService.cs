@@ -30,12 +30,19 @@ public class AccessPolicyService : IAccessPolicyService
         return map;
     }
 
+    private static bool Resolve(Dictionary<string, bool> map, string areaKey)
+    {
+        if (map.TryGetValue(areaKey, out var restricted)) return restricted;
+        if (AccessAreas.FormerlyShared.TryGetValue(areaKey, out var parent) && map.TryGetValue(parent, out var parentRestricted)) return parentRestricted;
+        return true;
+    }
+
     public async Task<bool> IsRestrictedAsync(string areaKey)
     {
         if (string.IsNullOrEmpty(areaKey)) return true;
         var map = await LoadAsync();
-        // Missing row → restricted (safe default).
-        return !map.TryGetValue(areaKey, out var restricted) || restricted;
+        // Missing row → restricted (safe default), unless the area was split off another one: then it follows that area.
+        return Resolve(map, areaKey);
     }
 
     public async Task<bool> AnyOpenAsync()
@@ -49,7 +56,7 @@ public class AccessPolicyService : IAccessPolicyService
         var map = await LoadAsync();
         return AccessAreas.All.ToDictionary(
             a => a,
-            a => !map.TryGetValue(a, out var restricted) || restricted,
+            a => Resolve(map, a),
             StringComparer.OrdinalIgnoreCase);
     }
 

@@ -2298,4 +2298,8 @@
   <data name="CT_GrpSubOd" xml:space="preserve"><value>Trainers against the rule and the plan by director</value></data>
   <data name="CT_GrpSubOm" xml:space="preserve"><value>Trainers against the rule and the plan by manager</value></data>
   <data name="CT_GrpSubSoc" xml:space="preserve"><value>Trainers against the rule and the plan by senior consultant</value></data>
+  <data name="Set_Access_Area_hiring_forecast" xml:space="preserve"><value>Hiring Forecast</value></data>
+  <data name="Set_Access_Desc_hiring_forecast" xml:space="preserve"><value>The Hiring Forecast page (hires needed per month).</value></data>
+  <data name="Set_Access_Area_crew_trainers" xml:space="preserve"><value>Crew Trainers</value></data>
+  <data name="Set_Access_Desc_crew_trainers" xml:space="preserve"><value>The Crew Trainers page (trainers against the plan and the 1-per-6 rule).</value></data>
 </root>

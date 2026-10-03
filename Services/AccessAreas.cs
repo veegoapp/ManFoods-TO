@@ -13,6 +13,8 @@ public static class AccessAreas
 {
     public const string Analytics       = "analytics";        // Workforce + Turnover + Comparisons (DashboardService)
     public const string WorkforcePlanning = "workforce_planning"; // Workforce Planning page (projected vs actual headcount)
+    public const string HiringForecast  = "hiring_forecast";  // Hiring Forecast page
+    public const string CrewTrainers    = "crew_trainers";    // Crew Trainers page
     public const string Retention       = "retention";
     public const string NinetyDay       = "ninety_day";
     public const string NinetyDayLeavers = "ninety_day_leavers"; // sub: named early-leaver list
@@ -30,13 +32,22 @@ public static class AccessAreas
     /// stay own-stores otherwise. Never appears in the Settings matrix.</summary>
     public const string Shared          = "shared";
 
+    /// <summary>Areas that were part of another area before they got their own row. Until an Admin saves the
+    /// Access settings (which writes a row for every area), a missing row follows the area it used to share,
+    /// so splitting an area off never changes what a role can see.</summary>
+    public static readonly IReadOnlyDictionary<string, string> FormerlyShared = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        [HiringForecast] = WorkforcePlanning,
+        [CrewTrainers] = WorkforcePlanning,
+    };
+
     /// <summary>Every configurable area, in display order for the Settings matrix.
     /// "Stores" is intentionally not here: the Stores page reuses the Analytics,
     /// Action Center and Early Warning endpoints, so its visibility follows those
     /// areas rather than a toggle of its own.</summary>
     public static readonly IReadOnlyList<string> All = new[]
     {
-        Analytics, WorkforcePlanning, Retention, NinetyDay, NinetyDayLeavers, ExitInterviews, ExitComments,
+        Analytics, WorkforcePlanning, HiringForecast, CrewTrainers, Retention, NinetyDay, NinetyDayLeavers, ExitInterviews, ExitComments,
         EarlyWarning, Scorecard, ActionCenter, Reports,
     };
 }
