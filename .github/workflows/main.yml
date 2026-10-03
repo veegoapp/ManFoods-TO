@@ -20,7 +20,9 @@ jobs:
     - name: Restore
       run: dotnet restore
     - name: Test
-      run: dotnet test --no-restore
+      # The real-SQL-Server tests (Category=SqlServer) run in the separate sql-tests job below, so this job keeps running
+      # exactly the regular tests and a SQL Server problem can never hide (or be hidden by) their result.
+      run: dotnet test --no-restore --filter "Category!=SqlServer"
     - name: Publish
       run: dotnet publish MvcApp.csproj -c Release --no-restore -o ./publish
     - name: Upload Artifact
@@ -29,3 +31,80 @@ jobs:
         name: site-files
         path: ./publish
         if-no-files-found: error
+
+  # Tests that need a real SQL Server (query translation, ExecuteDelete/transactions, upload paths, schema report).
+  # Own job: its result is reported separately from the build-and-test job above. The SQL Server runs as a throw-away
+  # service container on this runner only; the password below is a CI-only value for that container (not a secret), and
+  # no production connection string or secret is available to, or read by, these tests.
+  sql-tests:
+    name: sql-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_PID: Developer
+          MSSQL_SA_PASSWORD: CiTest_Passw0rd_9x
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P CiTest_Passw0rd_9x -C -b -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 30s
+    steps:
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      with:
+        persist-credentials: false
+    - name: Setup .NET
+      uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+      with:
+        dotnet-version: '9.0.x'
+    - name: Restore
+      run: dotnet restore
+    - name: SQL Server tests
+      env:
+        TEST_SQLSERVER_CONNECTION_STRING: "Server=localhost,1433;Database=master;User Id=sa;Password=CiTest_Passw0rd_9x;Encrypt=True;TrustServerCertificate=True"
+        # A missing connection string must FAIL this job, never skip silently.
+        REQUIRE_SQLSERVER_TESTS: "true"
+        TEST_SCHEMA_REPORT_PATH: ${{ github.workspace }}/sql-schema-report/schema-report.txt
+      run: dotnet test --no-restore --filter "Category=SqlServer" --logger "trx;LogFileName=sql-tests.trx" --results-directory "${{ github.workspace }}/sql-test-results"
+    - name: Verify the SQL Server tests really ran
+      run: |
+        trx="${{ github.workspace }}/sql-test-results/sql-tests.trx"
+        test -f "$trx" || { echo "::error::no TRX result file was produced"; exit 1; }
+        passed=$(grep -o 'outcome="Passed"' "$trx" | wc -l)
+        notexecuted=$(grep -o 'outcome="NotExecuted"' "$trx" | wc -l)
+        echo "SQL Server tests: passed=$passed not-executed(skipped)=$notexecuted"
+        test "$passed" -ge 30 || { echo "::error::expected at least 30 passing SQL Server tests, got $passed"; exit 1; }
+        test "$notexecuted" -eq 0 || { echo "::error::$notexecuted SQL Server test(s) were skipped"; exit 1; }
+    - name: Show schema report (report-only)
+      if: always()
+      run: |
+        f="${{ github.workspace }}/sql-schema-report/schema-report.txt"
+        if [ -f "$f" ]; then
+          cat "$f"
+          n=$(grep -o 'UNEXPECTED_COUNT=[0-9]*' "$f" | tail -1 | cut -d= -f2)
+          if [ "${n:-0}" -gt 0 ]; then
+            echo "::warning title=SQL schema report::${n} unexpected difference(s) between EnsureCreated and scripts/migrate.sql (report-only; see the sql-schema-report artifact)"
+          fi
+        else
+          echo "::warning title=SQL schema report::no report file was produced"
+        fi
+    - name: Upload schema report
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: sql-schema-report
+        path: ${{ github.workspace }}/sql-schema-report
+        if-no-files-found: warn
+    - name: Upload SQL test results
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: sql-test-results
+        path: ${{ github.workspace }}/sql-test-results
+        if-no-files-found: warn
