@@ -315,18 +315,21 @@ function hfRenderJobs() {
     const total = mi >= 0 ? d.monthTotals[mi] : d.grandTotal;
 
     if (hfJobChart) hfJobChart.destroy();
+    // Horizontal bars: one row per job, so the height grows with the number of jobs.
+    document.getElementById('hfJobChart').parentElement.style.height = Math.max(120, rows.length * 26 + 50) + 'px';
     hfJobChart = new Chart(document.getElementById('hfJobChart'), {
         type: 'bar',
         data: { labels: rows.map(r => r.store), datasets: [{ data: rows.map(valueOf), borderRadius: 3, backgroundColor: 'oklch(0.52 0.2 25)' }] },
         options: {
+            indexAxis: 'y',
             responsive: true, maintainAspectRatio: false,
             plugins: {
                 legend: { display: false },
                 tooltip: { callbacks: { label: c => ` ${hfL.chartLabel}: ${c.formattedValue}` } },
-                datalabels: { anchor: 'end', align: 'top', color: getComputedStyle(document.body).color, font: { size: 11, weight: 'bold' } }
+                datalabels: { anchor: 'end', align: 'right', color: getComputedStyle(document.body).color, font: { size: 11, weight: 'bold' } }
             },
-            layout: { padding: { top: 18 } },
-            scales: { x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 50, minRotation: 50 } }, y: { beginAtZero: true, grid: { color: 'rgba(128,128,128,.12)' } } }
+            layout: { padding: { right: 28 } },
+            scales: { y: { grid: { display: false }, ticks: { autoSkip: false } }, x: { beginAtZero: true, grid: { color: 'rgba(128,128,128,.12)' } } }
         }
     });
 
