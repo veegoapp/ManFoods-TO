@@ -232,6 +232,8 @@
   <data name="Common_To" xml:space="preserve"><value>To</value></data>
   <data name="Common_Export" xml:space="preserve"><value>Export</value></data>
   <data name="Common_Download" xml:space="preserve"><value>Download</value></data>
+  <data name="Common_Preparing" xml:space="preserve"><value>Preparing the file…</value></data>
+  <data name="Common_DownloadFailed" xml:space="preserve"><value>The report could not be downloaded. Please try again.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Save</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
@@ -1908,6 +1910,12 @@
   <data name="Set_Access_Desc_workforce_planning" xml:space="preserve"><value>The Workforce Planning page (projected vs actual headcount).</value></data>
   <data name="Rep_Title_WorkforcePlanning" xml:space="preserve"><value>Workforce Planning</value></data>
   <data name="Rep_Desc_WorkforcePlanning" xml:space="preserve"><value>Projected vs actual headcount by job and store — summary, by store, by job, by consultant &amp; manager, the full data sheet and ready-made Excel pivot tables.</value></data>
+  <data name="Rep_Title_WorkforcePlanningData" xml:space="preserve"><value>Workforce Planning — Detailed Data</value></data>
+  <data name="Rep_Desc_WorkforcePlanningData" xml:space="preserve"><value>The full flat data sheet (one row per store, job and month) and ready-made Excel pivot tables behind the Workforce Planning report. Large: download it only when you need to analyse the raw rows.</value></data>
+  <data name="Rep_Title_HiringForecast" xml:space="preserve"><value>Hiring Forecast</value></data>
+  <data name="Rep_Desc_HiringForecast" xml:space="preserve"><value>Hires needed per month for a year — by store, job, payroll group and by the people responsible for the stores — with the roster and forecast months marked.</value></data>
+  <data name="Rep_Title_CrewTrainers" xml:space="preserve"><value>Crew Trainers</value></data>
+  <data name="Rep_Desc_CrewTrainers" xml:space="preserve"><value>Trainers against the plan and the 1-trainer-per-6-crew rule for the selected month — by store and by the people responsible, the year's trend, and who joined or left the trainer list.</value></data>
   <data name="Rep_AllJobs" xml:space="preserve"><value>All job titles</value></data>
   <data name="ST_PlanFill" xml:space="preserve"><value>Staffing</value></data>
   <data name="ST_PlanOf" xml:space="preserve"><value>of</value></data>

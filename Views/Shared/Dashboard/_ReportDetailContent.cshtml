@@ -213,7 +213,7 @@ else
             @if (rep.UsesYear)
             {
                 <div class="col-6 col-sm-4 col-md-2">
-                    <label class="form-label small text-muted-custom mb-1">@(rep.Id == "early-warning" || rep.Id == "workforce-planning" ? L["Common_Year"].Value : L["Common_Year"].Value + " (since)")</label>
+                    <label class="form-label small text-muted-custom mb-1">@(rep.Id == "early-warning" || rep.Id.StartsWith("workforce-planning") || rep.Id == "hiring-forecast" ? L["Common_Year"].Value : L["Common_Year"].Value + " (since)")</label>
                     <select id="rd-since-year" class="form-select form-select-dark form-select-sm" onchange="rdUpdateMonthsMultiselect()">
                         @foreach (var y in years)
                         {
@@ -505,6 +505,36 @@ function rdInitComparisonSides() {
     });
 }
 
+const RD_PREPARING = '@L["Common_Preparing"]';
+const RD_FAILED = '@L["Common_DownloadFailed"]';
+let rdDownloading = false;
+
+/* The export is built on the server and can take a while. Download it through fetch so the button stays
+   disabled until the file arrives: a second click would otherwise start the same heavy request again. */
+async function rdStartDownload(url) {
+    if (rdDownloading) return;
+    const btn = document.querySelector('.rep-dl-btn');
+    const label = btn ? btn.innerHTML : '';
+    rdDownloading = true;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>' + RD_PREPARING; }
+    try {
+        const r = await fetch(url, { credentials: 'same-origin' });
+        if (!r.ok || !/spreadsheet|octet-stream/i.test(r.headers.get('Content-Type') || '')) throw new Error();
+        const m = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(r.headers.get('Content-Disposition') || '');
+        const blob = await r.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = m ? decodeURIComponent(m[1]) : 'report.xlsx';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    } catch {
+        alert(RD_FAILED);
+    } finally {
+        rdDownloading = false;
+        if (btn) { btn.disabled = false; btn.innerHTML = label; }
+    }
+}
+
 function rdDownload() {
     const p = new URLSearchParams({ reportType: RD_REPORT_ID });
 
@@ -523,7 +553,7 @@ function rdDownload() {
             const b = document.getElementById(`rd-${f}-b`)?.value;
             if (b) p.set(f === 'store' ? 'storeB' : `${f}B`, b);
         });
-        window.location.href = __AREA_PREFIX + '/dashboard/export?' + p.toString();
+        rdStartDownload(__AREA_PREFIX + '/dashboard/export?' + p.toString());
         return;
     }
 
@@ -555,7 +585,7 @@ function rdDownload() {
     const selectedJobs = rdJobMs.getSelected();
     if (selectedJobs.length) p.set('jobs', selectedJobs.join(','));
 
-    window.location.href = __AREA_PREFIX + '/dashboard/export?' + p.toString();
+    rdStartDownload(__AREA_PREFIX + '/dashboard/export?' + p.toString());
 }
 
 rdUpdateMonths();

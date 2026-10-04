@@ -232,6 +232,8 @@
   <data name="Common_To" xml:space="preserve"><value>إلى</value></data>
   <data name="Common_Export" xml:space="preserve"><value>تصدير</value></data>
   <data name="Common_Download" xml:space="preserve"><value>تنزيل</value></data>
+  <data name="Common_Preparing" xml:space="preserve"><value>جارٍ تجهيز الملف…</value></data>
+  <data name="Common_DownloadFailed" xml:space="preserve"><value>تعذّر تنزيل التقرير. حاول مرة أخرى.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>رجوع</value></data>
   <data name="Common_Save" xml:space="preserve"><value>حفظ</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>إلغاء</value></data>
@@ -1914,6 +1916,12 @@
   <data name="Set_Access_Desc_workforce_planning" xml:space="preserve"><value>صفحة تخطيط القوى العاملة (المتوقّع مقابل الفعلي).</value></data>
   <data name="Rep_Title_WorkforcePlanning" xml:space="preserve"><value>تخطيط القوى العاملة</value></data>
   <data name="Rep_Desc_WorkforcePlanning" xml:space="preserve"><value>العدد المتوقّع مقابل الفعلي حسب الوظيفة والفرع — ملخص، وحسب الفرع والوظيفة والاستشاري والمدير، وورقة البيانات الكاملة وجداول Pivot جاهزة في Excel.</value></data>
+  <data name="Rep_Title_WorkforcePlanningData" xml:space="preserve"><value>تخطيط القوى العاملة — البيانات التفصيلية</value></data>
+  <data name="Rep_Desc_WorkforcePlanningData" xml:space="preserve"><value>ورقة البيانات الكاملة (صف لكل فرع ووظيفة وشهر) وجداول Pivot جاهزة في Excel الخاصة بتقرير تخطيط القوى العاملة. ملف كبير: حمّله فقط عند الحاجة لتحليل الصفوف الخام.</value></data>
+  <data name="Rep_Title_HiringForecast" xml:space="preserve"><value>توقعات التعيين</value></data>
+  <data name="Rep_Desc_HiringForecast" xml:space="preserve"><value>التعيينات المطلوبة في كل شهر خلال سنة — حسب الفرع والوظيفة ومجموعة الرواتب والمسؤولين عن الفروع — مع تمييز أشهر القائمة الفعلية وأشهر التقدير.</value></data>
+  <data name="Rep_Title_CrewTrainers" xml:space="preserve"><value>مدرّبو الطاقم</value></data>
+  <data name="Rep_Desc_CrewTrainers" xml:space="preserve"><value>المدرّبون مقابل الخطة وقاعدة مدرّب لكل 6 من الطاقم للشهر المحدد — حسب الفرع والمسؤولين، واتجاه السنة، ومن انضم لقائمة المدرّبين أو غادرها.</value></data>
   <data name="Rep_AllJobs" xml:space="preserve"><value>كل الوظائف</value></data>
   <data name="ST_PlanFill" xml:space="preserve"><value>الاكتمال</value></data>
   <data name="ST_PlanOf" xml:space="preserve"><value>من</value></data>
