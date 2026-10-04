@@ -42,6 +42,7 @@
 .hf-empty i { font-size:34px; display:block; margin-bottom:10px; }
 .chart-body canvas { direction:ltr; }
 .hf-legend { font-size:12px; color:var(--text-3); }
+.hf-gross-tag { font-size:11.5px; font-weight:600; color:var(--text-3); margin:2px 0 0; }
 </style>
 
 <div class="page-header">
@@ -102,11 +103,11 @@
     </div>
     <div class="chart-card mb-3"><div id="hfInsights"></div></div>
     <div class="chart-card mb-3">
-        <div class="chart-header"><h6>@L["HF_ChartTitle"]</h6><p>@L["HF_ChartSub"]</p></div>
+        <div class="chart-header"><h6>@L["HF_ChartTitle"]</h6><p>@L["HF_ChartSub"]</p><p class="hf-gross-tag" hidden></p></div>
         <div class="chart-body" style="position:relative;height:280px"><canvas id="hfChart"></canvas></div>
     </div>
     <div class="chart-card mb-3">
-        <div class="chart-header"><h6>@L["HF_JobTitle"]</h6><p>@L["HF_JobSub"]</p></div>
+        <div class="chart-header"><h6>@L["HF_JobTitle"]</h6><p>@L["HF_JobSub"]</p><p class="hf-gross-tag" hidden></p></div>
         <div class="chart-body" style="position:relative;height:340px"><canvas id="hfJobChart"></canvas></div>
         <div class="hf-wrap mt-3">
             <table class="hf-table">
@@ -119,7 +120,7 @@
     <div id="hfNote" class="hf-note"><i class="bi bi-info-circle-fill"></i><span id="hfNoteText"></span></div>
     <div class="chart-card">
         <div class="chart-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <div><h6>@L["HF_Title"]</h6><p>@L["HF_Sub"]</p></div>
+            <div><h6>@L["HF_Title"]</h6><p>@L["HF_Sub"]</p><p class="hf-gross-tag" hidden></p></div>
             <div class="d-flex flex-wrap align-items-center gap-2">
                 <div class="hf-select-wrap"><select id="hfBy" class="hf-select" aria-label="@L["HF_ViewBy"]">
                     <option value="store">@L["HF_ViewBy"]: @L["WP_ColStore"]</option>
@@ -145,7 +146,7 @@
 <div id="hfL" hidden
      data-all-oc="@L["Common_AllOperationConsultants"]" data-all-om="@L["Common_AllOperationManagers"]" data-all-soc="@L["WP_AllSoc"]" data-all-od="@L["WP_AllOd"]" data-all-stores="@L["WP_AllStores"]" data-all-jobs="@L["WP_AllJobs"]"
      data-kpi-year="@L["HF_KpiYear"]" data-kpi-year-d="@L["HF_KpiYearDesc"]" data-kpi-peak="@L["HF_KpiPeak"]" data-kpi-peak-d="@L["HF_KpiPeakDesc"]" data-kpi-next="@L["HF_KpiNext"]" data-kpi-next-d="@L["HF_KpiNextDesc"]" data-kpi-store="@L["HF_KpiStore"]" data-kpi-store-d="@L["HF_KpiStoreDesc"]"
-     data-chart-label="@L["HF_ChartLabel"]"
+     data-chart-label="@L["HF_ChartLabel"]" data-gross-tag="@L["HF_GrossTag"]"
      data-job="@L["WP_ColJob"]" data-payroll="@L["HF_ByPayroll"]"
      data-all-months="@L["HF_AllMonths"]" data-k-month="@L["HF_KpiMonth"]" data-k-month-d="@L["HF_KpiMonthDesc"]" data-k-share="@L["HF_KpiShare"]" data-k-share-d="@L["HF_KpiShareDesc"]" data-k-from="@L["HF_KpiFrom"]" data-k-from-d="@L["HF_KpiFromDesc"]" data-k-store-m="@L["HF_KpiStoreMonth"]" data-k-store-m-d="@L["HF_KpiStoreMonthDesc"]"
      data-store="@L["WP_ColStore"]" data-oc="@L["Common_OperationConsultant"]" data-total="@L["HF_Total"]" data-forecast="@L["HF_Forecast"]" data-roster="@L["HF_Roster"]"
@@ -238,6 +239,11 @@ async function hfLoad() {
     document.getElementById('hfNoteText').textContent = hfL.note
         .replace('{0}', hfMonthName(d.baselineMonth) + ' ' + d.baselineYear)
         .replace('{1}', d.earlyLeaverRate).replace('{2}', d.attritionMonths);
+    // The hires shown already include the new hires who leave within 90 days: say so under every heading.
+    document.querySelectorAll('.hf-gross-tag').forEach(el => {
+        el.hidden = !(d.earlyLeaverRate > 0);
+        el.textContent = d.earlyLeaverRate > 0 ? hfL.grossTag.replace('{0}', d.earlyLeaverRate) : '';
+    });
     hfRenderKpis(d);
     hfRenderInsights(d);
     hfRenderChart(d);
