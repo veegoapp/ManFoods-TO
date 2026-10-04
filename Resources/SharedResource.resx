@@ -1927,15 +1927,12 @@
   <data name="WP_KpiHiringDesc" xml:space="preserve"><value>Shortage plus expected resignations</value></data>
   <data name="WP_ColHiring" xml:space="preserve"><value>Hiring need</value></data>
   <data name="WP_ColSurplus" xml:space="preserve"><value>Surplus</value></data>
-  <data name="WP_ColHiringGross" xml:space="preserve"><value>Hiring need incl. early leavers</value></data>
-  <data name="WP_SubBefore90" xml:space="preserve"><value>before the 90-day top-up</value></data>
-  <data name="WP_SubWith90" xml:space="preserve"><value>incl. 90-day early leavers ({0}% leave early)</value></data>
+  <data name="WP_SubResignations" xml:space="preserve"><value>incl. people who leave in their first 90 days</value></data>
   <data name="WP_HowTitle" xml:space="preserve"><value>How these numbers are calculated</value></data>
   <data name="WP_HowGap" xml:space="preserve"><value>Gap = Actual − Projected for the whole row. A job above its plan offsets a job below it, so the gap can hide real shortages.</value></data>
   <data name="WP_HowSplit" xml:space="preserve"><value>Surplus = people above the plan, counted only in the jobs that are over. Shortage = people missing, counted only in the jobs that are short. So Gap = Surplus − Shortage, always.</value></data>
-  <data name="WP_HowAttrition" xml:space="preserve"><value>Expected resignations = the average monthly resignations of the last {0} roster months.</value></data>
-  <data name="WP_HowHiring" xml:space="preserve"><value>Hiring need = Shortage + Expected resignations. This is the number of people needed to reach the plan, before replacing new hires who leave early.</value></data>
-  <data name="WP_HowGross" xml:space="preserve"><value>Hiring need incl. early leavers = Hiring need ÷ (1 − {0}%), where {0}% is the share of hires who leave within 90 days company-wide. This is the figure the Hiring Forecast page shows for months with an uploaded roster.</value></data>
+  <data name="WP_HowAttrition" xml:space="preserve"><value>Expected resignations = the average monthly resignations of the last {0} roster months. It already includes people who leave in their first 90 days.</value></data>
+  <data name="WP_HowHiring" xml:space="preserve"><value>Hiring need = Shortage + Expected resignations: the people needed to reach the plan, plus the people expected to leave.</value></data>
   <data name="WP_AttrNote" xml:space="preserve"><value>Hiring need = shortage + expected resignations, based on the average monthly resignations of the last {0} months. It is an estimate.</value></data>
   <data name="WP_NoAttrition" xml:space="preserve"><value>There is no resignation history yet, so the hiring need equals the shortage.</value></data>
   <data name="Action_Workforce_Staffing" xml:space="preserve"><value>Close the staffing gap: accelerate hiring and onboarding ahead of the shortfall.</value></data>
@@ -2000,14 +1997,14 @@
   <data name="HF_Total" xml:space="preserve"><value>Total</value></data>
   <data name="HF_Forecast" xml:space="preserve"><value>Forecast</value></data>
   <data name="HF_Roster" xml:space="preserve"><value>Roster</value></data>
-  <data name="HF_Note" xml:space="preserve"><value>The forecast starts from the {0} employee list. Expected resignations (average of the last {2} roster months) leave each month, and hires fill the gap up to the projection. Hires are increased by {1}% — the share of new hires who leave within 90 days company-wide.</value></data>
+  <data name="HF_Note" xml:space="preserve"><value>The forecast starts from the {0} employee list. Expected resignations (average of the last {1} roster months, including people who leave in their first 90 days) leave each month, and hires fill the gap up to the projection.</value></data>
   <data name="HF_NoteNoRoster" xml:space="preserve"><value>No employee list (active employees) has been uploaded yet, so there is nothing to start the forecast from.</value></data>
   <data name="Guide_HF_Overview" xml:space="preserve"><value>A table of how many people each store needs to hire in each month of the year, so hiring can be planned ahead.</value></data>
   <data name="Guide_HF_FilterNote" xml:space="preserve"><value>Year, Store, Job title and the Operation Consultant / Manager / Senior Consultant / Director selectors narrow the table and its totals. You only see the stores you have access to (Settings → Access, Workforce Planning row). The Month filter focuses the summary cards, the Smart Insights and the chart on one month; the table below always shows the whole year.</value></data>
   <data name="Guide_HF_MatrixTitle" xml:space="preserve"><value>Reading the table</value></data>
   <data name="Guide_HF_Matrix" xml:space="preserve"><value>Use "View by" above the table to group the rows by store (with its Operation Consultant), job, payroll group or Operation Consultant — the totals stay the same, only the grouping changes. One column per month and a Total at the end; the last row adds up every row. Click a column title to sort and use the search box to find a row. The darker the red, the more hires that month. A dash means the projection has no data for that month.</value></data>
   <data name="Guide_HF_MethodTitle" xml:space="preserve"><value>How it is calculated</value></data>
-  <data name="Guide_HF_Method" xml:space="preserve"><value>Months that already have an uploaded employee list: hires = shortage + expected resignations (per store and job, as on Workforce Planning). Later months are simulated from the latest list: people expected to resign leave, then hires fill up to that month's projection. Finally hires are increased by the company-wide 90-day early-leaver rate, because some new hires leave quickly and must be replaced.</value></data>
+  <data name="Guide_HF_Method" xml:space="preserve"><value>Months that already have an uploaded employee list: hires = shortage + expected resignations (per store and job, as on Workforce Planning). Later months are simulated from the latest list: people expected to resign leave, then hires fill up to that month's projection. Expected resignations already include people who leave in their first 90 days.</value></data>
   <data name="Guide_HF_LimitsTitle" xml:space="preserve"><value>Good to know</value></data>
   <data name="Guide_HF_Limits" xml:space="preserve"><value>This is an estimate based on past resignations and the projection; it changes as new employee lists and projections are uploaded. It is not a hiring order.</value></data>
   <data name="HF_KpiYear" xml:space="preserve"><value>Hires needed in the year</value></data>
@@ -2021,7 +2018,6 @@
   <data name="HF_ChartTitle" xml:space="preserve"><value>Hires needed per month</value></data>
   <data name="HF_ChartSub" xml:space="preserve"><value>Dark bars use the uploaded employee list; light bars are forecast</value></data>
   <data name="HF_ChartLabel" xml:space="preserve"><value>Hires needed</value></data>
-  <data name="HF_GrossTag" xml:space="preserve"><value>incl. 90-day early leavers ({0}% leave early)</value></data>
   <data name="HF_JobTitle" xml:space="preserve"><value>Hires needed by job title</value></data>
   <data name="HF_JobSub" xml:space="preserve"><value>Follows the filters above. Pick a month to see the jobs to hire for in that month; otherwise the whole year. Jobs that need no hires are hidden.</value></data>
   <data name="HF_JobPeriodYear" xml:space="preserve"><value>Whole year</value></data>

@@ -286,19 +286,15 @@ public class WorkforcePlanningService : IWorkforcePlanningService
     }
 
     public Task<WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName,
-        string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0) =>
-        BuildAsync(year, month, stores, jobs, role, assignedName, strict: false, includeTrend: true, includeHiring: true, om: om, oc: oc, soc: soc, od: od, earlyLeaverPercent: earlyLeaverPercent);
+        string? om = null, string? oc = null, string? soc = null, string? od = null) =>
+        BuildAsync(year, month, stores, jobs, role, assignedName, strict: false, includeTrend: true, includeHiring: true, om: om, oc: oc, soc: soc, od: od);
 
     // strict: use exactly the requested year/month or return "no data" (the page itself
     // falls back to a sensible default period instead).
     private async Task<WorkforcePlanningDto> BuildAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName, bool strict, bool includeTrend, bool includeHiring = false,
-        string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0)
+        string? om = null, string? oc = null, string? soc = null, string? od = null)
     {
         var dto = new WorkforcePlanningDto();
-        // Hires needed are grossed up for the new hires who leave within 90 days, the same way the Hiring Forecast does it.
-        var earlyRate = Math.Clamp(earlyLeaverPercent / 100.0, 0, 0.5);
-        var gross = 1.0 / (1.0 - earlyRate);
-        dto.EarlyLeaverRate = Math.Round(earlyRate * 100, 1);
         var years = await GetYearsAsync();
         dto.Years = years;
         if (years.Count == 0) return dto;
@@ -431,13 +427,12 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                 AddNeed(byStoreNeed, store, need, expected, shortage); AddNeed(byJobNeed, job, need, expected, shortage);
                 totalNeed += need; totalAttr += expected; totalShort += shortage;
             }
-            foreach (var r in dto.ByStore) if (byStoreNeed.TryGetValue(r.Name, out var v)) SetNeed(r, v[2], v[1], gross);
-            foreach (var r in dto.ByJob) if (byJobNeed.TryGetValue(r.Name, out var v)) SetNeed(r, v[2], v[1], gross);
+            foreach (var r in dto.ByStore) if (byStoreNeed.TryGetValue(r.Name, out var v)) SetNeed(r, v[2], v[1]);
+            foreach (var r in dto.ByJob) if (byJobNeed.TryGetValue(r.Name, out var v)) SetNeed(r, v[2], v[1]);
             dto.Kpis.Shortage = RoundNeed(totalShort);
             dto.Kpis.ExpectedAttrition = Math.Round(totalAttr, 1);
             dto.Kpis.HiringNeed = dto.Kpis.Shortage + RoundNeed(dto.Kpis.ExpectedAttrition);
             dto.Kpis.Surplus = dto.Kpis.Shortage + dto.Kpis.Gap;                       // Gap = Surplus − Shortage
-            dto.Kpis.HiringNeedGross = RoundNeed((totalShort + totalAttr) * gross);
             storeNeed = byStoreNeed;
             jobNeed = byJobNeed;
         }
@@ -459,7 +454,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             dto.ByPayrollGroup = accPg.Select(kv =>
                 {
                     var row = Row(kv.Key, new[] { kv.Value.P, kv.Value.A }, dto.HasActual);
-                    SetNeed(row, kv.Value.Short, kv.Value.Attr, gross);
+                    SetNeed(row, kv.Value.Short, kv.Value.Attr);
                     return row;
                 })
                 .OrderBy(r => dto.HasActual ? r.Gap : -r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
@@ -471,7 +466,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         {
             List<PlanningRowDto> RollUp(Func<Leaders, string> pick)
             {
-                var acc = new Dictionary<string, (int Stores, int P, int A, double Need, double Attr, double Short, int Gross)>(StringComparer.OrdinalIgnoreCase);
+                var acc = new Dictionary<string, (int Stores, int P, int A, double Need, double Attr, double Short)>(StringComparer.OrdinalIgnoreCase);
                 foreach (var r in dto.ByStore)
                 {
                     if (!leaders.TryGetValue(r.Name.Trim(), out var l)) continue;
@@ -480,14 +475,13 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                     acc.TryGetValue(name, out var a);
                     double need = 0, attr = 0, shortage = 0;
                     if (storeNeed != null && storeNeed.TryGetValue(r.Name, out var sn)) { need = sn[0]; attr = sn[1]; shortage = sn[2]; }
-                    acc[name] = (a.Stores + 1, a.P + r.Projected, a.A + (dto.HasActual ? r.Actual : 0), a.Need + need, a.Attr + attr, a.Short + shortage, a.Gross + r.HiringNeedGross);
+                    acc[name] = (a.Stores + 1, a.P + r.Projected, a.A + (dto.HasActual ? r.Actual : 0), a.Need + need, a.Attr + attr, a.Short + shortage);
                 }
                 return acc.Select(kv =>
                     {
                         var row = Row(kv.Key, new[] { kv.Value.P, kv.Value.A }, dto.HasActual);
                         row.StoreCount = kv.Value.Stores;
-                        SetNeed(row, kv.Value.Short, kv.Value.Attr, gross);
-                        row.HiringNeedGross = kv.Value.Gross; // the stores' own grossed-up figures added up
+                        SetNeed(row, kv.Value.Short, kv.Value.Attr);
                         return row;
                     })
                     .OrderBy(r => dto.HasActual ? r.Gap : -r.Projected).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
@@ -628,7 +622,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
     }
 
     public async Task<HiringForecastDto> GetHiringForecastAsync(int? year, string? stores, string? jobs, string role, string? assignedName,
-        string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0, string? by = null)
+        string? om = null, string? oc = null, string? soc = null, string? od = null, string? by = null)
     {
         var dto = new HiringForecastDto();
         var years = await GetYearsAsync();
@@ -669,9 +663,6 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         dto.BaselineYear = baseline / 100; dto.BaselineMonth = baseline % 100;
         if (!dto.HasRoster) return dto;
 
-        var rate = Math.Clamp(earlyLeaverPercent / 100.0, 0, 0.5);
-        dto.EarlyLeaverRate = Math.Round(rate * 100, 1);
-        var gross = 1.0 / (1.0 - rate);
 
         var baseAttr = await GetAttritionAsync(baseline / 100, baseline % 100);
         dto.AttritionMonths = baseAttr.Periods;
@@ -757,8 +748,8 @@ public class WorkforcePlanningService : IWorkforcePlanningService
                     hires = net;
                     prev = before + net;
                 }
-                acc[mon - 1] += hires * gross;
-                storeAcc[mon - 1] += hires * gross;
+                acc[mon - 1] += hires;
+                storeAcc[mon - 1] += hires;
             }
         }
 
@@ -843,12 +834,11 @@ public class WorkforcePlanningService : IWorkforcePlanningService
 
     // Shortage, expected resignations and hiring need of a row. Hiring need is always the shortage plus the
     // expected resignations as displayed (rounded), so the three columns add up on screen.
-    private static void SetNeed(PlanningRowDto row, double shortage, double attrition, double gross = 1)
+    private static void SetNeed(PlanningRowDto row, double shortage, double attrition)
     {
         row.Shortage = RoundNeed(shortage);
         row.ExpectedAttrition = Math.Round(attrition, 1);
         row.HiringNeed = row.Shortage + RoundNeed(row.ExpectedAttrition);
-        row.HiringNeedGross = RoundNeed((shortage + attrition) * gross);
         row.Surplus = row.Status == "none" ? 0 : row.Shortage + row.Gap; // Gap = Surplus − Shortage, so the three always agree
     }
 

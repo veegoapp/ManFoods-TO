@@ -26,9 +26,6 @@ public class WorkforcePlanningDto
     /// <summary>How many recent roster months the expected-resignations average is based on
     /// (0 = no history, so hiring need equals the shortage).</summary>
     public int AttritionMonths { get; set; }
-    /// <summary>Company-wide share (%) of hires who leave within 90 days (0 = unknown): the rate behind
-    /// <see cref="PlanningRowDto.HiringNeedGross"/>.</summary>
-    public double EarlyLeaverRate { get; set; }
     public PlanningKpiDto Kpis { get; set; } = new();
     public List<PlanningRowDto> ByJob { get; set; } = new();
     public List<PlanningRowDto> ByStore { get; set; } = new();
@@ -62,8 +59,6 @@ public class PlanningKpiDto
     public int HiringNeed { get; set; }
     /// <summary>People above the plan, counted only in the store/jobs that are over: Gap = Surplus − Shortage.</summary>
     public int Surplus { get; set; }
-    /// <summary>Hiring need grossed up for the new hires who leave within 90 days (the figure the Hiring Forecast shows).</summary>
-    public int HiringNeedGross { get; set; }
     /// <summary>Expected resignations per month (recent average) in the compared stores/jobs.</summary>
     public double ExpectedAttrition { get; set; }
 }
@@ -78,8 +73,6 @@ public class PlanningRowDto
     /// <summary>"ok" (95–100%) | "watch" (85–95%) | "critical" (<85%) | "over" (above 100%) | "none" (no roster).</summary>
     public string Status { get; set; } = "none";
     public int HiringNeed { get; set; }
-    /// <summary>Hiring need grossed up for the new hires who leave within 90 days (0 when there is no roster).</summary>
-    public int HiringNeedGross { get; set; }
     /// <summary>People above the plan, counted only in the jobs that are over (0 when there is no roster): Gap = Surplus − Shortage.</summary>
     public int Surplus { get; set; }
     public double ExpectedAttrition { get; set; }
@@ -182,8 +175,6 @@ public class HiringForecastDto
     public int BaselineMonth { get; set; }
     /// <summary>Roster months used for the expected-resignation average.</summary>
     public int AttritionMonths { get; set; }
-    /// <summary>Company-wide share (%) of hires who leave within 90 days, used to gross hiring up.</summary>
-    public double EarlyLeaverRate { get; set; }
     /// <summary>Per month (January first): "actual" (roster exists), "forecast" (simulated) or "none" (no projection).</summary>
     public string[] MonthModes { get; set; } = Enumerable.Repeat("none", 12).ToArray();
     public List<HiringForecastRowDto> Rows { get; set; } = new();

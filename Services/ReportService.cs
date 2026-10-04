@@ -1214,7 +1214,7 @@ public class ReportService : IReportService
         WriteGroups();
 
         // ── Hiring Plan: hires needed per store per month (whole year, same store/job/responsible filters) ──
-        var forecast = await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, await EarlyLeaverRate.GetAsync(_ninetyDay, null));
+        var forecast = await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od);
         if (forecast.Rows.Count > 0)
         {
             var hp = AddSheet(wb, "Hiring Plan");
@@ -1242,7 +1242,7 @@ public class ReportService : IReportService
             hp.Range(2, 3, hr - 1, 14).AddConditionalFormat().ColorScale()
                 .LowestValue(XLColor.White).HighestValue(XLColor.FromHtml("#F4A29B"));
             hp.SheetView.FreezeRows(1); hp.SheetView.FreezeColumns(2);
-            hp.Cell(hr + 2, 1).Value = $"Hires needed per store. Months with an uploaded roster: max(0, projected − actual + expected resignations) per job. Later months are simulated from the {monthName[forecast.BaselineMonth - 1]} {forecast.BaselineYear} roster (expected resignations leave, hires fill up to the projection). Hires are grossed up by the company-wide 90-day early-leaver rate ({forecast.EarlyLeaverRate:0.#}%). An estimate, not a commitment.";
+            hp.Cell(hr + 2, 1).Value = $"Hires needed per store. Months with an uploaded roster: max(0, projected − actual + expected resignations) per job. Later months are simulated from the {monthName[forecast.BaselineMonth - 1]} {forecast.BaselineYear} roster (expected resignations leave, hires fill up to the projection). Expected resignations already include people who leave in their first 90 days. An estimate, not a commitment.";
             hp.Cell(hr + 2, 1).Style.Font.Italic = true;
         }
 
@@ -1296,8 +1296,7 @@ public class ReportService : IReportService
     public async Task<XLWorkbook> BuildHiringForecastReportAsync(int year, string? store, string? jobs, string role, string? assignedName,
         string? om = null, string? oc = null, string? soc = null, string? od = null)
     {
-        var rate = await EarlyLeaverRate.GetAsync(_ninetyDay, null);
-        var byStore = await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, rate);
+        var byStore = await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od);
         var wb = new XLWorkbook();
         var monthName = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames;
 
@@ -1328,7 +1327,7 @@ public class ReportService : IReportService
             return wb;
         }
 
-        sum.Cell(6, 1).Value = $"Hires needed per month. Months with an uploaded roster: max(0, projected − actual + expected resignations) per store and job. Later months are simulated from the {monthName[byStore.BaselineMonth - 1]} {byStore.BaselineYear} roster (expected resignations leave, hires fill up to the projection). Hires are grossed up by the company-wide 90-day early-leaver rate ({byStore.EarlyLeaverRate:0.#}%). Every sheet adds up to the same totals. An estimate, not a commitment.";
+        sum.Cell(6, 1).Value = $"Hires needed per month. Months with an uploaded roster: max(0, projected − actual + expected resignations) per store and job. Later months are simulated from the {monthName[byStore.BaselineMonth - 1]} {byStore.BaselineYear} roster (expected resignations leave, hires fill up to the projection). Expected resignations already include people who leave in their first 90 days. Every sheet adds up to the same totals. An estimate, not a commitment.";
         sum.Cell(6, 1).Style.Font.Italic = true;
         sum.Range(6, 1, 6, 3).Merge().Style.Alignment.SetWrapText(true).Alignment.SetVertical(XLAlignmentVerticalValues.Top);
         sum.Row(6).Height = 78;
@@ -1361,9 +1360,9 @@ public class ReportService : IReportService
         sum.Column(3).Width = Math.Max(sum.Column(3).Width, 16);
 
         WriteForecastMatrix(wb, "By Store", "Store", "Operation Consultant", byStore, byStore.Rows, r => r.OperationConsultant);
-        var byJob = await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, rate, "job");
+        var byJob = await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, by: "job");
         WriteForecastMatrix(wb, "By Job", "Job title", null, byJob, byJob.Rows, _ => "");
-        var byPayroll = await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, rate, "payroll");
+        var byPayroll = await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, by: "payroll");
         WriteForecastMatrix(wb, "By Payroll Group", "Payroll group", null, byPayroll, byPayroll.Rows, _ => "", unassignedIfBlank: true);
 
         // The four per-leader roll-ups, stacked on one sheet (same rounded store-month hires as the store sheet).
