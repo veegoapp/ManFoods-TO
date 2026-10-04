@@ -2008,6 +2008,9 @@
   <data name="HF_ChartTitle" xml:space="preserve"><value>التعيينات المطلوبة في كل شهر</value></data>
   <data name="HF_ChartSub" xml:space="preserve"><value>الأعمدة الداكنة من قائمة الموظفين المرفوعة، والفاتحة تقدير</value></data>
   <data name="HF_ChartLabel" xml:space="preserve"><value>التعيينات المطلوبة</value></data>
+  <data name="HF_JobTitle" xml:space="preserve"><value>التعيينات المطلوبة حسب الوظيفة</value></data>
+  <data name="HF_JobSub" xml:space="preserve"><value>يتأثر بالفلاتر أعلاه. اختر شهرًا لترى الوظائف المطلوب التعيين فيها في هذا الشهر، وإلا تظهر السنة كاملة. الوظائف التي لا تحتاج تعيينًا مخفية.</value></data>
+  <data name="HF_JobPeriodYear" xml:space="preserve"><value>السنة كاملة</value></data>
   <data name="HF_ViewBy" xml:space="preserve"><value>عرض حسب</value></data>
   <data name="HF_ByPayroll" xml:space="preserve"><value>مجموعة الرواتب</value></data>
   <data name="Guide_HF_KpisTitle" xml:space="preserve"><value>كروت الملخص</value></data>
