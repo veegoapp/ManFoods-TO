@@ -685,10 +685,14 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         }
         var actual = new Dictionary<(int Month, int Store, int Job), int>();
         foreach (var c in data.Actual) { var key = (c.Month, c.Store, Canon(c.Job)); actual[key] = (actual.TryGetValue(key, out var v) ? v : 0) + c.Count; }
+        // The two trainer jobs share one forecast cell (its actuals and resignations cover both), so a job filter
+        // naming either of them keeps both; otherwise the cell would compare one job's plan with both jobs' staff.
+        var trainerPicked = jobSet != null && CrewTrainerJobs.Any(j => jobSet.Any(s => Norm(s) == Norm(j)));
+        bool JobOk(int job) => jobSet == null || jobSet.Contains(data.Jobs[job]) || (trainerPicked && trainerNames.Contains(Norm(data.Jobs[job])));
         var projected = new Dictionary<(int Store, int Job), int[]>();
         foreach (var c in data.Projected)
         {
-            if (!StoreOk(c.Store) || (jobSet != null && !jobSet.Contains(data.Jobs[c.Job]))) continue;
+            if (!StoreOk(c.Store) || !JobOk(c.Job)) continue;
             var key = (c.Store, Canon(c.Job));
             if (!projected.TryGetValue(key, out var arr)) projected[key] = arr = new int[13];
             arr[c.Month] += c.Count;
