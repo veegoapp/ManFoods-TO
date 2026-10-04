@@ -215,6 +215,12 @@ async function hfLoad() {
     if (d.hasData && !d.hasRoster) document.getElementById('hfEmptyText').textContent = hfL.noteNone;
     if (!d.hasData) return;
 
+    // A filter value that no longer exists (e.g. a store missing from the newly picked year) would keep filtering
+    // while its dropdown shows blank: drop it and load again.
+    const stale = [['store', d.stores], ['job', d.jobs], ['oc', d.operationConsultants], ['om', d.operationManagers],
+        ['soc', d.seniorOperationConsultants], ['od', d.operationDirectors]].filter(([k, list]) => hfState[k] && !(list || []).includes(hfState[k]));
+    if (stale.length) { stale.forEach(([k]) => { hfState[k] = ''; }); return hfLoad(); }
+
     hfState.year = d.year;
     hfFillSelect('hfYear', d.years.map(y => ({ value: y, label: y })), d.year);
     const monthsWithData = [...Array(12).keys()].filter(i => d.monthModes[i] !== 'none');
