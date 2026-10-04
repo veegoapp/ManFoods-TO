@@ -2002,6 +2002,9 @@
   <data name="HF_ChartTitle" xml:space="preserve"><value>Hires needed per month</value></data>
   <data name="HF_ChartSub" xml:space="preserve"><value>Dark bars use the uploaded employee list; light bars are forecast</value></data>
   <data name="HF_ChartLabel" xml:space="preserve"><value>Hires needed</value></data>
+  <data name="HF_JobTitle" xml:space="preserve"><value>Hires needed by job title</value></data>
+  <data name="HF_JobSub" xml:space="preserve"><value>Follows the filters above. Pick a month to see the jobs to hire for in that month; otherwise the whole year. Jobs that need no hires are hidden.</value></data>
+  <data name="HF_JobPeriodYear" xml:space="preserve"><value>Whole year</value></data>
   <data name="HF_ViewBy" xml:space="preserve"><value>View by</value></data>
   <data name="HF_ByPayroll" xml:space="preserve"><value>Payroll group</value></data>
   <data name="Guide_HF_KpisTitle" xml:space="preserve"><value>Summary cards</value></data>

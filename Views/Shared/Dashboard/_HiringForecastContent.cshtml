@@ -105,6 +105,17 @@
         <div class="chart-header"><h6>@L["HF_ChartTitle"]</h6><p>@L["HF_ChartSub"]</p></div>
         <div class="chart-body" style="position:relative;height:280px"><canvas id="hfChart"></canvas></div>
     </div>
+    <div class="chart-card mb-3">
+        <div class="chart-header"><h6>@L["HF_JobTitle"]</h6><p>@L["HF_JobSub"]</p></div>
+        <div class="chart-body" style="position:relative;height:340px"><canvas id="hfJobChart"></canvas></div>
+        <div class="hf-wrap mt-3">
+            <table class="hf-table">
+                <thead><tr id="hfJobHead"></tr></thead>
+                <tbody id="hfJobRows"></tbody>
+                <tfoot><tr id="hfJobFoot"></tr></tfoot>
+            </table>
+        </div>
+    </div>
     <div id="hfNote" class="hf-note"><i class="bi bi-info-circle-fill"></i><span id="hfNoteText"></span></div>
     <div class="chart-card">
         <div class="chart-header d-flex flex-wrap align-items-center justify-content-between gap-2">
@@ -166,7 +177,7 @@ const HF_I = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new Dictionary<
 }));
 const hfState = { by: 'store', year: '', month: '', store: '', job: '', oc: '', om: '', soc: '', od: '' };
 const hfSort = { key: 'total', dir: 'desc' };
-let hfData, hfChart;
+let hfData, hfJobData, hfChart, hfJobChart;
 const hfMonthName = (m, style) => new Date(2000, m - 1, 1).toLocaleString('default', { month: style || 'short' });
 
 function hfFillSelect(id, options, value) {
@@ -182,19 +193,21 @@ async function hfLoad() {
     if (hfState.store) q.set('store', hfState.store);
     if (hfState.job) q.set('jobs', hfState.job);
     ['oc', 'om', 'soc', 'od'].forEach(k => { if (hfState[k]) q.set(k, hfState[k]); });
-    let d;
+    let d, jd;
     const done = PageLoader.begin();
     try {
-        const r = await fetch('/api/workforce-planning/hiring-forecast?' + q);
-        if (!r.ok) throw new Error();
-        d = await r.json();
+        // The by-job card always needs the per-job rows, whatever the table below is grouped by (same cached server data).
+        const qJob = new URLSearchParams(q); qJob.set('by', 'job');
+        const get = async p => { const r = await fetch('/api/workforce-planning/hiring-forecast?' + p); if (!r.ok) throw new Error(); return r.json(); };
+        [d, jd] = await Promise.all([get(q), hfState.by === 'job' ? null : get(qJob)]);
+        if (!jd) jd = d;
     } catch {
         document.getElementById('hfEmpty').hidden = false;
         return;
     } finally {
         done();
     }
-    hfData = d;
+    hfData = d; hfJobData = jd;
     const show = d.hasData && d.hasRoster;
     document.getElementById('hfEmpty').hidden = show;
     document.getElementById('hfBody').hidden = !show;
@@ -222,6 +235,7 @@ async function hfLoad() {
     hfRenderKpis(d);
     hfRenderInsights(d);
     hfRenderChart(d);
+    hfRenderJobs();
     hfRender();
     hfRenderGroups();
 }
@@ -290,6 +304,49 @@ function hfRenderChart(d) {
             scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(128,128,128,.12)' } } }
         }
     });
+}
+
+/* Hires needed per job: the selected month, or the whole year. Follows every filter; jobs with no need are hidden. */
+function hfRenderJobs() {
+    const d = hfJobData, modes = d.monthModes;
+    const mi = hfState.month ? +hfState.month - 1 : -1;
+    const valueOf = r => mi >= 0 ? r.months[mi] : r.total;
+    const rows = d.rows.filter(r => valueOf(r) > 0).sort((a, b) => valueOf(b) - valueOf(a) || a.store.localeCompare(b.store));
+    const total = mi >= 0 ? d.monthTotals[mi] : d.grandTotal;
+
+    if (hfJobChart) hfJobChart.destroy();
+    // Horizontal bars: one row per job, so the height grows with the number of jobs.
+    document.getElementById('hfJobChart').parentElement.style.height = Math.max(120, rows.length * 26 + 50) + 'px';
+    hfJobChart = new Chart(document.getElementById('hfJobChart'), {
+        type: 'bar',
+        data: { labels: rows.map(r => r.store), datasets: [{ data: rows.map(valueOf), borderRadius: 3, backgroundColor: 'oklch(0.52 0.2 25)' }] },
+        options: {
+            indexAxis: 'y',
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: c => ` ${hfL.chartLabel}: ${c.formattedValue}` } },
+                datalabels: { anchor: 'end', align: 'right', color: getComputedStyle(document.body).color, font: { size: 11, weight: 'bold' } }
+            },
+            layout: { padding: { right: 28 } },
+            scales: { y: { grid: { display: false }, ticks: { autoSkip: false } }, x: { beginAtZero: true, grid: { color: 'rgba(128,128,128,.12)' } } }
+        }
+    });
+
+    const th = (label, cls, sub) => `<th class="${cls || ''}">${sapEscape(label)}${sub ? `<span class="hf-tag">${sapEscape(sub)}</span>` : ''}</th>`;
+    let h = th(hfL.job);
+    for (let i = 0; i < 12; i++) h += th(hfMonthName(i + 1), 'num' + (i === mi ? ' hf-total' : ''), modes[i] === 'none' ? '' : modes[i] === 'forecast' ? hfL.forecast : hfL.roster);
+    document.getElementById('hfJobHead').innerHTML = h + th(hfL.total, 'num hf-total');
+
+    const max = Math.max(1, ...rows.flatMap(r => r.months));
+    const cell = (v, mode, on) => mode === 'none'
+        ? '<td class="num hf-zero">—</td>'
+        : `<td class="num ${v === 0 ? 'hf-zero' : ''} ${on ? 'fw-bold' : ''}" style="${v > 0 ? `background:oklch(0.6 0.2 25 / ${(0.08 + 0.5 * v / max).toFixed(2)})` : ''}">${v}</td>`;
+    document.getElementById('hfJobRows').innerHTML = rows.length ? rows.map(r =>
+        `<tr><td>${sapEscape(r.store)}</td>` + r.months.map((v, i) => cell(v, modes[i], i === mi)).join('') + `<td class="num hf-total">${r.total}</td></tr>`).join('')
+        : `<tr><td colspan="14" class="text-center py-3 text-muted">${sapEscape(hfL.noRows)}</td></tr>`;
+    document.getElementById('hfJobFoot').innerHTML = `<td>${sapEscape(hfL.total)}</td>`
+        + d.monthTotals.map((v, i) => `<td class="num">${modes[i] === 'none' ? '—' : v}</td>`).join('') + `<td class="num">${d.grandTotal}</td>`;
 }
 
 /* ── Smart Insights: plain-language takeaways computed from the matrix on screen ── */
@@ -489,7 +546,7 @@ function hfRenderGroups() {
 document.getElementById('hfBy').addEventListener('change', e => { hfState.by = e.target.value; hfLoad(); });
 document.getElementById('hfYear').addEventListener('change', e => { hfState.year = e.target.value; hfState.month = ''; hfLoad(); });
 // The month only changes the cards, the insights and the chart: the table below always shows the whole year.
-document.getElementById('hfMonth').addEventListener('change', e => { hfState.month = e.target.value; if (hfData) { hfRenderKpis(hfData); hfRenderInsights(hfData); hfRenderChart(hfData); } });
+document.getElementById('hfMonth').addEventListener('change', e => { hfState.month = e.target.value; if (hfData) { hfRenderKpis(hfData); hfRenderInsights(hfData); hfRenderChart(hfData); hfRenderJobs(); } });
 document.getElementById('hfStore').addEventListener('change', e => { hfState.store = e.target.value; hfLoad(); });
 document.getElementById('hfJob').addEventListener('change', e => { hfState.job = e.target.value; hfLoad(); });
 [['hfOc', 'oc'], ['hfOm', 'om'], ['hfSoc', 'soc'], ['hfOd', 'od']].forEach(([id, key]) =>
