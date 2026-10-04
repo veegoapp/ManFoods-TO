@@ -693,61 +693,64 @@ public class WorkforcePlanningReportTests
     private sealed class FakePlanning : IWorkforcePlanningService
     {
         public List<MvcApp.Models.ViewModels.PlanningDetailRow> Rows { get; set; } = new();
+        public MvcApp.Models.ViewModels.HiringForecastDto Forecast { get; set; } = new();
         public Task<MvcApp.Models.ViewModels.WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null) => throw new NotSupportedException();
         public Task<List<MvcApp.Models.ViewModels.PlanningDetailRow>> GetDetailAsync(int year, IReadOnlyCollection<int>? months, string? stores, string? jobs, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null) => Task.FromResult(Rows);
         public Task<List<MvcApp.Models.ViewModels.StoreFillDto>> GetStoreFillAsync(int year, int month, string? jobs, string role, string? assignedName) => throw new NotSupportedException();
         public Task<MvcApp.Models.ViewModels.StorePlanDto> GetStorePlanAsync(string store, int year, int month, string role, string? assignedName) => throw new NotSupportedException();
         public Task<List<MvcApp.Models.ViewModels.PeriodItem>> GetProjectionPeriodsAsync() => Task.FromResult(new List<MvcApp.Models.ViewModels.PeriodItem>());
         public Task<List<string>> GetProjectionJobsAsync() => Task.FromResult(new List<string>());
-        public Task<MvcApp.Models.ViewModels.HiringForecastDto> GetHiringForecastAsync(int? year, string? stores, string? jobs, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0, string? by = null) => Task.FromResult(new MvcApp.Models.ViewModels.HiringForecastDto());
+        public Task<MvcApp.Models.ViewModels.HiringForecastDto> GetHiringForecastAsync(int? year, string? stores, string? jobs, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0, string? by = null) => Task.FromResult(Forecast);
     }
 
-    private static ReportService NewReports(IWorkforcePlanningService planning) =>
-        new(null!, null!, null!, null!, null!, null!, null!, null!, new AccessAreaContext(), planning);
-
-    [Fact]
-    public async Task Report_HasSummaryBreakdownsDataAndPivotTables()
+    private sealed class FakeTrainers : ICrewTrainerService
     {
-        var fake = new FakePlanning
-        {
-            Rows =
-            {
-                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", PayrollGroup = "Hourly", Projected = 10, Actual = 8, Shortage = 2, ExpectedAttrition = 1.5, HiringNeed = 3.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
-                new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4, Shortage = 0, ExpectedAttrition = 0.5, HiringNeed = 0.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
-                new() { Year = 2026, Month = 2, Store = "1 | A", Job = "Crew", Projected = 11, Actual = null },
-            }
-        };
-        using var wb = await NewReports(fake).BuildWorkforcePlanningReportAsync(2026, null, null, null, "Admin", null);
+        public MvcApp.Models.ViewModels.CrewTrainerDto Dto { get; set; } = new();
+        public Task<MvcApp.Models.ViewModels.CrewTrainerDto> GetAsync(int? year, int? month, string? stores, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null) => Task.FromResult(Dto);
+    }
 
-        using var ms = new MemoryStream();
+    private static ReportService NewReports(IWorkforcePlanningService planning, ICrewTrainerService? trainers = null) =>
+        new(null!, null!, null!, null!, null!, null!, null!, null!, new AccessAreaContext(), planning, trainers);
+
+    private static FakePlanning TwoJobFake() => new()
+    {
+        Rows =
+        {
+            new() { Year = 2026, Month = 1, Store = "1 | A", Job = "Crew", PayrollGroup = "Hourly", Projected = 10, Actual = 8, Shortage = 2, ExpectedAttrition = 1.5, HiringNeed = 3.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+            new() { Year = 2026, Month = 1, Store = "1 | A", Job = "GEM", Projected = 4, Actual = 4, Shortage = 0, ExpectedAttrition = 0.5, HiringNeed = 0.5, OperationConsultant = "Amy", OperationManager = "Mona", OperationDirector = "Dan", SeniorOperationConsultant = "Sam" },
+            new() { Year = 2026, Month = 2, Store = "1 | A", Job = "Crew", Projected = 11, Actual = null },
+        }
+    };
+
+    private static ClosedXML.Excel.XLWorkbook Reopen(ClosedXML.Excel.XLWorkbook wb, out MemoryStream ms)
+    {
+        ms = new MemoryStream();
         wb.SaveAs(ms);
         ms.Position = 0;
+        return new ClosedXML.Excel.XLWorkbook(ms);
+    }
 
-        // Re-open the saved file: it must be a valid workbook with the expected sheets…
-        using var reopened = new ClosedXML.Excel.XLWorkbook(ms);
+    [Fact]
+    public async Task Report_HasSummaryAndBreakdowns_ButNoDataOrPivots()
+    {
+        using var wb = await NewReports(TwoJobFake()).BuildWorkforcePlanningReportAsync(2026, null, null, null, "Admin", null);
+        using var reopened = Reopen(wb, out var ms);
         var names = reopened.Worksheets.Select(w => w.Name).ToList();
         Assert.Contains("Summary", names);
-        Assert.Contains("Data", names);
         Assert.Contains(names, n => n.StartsWith("By Store"));
         Assert.Contains(names, n => n.StartsWith("By Job"));
-        Assert.Equal(5, names.Count(n => n.StartsWith("Pivot")));
-        Assert.Equal(4, reopened.Worksheet("Data").LastRowUsed()!.RowNumber()); // header + 3 rows
+        Assert.Contains("By Consultant & Manager", names);
+        Assert.DoesNotContain("Data", names);                       // the heavy sheets live in the Detailed Data report
+        Assert.Empty(names.Where(n => n.StartsWith("Pivot")));
 
-        // Hiring need columns: Data sheet, month summary and per-store breakdown.
-        var dataWs = reopened.Worksheet("Data");
-        Assert.Equal("Hiring Need", dataWs.Cell(1, 11).GetString());
-        Assert.Equal(3.5, dataWs.Cell(2, 11).GetDouble());
         var summary = reopened.Worksheet("Summary");
         Assert.Equal(2, summary.Cell(10, 6).GetDouble());   // Jan shortage: Crew is 2 short, GEM is at plan
         Assert.Equal(2, summary.Cell(10, 7).GetDouble());   // expected resignations 1.5 + 0.5
         Assert.Equal(4, summary.Cell(10, 8).GetDouble());   // hiring need 3.5 + 0.5 -> 4
-        Assert.Equal(-2, dataWs.Cell(2, 8).GetDouble());   // Data gap = actual − projected (8 − 10)
-        Assert.Equal("Shortage", dataWs.Cell(1, 16).GetString());
-        Assert.Equal("Payroll Group", dataWs.Cell(1, 17).GetString());
-        Assert.Equal("Hourly", dataWs.Cell(2, 17).GetString());
-        Assert.Equal("Unassigned", dataWs.Cell(3, 17).GetString()); // a job with no known group
-        Assert.Equal(2, dataWs.Cell(2, 16).GetDouble());
-        // By Consultant & Manager: four stacked tables; Amy covers 1 store, 14 projected, 12 actual.
+        // The long note is wrapped across the table, so it no longer stretches column A.
+        Assert.True(summary.Cell(7, 1).Style.Alignment.WrapText);
+        Assert.True(summary.Column(1).Width < 40);
+
         var groups = reopened.Worksheet("By Consultant & Manager");
         var cells = groups.CellsUsed().Select(c => c.GetString()).ToList();
         Assert.Contains("Operation Consultants", cells); Assert.Contains("Operation Directors", cells);
@@ -756,19 +759,130 @@ public class WorkforcePlanningReportTests
         Assert.Equal(1, amyRow.Cell(2).GetDouble()); Assert.Equal(14, amyRow.Cell(3).GetDouble()); Assert.Equal(12, amyRow.Cell(4).GetDouble());
         Assert.Equal(2, amyRow.Cell(7).GetDouble()); // shortage
         Assert.Equal(4, amyRow.Cell(9).GetDouble()); // hiring need 3.5 + 0.5
-        Assert.Equal("Operation Consultant", dataWs.Cell(1, 12).GetString());
-        Assert.Equal("Amy", dataWs.Cell(2, 12).GetString());
         var byStore = reopened.Worksheets.First(w => w.Name.StartsWith("By Store"));
         Assert.Equal("Shortage", byStore.Cell(1, 6).GetString());
         Assert.Equal(2, byStore.Cell(2, 6).GetDouble());
         Assert.Equal("Hiring need (est.)", byStore.Cell(1, 8).GetString());
         Assert.Equal(4, byStore.Cell(2, 8).GetDouble());
+    }
+
+    [Fact]
+    public async Task DataReport_HasTheFlatDataSheetAndPivotTables()
+    {
+        using var wb = await NewReports(TwoJobFake()).BuildWorkforcePlanningDataReportAsync(2026, null, null, null, "Admin", null);
+        using var reopened = Reopen(wb, out var ms);
+        var names = reopened.Worksheets.Select(w => w.Name).ToList();
+        Assert.Contains("Data", names);
+        Assert.Equal(5, names.Count(n => n.StartsWith("Pivot")));
+        Assert.DoesNotContain("Summary", names);
+        var dataWs = reopened.Worksheet("Data");
+        Assert.Equal(4, dataWs.LastRowUsed()!.RowNumber()); // header + 3 rows
+        Assert.Equal("Hiring Need", dataWs.Cell(1, 11).GetString());
+        Assert.Equal(3.5, dataWs.Cell(2, 11).GetDouble());
+        Assert.Equal(-2, dataWs.Cell(2, 8).GetDouble());   // Data gap = actual − projected (8 − 10)
+        Assert.Equal("Shortage", dataWs.Cell(1, 16).GetString());
+        Assert.Equal("Payroll Group", dataWs.Cell(1, 17).GetString());
+        Assert.Equal("Hourly", dataWs.Cell(2, 17).GetString());
+        Assert.Equal("Unassigned", dataWs.Cell(3, 17).GetString()); // a job with no known group
+        Assert.Equal(2, dataWs.Cell(2, 16).GetDouble());
+        Assert.Equal("Operation Consultant", dataWs.Cell(1, 12).GetString());
+        Assert.Equal("Amy", dataWs.Cell(2, 12).GetString());
 
         // …and the raw package must really contain pivot table parts.
         ms.Position = 0;
         using var zip = new System.IO.Compression.ZipArchive(ms);
         Assert.Equal(5, zip.Entries.Count(e => e.FullName.StartsWith("xl/pivotTables/pivotTable")));
         Assert.Contains(zip.Entries, e => e.FullName.EndsWith("pivotCache/pivotCacheDefinition1.xml"));
+    }
+
+    [Fact]
+    public async Task DataReport_WithNoRows_IsJustANote()
+    {
+        using var wb = await NewReports(new FakePlanning()).BuildWorkforcePlanningDataReportAsync(2026, null, null, null, "Admin", null);
+        Assert.Single(wb.Worksheets);
+    }
+
+    private static MvcApp.Models.ViewModels.HiringForecastDto SampleForecast(string by)
+    {
+        var f = new MvcApp.Models.ViewModels.HiringForecastDto { HasData = true, HasRoster = true, Year = 2026, By = by, BaselineYear = 2026, BaselineMonth = 1, EarlyLeaverRate = 20 };
+        f.MonthModes[0] = "actual"; f.MonthModes[1] = "forecast";
+        f.Rows.Add(new() { Store = by == "store" ? "1 | A" : "Crew", OperationConsultant = "Amy", Months = new[] { 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, Total = 8 });
+        f.Rows.Add(new() { Store = "", Months = new[] { 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, Total = 3 });
+        f.MonthTotals[0] = 7; f.MonthTotals[1] = 4; f.GrandTotal = 11;
+        f.ByOperationConsultant.Add(new() { Store = "Amy", StoreCount = 2, Months = new[] { 7, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, Total = 11 });
+        return f;
+    }
+
+    [Fact]
+    public async Task HiringForecastReport_HasSummaryAndTheFourBreakdowns()
+    {
+        var fake = new FakePlanning { Forecast = SampleForecast("store") };
+        using var wb = await NewReports(fake).BuildHiringForecastReportAsync(2026, null, null, "Admin", null);
+        using var reopened = Reopen(wb, out _);
+        Assert.Equal(new[] { "Summary", "By Store", "By Job", "By Payroll Group", "By Consultant & Manager" }, reopened.Worksheets.Select(w => w.Name).ToArray());
+
+        var summary = reopened.Worksheet("Summary");
+        Assert.Equal("Roster", summary.Cell(9, 2).GetString());
+        Assert.Equal(7, summary.Cell(9, 3).GetDouble());
+        Assert.Equal("Forecast", summary.Cell(10, 2).GetString());
+        Assert.Equal(4, summary.Cell(10, 3).GetDouble());
+        Assert.True(summary.Cell(6, 1).Style.Alignment.WrapText);
+        Assert.True(summary.Column(1).Width < 40);
+
+        var byStore = reopened.Worksheet("By Store");
+        Assert.Equal("Feb (forecast)", byStore.Cell(1, 4).GetString());
+        Assert.Equal(5, byStore.Cell(2, 3).GetDouble());
+        Assert.Equal("Total", byStore.Cell(4, 1).GetString());     // the totals row follows the two stores
+        Assert.Equal("Unassigned", reopened.Worksheet("By Payroll Group").Cell(3, 1).GetString());
+        var amy = reopened.Worksheet("By Consultant & Manager").RowsUsed().First(r => r.Cell(1).GetString() == "Amy");
+        Assert.Equal(2, amy.Cell(2).GetDouble()); Assert.Equal(7, amy.Cell(3).GetDouble());
+    }
+
+    [Fact]
+    public async Task HiringForecastReport_WithoutData_IsJustANote()
+    {
+        using var wb = await NewReports(new FakePlanning()).BuildHiringForecastReportAsync(2026, null, null, "Admin", null);
+        Assert.Single(wb.Worksheets);
+    }
+
+    [Fact]
+    public async Task CrewTrainerReport_HasSummaryStoresLeadersTrendAndMoves()
+    {
+        var dto = new MvcApp.Models.ViewModels.CrewTrainerDto
+        {
+            HasData = true, Year = 2026, Month = 3, HasCrewLevelJobs = true, CrewPerTrainer = 6, HasPrevious = true, PreviousYear = 2026, PreviousMonth = 2,
+            Kpis = new() { Projected = 4, Actual = 3, Gap = -1, CrewLevel = 30, Required = 5, GapRule = -2, Resigned = 1, LookbackMonths = 3 },
+            ByStore = { new() { Store = "1 | A", OperationConsultant = "Amy", Projected = 4, Actual = 3, Gap = -1, CrewLevel = 30, Required = 5, GapRule = -2 } },
+            ByOperationConsultant = { new() { Name = "Amy", StoreCount = 1, Projected = 4, Actual = 3, Gap = -1, CrewLevel = 30, Required = 5, GapRule = -2 } },
+            Trend = { new() { Month = 2, Projected = 4, Actual = 2 }, new() { Month = 3, Projected = 4, Actual = 3 } },
+            Entered = { new() { EmployeeId = "7", Name = "Joe", Store = "1 | A" } },
+            Left = { new() { EmployeeId = "8", Name = "Ann", Store = "1 | A", Status = "resigned" } },
+        };
+        using var wb = await NewReports(new FakePlanning(), new FakeTrainers { Dto = dto }).BuildCrewTrainerReportAsync(2026, 3, null, "Admin", null);
+        using var reopened = Reopen(wb, out _);
+        Assert.Equal(new[] { "Summary", "By Store", "By Consultant & Manager", "Trend", "Joined & Left" }, reopened.Worksheets.Select(w => w.Name).ToArray());
+
+        var summary = reopened.Worksheet("Summary");
+        Assert.Contains("March 2026", summary.Cell(1, 1).GetString());
+        Assert.Equal(-2, summary.RowsUsed().First(r => r.Cell(1).GetString().StartsWith("Gap vs rule")).Cell(2).GetDouble());
+        Assert.True(summary.Column(1).Width < 60);
+
+        var byStore = reopened.Worksheet("By Store");
+        Assert.Contains("G2-F2", byStore.Cell(2, 8).FormulaA1);   // gap vs plan = trainers − plan
+        Assert.Contains("G2-J2", byStore.Cell(2, 11).FormulaA1);  // gap vs rule = trainers − required
+        Assert.Equal(5, byStore.Cell(2, 10).GetDouble());
+        Assert.Equal("Amy", reopened.Worksheet("By Consultant & Manager").RowsUsed().First(r => r.Cell(1).GetString() == "Amy").Cell(1).GetString());
+        Assert.Equal(3, reopened.Worksheet("Trend").Cell(3, 3).GetDouble());
+        var moves = reopened.Worksheet("Joined & Left");
+        Assert.Equal("Joined the list", moves.Cell(2, 1).GetString());
+        Assert.Equal("Resigned", moves.Cell(3, 5).GetString());
+    }
+
+    [Fact]
+    public async Task CrewTrainerReport_WithoutALists_IsJustANote()
+    {
+        using var wb = await NewReports(new FakePlanning(), new FakeTrainers()).BuildCrewTrainerReportAsync(0, 0, null, "Admin", null);
+        Assert.Single(wb.Worksheets);
     }
 
     [Fact]

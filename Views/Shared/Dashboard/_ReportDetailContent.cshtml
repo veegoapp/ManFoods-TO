@@ -213,7 +213,7 @@ else
             @if (rep.UsesYear)
             {
                 <div class="col-6 col-sm-4 col-md-2">
-                    <label class="form-label small text-muted-custom mb-1">@(rep.Id == "early-warning" || rep.Id == "workforce-planning" ? L["Common_Year"].Value : L["Common_Year"].Value + " (since)")</label>
+                    <label class="form-label small text-muted-custom mb-1">@(rep.Id == "early-warning" || rep.Id.StartsWith("workforce-planning") || rep.Id == "hiring-forecast" ? L["Common_Year"].Value : L["Common_Year"].Value + " (since)")</label>
                     <select id="rd-since-year" class="form-select form-select-dark form-select-sm" onchange="rdUpdateMonthsMultiselect()">
                         @foreach (var y in years)
                         {

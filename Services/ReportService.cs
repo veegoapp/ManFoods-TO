@@ -51,6 +51,7 @@ public class ReportService : IReportService
     private readonly IStoreService _stores;
     private readonly IAccessAreaContext _areaContext;
     private readonly IWorkforcePlanningService _planning;
+    private readonly ICrewTrainerService? _trainers;
 
     public ReportService(
         IDashboardService dashboard,
@@ -62,7 +63,8 @@ public class ReportService : IReportService
         IStoreActionPlanService actionPlans,
         IStoreService stores,
         IAccessAreaContext areaContext,
-        IWorkforcePlanningService planning)
+        IWorkforcePlanningService planning,
+        ICrewTrainerService? trainers = null)
     {
         _dashboard = dashboard;
         _ninetyDay = ninetyDay;
@@ -74,6 +76,7 @@ public class ReportService : IReportService
         _stores = stores;
         _areaContext = areaContext;
         _planning = planning;
+        _trainers = trainers;
     }
 
     /// <summary>Runs a fetch under a specific access area instead of whatever the
@@ -948,13 +951,88 @@ public class ReportService : IReportService
     }
 
     // ── Workforce Planning (projected vs actual) ─────────────
+    private static List<int>? ParseMonthList(string? months) => string.IsNullOrWhiteSpace(months)
+        ? null
+        : months.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(m => int.TryParse(m, out var n) ? n : 0).Where(n => n is >= 1 and <= 12).Distinct().ToList();
+
+    /// <summary>The detailed-data companion of the Workforce Planning report: the flat Data sheet (one row per
+    /// store/job/month) and the five pivot tables built on it. Kept apart because it is by far the heaviest part.</summary>
+    public async Task<XLWorkbook> BuildWorkforcePlanningDataReportAsync(int year, string? months, string? store, string? jobs, string role, string? assignedName,
+        string? om = null, string? oc = null, string? soc = null, string? od = null)
+    {
+        var rows = await _planning.GetDetailAsync(year, ParseMonthList(months), store, jobs, role, assignedName, om, oc, soc, od);
+        var wb = new XLWorkbook();
+        var monthName = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames;
+        if (rows.Count == 0)
+        {
+            var note = AddSheet(wb, "Summary");
+            note.Cell(1, 1).Value = "No projection data matches the selected filters.";
+            note.Column(1).Width = 50;
+            return wb;
+        }
+
+        // ── Data: one flat row per store/job/month — the pivot tables' source ──
+        var data = AddSheet(wb, "Data");
+        string[] dh = { "Period", "Year", "Month", "Store", "Job Title", "Projected", "Actual", "Gap", "Fill %", "Expected Resignations", "Hiring Need", "Operation Consultant", "Operation Manager", "Senior Operation Consultant", "Operation Director", "Shortage", "Payroll Group" };
+        StyleHeader(data, dh);
+        int dr = 2;
+        foreach (var r in rows)
+        {
+            data.Cell(dr, 1).Value = $"{r.Year}-{r.Month:D2}";
+            data.Cell(dr, 2).Value = (double)r.Year;
+            data.Cell(dr, 3).Value = monthName[r.Month - 1];
+            data.Cell(dr, 4).Value = SafeText(r.Store);
+            data.Cell(dr, 5).Value = SafeText(r.Job);
+            data.Cell(dr, 6).Value = (double)r.Projected;
+            if (r.Actual.HasValue)
+            {
+                data.Cell(dr, 7).Value = (double)r.Actual.Value;
+                data.Cell(dr, 8).Value = (double)(r.Actual.Value - r.Projected);
+                data.Cell(dr, 16).Value = r.Shortage ?? 0.0;
+                if (r.Projected > 0) { data.Cell(dr, 9).Value = r.Actual.Value / (double)r.Projected; data.Cell(dr, 9).Style.NumberFormat.Format = "0.0%"; }
+                if (r.ExpectedAttrition.HasValue) data.Cell(dr, 10).Value = r.ExpectedAttrition.Value;
+                if (r.HiringNeed.HasValue) data.Cell(dr, 11).Value = r.HiringNeed.Value;
+            }
+            data.Cell(dr, 12).Value = SafeText(r.OperationConsultant);
+            data.Cell(dr, 13).Value = SafeText(r.OperationManager);
+            data.Cell(dr, 14).Value = SafeText(r.SeniorOperationConsultant);
+            data.Cell(dr, 15).Value = SafeText(r.OperationDirector);
+            data.Cell(dr, 17).Value = string.IsNullOrWhiteSpace(r.PayrollGroup) ? "Unassigned" : SafeText(r.PayrollGroup);
+            dr++;
+        }
+        var lastRow = dr - 1;
+        data.SheetView.FreezeRows(1);
+        data.Range(1, 1, lastRow, dh.Length).SetAutoFilter();
+        data.Columns().AdjustToContents();
+
+        // ── Pivot tables (Excel builds them from the Data sheet when the file opens) ──
+        var source = data.Range(1, 1, lastRow, dh.Length);
+        void AddPivot(string sheetName, string pivotName, string rowField, string? colField, params string[] valueFields)
+        {
+            var ws = AddSheet(wb, sheetName);
+            var pt = ws.PivotTables.Add(pivotName, ws.Cell(3, 1), source);
+            pt.RowLabels.Add(rowField);
+            if (colField != null) pt.ColumnLabels.Add(colField);
+            foreach (var v in valueFields)
+                pt.Values.Add(v, $"Sum of {v}").SetSummaryFormula(XLPivotSummary.Sum);
+            pt.ShowGrandTotalsRows = true;
+            pt.ShowGrandTotalsColumns = true;
+            ws.Cell(1, 1).Value = $"{sheetName} — refreshes when opened in Excel";
+            ws.Cell(1, 1).Style.Font.Bold = true;
+        }
+        AddPivot("Pivot Store x Period", "PivotStorePeriod", "Store", "Period", "Projected");
+        AddPivot("Pivot Job x Period", "PivotJobPeriod", "Job Title", "Period", "Projected");
+        AddPivot("Pivot Store Gap", "PivotStoreGap", "Store", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
+        AddPivot("Pivot Payroll Group", "PivotPayrollGroup", "Payroll Group", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
+        AddPivot("Pivot Consultant Gap", "PivotConsultantGap", "Operation Consultant", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
+        return wb;
+    }
+
     public async Task<XLWorkbook> BuildWorkforcePlanningReportAsync(int year, string? months, string? store, string? jobs, string role, string? assignedName,
         string? om = null, string? oc = null, string? soc = null, string? od = null)
     {
-        var monthList = string.IsNullOrWhiteSpace(months)
-            ? null
-            : months.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(m => int.TryParse(m, out var n) ? n : 0).Where(n => n is >= 1 and <= 12).Distinct().ToList();
+        var monthList = ParseMonthList(months);
         var rows = await _planning.GetDetailAsync(year, monthList, store, jobs, role, assignedName, om, oc, soc, od);
 
         var wb = new XLWorkbook();
@@ -979,11 +1057,15 @@ public class ReportService : IReportService
         sum.Range(2, 1, 6, 1).Style.Font.Bold = true;
         sum.Cell(7, 1).Value = "Gap = Actual − Projected (positive = surplus, negative = shortage). Fill rate = Actual ÷ Projected. Shortage = people missing in the jobs that are short (a surplus in one job never offsets another). Hiring need = shortage + expected resignations (average monthly resignations of the last 6 roster months) — an estimate. Only stores with a projection for a month are compared in that month; months without an uploaded roster show the projection only.";
         sum.Cell(7, 1).Style.Font.Italic = true;
+        // The title and the long note span the table instead of stretching column A.
+        sum.Range(1, 1, 1, 8).Merge();
+        sum.Range(7, 1, 7, 8).Merge().Style.Alignment.SetWrapText(true).Alignment.SetVertical(XLAlignmentVerticalValues.Top);
+        sum.Row(7).Height = 78;
 
         if (rows.Count == 0)
         {
             sum.Cell(9, 1).Value = "No projection data matches the selected filters.";
-            sum.Columns().AdjustToContents();
+            sum.Column(1).Width = 24;
             return wb;
         }
 
@@ -1013,8 +1095,9 @@ public class ReportService : IReportService
         }
         sum.Range(r0, 1, rr - 1, 8).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
         sum.Range(r0, 1, rr - 1, 8).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-        sum.Columns().AdjustToContents();
-        sum.Column(1).Width = Math.Max(sum.Column(1).Width, 18);
+        sum.Columns().AdjustToContents(hdr, rr - 1); // size columns from the table only, not the title and the note
+        sum.Column(1).Width = Math.Max(sum.Column(1).Width, 20);
+        for (int c = 2; c <= 8; c++) sum.Column(c).Width = Math.Max(sum.Column(c).Width, 14);
 
         // Snapshot month for the By Store / By Job sheets: the latest selected month
         // with an uploaded roster, else the latest selected month.
@@ -1125,7 +1208,7 @@ public class ReportService : IReportService
                 block.Style.Border.InsideBorderColor = XLColor.FromHtml(GridColor);
                 rowNo++; // blank line between the tables
             }
-            ws.Columns().AdjustToContents();
+            ws.Columns().AdjustToContents(4, rowNo); // the tables only: the title and the note are longer than any column
             ws.Column(1).Width = Math.Max(ws.Column(1).Width, 32);
         }
         WriteGroups();
@@ -1163,60 +1246,326 @@ public class ReportService : IReportService
             hp.Cell(hr + 2, 1).Style.Font.Italic = true;
         }
 
-        // ── Data: one flat row per store/job/month — the pivot tables' source ──
-        var data = AddSheet(wb, "Data");
-        string[] dh = { "Period", "Year", "Month", "Store", "Job Title", "Projected", "Actual", "Gap", "Fill %", "Expected Resignations", "Hiring Need", "Operation Consultant", "Operation Manager", "Senior Operation Consultant", "Operation Director", "Shortage", "Payroll Group" };
-        StyleHeader(data, dh);
-        int dr = 2;
-        foreach (var r in rows)
-        {
-            data.Cell(dr, 1).Value = $"{r.Year}-{r.Month:D2}";
-            data.Cell(dr, 2).Value = (double)r.Year;
-            data.Cell(dr, 3).Value = monthName[r.Month - 1];
-            data.Cell(dr, 4).Value = SafeText(r.Store);
-            data.Cell(dr, 5).Value = SafeText(r.Job);
-            data.Cell(dr, 6).Value = (double)r.Projected;
-            if (r.Actual.HasValue)
-            {
-                data.Cell(dr, 7).Value = (double)r.Actual.Value;
-                data.Cell(dr, 8).Value = (double)(r.Actual.Value - r.Projected);
-                data.Cell(dr, 16).Value = r.Shortage ?? 0.0;
-                if (r.Projected > 0) { data.Cell(dr, 9).Value = r.Actual.Value / (double)r.Projected; data.Cell(dr, 9).Style.NumberFormat.Format = "0.0%"; }
-                if (r.ExpectedAttrition.HasValue) data.Cell(dr, 10).Value = r.ExpectedAttrition.Value;
-                if (r.HiringNeed.HasValue) data.Cell(dr, 11).Value = r.HiringNeed.Value;
-            }
-            data.Cell(dr, 12).Value = SafeText(r.OperationConsultant);
-            data.Cell(dr, 13).Value = SafeText(r.OperationManager);
-            data.Cell(dr, 14).Value = SafeText(r.SeniorOperationConsultant);
-            data.Cell(dr, 15).Value = SafeText(r.OperationDirector);
-            data.Cell(dr, 17).Value = string.IsNullOrWhiteSpace(r.PayrollGroup) ? "Unassigned" : SafeText(r.PayrollGroup);
-            dr++;
-        }
-        var lastRow = dr - 1;
-        data.SheetView.FreezeRows(1);
-        data.Range(1, 1, lastRow, dh.Length).SetAutoFilter();
-        data.Columns().AdjustToContents();
+        return wb;
+    }
 
-        // ── Pivot tables (Excel builds them from the Data sheet when the file opens) ──
-        var source = data.Range(1, 1, lastRow, dh.Length);
-        void AddPivot(string sheetName, string pivotName, string rowField, string? colField, params string[] valueFields)
+    // ── Hiring Forecast: hires needed per month ─────────────
+    /// <summary>One matrix sheet: a name column (plus the consultant, or the store count), the 12 months and a total.
+    /// Months with no projection stay blank; the totals row is live SUM formulas.</summary>
+    private static void WriteForecastMatrix(XLWorkbook wb, string sheetName, string nameHeader, string? extraHeader, HiringForecastDto f,
+        IEnumerable<HiringForecastRowDto> rows, Func<HiringForecastRowDto, string> extra, bool unassignedIfBlank = false)
+    {
+        var monthName = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames;
+        var ws = AddSheet(wb, sheetName);
+        int x = extraHeader == null ? 0 : 1;          // extra column before the months
+        int first = 2 + x, last = first + 11, totalCol = last + 1;
+        var heads = new List<string> { nameHeader };
+        if (extraHeader != null) heads.Add(extraHeader);
+        heads.AddRange(Enumerable.Range(0, 12).Select(i => monthName[i].Substring(0, 3) + (f.MonthModes[i] == "forecast" ? " (forecast)" : "")));
+        heads.Add("Total");
+        StyleHeader(ws, heads.ToArray());
+        int r = 2;
+        foreach (var row in rows)
         {
-            var ws = AddSheet(wb, sheetName);
-            var pt = ws.PivotTables.Add(pivotName, ws.Cell(3, 1), source);
-            pt.RowLabels.Add(rowField);
-            if (colField != null) pt.ColumnLabels.Add(colField);
-            foreach (var v in valueFields)
-                pt.Values.Add(v, $"Sum of {v}").SetSummaryFormula(XLPivotSummary.Sum);
-            pt.ShowGrandTotalsRows = true;
-            pt.ShowGrandTotalsColumns = true;
-            ws.Cell(1, 1).Value = $"{sheetName} — refreshes when opened in Excel";
-            ws.Cell(1, 1).Style.Font.Bold = true;
+            ws.Cell(r, 1).Value = SafeText(unassignedIfBlank && string.IsNullOrWhiteSpace(row.Store) ? "Unassigned" : row.Store);
+            if (extraHeader != null) ws.Cell(r, 2).Value = SafeText(extra(row));
+            for (int i = 0; i < 12; i++) if (f.MonthModes[i] != "none") SetIntCell(ws.Cell(r, first + i), row.Months[i]);
+            ws.Cell(r, totalCol).FormulaA1 = $"=SUM({ws.Cell(r, first).Address.ColumnLetter}{r}:{ws.Cell(r, last).Address.ColumnLetter}{r})";
+            r++;
         }
-        AddPivot("Pivot Store x Period", "PivotStorePeriod", "Store", "Period", "Projected");
-        AddPivot("Pivot Job x Period", "PivotJobPeriod", "Job Title", "Period", "Projected");
-        AddPivot("Pivot Store Gap", "PivotStoreGap", "Store", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
-        AddPivot("Pivot Payroll Group", "PivotPayrollGroup", "Payroll Group", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
-        AddPivot("Pivot Consultant Gap", "PivotConsultantGap", "Operation Consultant", null, "Projected", "Actual", "Gap", "Shortage", "Hiring Need");
+        Finalize(ws);
+        int dataEnd = r - 1;
+        ws.Cell(r, 1).Value = "Total";
+        for (int c = first; c <= totalCol; c++)
+        {
+            var col = ws.Cell(1, c).Address.ColumnLetter;
+            ws.Cell(r, c).FormulaA1 = $"=SUM({col}2:{col}{dataEnd})";
+        }
+        var totals = ws.Range(r, 1, r, totalCol);
+        totals.Style.Font.Bold = true;
+        totals.Style.Fill.BackgroundColor = XLColor.FromHtml("#F3F3F3");
+        totals.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        totals.Style.Border.OutsideBorderColor = XLColor.FromHtml(GridColor);
+        if (dataEnd >= 2)
+            ws.Range(2, first, dataEnd, last).AddConditionalFormat().ColorScale().LowestValue(XLColor.White).HighestValue(XLColor.FromHtml("#F4A29B"));
+        ws.SheetView.FreezeColumns(1 + x);
+    }
+
+    /// <summary>Hiring Forecast report: hires needed per month for a year, by store, job, payroll group and
+    /// responsible person. Same filters as the page; the forecast service serves everything from its cache.</summary>
+    public async Task<XLWorkbook> BuildHiringForecastReportAsync(int year, string? store, string? jobs, string role, string? assignedName,
+        string? om = null, string? oc = null, string? soc = null, string? od = null)
+    {
+        var rate = await EarlyLeaverRate.GetAsync(_ninetyDay, null);
+        var byStore = await WithAreaAsync(AccessAreas.HiringForecast, () => _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, rate));
+        var wb = new XLWorkbook();
+        var monthName = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames;
+
+        var sum = AddSheet(wb, "Summary");
+        sum.Cell(1, 1).Value = $"Hiring Forecast — Hires Needed per Month ({(byStore.Year > 0 ? byStore.Year : year)})";
+        sum.Cell(1, 1).Style.Font.Bold = true; sum.Cell(1, 1).Style.Font.FontSize = 14;
+        sum.Cell(2, 1).Value = "Store filter"; sum.Cell(2, 2).Value = string.IsNullOrWhiteSpace(store) ? "All accessible stores" : SafeText(store);
+        sum.Cell(3, 1).Value = "Job filter"; sum.Cell(3, 2).Value = string.IsNullOrWhiteSpace(jobs) ? "All job titles" : SafeText(jobs);
+        var responsible = string.Join("; ", new[]
+        {
+            string.IsNullOrWhiteSpace(oc) ? null : "Consultant: " + oc,
+            string.IsNullOrWhiteSpace(om) ? null : "Manager: " + om,
+            string.IsNullOrWhiteSpace(soc) ? null : "Senior consultant: " + soc,
+            string.IsNullOrWhiteSpace(od) ? null : "Director: " + od,
+        }.Where(x => x != null));
+        sum.Cell(4, 1).Value = "Responsible filter"; sum.Cell(4, 2).Value = responsible.Length == 0 ? "All" : SafeText(responsible);
+        sum.Cell(5, 1).Value = "Generated"; sum.Cell(5, 2).Value = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC";
+        sum.Range(2, 1, 5, 1).Style.Font.Bold = true;
+        sum.Range(1, 1, 1, 3).Merge();
+
+        string? empty = !byStore.HasData ? "No job projections have been uploaded yet."
+            : !byStore.HasRoster ? "No active-employee roster has been uploaded, so the forecast has nothing to start from."
+            : byStore.Rows.Count == 0 ? "No hiring need matches the selected filters." : null;
+        if (empty != null)
+        {
+            sum.Cell(7, 1).Value = empty;
+            sum.Column(1).Width = 24;
+            return wb;
+        }
+
+        sum.Cell(6, 1).Value = $"Hires needed per month. Months with an uploaded roster: max(0, projected − actual + expected resignations) per store and job. Later months are simulated from the {monthName[byStore.BaselineMonth - 1]} {byStore.BaselineYear} roster (expected resignations leave, hires fill up to the projection). Hires are grossed up by the company-wide 90-day early-leaver rate ({byStore.EarlyLeaverRate:0.#}%). Every sheet adds up to the same totals. An estimate, not a commitment.";
+        sum.Cell(6, 1).Style.Font.Italic = true;
+        sum.Range(6, 1, 6, 3).Merge().Style.Alignment.SetWrapText(true).Alignment.SetVertical(XLAlignmentVerticalValues.Top);
+        sum.Row(6).Height = 78;
+
+        const int hdr = 8;
+        string[] mh = { "Month", "Source", "Hires needed" };
+        for (int i = 0; i < mh.Length; i++)
+        {
+            var c = sum.Cell(hdr, i + 1);
+            c.Value = mh[i]; c.Style.Font.Bold = true; c.Style.Fill.BackgroundColor = XLColor.FromHtml(BrandRed);
+            c.Style.Font.FontColor = XLColor.White; c.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        }
+        int rr = hdr + 1;
+        for (int i = 0; i < 12; i++)
+        {
+            if (byStore.MonthModes[i] == "none") continue;
+            sum.Cell(rr, 1).Value = monthName[i];
+            sum.Cell(rr, 2).Value = byStore.MonthModes[i] == "forecast" ? "Forecast" : "Roster";
+            SetIntCell(sum.Cell(rr, 3), byStore.MonthTotals[i]);
+            rr++;
+        }
+        sum.Cell(rr, 1).Value = "Total";
+        sum.Cell(rr, 3).FormulaA1 = $"=SUM(C{hdr + 1}:C{rr - 1})";
+        sum.Range(rr, 1, rr, 3).Style.Font.Bold = true;
+        sum.Range(hdr + 1, 1, rr, 3).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+        sum.Range(hdr + 1, 1, rr, 3).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        sum.Columns().AdjustToContents(hdr, rr);
+        sum.Column(1).Width = Math.Max(sum.Column(1).Width, 22);
+        sum.Column(2).Width = Math.Max(sum.Column(2).Width, 14);
+        sum.Column(3).Width = Math.Max(sum.Column(3).Width, 16);
+
+        WriteForecastMatrix(wb, "By Store", "Store", "Operation Consultant", byStore, byStore.Rows, r => r.OperationConsultant);
+        var byJob = await WithAreaAsync(AccessAreas.HiringForecast, () => _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, rate, "job"));
+        WriteForecastMatrix(wb, "By Job", "Job title", null, byJob, byJob.Rows, _ => "");
+        var byPayroll = await WithAreaAsync(AccessAreas.HiringForecast, () => _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, rate, "payroll"));
+        WriteForecastMatrix(wb, "By Payroll Group", "Payroll group", null, byPayroll, byPayroll.Rows, _ => "", unassignedIfBlank: true);
+
+        // The four per-leader roll-ups, stacked on one sheet (same rounded store-month hires as the store sheet).
+        var gs = AddSheet(wb, "By Consultant & Manager");
+        gs.Cell(1, 1).Value = $"Hires needed per month by the people responsible for the stores — {byStore.Year}";
+        gs.Cell(1, 1).Style.Font.Bold = true; gs.Cell(1, 1).Style.Font.FontSize = 13;
+        var heads = new List<string> { "Name", "Stores" };
+        heads.AddRange(Enumerable.Range(0, 12).Select(i => monthName[i].Substring(0, 3) + (byStore.MonthModes[i] == "forecast" ? " (forecast)" : "")));
+        heads.Add("Total");
+        var groups = new (string Title, List<HiringForecastRowDto> Rows)[]
+        {
+            ("Operation Consultants", byStore.ByOperationConsultant),
+            ("Operation Directors", byStore.ByOperationDirector),
+            ("Operation Managers", byStore.ByOperationManager),
+            ("Senior Operation Consultants", byStore.BySeniorOperationConsultant),
+        };
+        int gr = 3;
+        foreach (var (title, list) in groups)
+        {
+            gs.Cell(gr, 1).Value = title; gs.Cell(gr, 1).Style.Font.Bold = true; gs.Cell(gr, 1).Style.Font.FontSize = 12;
+            gr++;
+            for (int i = 0; i < heads.Count; i++)
+            {
+                var c = gs.Cell(gr, i + 1);
+                c.Value = heads[i]; c.Style.Font.Bold = true; c.Style.Fill.BackgroundColor = XLColor.FromHtml(BrandRed);
+                c.Style.Font.FontColor = XLColor.White; c.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            }
+            int headRow = gr; gr++;
+            if (list.Count == 0) { gs.Cell(gr, 1).Value = "No data"; gs.Cell(gr, 1).Style.Font.Italic = true; gr += 2; continue; }
+            foreach (var row in list)
+            {
+                gs.Cell(gr, 1).Value = SafeText(row.Store);
+                SetIntCell(gs.Cell(gr, 2), row.StoreCount);
+                for (int i = 0; i < 12; i++) if (byStore.MonthModes[i] != "none") SetIntCell(gs.Cell(gr, 3 + i), row.Months[i]);
+                gs.Cell(gr, 15).FormulaA1 = $"=SUM(C{gr}:N{gr})";
+                gr++;
+            }
+            var block = gs.Range(headRow, 1, gr - 1, heads.Count);
+            block.Style.Border.OutsideBorder = XLBorderStyleValues.Thin; block.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            block.Style.Border.OutsideBorderColor = XLColor.FromHtml(GridColor); block.Style.Border.InsideBorderColor = XLColor.FromHtml(GridColor);
+            gr++;
+        }
+        gs.Columns().AdjustToContents(3, gr);
+        gs.Column(1).Width = Math.Max(gs.Column(1).Width, 32);
+        return wb;
+    }
+
+    // ── Crew Trainers: trainers against the plan and the 1-per-6 rule ─────
+    /// <summary>Crew Trainers report for one month that has a trainer list: trainers against the Crew Trainer projection
+    /// and against the 1-trainer-per-6-crew rule, by store and by leader, the year's trend and who joined or left the list.</summary>
+    public async Task<XLWorkbook> BuildCrewTrainerReportAsync(int year, int month, string? store, string role, string? assignedName,
+        string? om = null, string? oc = null, string? soc = null, string? od = null)
+    {
+        if (_trainers == null) throw new InvalidOperationException("The Crew Trainers service is not available.");
+        var dto = await WithAreaAsync(AccessAreas.CrewTrainers, () => _trainers.GetAsync(year > 0 ? year : null, month > 0 ? month : null, store, role, assignedName, om, oc, soc, od));
+        var wb = new XLWorkbook();
+        var monthName = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames;
+
+        var sum = AddSheet(wb, "Summary");
+        sum.Cell(1, 1).Value = dto.HasData ? $"Crew Trainers — {monthName[dto.Month - 1]} {dto.Year}" : "Crew Trainers";
+        sum.Cell(1, 1).Style.Font.Bold = true; sum.Cell(1, 1).Style.Font.FontSize = 14;
+        sum.Cell(2, 1).Value = "Store filter"; sum.Cell(2, 2).Value = string.IsNullOrWhiteSpace(store) ? "All accessible stores" : SafeText(store);
+        var responsible = string.Join("; ", new[]
+        {
+            string.IsNullOrWhiteSpace(oc) ? null : "Consultant: " + oc,
+            string.IsNullOrWhiteSpace(om) ? null : "Manager: " + om,
+            string.IsNullOrWhiteSpace(soc) ? null : "Senior consultant: " + soc,
+            string.IsNullOrWhiteSpace(od) ? null : "Director: " + od,
+        }.Where(x => x != null));
+        sum.Cell(3, 1).Value = "Responsible filter"; sum.Cell(3, 2).Value = responsible.Length == 0 ? "All" : SafeText(responsible);
+        sum.Cell(4, 1).Value = "Generated"; sum.Cell(4, 2).Value = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC";
+        sum.Range(2, 1, 4, 1).Style.Font.Bold = true;
+        sum.Range(1, 1, 1, 3).Merge();
+
+        if (!dto.HasData)
+        {
+            sum.Cell(6, 1).Value = "No crew trainer list has been uploaded yet.";
+            sum.Column(1).Width = 24;
+            return wb;
+        }
+
+        sum.Cell(5, 1).Value = $"Trainers are the people on the uploaded trainer list. Plan = Crew Trainer + Hourly Paid Crew Trainer in the projection. Required = crew-level employees (trainers excluded) ÷ {dto.CrewPerTrainer}, rounded to the nearest whole number. Gap = Actual − Plan or Actual − Required (negative = short). Only stores in the selected month's projection are compared.";
+        sum.Cell(5, 1).Style.Font.Italic = true;
+        sum.Range(5, 1, 5, 3).Merge().Style.Alignment.SetWrapText(true).Alignment.SetVertical(XLAlignmentVerticalValues.Top);
+        sum.Row(5).Height = 64;
+
+        const int hdr = 7;
+        string[] kh = { "Measure", "Value" };
+        for (int i = 0; i < kh.Length; i++)
+        {
+            var c = sum.Cell(hdr, i + 1);
+            c.Value = kh[i]; c.Style.Font.Bold = true; c.Style.Fill.BackgroundColor = XLColor.FromHtml(BrandRed);
+            c.Style.Font.FontColor = XLColor.White; c.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        }
+        var k = dto.Kpis;
+        var measures = new List<(string Label, int Value)>
+        {
+            ("Trainers in the plan", k.Projected), ("Trainers on the list", k.Actual), ("Gap vs plan (actual − plan)", k.Gap),
+        };
+        if (dto.HasCrewLevelJobs)
+        {
+            measures.Add(("Crew-level employees", k.CrewLevel));
+            measures.Add(($"Trainers required (1 per {dto.CrewPerTrainer})", k.Required));
+            measures.Add(("Gap vs rule (actual − required)", k.GapRule));
+        }
+        measures.Add(($"Trainers who resigned (last {k.LookbackMonths} months)", k.Resigned));
+        int kr = hdr + 1;
+        foreach (var (label, value) in measures) { sum.Cell(kr, 1).Value = label; SetIntCell(sum.Cell(kr, 2), value); kr++; }
+        sum.Range(hdr + 1, 1, kr - 1, 2).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+        sum.Range(hdr + 1, 1, kr - 1, 2).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        sum.Columns().AdjustToContents(hdr, kr - 1);
+        sum.Column(1).Width = Math.Max(sum.Column(1).Width, 36);
+        sum.Column(2).Width = Math.Max(sum.Column(2).Width, 14);
+
+        // By Store: trainers against the plan and against the rule, with the store's leaders.
+        var bs = AddSheet(wb, "By Store");
+        StyleHeader(bs, new[] { "Store", "Operation Consultant", "Operation Manager", "Senior Operation Consultant", "Operation Director",
+            "Plan", "Trainers", "Gap vs plan", "Crew level", "Required", "Gap vs rule" });
+        int sr = 2;
+        foreach (var s in dto.ByStore)
+        {
+            bs.Cell(sr, 1).Value = SafeText(s.Store); bs.Cell(sr, 2).Value = SafeText(s.OperationConsultant); bs.Cell(sr, 3).Value = SafeText(s.OperationManager);
+            bs.Cell(sr, 4).Value = SafeText(s.SeniorOperationConsultant); bs.Cell(sr, 5).Value = SafeText(s.OperationDirector);
+            SetIntCell(bs.Cell(sr, 6), s.Projected); SetIntCell(bs.Cell(sr, 7), s.Actual);
+            bs.Cell(sr, 8).FormulaA1 = $"=G{sr}-F{sr}";
+            SetIntCell(bs.Cell(sr, 9), s.CrewLevel); SetIntCell(bs.Cell(sr, 10), s.Required);
+            bs.Cell(sr, 11).FormulaA1 = $"=G{sr}-J{sr}";
+            sr++;
+        }
+        Finalize(bs);
+        bs.SheetView.FreezeColumns(1);
+
+        // By leader: the store rows added up under each store's leader, four tables on one sheet.
+        var gs = AddSheet(wb, "By Consultant & Manager");
+        gs.Cell(1, 1).Value = $"Crew trainers by the people responsible for the stores — {monthName[dto.Month - 1]} {dto.Year}";
+        gs.Cell(1, 1).Style.Font.Bold = true; gs.Cell(1, 1).Style.Font.FontSize = 13;
+        string[] gh = { "Name", "Stores", "Plan", "Trainers", "Gap vs plan", "Crew level", "Required", "Gap vs rule" };
+        var groups = new (string Title, List<CrewTrainerGroupDto> Rows)[]
+        {
+            ("Operation Consultants", dto.ByOperationConsultant), ("Operation Directors", dto.ByOperationDirector),
+            ("Operation Managers", dto.ByOperationManager), ("Senior Operation Consultants", dto.BySeniorOperationConsultant),
+        };
+        int gr = 3;
+        foreach (var (title, list) in groups)
+        {
+            gs.Cell(gr, 1).Value = title; gs.Cell(gr, 1).Style.Font.Bold = true; gs.Cell(gr, 1).Style.Font.FontSize = 12;
+            gr++;
+            for (int i = 0; i < gh.Length; i++)
+            {
+                var c = gs.Cell(gr, i + 1);
+                c.Value = gh[i]; c.Style.Font.Bold = true; c.Style.Fill.BackgroundColor = XLColor.FromHtml(BrandRed);
+                c.Style.Font.FontColor = XLColor.White; c.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            }
+            int headRow = gr; gr++;
+            if (list.Count == 0) { gs.Cell(gr, 1).Value = "No data"; gs.Cell(gr, 1).Style.Font.Italic = true; gr += 2; continue; }
+            foreach (var g in list)
+            {
+                gs.Cell(gr, 1).Value = SafeText(g.Name);
+                SetIntCell(gs.Cell(gr, 2), g.StoreCount); SetIntCell(gs.Cell(gr, 3), g.Projected); SetIntCell(gs.Cell(gr, 4), g.Actual);
+                gs.Cell(gr, 5).FormulaA1 = $"=D{gr}-C{gr}";
+                SetIntCell(gs.Cell(gr, 6), g.CrewLevel); SetIntCell(gs.Cell(gr, 7), g.Required);
+                gs.Cell(gr, 8).FormulaA1 = $"=D{gr}-G{gr}";
+                gr++;
+            }
+            var block = gs.Range(headRow, 1, gr - 1, gh.Length);
+            block.Style.Border.OutsideBorder = XLBorderStyleValues.Thin; block.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            block.Style.Border.OutsideBorderColor = XLColor.FromHtml(GridColor); block.Style.Border.InsideBorderColor = XLColor.FromHtml(GridColor);
+            gr++;
+        }
+        gs.Columns().AdjustToContents(3, gr);
+        gs.Column(1).Width = Math.Max(gs.Column(1).Width, 32);
+
+        // Trend over the year: trainers in the plan against trainers on the list.
+        var tr = AddSheet(wb, "Trend");
+        StyleHeader(tr, new[] { "Month", "Plan", "Trainers", "Gap vs plan" });
+        int tr2 = 2;
+        foreach (var t in dto.Trend.OrderBy(t => t.Month))
+        {
+            tr.Cell(tr2, 1).Value = monthName[t.Month - 1];
+            SetIntCell(tr.Cell(tr2, 2), t.Projected);
+            if (t.Actual.HasValue)
+            {
+                SetIntCell(tr.Cell(tr2, 3), t.Actual.Value);
+                tr.Cell(tr2, 4).FormulaA1 = $"=C{tr2}-B{tr2}";
+            }
+            tr2++;
+        }
+        Finalize(tr);
+
+        // Joined / left the list since the previous one.
+        if (dto.HasPrevious)
+        {
+            var mv = AddSheet(wb, "Joined & Left");
+            StyleHeader(mv, new[] { "Change", "Employee ID", "Name", "Store", "Status" });
+            int mr = 2;
+            string Status(string s) => s switch { "resigned" => "Resigned", "active" => "Still active (off the list)", "gone" => "Not on the roster", _ => "" };
+            foreach (var e in dto.Entered) { mv.Cell(mr, 1).Value = "Joined the list"; mv.Cell(mr, 2).Value = SafeText(e.EmployeeId); mv.Cell(mr, 3).Value = SafeText(e.Name); mv.Cell(mr, 4).Value = SafeText(e.Store); mr++; }
+            foreach (var e in dto.Left) { mv.Cell(mr, 1).Value = "Left the list"; mv.Cell(mr, 2).Value = SafeText(e.EmployeeId); mv.Cell(mr, 3).Value = SafeText(e.Name); mv.Cell(mr, 4).Value = SafeText(e.Store); mv.Cell(mr, 5).Value = Status(e.Status); mr++; }
+            Finalize(mv);
+            mv.Cell(mr + 1, 1).Value = $"Compared with the {monthName[dto.PreviousMonth - 1]} {dto.PreviousYear} trainer list.";
+            mv.Cell(mr + 1, 1).Style.Font.Italic = true;
+        }
         return wb;
     }
 

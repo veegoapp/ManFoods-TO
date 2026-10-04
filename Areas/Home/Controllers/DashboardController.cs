@@ -75,16 +75,20 @@ public class DashboardController : Controller
 
     [HttpGet("home/dashboard/reports/{reportType}")]
     [AccessArea(AccessAreas.Shared)]
-    public async Task<IActionResult> ReportDetail(string reportType)
+    public async Task<IActionResult> ReportDetail(string reportType, [FromServices] ICrewTrainerService trainers)
     {
         if (MvcApp.Models.ViewModels.ReportCatalog.Find(reportType) == null) return NotFound();
 
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetEmail();
-        var periods = reportType == "workforce-planning"
-            ? await _planning.GetProjectionPeriodsAsync() // this report's Year/Months filters come from the projection, not the uploaded rosters
-            : await _dashboard.GetAvailablePeriodsAsync();
-        if (reportType == "workforce-planning") ViewBag.Jobs = await _planning.GetProjectionJobsAsync();
+        // These reports' Year/Months filters come from the projection (or the trainer lists), not the uploaded rosters.
+        var usesProjection = reportType is "workforce-planning" or "workforce-planning-data" or "hiring-forecast";
+        var periods = usesProjection
+            ? await _planning.GetProjectionPeriodsAsync()
+            : reportType == "crew-trainers"
+                ? (await trainers.GetAsync(null, null, null, role, assignedName)).Periods
+                : await _dashboard.GetAvailablePeriodsAsync();
+        if (usesProjection) ViewBag.Jobs = await _planning.GetProjectionJobsAsync();
         var stores = await _stores.GetStoresAsync(null, null, role, assignedName);
         ViewBag.Stores = stores.Select(s => s.StoreName).Distinct().OrderBy(s => s).ToList();
         ViewBag.OperationManagers = await _dashboard.GetOperationManagersAsync(null, null, role, assignedName);
@@ -182,6 +186,26 @@ public class DashboardController : Controller
                     await _reports.BuildWorkforcePlanningReportAsync(planYear, months, store, jobs, role, assignedName, om, oc, soc, od),
                     $"Workforce_Planning_{planYear}.xlsx");
             }
+            case "workforce-planning-data":
+            {
+                var planYear = year > 0 ? year : (await _planning.GetProjectionPeriodsAsync()).Select(p => p.Year).DefaultIfEmpty(0).Max();
+                if (planYear == 0) return NotFound();
+                return await DownloadWorkbookAsync(
+                    await _reports.BuildWorkforcePlanningDataReportAsync(planYear, months, store, jobs, role, assignedName, om, oc, soc, od),
+                    $"Workforce_Planning_Data_{planYear}.xlsx");
+            }
+            case "hiring-forecast":
+            {
+                var planYear = year > 0 ? year : (await _planning.GetProjectionPeriodsAsync()).Select(p => p.Year).DefaultIfEmpty(0).Max();
+                if (planYear == 0) return NotFound();
+                return await DownloadWorkbookAsync(
+                    await _reports.BuildHiringForecastReportAsync(planYear, store, jobs, role, assignedName, om, oc, soc, od),
+                    $"Hiring_Forecast_{planYear}.xlsx");
+            }
+            case "crew-trainers":
+                return await DownloadWorkbookAsync(
+                    await _reports.BuildCrewTrainerReportAsync(year, month, store, role, assignedName, om, oc, soc, od),
+                    year > 0 && month > 0 ? $"Crew_Trainers_{year}_{month:D2}.xlsx" : "Crew_Trainers.xlsx");
             case "workforce":
                 return await DownloadWorkbookAsync(
                     await _reports.BuildWorkforceReportAsync(month, year, role, assignedName, store, om, oc, soc, od),
