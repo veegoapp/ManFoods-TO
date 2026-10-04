@@ -178,6 +178,8 @@ const HF_I = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new Dictionary<
 const hfState = { by: 'store', year: '', month: '', store: '', job: '', oc: '', om: '', soc: '', od: '' };
 const hfSort = { key: 'total', dir: 'desc' };
 let hfData, hfJobData, hfChart, hfJobChart;
+const hfMi = () => hfState.month ? +hfState.month - 1 : -1; // selected month (0-based), -1 = the whole year
+const hfCols = () => hfMi() >= 0 ? [hfMi()] : [...Array(12).keys()]; // month columns the tables show
 const hfMonthName = (m, style) => new Date(2000, m - 1, 1).toLocaleString('default', { month: style || 'short' });
 
 function hfFillSelect(id, options, value) {
@@ -341,18 +343,18 @@ function hfRenderJobs() {
 
     const th = (label, cls, sub) => `<th class="${cls || ''}">${sapEscape(label)}${sub ? `<span class="hf-tag">${sapEscape(sub)}</span>` : ''}</th>`;
     let h = th(hfL.job);
-    for (let i = 0; i < 12; i++) h += th(hfMonthName(i + 1), 'num' + (i === mi ? ' hf-total' : ''), modes[i] === 'none' ? '' : modes[i] === 'forecast' ? hfL.forecast : hfL.roster);
-    document.getElementById('hfJobHead').innerHTML = h + th(hfL.total, 'num hf-total');
+    for (const i of hfCols()) h += th(hfMonthName(i + 1), 'num', modes[i] === 'none' ? '' : modes[i] === 'forecast' ? hfL.forecast : hfL.roster);
+    document.getElementById('hfJobHead').innerHTML = h + (mi < 0 ? th(hfL.total, 'num hf-total') : '');
 
-    const max = Math.max(1, ...rows.flatMap(r => r.months));
+    const max = Math.max(1, ...rows.flatMap(r => hfCols().map(i => r.months[i])));
     const cell = (v, mode, on) => mode === 'none'
         ? '<td class="num hf-zero">—</td>'
         : `<td class="num ${v === 0 ? 'hf-zero' : ''} ${on ? 'fw-bold' : ''}" style="${v > 0 ? `background:oklch(0.6 0.2 25 / ${(0.08 + 0.5 * v / max).toFixed(2)})` : ''}">${v}</td>`;
     document.getElementById('hfJobRows').innerHTML = rows.length ? rows.map(r =>
-        `<tr><td>${sapEscape(r.store)}</td>` + r.months.map((v, i) => cell(v, modes[i], i === mi)).join('') + `<td class="num hf-total">${r.total}</td></tr>`).join('')
+        `<tr><td>${sapEscape(r.store)}</td>` + hfCols().map(i => cell(r.months[i], modes[i], false)).join('') + (mi < 0 ? `<td class="num hf-total">${r.total}</td>` : '') + `</tr>`).join('')
         : `<tr><td colspan="14" class="text-center py-3 text-muted">${sapEscape(hfL.noRows)}</td></tr>`;
     document.getElementById('hfJobFoot').innerHTML = `<td>${sapEscape(hfL.total)}</td>`
-        + d.monthTotals.map((v, i) => `<td class="num">${modes[i] === 'none' ? '—' : v}</td>`).join('') + `<td class="num">${d.grandTotal}</td>`;
+        + hfCols().map(i => `<td class="num">${modes[i] === 'none' ? '—' : d.monthTotals[i]}</td>`).join('') + (mi < 0 ? `<td class="num">${d.grandTotal}</td>` : '');
 }
 
 /* ── Smart Insights: plain-language takeaways computed from the matrix on screen ── */
@@ -443,7 +445,7 @@ function hfRenderInsights(d) {
 }
 
 const hfVal = {
-    store: r => r.store.toLowerCase(), oc: r => (r.operationConsultant || '').toLowerCase(), total: r => r.total,
+    store: r => r.store.toLowerCase(), oc: r => (r.operationConsultant || '').toLowerCase(), total: r => hfMi() >= 0 ? r.months[hfMi()] : r.total, // the selected month, else the whole year
 };
 for (let i = 0; i < 12; i++) hfVal['m' + i] = r => r.months[i];
 
@@ -454,8 +456,8 @@ function hfRender() {
     const th = (key, label, cls, sub) => `<th class="sortable ${cls || ''}" data-sort="${key}">${sapEscape(label)}<i class="bi"></i>${sub ? `<span class="hf-tag">${sapEscape(sub)}</span>` : ''}</th>`;
     const first = { store: hfL.store, job: hfL.job, payroll: hfL.payroll, consultant: hfL.oc }[d.by] || hfL.store;
     let h = th('store', first) + (d.by === 'store' ? th('oc', hfL.oc) : '');
-    for (let i = 0; i < 12; i++) h += th('m' + i, hfMonthName(i + 1), 'num', modes[i] === 'none' ? '' : modes[i] === 'forecast' ? hfL.forecast : hfL.roster);
-    head.innerHTML = h + th('total', hfL.total, 'num hf-total');
+    for (const i of hfCols()) h += th('m' + i, hfMonthName(i + 1), 'num', modes[i] === 'none' ? '' : modes[i] === 'forecast' ? hfL.forecast : hfL.roster);
+    head.innerHTML = h + (hfMi() < 0 ? th('total', hfL.total, 'num hf-total') : '');
     head.querySelectorAll('th.sortable').forEach(el => el.addEventListener('click', () => {
         hfSort.dir = hfSort.key === el.dataset.sort && hfSort.dir === 'asc' ? 'desc' : 'asc';
         hfSort.key = el.dataset.sort;
@@ -469,6 +471,7 @@ function hfRender() {
 
     const term = (document.getElementById('hfSearch').value || '').trim().toLowerCase();
     let rows = d.rows.filter(r => !term || r.store.toLowerCase().includes(term) || (r.operationConsultant || '').toLowerCase().includes(term));
+    if (/^m\d+$/.test(hfSort.key) && hfMi() >= 0 && hfSort.key !== 'm' + hfMi()) hfSort.key = 'total';
     const val = hfVal[hfSort.key], sign = hfSort.dir === 'asc' ? 1 : -1;
     rows = [...rows].sort((a, b) => {
         const x = val(a), y = val(b);
@@ -478,21 +481,21 @@ function hfRender() {
     });
 
     // Colour each cell by its size relative to the biggest store-month on screen.
-    const max = Math.max(1, ...d.rows.flatMap(r => r.months));
+    const max = Math.max(1, ...d.rows.flatMap(r => hfCols().map(i => r.months[i])));
     const cell = (v, mode) => mode === 'none'
         ? '<td class="num hf-zero">—</td>'
         : `<td class="num ${v === 0 ? 'hf-zero' : ''}" style="${v > 0 ? `background:oklch(0.6 0.2 25 / ${(0.08 + 0.5 * v / max).toFixed(2)})` : ''}">${v}</td>`;
     const body = document.getElementById('hfBodyRows');
     body.innerHTML = rows.length ? rows.map(r =>
         `<tr><td>${r.store ? sapEscape(r.store) : '—'}</td>${d.by === 'store' ? `<td>${r.operationConsultant ? sapEscape(r.operationConsultant) : '—'}</td>` : ''}`
-        + r.months.map((v, i) => cell(v, modes[i])).join('')
-        + `<td class="num hf-total">${r.total}</td></tr>`).join('')
+        + hfCols().map(i => cell(r.months[i], modes[i])).join('')
+        + (hfMi() < 0 ? `<td class="num hf-total">${r.total}</td>` : '') + `</tr>`).join('')
         : `<tr><td colspan="15" class="text-center py-3 text-muted">${sapEscape(hfL.noRows)}</td></tr>`;
 
     // Totals always cover the filtered stores, not just the search result.
     document.getElementById('hfFoot').innerHTML = `<td>${sapEscape(hfL.total)}</td>${d.by === 'store' ? '<td></td>' : ''}`
-        + d.monthTotals.map((v, i) => `<td class="num">${modes[i] === 'none' ? '—' : v}</td>`).join('')
-        + `<td class="num">${d.grandTotal}</td>`;
+        + hfCols().map(i => `<td class="num">${modes[i] === 'none' ? '—' : d.monthTotals[i]}</td>`).join('')
+        + (hfMi() < 0 ? `<td class="num">${d.grandTotal}</td>` : '');
 }
 
 /* Per-leader roll-ups: the same rounded store-month hires added up under each store's leader (always by store). */
@@ -521,8 +524,9 @@ function hfRenderGroups() {
         const th = (key, label, cls, sub) => `<th class="sortable ${cls || ''}" data-sort="${key}">${sapEscape(label)}<i class="bi"></i>${sub ? `<span class="hf-tag">${sapEscape(sub)}</span>` : ''}</th>`;
         const head = document.getElementById('hfGrpHead' + g.id);
         let h = th('name', hfL.colName) + th('stores', hfL.colStores, 'num');
-        for (let i = 0; i < 12; i++) h += th('m' + i, hfMonthName(i + 1), 'num', modes[i] === 'none' ? '' : modes[i] === 'forecast' ? hfL.forecast : hfL.roster);
-        head.innerHTML = h + th('total', hfL.total, 'num hf-total');
+        for (const i of hfCols()) h += th('m' + i, hfMonthName(i + 1), 'num', modes[i] === 'none' ? '' : modes[i] === 'forecast' ? hfL.forecast : hfL.roster);
+        head.innerHTML = h + (hfMi() < 0 ? th('total', hfL.total, 'num hf-total') : '');
+        if (/^m\d+$/.test(state.key) && hfMi() >= 0 && state.key !== 'm' + hfMi()) state.key = 'total';
         head.querySelectorAll('th.sortable').forEach(el => {
             const on = el.dataset.sort === state.key;
             el.classList.toggle('sorted', on);
@@ -533,26 +537,26 @@ function hfRenderGroups() {
         const val = state.key === 'name' ? (r => r.store) : state.key === 'stores' ? (r => r.storeCount) : hfVal[state.key];
         const sign = state.dir === 'asc' ? 1 : -1;
         const rows = [...all].sort((a, b) => { const x = val(a), y = val(b); const c = typeof x === 'string' ? x.localeCompare(y, undefined, { numeric: true }) : x - y; return (c || a.store.localeCompare(b.store)) * sign; });
-        const max = Math.max(1, ...all.flatMap(r => r.months));
+        const max = Math.max(1, ...all.flatMap(r => hfCols().map(i => r.months[i])));
         const cell = (v, mode) => mode === 'none'
             ? '<td class="num hf-zero">—</td>'
             : `<td class="num ${v === 0 ? 'hf-zero' : ''}" style="${v > 0 ? `background:oklch(0.6 0.2 25 / ${(0.08 + 0.5 * v / max).toFixed(2)})` : ''}">${v}</td>`;
         document.getElementById('hfGrpBody' + g.id).innerHTML = rows.length ? rows.map(r =>
             `<tr><td class="fw-semibold">${sapEscape(r.store)}</td><td class="num">${r.storeCount}</td>`
-            + r.months.map((v, i) => cell(v, modes[i])).join('')
-            + `<td class="num hf-total">${r.total}</td></tr>`).join('')
+            + hfCols().map(i => cell(r.months[i], modes[i])).join('')
+            + (hfMi() < 0 ? `<td class="num hf-total">${r.total}</td>` : '') + `</tr>`).join('')
             : `<tr><td colspan="15" class="text-center py-3 text-muted">${sapEscape(hfL.noRows)}</td></tr>`;
         const sums = Array.from({ length: 12 }, (_, i) => all.reduce((t, r) => t + r.months[i], 0));
         document.getElementById('hfGrpFoot' + g.id).innerHTML = all.length
-            ? `<td>${sapEscape(hfL.total)}</td><td></td>` + sums.map((v, i) => `<td class="num">${modes[i] === 'none' ? '—' : v}</td>`).join('') + `<td class="num">${all.reduce((t, r) => t + r.total, 0)}</td>`
+            ? `<td>${sapEscape(hfL.total)}</td><td></td>` + hfCols().map(i => `<td class="num">${modes[i] === 'none' ? '—' : sums[i]}</td>`).join('') + (hfMi() < 0 ? `<td class="num">${all.reduce((t, r) => t + r.total, 0)}</td>` : '')
             : '';
     });
 }
 
 document.getElementById('hfBy').addEventListener('change', e => { hfState.by = e.target.value; hfLoad(); });
 document.getElementById('hfYear').addEventListener('change', e => { hfState.year = e.target.value; hfState.month = ''; hfLoad(); });
-// The month only changes the cards, the insights and the chart: the table below always shows the whole year.
-document.getElementById('hfMonth').addEventListener('change', e => { hfState.month = e.target.value; if (hfData) { hfRenderKpis(hfData); hfRenderInsights(hfData); hfRenderChart(hfData); hfRenderJobs(); } });
+// The month applies to everything on the page: cards, insights, charts and every table.
+document.getElementById('hfMonth').addEventListener('change', e => { hfState.month = e.target.value; if (hfData) { hfRenderKpis(hfData); hfRenderInsights(hfData); hfRenderChart(hfData); hfRenderJobs(); hfRender(); hfRenderGroups(); } });
 document.getElementById('hfStore').addEventListener('change', e => { hfState.store = e.target.value; hfLoad(); });
 document.getElementById('hfJob').addEventListener('change', e => { hfState.job = e.target.value; hfLoad(); });
 [['hfOc', 'oc'], ['hfOm', 'om'], ['hfSoc', 'soc'], ['hfOd', 'od']].forEach(([id, key]) =>
