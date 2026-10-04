@@ -1929,7 +1929,7 @@
   <data name="WP_ColSurplus" xml:space="preserve"><value>Surplus</value></data>
   <data name="WP_ColHiringGross" xml:space="preserve"><value>Hiring need incl. early leavers</value></data>
   <data name="WP_SubBefore90" xml:space="preserve"><value>before the 90-day top-up</value></data>
-  <data name="WP_SubWith90" xml:space="preserve"><value>incl. 90-day early leavers (+{0}%)</value></data>
+  <data name="WP_SubWith90" xml:space="preserve"><value>incl. 90-day early leavers ({0}% leave early)</value></data>
   <data name="WP_HowTitle" xml:space="preserve"><value>How these numbers are calculated</value></data>
   <data name="WP_HowGap" xml:space="preserve"><value>Gap = Actual − Projected for the whole row. A job above its plan offsets a job below it, so the gap can hide real shortages.</value></data>
   <data name="WP_HowSplit" xml:space="preserve"><value>Surplus = people above the plan, counted only in the jobs that are over. Shortage = people missing, counted only in the jobs that are short. So Gap = Surplus − Shortage, always.</value></data>
@@ -2021,7 +2021,7 @@
   <data name="HF_ChartTitle" xml:space="preserve"><value>Hires needed per month</value></data>
   <data name="HF_ChartSub" xml:space="preserve"><value>Dark bars use the uploaded employee list; light bars are forecast</value></data>
   <data name="HF_ChartLabel" xml:space="preserve"><value>Hires needed</value></data>
-  <data name="HF_GrossTag" xml:space="preserve"><value>incl. 90-day early leavers (+{0}%)</value></data>
+  <data name="HF_GrossTag" xml:space="preserve"><value>incl. 90-day early leavers ({0}% leave early)</value></data>
   <data name="HF_JobTitle" xml:space="preserve"><value>Hires needed by job title</value></data>
   <data name="HF_JobSub" xml:space="preserve"><value>Follows the filters above. Pick a month to see the jobs to hire for in that month; otherwise the whole year. Jobs that need no hires are hidden.</value></data>
   <data name="HF_JobPeriodYear" xml:space="preserve"><value>Whole year</value></data>
