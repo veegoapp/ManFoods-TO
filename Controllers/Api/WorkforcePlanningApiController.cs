@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.Extensions.Caching.Memory;
 using MvcApp.Extensions;
 using MvcApp.Filters;
 using MvcApp.Services;
@@ -15,14 +14,10 @@ namespace MvcApp.Controllers.Api;
 public class WorkforcePlanningApiController : ControllerBase
 {
     private readonly IWorkforcePlanningService _planning;
-    private readonly INinetyDayTurnoverService _ninetyDay;
-    private readonly IMemoryCache _cache;
 
-    public WorkforcePlanningApiController(IWorkforcePlanningService planning, INinetyDayTurnoverService ninetyDay, IMemoryCache cache)
+    public WorkforcePlanningApiController(IWorkforcePlanningService planning)
     {
         _planning = planning;
-        _ninetyDay = ninetyDay;
-        _cache = cache;
     }
 
     /// <summary>The Crew Trainers page (its own access area).</summary>
@@ -45,7 +40,7 @@ public class WorkforcePlanningApiController : ControllerBase
     {
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetEmail();
-        return Ok(await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, await EarlyLeaverRate.GetAsync(_ninetyDay, _cache), by));
+        return Ok(await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, by));
     }
 
     [HttpGet("summary")]
@@ -55,7 +50,7 @@ public class WorkforcePlanningApiController : ControllerBase
     {
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetEmail();
-        return Ok(await _planning.GetAsync(year, month, store, jobs, role, assignedName, om, oc, soc, od, await EarlyLeaverRate.GetAsync(_ninetyDay, _cache)));
+        return Ok(await _planning.GetAsync(year, month, store, jobs, role, assignedName, om, oc, soc, od));
     }
 
     /// <summary>One store's jobs for a month (projected, actual, expected resignations, hiring need): the

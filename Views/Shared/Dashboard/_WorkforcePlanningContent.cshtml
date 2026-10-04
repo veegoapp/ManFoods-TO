@@ -192,9 +192,8 @@
                     <th class="sortable num" data-sort="gap">@L["WP_ColGap"]<i class="bi"></i></th>
                     <th class="sortable num" data-sort="surplus">@L["WP_ColSurplus"]<i class="bi"></i></th>
                     <th class="sortable num" data-sort="shortage">@L["WP_ColShortage"]<i class="bi"></i></th>
-                    <th class="sortable num" data-sort="attrition">@L["WP_ColAttrition"]<i class="bi"></i></th>
-                    <th class="sortable num" data-sort="hiring">@L["WP_ColHiring"]<i class="bi"></i><span class="wp-th-sub">@L["WP_SubBefore90"]</span></th>
-                    <th class="sortable num" data-sort="hiringGross" id="wpThGross" hidden>@L["WP_ColHiringGross"]<i class="bi"></i><span class="wp-th-sub" id="wpThGrossSub"></span></th>
+                    <th class="sortable num" data-sort="attrition">@L["WP_ColAttrition"]<i class="bi"></i><span class="wp-th-sub">@L["WP_SubResignations"]</span></th>
+                    <th class="sortable num" data-sort="hiring">@L["WP_ColHiring"]<i class="bi"></i></th>
                     <th class="sortable" data-sort="fill">@L["WP_ColFill"]<i class="bi"></i></th>
                     <th class="sortable" data-sort="status">@L["WP_ColStatus"]<i class="bi"></i></th>
                 </tr></thead>
@@ -215,8 +214,8 @@
      data-projected="@L["WP_Projected"]" data-actual="@L["WP_Actual"]"
      data-ok="@L["WP_StatusOk"]" data-watch="@L["WP_StatusWatch"]" data-critical="@L["WP_StatusCritical"]" data-none="@L["WP_StatusNone"]"
      data-col-name="@L["Common_Name"]" data-col-stores="@L["Common_Stores"]" data-col-projected="@L["WP_ColProjected"]" data-col-actual="@L["WP_ColActual"]" data-col-gap="@L["WP_ColGap"]" data-unassigned="@L["WP_Unassigned"]" data-col-hiring="@L["WP_ColHiring"]" data-col-shortage="@L["WP_ColShortage"]" data-col-attrition="@L["WP_ColAttrition"]" data-over="@L["WP_StatusOver"]" data-col-fill="@L["WP_ColFill"]" data-col-status="@L["WP_ColStatus"]" data-no-rows="@L["Common_NoData"]" data-oc-title="@L["Common_OperationConsultants"]" data-oc-sub="@L["WP_GrpSubOc"]" data-od-title="@L["Common_OperationDirectors"]" data-od-sub="@L["WP_GrpSubOd"]" data-om-title="@L["Common_OperationManagers"]" data-om-sub="@L["WP_GrpSubOm"]" data-soc-title="@L["Common_SeniorOperationConsultants"]" data-soc-sub="@L["WP_GrpSubSoc"]" data-hiring="@L["WP_ColHiring"]" data-kpi-shortage="@L["WP_KpiShortage"]" data-kpi-shortage-desc="@L["WP_KpiShortageDesc"]" data-kpi-hiring="@L["WP_KpiHiring"]" data-kpi-hiring-desc="@L["WP_KpiHiringDesc"]" data-attr-note="@L["WP_AttrNote"]" data-no-attr="@L["WP_NoAttrition"]" data-gap="@L["WP_ColGap"]" data-fill="@L["WP_ColFill"]" data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
-     data-col-surplus="@L["WP_ColSurplus"]" data-col-hiring-gross="@L["WP_ColHiringGross"]" data-sub-before="@L["WP_SubBefore90"]" data-sub-with="@L["WP_SubWith90"]"
-     data-how-gap="@L["WP_HowGap"]" data-how-split="@L["WP_HowSplit"]" data-how-attrition="@L["WP_HowAttrition"]" data-how-hiring="@L["WP_HowHiring"]" data-how-gross="@L["WP_HowGross"]"
+     data-col-surplus="@L["WP_ColSurplus"]" data-sub-resignations="@L["WP_SubResignations"]"
+     data-how-gap="@L["WP_HowGap"]" data-how-split="@L["WP_HowSplit"]" data-how-attrition="@L["WP_HowAttrition"]" data-how-hiring="@L["WP_HowHiring"]"
      data-drill-title="@L["WP_DrillTitle"]" data-drill-formula="@L["WP_DrillFormula"]" data-drill-loading="@L["WP_DrillLoading"]" data-drill-hint="@L["WP_DrillHint"]" data-col-job="@L["WP_ColJob"]" data-total="@L["HF_Total"]"
      data-error="@L["Common_NoData"]"></div>
 
@@ -333,13 +332,10 @@ async function wpLoad() {
     wpRenderGroups();
 }
 
-// The small guide above the tables, and the stores table's grossed-up column (shown only when the early-leaver rate is known).
+// The small guide above the tables.
 function wpRenderHow(d) {
-    const gross = d.earlyLeaverRate > 0;
-    const lines = [wpL.howGap, wpL.howSplit, d.attritionMonths > 0 ? wpFmt(wpL.howAttrition, d.attritionMonths) : null, wpL.howHiring, gross ? wpFmt(wpL.howGross, d.earlyLeaverRate) : null].filter(Boolean);
+    const lines = [wpL.howGap, wpL.howSplit, d.attritionMonths > 0 ? wpFmt(wpL.howAttrition, d.attritionMonths) : null, wpL.howHiring].filter(Boolean);
     document.getElementById('wpHow').innerHTML = lines.map(t => `<li>${sapEscape(t)}</li>`).join('');
-    document.getElementById('wpThGross').hidden = !gross;
-    if (gross) document.getElementById('wpThGrossSub').textContent = wpFmt(wpL.subWith, d.earlyLeaverRate);
 }
 
 /* ── Smart Insights: plain-language takeaways computed from the numbers on the page ── */
@@ -499,7 +495,7 @@ const wpSort = { key: null, dir: 'asc' };
 const WP_STATUS_ORDER = { critical: 0, watch: 1, ok: 2, over: 3, none: 4 };
 const wpSortValue = {
     name: r => r.name, oc: r => r.operationConsultant || '', stores: r => r.storeCount,
-    projected: r => r.projected, actual: r => r.actual, gap: r => r.gap, surplus: r => r.surplus, hiring: r => r.hiringNeed, hiringGross: r => r.hiringNeedGross, shortage: r => r.shortage, attrition: r => r.expectedAttrition,
+    projected: r => r.projected, actual: r => r.actual, gap: r => r.gap, surplus: r => r.surplus, hiring: r => r.hiringNeed, shortage: r => r.shortage, attrition: r => r.expectedAttrition,
     fill: r => r.fillPercent, status: r => WP_STATUS_ORDER[r.status] ?? 9,
 };
 // Shared by every sortable table on the page; `state` is { key, dir }.
@@ -539,9 +535,7 @@ const WP_GROUP_DEFS = [
 ];
 const wpGroupSort = {};
 const wpTh = (key, label, cls, sub) => `<th class="sortable px-3 py-2 ${cls || ''}" data-sort="${key}">${sapEscape(label)}<i class="bi"></i>${sub ? `<span class="wp-th-sub">${sapEscape(sub)}</span>` : ''}</th>`;
-// The grossed-up hiring need (incl. the new hires who leave within 90 days) is shown only when that rate is known.
-const wpHasGross = () => !!wpData && wpData.earlyLeaverRate > 0;
-const wpSubGross = () => wpFmt(wpL.subWith, wpData.earlyLeaverRate);
+
 
 function wpBuildGroups() {
     const host = document.getElementById('wpGroups');
@@ -557,7 +551,7 @@ function wpBuildGroups() {
                 <table class="table table-hover table-sm mb-0" style="font-size:13px">
                     <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1"><tr id="wpGrpHead${g.id}">
                         ${wpTh('name', wpL.colName)}${wpTh('stores', wpL.colStores, 'text-center')}${wpTh('projected', wpL.colProjected, 'text-center')}
-                        ${wpTh('actual', wpL.colActual, 'text-center')}${wpTh('gap', wpL.colGap, 'text-center')}${wpTh('surplus', wpL.colSurplus, 'text-center')}${wpTh('shortage', wpL.colShortage, 'text-center')}${wpTh('attrition', wpL.colAttrition, 'text-center')}${wpTh('hiring', wpL.colHiring, 'text-center', wpL.subBefore)}${wpHasGross() ? wpTh('hiringGross', wpL.colHiringGross, 'text-center', wpSubGross()) : ''}
+                        ${wpTh('actual', wpL.colActual, 'text-center')}${wpTh('gap', wpL.colGap, 'text-center')}${wpTh('surplus', wpL.colSurplus, 'text-center')}${wpTh('shortage', wpL.colShortage, 'text-center')}${wpTh('attrition', wpL.colAttrition, 'text-center', wpL.subResignations)}${wpTh('hiring', wpL.colHiring, 'text-center')}
                         ${wpTh('fill', wpL.colFill)}${wpTh('status', wpL.colStatus)}
                     </tr></thead>
                     <tbody id="wpGrpBody${g.id}"></tbody>
@@ -596,7 +590,6 @@ function wpRenderGroup(g) {
             <td class="px-3 py-2 text-center">${has ? r.shortage : '—'}</td>
             <td class="px-3 py-2 text-center">${has ? Math.round(r.expectedAttrition) : '—'}</td>
             <td class="px-3 py-2 text-center">${has ? r.hiringNeed : '—'}</td>
-            ${wpHasGross() ? `<td class="px-3 py-2 text-center"><b>${has ? r.hiringNeedGross : '—'}</b></td>` : ''}
             <td class="px-3 py-2" style="white-space:nowrap">${tube}</td>
             <td class="px-3 py-2"><span class="wp-pill ${r.status}">${sapEscape(wpPillLabel(r.status))}</span></td>
         </tr>`;
@@ -648,7 +641,7 @@ function wpRenderPayroll(d) {
         head.dataset.built = '1';
         head.innerHTML = wpTh('name', wpL.colName) + wpTh('projected', wpL.colProjected, 'text-center') + wpTh('actual', wpL.colActual, 'text-center')
             + wpTh('gap', wpL.colGap, 'text-center') + wpTh('surplus', wpL.colSurplus, 'text-center') + wpTh('shortage', wpL.colShortage, 'text-center')
-            + wpTh('hiring', wpL.colHiring, 'text-center', wpL.subBefore) + (wpHasGross() ? wpTh('hiringGross', wpL.colHiringGross, 'text-center', wpSubGross()) : '')
+            + wpTh('hiring', wpL.colHiring, 'text-center')
             + wpTh('fill', wpL.colFill) + wpTh('status', wpL.colStatus);
         head.querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => {
             wpToggleSort(wpPayrollSort, th.dataset.sort);
@@ -676,7 +669,6 @@ function wpRenderPayrollTable(d) {
             <td class="px-3 py-2 text-center">${has ? r.surplus : '—'}</td>
             <td class="px-3 py-2 text-center">${has ? r.shortage : '—'}</td>
             <td class="px-3 py-2 text-center">${has ? r.hiringNeed : '—'}</td>
-            ${wpHasGross() ? `<td class="px-3 py-2 text-center"><b>${has ? r.hiringNeedGross : '—'}</b></td>` : ''}
             <td class="px-3 py-2" style="white-space:nowrap">${tube}</td>
             <td class="px-3 py-2"><span class="wp-pill ${r.status}">${sapEscape(wpPillLabel(r.status))}</span></td>
         </tr>`;
@@ -750,7 +742,6 @@ function wpRenderStores() {
             <td class="num">${has ? r.shortage : '—'}</td>
             <td class="num">${has ? Math.round(r.expectedAttrition) : '—'}</td>
             <td class="num">${has ? r.hiringNeed : '—'}</td>
-            ${wpHasGross() ? `<td class="num"><b>${has ? r.hiringNeedGross : '—'}</b></td>` : ''}
             <td>${fill}</td>
             <td><span class="wp-pill ${r.status}">${sapEscape(wpPillLabel(r.status))}</span></td>
         </tr>`;
