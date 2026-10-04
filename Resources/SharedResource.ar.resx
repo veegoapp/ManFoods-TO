@@ -1935,7 +1935,7 @@
   <data name="WP_ColSurplus" xml:space="preserve"><value>الزيادة</value></data>
   <data name="WP_ColHiringGross" xml:space="preserve"><value>احتياج التعيين شامل من يغادرون مبكرًا</value></data>
   <data name="WP_SubBefore90" xml:space="preserve"><value>قبل تعويض الـ 90 يوم</value></data>
-  <data name="WP_SubWith90" xml:space="preserve"><value>شامل تعويض الـ 90 يوم (+{0}%)</value></data>
+  <data name="WP_SubWith90" xml:space="preserve"><value>شامل تعويض الـ 90 يوم ({0}% بيسيبوا بدري)</value></data>
   <data name="WP_HowTitle" xml:space="preserve"><value>إزاي بتتحسب الأرقام دي</value></data>
   <data name="WP_HowGap" xml:space="preserve"><value>الفجوة = الفعلي − المخطط للصف كله. الوظيفة اللي فوق خطتها بتعوّض الوظيفة اللي تحتها، فالفجوة ممكن تخفي نقص حقيقي.</value></data>
   <data name="WP_HowSplit" xml:space="preserve"><value>الزيادة = الناس الزايدين عن الخطة، وبتتحسب في الوظايف اللي فوق خطتها بس. النقص = الناس الناقصين، وبيتحسب في الوظايف الناقصة بس. يعني الفجوة = الزيادة − النقص دايمًا.</value></data>
@@ -2027,7 +2027,7 @@
   <data name="HF_ChartTitle" xml:space="preserve"><value>التعيينات المطلوبة في كل شهر</value></data>
   <data name="HF_ChartSub" xml:space="preserve"><value>الأعمدة الداكنة من قائمة الموظفين المرفوعة، والفاتحة تقدير</value></data>
   <data name="HF_ChartLabel" xml:space="preserve"><value>التعيينات المطلوبة</value></data>
-  <data name="HF_GrossTag" xml:space="preserve"><value>شامل تعويض الـ 90 يوم (+{0}%)</value></data>
+  <data name="HF_GrossTag" xml:space="preserve"><value>شامل تعويض الـ 90 يوم ({0}% بيسيبوا بدري)</value></data>
   <data name="HF_JobTitle" xml:space="preserve"><value>التعيينات المطلوبة حسب الوظيفة</value></data>
   <data name="HF_JobSub" xml:space="preserve"><value>يتأثر بالفلاتر أعلاه. اختر شهرًا لترى الوظائف المطلوب التعيين فيها في هذا الشهر، وإلا تظهر السنة كاملة. الوظائف التي لا تحتاج تعيينًا مخفية.</value></data>
   <data name="HF_JobPeriodYear" xml:space="preserve"><value>السنة كاملة</value></data>
