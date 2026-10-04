@@ -1297,7 +1297,7 @@ public class ReportService : IReportService
         string? om = null, string? oc = null, string? soc = null, string? od = null)
     {
         var rate = await EarlyLeaverRate.GetAsync(_ninetyDay, null);
-        var byStore = await WithAreaAsync(AccessAreas.HiringForecast, () => _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, rate));
+        var byStore = await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, rate);
         var wb = new XLWorkbook();
         var monthName = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames;
 
@@ -1361,9 +1361,9 @@ public class ReportService : IReportService
         sum.Column(3).Width = Math.Max(sum.Column(3).Width, 16);
 
         WriteForecastMatrix(wb, "By Store", "Store", "Operation Consultant", byStore, byStore.Rows, r => r.OperationConsultant);
-        var byJob = await WithAreaAsync(AccessAreas.HiringForecast, () => _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, rate, "job"));
+        var byJob = await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, rate, "job");
         WriteForecastMatrix(wb, "By Job", "Job title", null, byJob, byJob.Rows, _ => "");
-        var byPayroll = await WithAreaAsync(AccessAreas.HiringForecast, () => _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, rate, "payroll"));
+        var byPayroll = await _planning.GetHiringForecastAsync(year, store, jobs, role, assignedName, om, oc, soc, od, rate, "payroll");
         WriteForecastMatrix(wb, "By Payroll Group", "Payroll group", null, byPayroll, byPayroll.Rows, _ => "", unassignedIfBlank: true);
 
         // The four per-leader roll-ups, stacked on one sheet (same rounded store-month hires as the store sheet).
@@ -1418,7 +1418,7 @@ public class ReportService : IReportService
         string? om = null, string? oc = null, string? soc = null, string? od = null)
     {
         if (_trainers == null) throw new InvalidOperationException("The Crew Trainers service is not available.");
-        var dto = await WithAreaAsync(AccessAreas.CrewTrainers, () => _trainers.GetAsync(year > 0 ? year : null, month > 0 ? month : null, store, role, assignedName, om, oc, soc, od));
+        var dto = await _trainers.GetAsync(year > 0 ? year : null, month > 0 ? month : null, store, role, assignedName, om, oc, soc, od);
         var wb = new XLWorkbook();
         var monthName = System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat.MonthNames;
 

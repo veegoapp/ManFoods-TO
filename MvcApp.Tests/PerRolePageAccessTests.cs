@@ -166,6 +166,22 @@ public class PerRolePageAccessTests : IClassFixture<AppFactory>
     }
 
     [Fact]
+    public async Task Report_FollowsItsPage_HiddenPageMeansNoDownloadAndNoReportPage()
+    {
+        await SaveAsync((page, role) => role == "HR" && page == "hiringforecast");   // the Reports page itself stays visible
+        var hr = await HrAsync();
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await hr.GetAsync("/home/dashboard/export?reportType=hiring-forecast&year=2026")).StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, (await hr.GetAsync("/home/dashboard/reports/hiring-forecast")).StatusCode);
+        Assert.NotEqual(HttpStatusCode.Forbidden, (await hr.GetAsync("/home/dashboard/export?reportType=turnover")).StatusCode);   // other reports untouched
+        Assert.NotEqual(HttpStatusCode.Redirect, (await hr.GetAsync("/home/dashboard/reports/turnover")).StatusCode);
+
+        var user = await _app.UserClientAsync();                                      // User still sees the page, so the report
+        Assert.NotEqual(HttpStatusCode.Forbidden, (await user.GetAsync("/home/dashboard/export?reportType=hiring-forecast&year=2026")).StatusCode);
+        await ResetAsync();
+    }
+
+    [Fact]
     public async Task Admin_IsNeverAffected_ByAnyPageSetting()
     {
         await SaveAsync((page, _) => page != "workforce"); // everything hidden from every role except one page
@@ -208,7 +224,7 @@ public class PerRolePageAccessTests : IClassFixture<AppFactory>
             "/api/ninety-day-turnover/kpi", "/api/exit-interviews/sentiment-summary", "/api/exit-interviews/would-return", "/api/retention/tenure-distribution",
             "/api/dashboard/kpis", "/api/dashboard/turnover-by-tenure", "/api/dashboard/store-leader-tracking?store=A", "/api/dashboard/headcount-by-job-title",
             "/api/early-warning/summary", "/api/scorecard/leader-profile?leader=x" },
-        ["reports"] = new[] { "/home/dashboard/export?reportType=turnover" },
+        ["reports"] = Array.Empty<string>(), // a report follows its own page, so downloads are checked in Report_FollowsItsPage… and below
     };
 
     [Fact]
@@ -228,6 +244,8 @@ public class PerRolePageAccessTests : IClassFixture<AppFactory>
                 Assert.True(response.StatusCode != HttpStatusCode.Forbidden && response.StatusCode != HttpStatusCode.Redirect,
                     $"'{page.Key}' is the only visible page but its API {url} answered {(int)response.StatusCode}");
             }
+            if (page.Key == "reports") // with every other page hidden no report is left to download: a report follows its page
+                Assert.Equal(HttpStatusCode.Forbidden, (await hr.GetAsync("/home/dashboard/export?reportType=turnover")).StatusCode);
         }
         await ResetAsync();
     }
@@ -244,6 +262,8 @@ public class PerRolePageAccessTests : IClassFixture<AppFactory>
                 var r = await ops.GetAsync(url);
                 Assert.True(r.StatusCode != HttpStatusCode.Forbidden && r.StatusCode != HttpStatusCode.Redirect, $"{page}: {url} -> {(int)r.StatusCode}");
             }
+        // every report is downloadable while its page is visible (the default)
+        Assert.NotEqual(HttpStatusCode.Forbidden, (await ops.GetAsync("/home/dashboard/export?reportType=turnover")).StatusCode);
     }
 
     // ── pages that are still under review ────────────────────────────────────

@@ -5,7 +5,9 @@
     var hasPeriods  = Model != null && Model.Count > 0;
     var __area = ViewContext.RouteData.Values["area"]?.ToString();
     var __areaPrefix = string.Equals(__area, "Home", StringComparison.OrdinalIgnoreCase) ? "/home" : "/admin";
-    var sectionGroups = ReportCatalog.All.GroupBy(r => r.Section);
+    // Reports of a page hidden from the signed-in role (Settings → Pages) are not listed; the Admin portal passes nothing and sees all.
+    var hiddenPages = ViewBag.HiddenPages as ISet<string> ?? new HashSet<string>();
+    var sectionGroups = ReportCatalog.All.Where(r => r.IsVisible(hiddenPages)).GroupBy(r => r.Section);
 }
 
 <style>

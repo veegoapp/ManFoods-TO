@@ -70,6 +70,7 @@ public class DashboardController : Controller
     public async Task<IActionResult> Reports()
     {
         var periods = await _dashboard.GetAvailablePeriodsAsync();
+        ViewBag.HiddenPages = await _visibility.GetHiddenAsync(HttpContext.Session.GetRole()); // reports of a hidden page are not listed
         return View(periods);
     }
 
@@ -77,9 +78,12 @@ public class DashboardController : Controller
     [AccessArea(AccessAreas.Shared)]
     public async Task<IActionResult> ReportDetail(string reportType, [FromServices] ICrewTrainerService trainers)
     {
-        if (MvcApp.Models.ViewModels.ReportCatalog.Find(reportType) == null) return NotFound();
+        var definition = MvcApp.Models.ViewModels.ReportCatalog.Find(reportType);
+        if (definition == null) return NotFound();
 
         var role = HttpContext.Session.GetRole();
+        // A report of a page hidden from this role (Settings → Pages) does not open either.
+        if (!definition.IsVisible(await _visibility.GetHiddenAsync(role))) return Redirect("/home/dashboard/reports");
         var assignedName = HttpContext.Session.GetEmail();
         // These reports' Year/Months filters come from the projection (or the trainer lists), not the uploaded rosters.
         var usesProjection = reportType is "workforce-planning" or "workforce-planning-data" or "hiring-forecast";
@@ -120,10 +124,21 @@ public class DashboardController : Controller
     [AccessArea(AccessAreas.Reports)]
     public async Task<IActionResult> Export(int month, int year, string reportType = "stores-overview",
         string? store = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null,
-        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null, string? jobs = null)
+        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null, string? jobs = null,
+        [FromServices] IReportAccessService? reportAccess = null, [FromServices] IAccessAreaContext? areaContext = null)
     {
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetEmail();
+
+        // The download follows its page: refused when the page is hidden from this role (Settings → Pages), and run under
+        // the page's own access area when that is restricted (Settings → Access), so it never shows more stores than the page.
+        var definition = MvcApp.Models.ViewModels.ReportCatalog.Find(reportType);
+        if (definition != null)
+        {
+            if (!definition.IsVisible(await _visibility.GetHiddenAsync(role))) return StatusCode(StatusCodes.Status403Forbidden);
+            if (reportAccess != null && areaContext != null && await reportAccess.ResolveRestrictedAreaAsync(definition) is { } restrictedArea)
+                areaContext.Area = restrictedArea;
+        }
         store = string.IsNullOrWhiteSpace(store) ? null : store;
         om = string.IsNullOrWhiteSpace(om) ? null : om;
         oc = string.IsNullOrWhiteSpace(oc) ? null : oc;
