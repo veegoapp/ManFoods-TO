@@ -1,3 +1,5 @@
+using MvcApp.Services;
+
 namespace MvcApp.Models.ViewModels;
 
 public class ReportDefinition
@@ -14,6 +16,15 @@ public class ReportDefinition
     public string Icon { get; set; } = "";
     public string IconBg { get; set; } = "";
     public string IconColor { get; set; } = "";
+    /// <summary>The pages (Settings → Pages keys) the report's data comes from. A role the page is hidden from
+    /// does not see the report and cannot download it; a report built on several pages stays visible while any
+    /// one of them is. Empty = not tied to a page.</summary>
+    public string[] PageKeys { get; set; } = Array.Empty<string>();
+    /// <summary>The access areas (Settings → Access) whose store scope applies to the export: when any of them is
+    /// restricted, a restricted role gets only its own stores in the report, whatever the Reports area says.</summary>
+    public string[] Areas { get; set; } = Array.Empty<string>();
+    /// <summary>Whether the report is shown to a role whose hidden pages are <paramref name="hiddenPages"/>.</summary>
+    public bool IsVisible(ISet<string> hiddenPages) => PageKeys.Length == 0 || PageKeys.Any(k => !hiddenPages.Contains(k));
     /// <summary>Single month + year snapshot filter.</summary>
     public bool UsesPeriod { get; set; }
     /// <summary>Single "since year" filter (cumulative, not a snapshot).</summary>
@@ -46,6 +57,8 @@ public static class ReportCatalog
             Description = "Per-store action-plan status — severity, signals, age, ownership, and task progress for every accessible store.",
             SectionKey = "Rep_Section_StoreOperations", TitleKey = "Rep_Title_ActionCenter", DescriptionKey = "Rep_Desc_ActionCenter",
             Icon = "bi-clipboard2-check-fill", IconBg = "oklch(0.6 0.22 22 / .10)", IconColor = "oklch(0.6 0.22 22)",
+            PageKeys = new[] { "actioncenter" },
+            Areas = new[] { AccessAreas.ActionCenter },
             UsesOmOc = true,
         },
         new ReportDefinition
@@ -54,6 +67,8 @@ public static class ReportCatalog
             Description = "Every store's Headcount, Turnover, Action Center status, and Early Warning high-risk count for the selected month — the single cross-page view of store health.",
             SectionKey = "Rep_Section_StoreOperations", TitleKey = "Rep_Title_StoresOverview", DescriptionKey = "Rep_Desc_StoresOverview",
             Icon = "bi-shop", IconBg = "oklch(0.5 0.18 25 / .10)", IconColor = "oklch(0.5 0.18 25)",
+            PageKeys = new[] { "stores" },
+            Areas = new[] { AccessAreas.Analytics, AccessAreas.ActionCenter, AccessAreas.EarlyWarning },
             UsesPeriod = true, UsesOmOc = true,
         },
         new ReportDefinition
@@ -62,6 +77,8 @@ public static class ReportCatalog
             Description = "Trainers against the plan and the 1-trainer-per-6-crew rule for the selected month — by store and by the people responsible, the year's trend, and who joined or left the trainer list.",
             SectionKey = "Rep_Section_StoreOperations", TitleKey = "Rep_Title_CrewTrainers", DescriptionKey = "Rep_Desc_CrewTrainers",
             Icon = "bi-mortarboard-fill", IconBg = "oklch(0.6 0.13 250 / .10)", IconColor = "oklch(0.5 0.13 250)",
+            PageKeys = new[] { "crewtrainers" },
+            Areas = new[] { AccessAreas.CrewTrainers },
             UsesPeriod = true, UsesStore = true, UsesOmOc = true,
         },
         new ReportDefinition
@@ -70,6 +87,8 @@ public static class ReportCatalog
             Description = "Detailed employee-level roster plus active workforce composition for the selected month — Headcount by Job Title, Payroll Group, Tenure, and Gender, Gender Count by Store — and the Headcount Trend over time.",
             SectionKey = "Rep_Section_WorkforceHiring", TitleKey = "Rep_Title_Workforce", DescriptionKey = "Rep_Desc_Workforce",
             Icon = "bi-people-fill", IconBg = "oklch(0.6 0.13 250 / .10)", IconColor = "oklch(0.5 0.13 250)",
+            PageKeys = new[] { "workforce" },
+            Areas = new[] { AccessAreas.Analytics },
             UsesPeriod = true, UsesStore = true, UsesOmOc = true,
         },
         new ReportDefinition
@@ -78,6 +97,8 @@ public static class ReportCatalog
             Description = "Projected vs actual headcount by job and store — summary, by store, by job, by consultant & manager, the full data sheet and ready-made Excel pivot tables.",
             SectionKey = "Rep_Section_WorkforceHiring", TitleKey = "Rep_Title_WorkforcePlanning", DescriptionKey = "Rep_Desc_WorkforcePlanning",
             Icon = "bi-diagram-3-fill", IconBg = "oklch(0.62 0.15 155 / .10)", IconColor = "oklch(0.5 0.15 155)",
+            PageKeys = new[] { "workforceplanning" },
+            Areas = new[] { AccessAreas.WorkforcePlanning },
             UsesYear = true, UsesMonths = true, UsesStore = true, UsesJobs = true, UsesOmOc = true,
         },
         new ReportDefinition
@@ -86,6 +107,8 @@ public static class ReportCatalog
             Description = "The full flat data sheet (one row per store, job and month) and ready-made Excel pivot tables behind the Workforce Planning report. Large: download it only when you need to analyse the raw rows.",
             SectionKey = "Rep_Section_WorkforceHiring", TitleKey = "Rep_Title_WorkforcePlanningData", DescriptionKey = "Rep_Desc_WorkforcePlanningData",
             Icon = "bi-database-fill", IconBg = "oklch(0.62 0.15 155 / .10)", IconColor = "oklch(0.5 0.15 155)",
+            PageKeys = new[] { "workforceplanning" },
+            Areas = new[] { AccessAreas.WorkforcePlanning },
             UsesYear = true, UsesMonths = true, UsesStore = true, UsesJobs = true, UsesOmOc = true,
         },
         new ReportDefinition
@@ -94,6 +117,8 @@ public static class ReportCatalog
             Description = "Hires needed per month for a year — by store, job, payroll group and by the people responsible for the stores — with the roster and forecast months marked.",
             SectionKey = "Rep_Section_WorkforceHiring", TitleKey = "Rep_Title_HiringForecast", DescriptionKey = "Rep_Desc_HiringForecast",
             Icon = "bi-person-plus-fill", IconBg = "oklch(0.5 0.18 25 / .10)", IconColor = "oklch(0.5 0.18 25)",
+            PageKeys = new[] { "hiringforecast" },
+            Areas = new[] { AccessAreas.HiringForecast },
             UsesYear = true, UsesStore = true, UsesJobs = true, UsesOmOc = true,
         },
 
@@ -104,6 +129,8 @@ public static class ReportCatalog
             Description = "Company-wide turnover trend across every uploaded period, the latest period broken down by store, the full resignation list, and aggregated breakdowns by job title and tenure.",
             SectionKey = "Rep_Section_Turnover", TitleKey = "Rep_Title_Turnover", DescriptionKey = "Rep_Desc_Turnover",
             Icon = "bi-arrow-down-up", IconBg = "oklch(0.5 0.18 25 / .10)", IconColor = "oklch(0.5 0.18 25)",
+            PageKeys = new[] { "turnover" },
+            Areas = new[] { AccessAreas.Analytics },
             UsesStore = true,
         },
         new ReportDefinition
@@ -112,6 +139,8 @@ public static class ReportCatalog
             Description = "Full data table — one row per store, one column per month, showing Turnover % across all available periods from the selected year onward, with a total column.",
             SectionKey = "Rep_Section_Turnover", TitleKey = "Rep_Title_TrendMatrix", DescriptionKey = "Rep_Desc_TrendMatrix",
             Icon = "bi-table", IconBg = "oklch(0.55 0.15 258 / .10)", IconColor = "oklch(0.5 0.15 258)",
+            PageKeys = new[] { "turnover" },
+            Areas = new[] { AccessAreas.Analytics },
             UsesYear = true, UsesMonths = true, UsesOmOc = true,
         },
         new ReportDefinition
@@ -120,6 +149,8 @@ public static class ReportCatalog
             Description = "Cohort trend, full list of early leavers, by-store rates, and aggregated reasons — across all available periods.",
             SectionKey = "Rep_Section_Turnover", TitleKey = "Rep_Title_NinetyDay", DescriptionKey = "Rep_Desc_NinetyDay",
             Icon = "bi-hourglass-split", IconBg = "oklch(0.5 0.18 25 / .10)", IconColor = "oklch(0.5 0.18 25)",
+            PageKeys = new[] { "ninetyday" },
+            Areas = new[] { AccessAreas.NinetyDay },
             UsesStore = true,
         },
         new ReportDefinition
@@ -128,6 +159,8 @@ public static class ReportCatalog
             Description = "Full data table — one row per store, one column per hire-cohort month, showing the 90-day early-leave rate across all available cohorts, with a total column.",
             SectionKey = "Rep_Section_Turnover", TitleKey = "Rep_Title_NinetyDayTrendMatrix", DescriptionKey = "Rep_Desc_NinetyDayTrendMatrix",
             Icon = "bi-table", IconBg = "oklch(0.5 0.18 25 / .10)", IconColor = "oklch(0.5 0.18 25)",
+            PageKeys = new[] { "ninetyday" },
+            Areas = new[] { AccessAreas.NinetyDay },
             UsesYear = true, UsesMonths = true, UsesOmOc = true,
         },
         // ── Comparison ────────────────────────────────────────
@@ -137,6 +170,8 @@ public static class ReportCatalog
             Description = "Side-by-side Period A vs Period B — Headcount, New Hires, Resignations, Turnover Rate, and 90-Day Early Leave Rate, company-wide and per store.",
             SectionKey = "Rep_Section_Comparison", TitleKey = "Rep_Title_Comparisons", DescriptionKey = "Rep_Desc_Comparisons",
             Icon = "bi-arrow-left-right", IconBg = "oklch(0.5 0.18 25 / .10)", IconColor = "oklch(0.5 0.18 25)",
+            PageKeys = new[] { "comparisons" },
+            Areas = new[] { AccessAreas.Analytics },
             UsesComparisonAB = true,
         },
         new ReportDefinition
@@ -145,6 +180,8 @@ public static class ReportCatalog
             Description = "Stores, headcount, resignations, and average turnover rate rolled up by Operation Consultant, Operation Manager, Senior Operation Consultant, and Operation Director.",
             SectionKey = "Rep_Section_Comparison", TitleKey = "Rep_Title_OcOmComparison", DescriptionKey = "Rep_Desc_OcOmComparison",
             Icon = "bi-people", IconBg = "oklch(0.55 0.15 258 / .10)", IconColor = "oklch(0.5 0.15 258)",
+            PageKeys = new[] { "workforce", "turnover" },
+            Areas = new[] { AccessAreas.Analytics },
             UsesPeriod = true, UsesOmOc = true,
         },
 
@@ -155,6 +192,8 @@ public static class ReportCatalog
             Description = "Milestone rates (90d–5yr), survival curve, multi-year trend, store leaderboard, and workforce tenure distribution.",
             SectionKey = "Rep_Section_PerformanceRisk", TitleKey = "Rep_Title_Retention", DescriptionKey = "Rep_Desc_Retention",
             Icon = "bi-graph-up-arrow", IconBg = "oklch(0.75 0.15 85 / .12)", IconColor = "oklch(0.6 0.13 82)",
+            PageKeys = new[] { "retention" },
+            Areas = new[] { AccessAreas.Retention },
             UsesStore = true,
         },
         new ReportDefinition
@@ -163,6 +202,8 @@ public static class ReportCatalog
             Description = "KPI rankings for Store Leaders, Operation Consultants, and Operation Managers — Turnover, 90-Day, Retention, and Exit Sentiment.",
             SectionKey = "Rep_Section_PerformanceRisk", TitleKey = "Rep_Title_Scorecard", DescriptionKey = "Rep_Desc_Scorecard",
             Icon = "bi-award-fill", IconBg = "oklch(0.5 0.18 25 / .10)", IconColor = "oklch(0.5 0.18 25)",
+            PageKeys = new[] { "scorecard" },
+            Areas = new[] { AccessAreas.Scorecard },
             UsesYear = true, UsesMonths = true, UsesOmOc = true,
         },
         new ReportDefinition
@@ -171,6 +212,8 @@ public static class ReportCatalog
             Description = "At-risk employee watchlist with ★ risk stars (7 scoring criteria), flagged reasons, hire date, and tenure — scoped to the selected store(s).",
             SectionKey = "Rep_Section_PerformanceRisk", TitleKey = "Rep_Title_EarlyWarning", DescriptionKey = "Rep_Desc_EarlyWarning",
             Icon = "bi-exclamation-diamond-fill", IconBg = "oklch(0.6 0.22 22 / .10)", IconColor = "oklch(0.6 0.22 22)",
+            PageKeys = new[] { "earlywarning" },
+            Areas = new[] { AccessAreas.EarlyWarning },
             UsesYear = true, UsesMonths = true, UsesStore = true, UsesOmOc = true,
         },
 
@@ -181,6 +224,8 @@ public static class ReportCatalog
             Description = "Reasons for leaving, engagement drivers, workload ratings, overall experience, and anonymous comments — aggregated across all periods matching the selected filters.",
             SectionKey = "Rep_Section_ExitInterviews", TitleKey = "Rep_Title_ExitInterviews", DescriptionKey = "Rep_Desc_ExitInterviews",
             Icon = "bi-chat-square-text-fill", IconBg = "oklch(0.65 0.15 190 / .12)", IconColor = "oklch(0.55 0.15 190)",
+            PageKeys = new[] { "exitinterviews" },
+            Areas = new[] { AccessAreas.ExitInterviews },
             UsesStore = true, UsesOmOc = true,
         },
     };

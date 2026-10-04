@@ -146,6 +146,7 @@ builder.Services.AddScoped<IStoreService, StoreService>();
 builder.Services.AddScoped<IStoreAccessService, StoreAccessService>();
 builder.Services.AddScoped<IAccessAreaContext, AccessAreaContext>();
 builder.Services.AddScoped<IAccessPolicyService, AccessPolicyService>();
+builder.Services.AddScoped<IReportAccessService, ReportAccessService>();
 builder.Services.AddScoped<IExitInterviewService, ExitInterviewService>();
 builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<INinetyDayTurnoverService, NinetyDayTurnoverService>();
