@@ -232,6 +232,8 @@
   <data name="Common_To" xml:space="preserve"><value>إلى</value></data>
   <data name="Common_Export" xml:space="preserve"><value>تصدير</value></data>
   <data name="Common_Download" xml:space="preserve"><value>تنزيل</value></data>
+  <data name="Common_Preparing" xml:space="preserve"><value>جارٍ تجهيز الملف…</value></data>
+  <data name="Common_DownloadFailed" xml:space="preserve"><value>تعذّر تنزيل التقرير. حاول مرة أخرى.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>رجوع</value></data>
   <data name="Common_Save" xml:space="preserve"><value>حفظ</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>إلغاء</value></data>

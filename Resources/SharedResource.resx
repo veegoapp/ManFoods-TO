@@ -232,6 +232,8 @@
   <data name="Common_To" xml:space="preserve"><value>To</value></data>
   <data name="Common_Export" xml:space="preserve"><value>Export</value></data>
   <data name="Common_Download" xml:space="preserve"><value>Download</value></data>
+  <data name="Common_Preparing" xml:space="preserve"><value>Preparing the file…</value></data>
+  <data name="Common_DownloadFailed" xml:space="preserve"><value>The report could not be downloaded. Please try again.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Save</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
