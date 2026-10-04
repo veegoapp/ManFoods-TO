@@ -1213,6 +1213,7 @@
 
   <!-- Reports catalog + month names -->
   <data name="Rep_Section_StoreOperations" xml:space="preserve"><value>عمليات الفروع</value></data>
+  <data name="Rep_Section_WorkforceHiring" xml:space="preserve"><value>القوى العاملة والتعيين</value></data>
   <data name="Rep_Section_Turnover" xml:space="preserve"><value>معدل الدوران</value></data>
   <data name="Rep_Section_Comparison" xml:space="preserve"><value>المقارنة</value></data>
   <data name="Rep_Title_Comparisons" xml:space="preserve"><value>المقارنة</value></data>
