@@ -527,6 +527,38 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task Summary_SplitsTheGapIntoSurplusAndShortage_AndGrossesHiringNeedUpLikeTheForecast()
+    {
+        var db = NewDb();
+        // Crew is 2 short (10 planned, 8 here); GEM is 3 over (4 planned, 7 here): the store's gap is +1 but 2 people are still missing.
+        Proj(db, 1, "1 | A", "Crew", 10); Proj(db, 1, "1 | A", "GEM", 4);
+        Active(db, 1, "1 | A", "Crew", 8); Active(db, 1, "1 | A", "GEM", 7);
+        await db.SaveChangesAsync();
+
+        var dto = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null, earlyLeaverPercent: 25);
+
+        var store = Assert.Single(dto.ByStore);
+        Assert.Equal(1, store.Gap);
+        Assert.Equal(2, store.Shortage);
+        Assert.Equal(3, store.Surplus);
+        Assert.Equal(store.Gap, store.Surplus - store.Shortage);          // Gap = Surplus − Shortage
+        Assert.Equal(2, store.HiringNeed);                                // before the 90-day top-up
+        Assert.Equal(3, store.HiringNeedGross);                           // 2 ÷ (1 − 25%) = 2.67 -> 3
+        Assert.Equal(3, dto.Kpis.Surplus);
+        Assert.Equal(25, dto.EarlyLeaverRate);
+        Assert.All(dto.ByJob, j => Assert.Equal(j.Gap, j.Surplus - j.Shortage));
+
+        // The Hiring Forecast shows the same figure for a month with a roster.
+        var forecast = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null, earlyLeaverPercent: 25);
+        Assert.Equal(store.HiringNeedGross, Assert.Single(forecast.Rows).Months[0]);
+
+        // Without a known early-leaver rate nothing is grossed up.
+        var plain = await NewService(db).GetAsync(2026, 1, null, null, "Admin", null);
+        Assert.Equal(0, plain.EarlyLeaverRate);
+        Assert.Equal(plain.ByStore[0].HiringNeed, plain.ByStore[0].HiringNeedGross);
+    }
+
+    [Fact]
     public async Task TrainerJobs_StaySeparate_EachWithItsOwnProjection()
     {
         var db = NewDb();
@@ -694,7 +726,7 @@ public class WorkforcePlanningReportTests
     {
         public List<MvcApp.Models.ViewModels.PlanningDetailRow> Rows { get; set; } = new();
         public MvcApp.Models.ViewModels.HiringForecastDto Forecast { get; set; } = new();
-        public Task<MvcApp.Models.ViewModels.WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null) => throw new NotSupportedException();
+        public Task<MvcApp.Models.ViewModels.WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0) => throw new NotSupportedException();
         public Task<List<MvcApp.Models.ViewModels.PlanningDetailRow>> GetDetailAsync(int year, IReadOnlyCollection<int>? months, string? stores, string? jobs, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null) => Task.FromResult(Rows);
         public Task<List<MvcApp.Models.ViewModels.StoreFillDto>> GetStoreFillAsync(int year, int month, string? jobs, string role, string? assignedName) => throw new NotSupportedException();
         public Task<MvcApp.Models.ViewModels.StorePlanDto> GetStorePlanAsync(string store, int year, int month, string role, string? assignedName) => throw new NotSupportedException();

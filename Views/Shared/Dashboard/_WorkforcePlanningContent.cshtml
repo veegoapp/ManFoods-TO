@@ -59,6 +59,11 @@
 .wp-sub tfoot td { font-weight:700; background:var(--bg-2); }
 .wp-explain { font-size:12.5px; color:var(--text-2); margin-top:8px; line-height:1.6; }
 .wp-explain b { color:var(--text); }
+.wp-th-sub { display:block; font-size:10px; font-weight:600; color:var(--text-3); white-space:normal; max-width:150px; line-height:1.3; }
+.wp-guide { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm); padding:10px 16px; font-size:12.5px; color:var(--text-2); }
+.wp-guide summary { cursor:pointer; font-weight:700; color:var(--text); font-size:13px; }
+.wp-guide summary i { color:var(--red); margin-inline-end:6px; }
+.wp-guide ul { margin:8px 0 2px; padding-inline-start:18px; line-height:1.7; }
 .wp-gap-short { color:oklch(0.55 0.2 22); }
 .wp-gap-over { color:oklch(0.45 0.15 250); }
 .wp-empty { padding:40px 20px; text-align:center; color:var(--text-3); font-size:14px; }
@@ -144,6 +149,11 @@
         </div>
     </div>
 
+    <details class="wp-guide mb-3" open>
+        <summary><i class="bi bi-info-circle-fill"></i>@L["WP_HowTitle"]</summary>
+        <ul id="wpHow"></ul>
+    </details>
+
     <div class="row g-3 mb-4">
         <div class="col-12 col-xl-5">
             <div class="chart-card h-100">
@@ -180,9 +190,11 @@
                     <th class="sortable num" data-sort="projected">@L["WP_ColProjected"]<i class="bi"></i></th>
                     <th class="sortable num" data-sort="actual">@L["WP_ColActual"]<i class="bi"></i></th>
                     <th class="sortable num" data-sort="gap">@L["WP_ColGap"]<i class="bi"></i></th>
+                    <th class="sortable num" data-sort="surplus">@L["WP_ColSurplus"]<i class="bi"></i></th>
                     <th class="sortable num" data-sort="shortage">@L["WP_ColShortage"]<i class="bi"></i></th>
                     <th class="sortable num" data-sort="attrition">@L["WP_ColAttrition"]<i class="bi"></i></th>
-                    <th class="sortable num" data-sort="hiring">@L["WP_ColHiring"]<i class="bi"></i></th>
+                    <th class="sortable num" data-sort="hiring">@L["WP_ColHiring"]<i class="bi"></i><span class="wp-th-sub">@L["WP_SubBefore90"]</span></th>
+                    <th class="sortable num" data-sort="hiringGross" id="wpThGross" hidden>@L["WP_ColHiringGross"]<i class="bi"></i><span class="wp-th-sub" id="wpThGrossSub"></span></th>
                     <th class="sortable" data-sort="fill">@L["WP_ColFill"]<i class="bi"></i></th>
                     <th class="sortable" data-sort="status">@L["WP_ColStatus"]<i class="bi"></i></th>
                 </tr></thead>
@@ -203,6 +215,8 @@
      data-projected="@L["WP_Projected"]" data-actual="@L["WP_Actual"]"
      data-ok="@L["WP_StatusOk"]" data-watch="@L["WP_StatusWatch"]" data-critical="@L["WP_StatusCritical"]" data-none="@L["WP_StatusNone"]"
      data-col-name="@L["Common_Name"]" data-col-stores="@L["Common_Stores"]" data-col-projected="@L["WP_ColProjected"]" data-col-actual="@L["WP_ColActual"]" data-col-gap="@L["WP_ColGap"]" data-unassigned="@L["WP_Unassigned"]" data-col-hiring="@L["WP_ColHiring"]" data-col-shortage="@L["WP_ColShortage"]" data-col-attrition="@L["WP_ColAttrition"]" data-over="@L["WP_StatusOver"]" data-col-fill="@L["WP_ColFill"]" data-col-status="@L["WP_ColStatus"]" data-no-rows="@L["Common_NoData"]" data-oc-title="@L["Common_OperationConsultants"]" data-oc-sub="@L["WP_GrpSubOc"]" data-od-title="@L["Common_OperationDirectors"]" data-od-sub="@L["WP_GrpSubOd"]" data-om-title="@L["Common_OperationManagers"]" data-om-sub="@L["WP_GrpSubOm"]" data-soc-title="@L["Common_SeniorOperationConsultants"]" data-soc-sub="@L["WP_GrpSubSoc"]" data-hiring="@L["WP_ColHiring"]" data-kpi-shortage="@L["WP_KpiShortage"]" data-kpi-shortage-desc="@L["WP_KpiShortageDesc"]" data-kpi-hiring="@L["WP_KpiHiring"]" data-kpi-hiring-desc="@L["WP_KpiHiringDesc"]" data-attr-note="@L["WP_AttrNote"]" data-no-attr="@L["WP_NoAttrition"]" data-gap="@L["WP_ColGap"]" data-fill="@L["WP_ColFill"]" data-shortage="@L["WP_Shortage"]" data-surplus="@L["WP_Surplus"]"
+     data-col-surplus="@L["WP_ColSurplus"]" data-col-hiring-gross="@L["WP_ColHiringGross"]" data-sub-before="@L["WP_SubBefore90"]" data-sub-with="@L["WP_SubWith90"]"
+     data-how-gap="@L["WP_HowGap"]" data-how-split="@L["WP_HowSplit"]" data-how-attrition="@L["WP_HowAttrition"]" data-how-hiring="@L["WP_HowHiring"]" data-how-gross="@L["WP_HowGross"]"
      data-drill-title="@L["WP_DrillTitle"]" data-drill-formula="@L["WP_DrillFormula"]" data-drill-loading="@L["WP_DrillLoading"]" data-drill-hint="@L["WP_DrillHint"]" data-col-job="@L["WP_ColJob"]" data-total="@L["HF_Total"]"
      data-error="@L["Common_NoData"]"></div>
 
@@ -308,6 +322,7 @@ async function wpLoad() {
     people('wpOd', wpL.allOd, d.operationDirectors, 'od');
 
     document.getElementById('wpNoActual').hidden = d.hasActual;
+    wpRenderHow(d);
     wpRenderKpis(d);
     wpRenderInsights(d);
     wpRenderJobChart(d);
@@ -316,6 +331,15 @@ async function wpLoad() {
     wpRenderStores();
     wpOpenStores.forEach(st => { if (d.byStore.some(r => r.name === st)) wpFetchStoreJobs(st); else wpOpenStores.delete(st); });
     wpRenderGroups();
+}
+
+// The small guide above the tables, and the stores table's grossed-up column (shown only when the early-leaver rate is known).
+function wpRenderHow(d) {
+    const gross = d.earlyLeaverRate > 0;
+    const lines = [wpL.howGap, wpL.howSplit, d.attritionMonths > 0 ? wpFmt(wpL.howAttrition, d.attritionMonths) : null, wpL.howHiring, gross ? wpFmt(wpL.howGross, d.earlyLeaverRate) : null].filter(Boolean);
+    document.getElementById('wpHow').innerHTML = lines.map(t => `<li>${sapEscape(t)}</li>`).join('');
+    document.getElementById('wpThGross').hidden = !gross;
+    if (gross) document.getElementById('wpThGrossSub').textContent = wpFmt(wpL.subWith, d.earlyLeaverRate);
 }
 
 /* ── Smart Insights: plain-language takeaways computed from the numbers on the page ── */
@@ -475,7 +499,7 @@ const wpSort = { key: null, dir: 'asc' };
 const WP_STATUS_ORDER = { critical: 0, watch: 1, ok: 2, over: 3, none: 4 };
 const wpSortValue = {
     name: r => r.name, oc: r => r.operationConsultant || '', stores: r => r.storeCount,
-    projected: r => r.projected, actual: r => r.actual, gap: r => r.gap, hiring: r => r.hiringNeed, shortage: r => r.shortage, attrition: r => r.expectedAttrition,
+    projected: r => r.projected, actual: r => r.actual, gap: r => r.gap, surplus: r => r.surplus, hiring: r => r.hiringNeed, hiringGross: r => r.hiringNeedGross, shortage: r => r.shortage, attrition: r => r.expectedAttrition,
     fill: r => r.fillPercent, status: r => WP_STATUS_ORDER[r.status] ?? 9,
 };
 // Shared by every sortable table on the page; `state` is { key, dir }.
@@ -514,7 +538,10 @@ const WP_GROUP_DEFS = [
     { key: 'bySeniorOperationConsultant', id: 'Soc', role: 'soc', abbr: 'SOC' },
 ];
 const wpGroupSort = {};
-const wpTh = (key, label, cls) => `<th class="sortable px-3 py-2 ${cls || ''}" data-sort="${key}">${sapEscape(label)}<i class="bi"></i></th>`;
+const wpTh = (key, label, cls, sub) => `<th class="sortable px-3 py-2 ${cls || ''}" data-sort="${key}">${sapEscape(label)}<i class="bi"></i>${sub ? `<span class="wp-th-sub">${sapEscape(sub)}</span>` : ''}</th>`;
+// The grossed-up hiring need (incl. the new hires who leave within 90 days) is shown only when that rate is known.
+const wpHasGross = () => !!wpData && wpData.earlyLeaverRate > 0;
+const wpSubGross = () => wpFmt(wpL.subWith, wpData.earlyLeaverRate);
 
 function wpBuildGroups() {
     const host = document.getElementById('wpGroups');
@@ -530,7 +557,7 @@ function wpBuildGroups() {
                 <table class="table table-hover table-sm mb-0" style="font-size:13px">
                     <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1"><tr id="wpGrpHead${g.id}">
                         ${wpTh('name', wpL.colName)}${wpTh('stores', wpL.colStores, 'text-center')}${wpTh('projected', wpL.colProjected, 'text-center')}
-                        ${wpTh('actual', wpL.colActual, 'text-center')}${wpTh('gap', wpL.colGap, 'text-center')}${wpTh('shortage', wpL.colShortage, 'text-center')}${wpTh('attrition', wpL.colAttrition, 'text-center')}${wpTh('hiring', wpL.colHiring, 'text-center')}
+                        ${wpTh('actual', wpL.colActual, 'text-center')}${wpTh('gap', wpL.colGap, 'text-center')}${wpTh('surplus', wpL.colSurplus, 'text-center')}${wpTh('shortage', wpL.colShortage, 'text-center')}${wpTh('attrition', wpL.colAttrition, 'text-center')}${wpTh('hiring', wpL.colHiring, 'text-center', wpL.subBefore)}${wpHasGross() ? wpTh('hiringGross', wpL.colHiringGross, 'text-center', wpSubGross()) : ''}
                         ${wpTh('fill', wpL.colFill)}${wpTh('status', wpL.colStatus)}
                     </tr></thead>
                     <tbody id="wpGrpBody${g.id}"></tbody>
@@ -552,7 +579,7 @@ function wpRenderGroup(g) {
     const rows = wpSortRowsBy(wpData[g.key] || [], state);
     wpMarkSorted(document.getElementById('wpGrpHead' + g.id), state);
     const body = document.getElementById('wpGrpBody' + g.id);
-    if (!rows.length) { body.innerHTML = `<tr><td colspan="10" class="text-center py-3 text-muted">${sapEscape(wpL.noRows)}</td></tr>`; return; }
+    if (!rows.length) { body.innerHTML = `<tr><td colspan="12" class="text-center py-3 text-muted">${sapEscape(wpL.noRows)}</td></tr>`; return; }
     body.innerHTML = rows.map(r => {
         const gapTxt = has ? wpGapText(r.gap) : '—';
         const gapCls = !has ? '' : wpGapClass(r.gap);
@@ -565,9 +592,11 @@ function wpRenderGroup(g) {
             <td class="px-3 py-2 text-center">${r.projected}</td>
             <td class="px-3 py-2 text-center">${has ? r.actual : '—'}</td>
             <td class="px-3 py-2 text-center ${gapCls}">${gapTxt}</td>
+            <td class="px-3 py-2 text-center">${has ? r.surplus : '—'}</td>
             <td class="px-3 py-2 text-center">${has ? r.shortage : '—'}</td>
             <td class="px-3 py-2 text-center">${has ? Math.round(r.expectedAttrition) : '—'}</td>
             <td class="px-3 py-2 text-center">${has ? r.hiringNeed : '—'}</td>
+            ${wpHasGross() ? `<td class="px-3 py-2 text-center"><b>${has ? r.hiringNeedGross : '—'}</b></td>` : ''}
             <td class="px-3 py-2" style="white-space:nowrap">${tube}</td>
             <td class="px-3 py-2"><span class="wp-pill ${r.status}">${sapEscape(wpPillLabel(r.status))}</span></td>
         </tr>`;
@@ -618,7 +647,8 @@ function wpRenderPayroll(d) {
     if (!head.dataset.built) {
         head.dataset.built = '1';
         head.innerHTML = wpTh('name', wpL.colName) + wpTh('projected', wpL.colProjected, 'text-center') + wpTh('actual', wpL.colActual, 'text-center')
-            + wpTh('gap', wpL.colGap, 'text-center') + wpTh('shortage', wpL.colShortage, 'text-center') + wpTh('hiring', wpL.colHiring, 'text-center')
+            + wpTh('gap', wpL.colGap, 'text-center') + wpTh('surplus', wpL.colSurplus, 'text-center') + wpTh('shortage', wpL.colShortage, 'text-center')
+            + wpTh('hiring', wpL.colHiring, 'text-center', wpL.subBefore) + (wpHasGross() ? wpTh('hiringGross', wpL.colHiringGross, 'text-center', wpSubGross()) : '')
             + wpTh('fill', wpL.colFill) + wpTh('status', wpL.colStatus);
         head.querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => {
             wpToggleSort(wpPayrollSort, th.dataset.sort);
@@ -633,7 +663,7 @@ function wpRenderPayrollTable(d) {
     const rows = wpSortRowsBy(wpPayrollRows(d), wpPayrollSort);
     wpMarkSorted(document.getElementById('wpPayrollHead'), wpPayrollSort);
     const body = document.getElementById('wpPayrollBody');
-    if (!rows.length) { body.innerHTML = `<tr><td colspan="8" class="text-center py-3 text-muted">${sapEscape(wpL.noRows)}</td></tr>`; return; }
+    if (!rows.length) { body.innerHTML = `<tr><td colspan="10" class="text-center py-3 text-muted">${sapEscape(wpL.noRows)}</td></tr>`; return; }
     body.innerHTML = rows.map(r => {
         const tube = has
             ? `<span class="wp-tube"><span style="width:${Math.min(100, r.fillPercent)}%;background:${wpFillColor(r.status)}"></span></span><b>${r.fillPercent}%</b>`
@@ -643,8 +673,10 @@ function wpRenderPayrollTable(d) {
             <td class="px-3 py-2 text-center">${r.projected}</td>
             <td class="px-3 py-2 text-center">${has ? r.actual : '—'}</td>
             <td class="px-3 py-2 text-center ${has ? wpGapClass(r.gap) : ''}">${has ? wpGapText(r.gap) : '—'}</td>
+            <td class="px-3 py-2 text-center">${has ? r.surplus : '—'}</td>
             <td class="px-3 py-2 text-center">${has ? r.shortage : '—'}</td>
             <td class="px-3 py-2 text-center">${has ? r.hiringNeed : '—'}</td>
+            ${wpHasGross() ? `<td class="px-3 py-2 text-center"><b>${has ? r.hiringNeedGross : '—'}</b></td>` : ''}
             <td class="px-3 py-2" style="white-space:nowrap">${tube}</td>
             <td class="px-3 py-2"><span class="wp-pill ${r.status}">${sapEscape(wpPillLabel(r.status))}</span></td>
         </tr>`;
@@ -681,16 +713,17 @@ function wpDrillHtml(main, rows) {
     if (rows === 'loading' || !rows) return `<div class="text-muted" style="font-size:13px">${sapEscape(wpL.drillLoading)}</div>`;
     const lines = rows.map(r => {
         const p = r.projected, a = r.actual ?? 0;
-        return { job: r.job, p, a, gap: a - p, shortage: r.shortage ?? Math.max(0, p - a), exp: r.expectedAttrition ?? 0, need: r.hiringNeed ?? 0 };
+        const shortage = r.shortage ?? Math.max(0, p - a);
+        return { job: r.job, p, a, gap: a - p, shortage, surplus: wpNum(Math.max(0, shortage + (a - p))), exp: r.expectedAttrition ?? 0, need: r.hiringNeed ?? 0 };
     });
     const body = lines.map(l => `<tr><td>${sapEscape(l.job)}</td><td class="num">${l.p}</td><td class="num">${l.a}</td>
-        <td class="num ${wpGapClass(l.gap)}">${wpGapText(l.gap)}</td><td class="num">${l.shortage}</td><td class="num">${wpNum(l.exp)}</td><td class="num"><b>${wpNum(l.need)}</b></td></tr>`).join('');
+        <td class="num ${wpGapClass(l.gap)}">${wpGapText(l.gap)}</td><td class="num">${l.surplus}</td><td class="num">${l.shortage}</td><td class="num">${wpNum(l.exp)}</td><td class="num"><b>${wpNum(l.need)}</b></td></tr>`).join('');
     // The total is the store's own row, so it always matches the table above.
     const foot = `<tr><td>${sapEscape(wpL.total)}</td><td class="num">${main.projected}</td><td class="num">${main.actual}</td>
-        <td class="num ${wpGapClass(main.gap)}">${wpGapText(main.gap)}</td><td class="num">${main.shortage}</td><td class="num">${Math.round(main.expectedAttrition)}</td><td class="num">${main.hiringNeed}</td></tr>`;
+        <td class="num ${wpGapClass(main.gap)}">${wpGapText(main.gap)}</td><td class="num">${main.surplus}</td><td class="num">${main.shortage}</td><td class="num">${Math.round(main.expectedAttrition)}</td><td class="num">${main.hiringNeed}</td></tr>`;
     return `<div style="font-weight:700;font-size:13px">${sapEscape(wpFmt(wpL.drillTitle, main.name))}</div>
         <div class="wp-table-wrap" style="max-height:340px"><table class="wp-sub"><thead><tr><th>${sapEscape(wpL.colJob)}</th><th class="num">${sapEscape(wpL.colProjected)}</th><th class="num">${sapEscape(wpL.colActual)}</th>
-        <th class="num">${sapEscape(wpL.colGap)}</th><th class="num">${sapEscape(wpL.colShortage)}</th><th class="num">${sapEscape(wpL.colAttrition)}</th><th class="num">${sapEscape(wpL.colHiring)}</th></tr></thead>
+        <th class="num">${sapEscape(wpL.colGap)}</th><th class="num">${sapEscape(wpL.colSurplus)}</th><th class="num">${sapEscape(wpL.colShortage)}</th><th class="num">${sapEscape(wpL.colAttrition)}</th><th class="num">${sapEscape(wpL.colHiring)}</th></tr></thead>
         <tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
         <div class="wp-explain">${sapEscape(wpL.drillFormula)}</div>`;
 }
@@ -713,13 +746,15 @@ function wpRenderStores() {
             <td class="num">${r.projected}</td>
             <td class="num">${has ? r.actual : '—'}</td>
             <td class="num ${gapCls}">${gapTxt}</td>
+            <td class="num">${has ? r.surplus : '—'}</td>
             <td class="num">${has ? r.shortage : '—'}</td>
             <td class="num">${has ? Math.round(r.expectedAttrition) : '—'}</td>
             <td class="num">${has ? r.hiringNeed : '—'}</td>
+            ${wpHasGross() ? `<td class="num"><b>${has ? r.hiringNeedGross : '—'}</b></td>` : ''}
             <td>${fill}</td>
             <td><span class="wp-pill ${r.status}">${sapEscape(wpPillLabel(r.status))}</span></td>
         </tr>`;
-        return main + (open ? `<tr class="wp-detail"><td colspan="10">${wpDrillHtml(r, wpStoreJobs.get(r.name))}</td></tr>` : '');
+        return main + (open ? `<tr class="wp-detail"><td colspan="12">${wpDrillHtml(r, wpStoreJobs.get(r.name))}</td></tr>` : '');
     }).join('');
 }
 document.getElementById('wpStoreRows').addEventListener('click', e => {

@@ -1932,6 +1932,16 @@
   <data name="WP_KpiHiring" xml:space="preserve"><value>احتياج التعيين (تقديري)</value></data>
   <data name="WP_KpiHiringDesc" xml:space="preserve"><value>العجز زائد الاستقالات المتوقّعة</value></data>
   <data name="WP_ColHiring" xml:space="preserve"><value>احتياج التعيين</value></data>
+  <data name="WP_ColSurplus" xml:space="preserve"><value>الزيادة</value></data>
+  <data name="WP_ColHiringGross" xml:space="preserve"><value>احتياج التعيين شامل من يغادرون مبكرًا</value></data>
+  <data name="WP_SubBefore90" xml:space="preserve"><value>قبل تعويض الـ 90 يوم</value></data>
+  <data name="WP_SubWith90" xml:space="preserve"><value>شامل تعويض الـ 90 يوم (+{0}%)</value></data>
+  <data name="WP_HowTitle" xml:space="preserve"><value>إزاي بتتحسب الأرقام دي</value></data>
+  <data name="WP_HowGap" xml:space="preserve"><value>الفجوة = الفعلي − المخطط للصف كله. الوظيفة اللي فوق خطتها بتعوّض الوظيفة اللي تحتها، فالفجوة ممكن تخفي نقص حقيقي.</value></data>
+  <data name="WP_HowSplit" xml:space="preserve"><value>الزيادة = الناس الزايدين عن الخطة، وبتتحسب في الوظايف اللي فوق خطتها بس. النقص = الناس الناقصين، وبيتحسب في الوظايف الناقصة بس. يعني الفجوة = الزيادة − النقص دايمًا.</value></data>
+  <data name="WP_HowAttrition" xml:space="preserve"><value>الاستقالات المتوقعة = متوسط الاستقالات الشهرية لآخر {0} شهور فيها قائمة موظفين.</value></data>
+  <data name="WP_HowHiring" xml:space="preserve"><value>احتياج التعيين = النقص + الاستقالات المتوقعة. ده عدد الناس المطلوبين للوصول للخطة، قبل تعويض من بيسيبوا بدري من الجداد.</value></data>
+  <data name="WP_HowGross" xml:space="preserve"><value>احتياج التعيين شامل من يغادرون مبكرًا = احتياج التعيين ÷ (1 − {0}%)، و{0}% هي نسبة اللي بيسيبوا خلال 90 يوم على مستوى الشركة. ده الرقم اللي بتعرضه صفحة Hiring Forecast للشهور اللي ليها قائمة موظفين مرفوعة.</value></data>
   <data name="WP_AttrNote" xml:space="preserve"><value>احتياج التعيين = العجز + الاستقالات المتوقّعة، بناءً على متوسط الاستقالات الشهرية لآخر {0} شهور. ده تقدير.</value></data>
   <data name="WP_NoAttrition" xml:space="preserve"><value>مفيش سجل استقالات لسه، فاحتياج التعيين بيساوي العجز.</value></data>
   <data name="Action_Workforce_Staffing" xml:space="preserve"><value>سُدّ فجوة التوظيف: سرّع التعيين والإعداد قبل حدوث العجز.</value></data>
@@ -2017,6 +2027,7 @@
   <data name="HF_ChartTitle" xml:space="preserve"><value>التعيينات المطلوبة في كل شهر</value></data>
   <data name="HF_ChartSub" xml:space="preserve"><value>الأعمدة الداكنة من قائمة الموظفين المرفوعة، والفاتحة تقدير</value></data>
   <data name="HF_ChartLabel" xml:space="preserve"><value>التعيينات المطلوبة</value></data>
+  <data name="HF_GrossTag" xml:space="preserve"><value>شامل تعويض الـ 90 يوم (+{0}%)</value></data>
   <data name="HF_JobTitle" xml:space="preserve"><value>التعيينات المطلوبة حسب الوظيفة</value></data>
   <data name="HF_JobSub" xml:space="preserve"><value>يتأثر بالفلاتر أعلاه. اختر شهرًا لترى الوظائف المطلوب التعيين فيها في هذا الشهر، وإلا تظهر السنة كاملة. الوظائف التي لا تحتاج تعيينًا مخفية.</value></data>
   <data name="HF_JobPeriodYear" xml:space="preserve"><value>السنة كاملة</value></data>
