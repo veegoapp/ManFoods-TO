@@ -1207,6 +1207,7 @@
 
   <!-- Reports catalog + month names -->
   <data name="Rep_Section_StoreOperations" xml:space="preserve"><value>Store Operations</value></data>
+  <data name="Rep_Section_WorkforceHiring" xml:space="preserve"><value>Workforce &amp; Hiring</value></data>
   <data name="Rep_Section_Turnover" xml:space="preserve"><value>Turnover</value></data>
   <data name="Rep_Section_Comparison" xml:space="preserve"><value>Comparison</value></data>
   <data name="Rep_Title_Comparisons" xml:space="preserve"><value>Comparison</value></data>

@@ -58,43 +58,43 @@ public static class ReportCatalog
         },
         new ReportDefinition
         {
-            Id = "workforce", Section = "Store Operations", Title = "Workforce",
-            Description = "Detailed employee-level roster plus active workforce composition for the selected month — Headcount by Job Title, Payroll Group, Tenure, and Gender, Gender Count by Store — and the Headcount Trend over time.",
-            SectionKey = "Rep_Section_StoreOperations", TitleKey = "Rep_Title_Workforce", DescriptionKey = "Rep_Desc_Workforce",
-            Icon = "bi-people-fill", IconBg = "oklch(0.6 0.13 250 / .10)", IconColor = "oklch(0.5 0.13 250)",
-            UsesPeriod = true, UsesStore = true, UsesOmOc = true,
-        },
-        new ReportDefinition
-        {
-            Id = "workforce-planning", Section = "Store Operations", Title = "Workforce Planning",
-            Description = "Projected vs actual headcount by job and store — summary, by store, by job, by consultant & manager, the full data sheet and ready-made Excel pivot tables.",
-            SectionKey = "Rep_Section_StoreOperations", TitleKey = "Rep_Title_WorkforcePlanning", DescriptionKey = "Rep_Desc_WorkforcePlanning",
-            Icon = "bi-diagram-3-fill", IconBg = "oklch(0.62 0.15 155 / .10)", IconColor = "oklch(0.5 0.15 155)",
-            UsesYear = true, UsesMonths = true, UsesStore = true, UsesJobs = true, UsesOmOc = true,
-        },
-        new ReportDefinition
-        {
-            Id = "workforce-planning-data", Section = "Store Operations", Title = "Workforce Planning — Detailed Data",
-            Description = "The full flat data sheet (one row per store, job and month) and ready-made Excel pivot tables behind the Workforce Planning report. Large: download it only when you need to analyse the raw rows.",
-            SectionKey = "Rep_Section_StoreOperations", TitleKey = "Rep_Title_WorkforcePlanningData", DescriptionKey = "Rep_Desc_WorkforcePlanningData",
-            Icon = "bi-database-fill", IconBg = "oklch(0.62 0.15 155 / .10)", IconColor = "oklch(0.5 0.15 155)",
-            UsesYear = true, UsesMonths = true, UsesStore = true, UsesJobs = true, UsesOmOc = true,
-        },
-        new ReportDefinition
-        {
-            Id = "hiring-forecast", Section = "Store Operations", Title = "Hiring Forecast",
-            Description = "Hires needed per month for a year — by store, job, payroll group and by the people responsible for the stores — with the roster and forecast months marked.",
-            SectionKey = "Rep_Section_StoreOperations", TitleKey = "Rep_Title_HiringForecast", DescriptionKey = "Rep_Desc_HiringForecast",
-            Icon = "bi-person-plus-fill", IconBg = "oklch(0.5 0.18 25 / .10)", IconColor = "oklch(0.5 0.18 25)",
-            UsesYear = true, UsesStore = true, UsesJobs = true, UsesOmOc = true,
-        },
-        new ReportDefinition
-        {
             Id = "crew-trainers", Section = "Store Operations", Title = "Crew Trainers",
             Description = "Trainers against the plan and the 1-trainer-per-6-crew rule for the selected month — by store and by the people responsible, the year's trend, and who joined or left the trainer list.",
             SectionKey = "Rep_Section_StoreOperations", TitleKey = "Rep_Title_CrewTrainers", DescriptionKey = "Rep_Desc_CrewTrainers",
             Icon = "bi-mortarboard-fill", IconBg = "oklch(0.6 0.13 250 / .10)", IconColor = "oklch(0.5 0.13 250)",
             UsesPeriod = true, UsesStore = true, UsesOmOc = true,
+        },
+        new ReportDefinition
+        {
+            Id = "workforce", Section = "Workforce & Hiring", Title = "Workforce",
+            Description = "Detailed employee-level roster plus active workforce composition for the selected month — Headcount by Job Title, Payroll Group, Tenure, and Gender, Gender Count by Store — and the Headcount Trend over time.",
+            SectionKey = "Rep_Section_WorkforceHiring", TitleKey = "Rep_Title_Workforce", DescriptionKey = "Rep_Desc_Workforce",
+            Icon = "bi-people-fill", IconBg = "oklch(0.6 0.13 250 / .10)", IconColor = "oklch(0.5 0.13 250)",
+            UsesPeriod = true, UsesStore = true, UsesOmOc = true,
+        },
+        new ReportDefinition
+        {
+            Id = "workforce-planning", Section = "Workforce & Hiring", Title = "Workforce Planning",
+            Description = "Projected vs actual headcount by job and store — summary, by store, by job, by consultant & manager, the full data sheet and ready-made Excel pivot tables.",
+            SectionKey = "Rep_Section_WorkforceHiring", TitleKey = "Rep_Title_WorkforcePlanning", DescriptionKey = "Rep_Desc_WorkforcePlanning",
+            Icon = "bi-diagram-3-fill", IconBg = "oklch(0.62 0.15 155 / .10)", IconColor = "oklch(0.5 0.15 155)",
+            UsesYear = true, UsesMonths = true, UsesStore = true, UsesJobs = true, UsesOmOc = true,
+        },
+        new ReportDefinition
+        {
+            Id = "workforce-planning-data", Section = "Workforce & Hiring", Title = "Workforce Planning — Detailed Data",
+            Description = "The full flat data sheet (one row per store, job and month) and ready-made Excel pivot tables behind the Workforce Planning report. Large: download it only when you need to analyse the raw rows.",
+            SectionKey = "Rep_Section_WorkforceHiring", TitleKey = "Rep_Title_WorkforcePlanningData", DescriptionKey = "Rep_Desc_WorkforcePlanningData",
+            Icon = "bi-database-fill", IconBg = "oklch(0.62 0.15 155 / .10)", IconColor = "oklch(0.5 0.15 155)",
+            UsesYear = true, UsesMonths = true, UsesStore = true, UsesJobs = true, UsesOmOc = true,
+        },
+        new ReportDefinition
+        {
+            Id = "hiring-forecast", Section = "Workforce & Hiring", Title = "Hiring Forecast",
+            Description = "Hires needed per month for a year — by store, job, payroll group and by the people responsible for the stores — with the roster and forecast months marked.",
+            SectionKey = "Rep_Section_WorkforceHiring", TitleKey = "Rep_Title_HiringForecast", DescriptionKey = "Rep_Desc_HiringForecast",
+            Icon = "bi-person-plus-fill", IconBg = "oklch(0.5 0.18 25 / .10)", IconColor = "oklch(0.5 0.18 25)",
+            UsesYear = true, UsesStore = true, UsesJobs = true, UsesOmOc = true,
         },
 
         // ── Turnover ──────────────────────────────────────────
