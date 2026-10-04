@@ -508,6 +508,25 @@ public class WorkforcePlanningServiceTests
     }
 
     [Fact]
+    public async Task HiringForecast_ByJob_RoundsAtStoreMonthLevelSoTotalsMatchTheStoreView()
+    {
+        var db = NewDb();
+        // Three jobs each need 2 hires; grossed up by 25% early leavers that is 2.67 each = 8 for the store,
+        // but rounding each job on its own would give 9.
+        Proj(db, 1, "1 | A", "X", 2); Proj(db, 1, "1 | A", "Y", 2); Proj(db, 1, "1 | A", "Z", 2);
+        Active(db, 1, "1 | A", "Other", 1);
+        await db.SaveChangesAsync();
+
+        var byStore = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null, earlyLeaverPercent: 25);
+        var byJob = await NewService(db).GetHiringForecastAsync(2026, null, null, "Admin", null, earlyLeaverPercent: 25, by: "job");
+
+        Assert.Equal(8, byStore.GrandTotal);
+        Assert.Equal(8, byJob.GrandTotal);
+        Assert.Equal(8, byJob.Rows.Sum(r => r.Months[0]));
+        Assert.Equal(byStore.MonthTotals, byJob.MonthTotals);
+    }
+
+    [Fact]
     public async Task TrainerJobs_StaySeparate_EachWithItsOwnProjection()
     {
         var db = NewDb();

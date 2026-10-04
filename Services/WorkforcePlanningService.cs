@@ -715,14 +715,15 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             "consultant" => leaders.TryGetValue(data.Stores[store].Trim(), out var lc) ? lc.Oc : "",
             _ => data.Stores[store],
         };
-        var byStore = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase);
+        var cellNeed = new Dictionary<string, Dictionary<string, double[]>>(StringComparer.OrdinalIgnoreCase); // store -> row -> unrounded hires per month
         var storeMonths = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase); // always per store, for the leader roll-ups
         foreach (var kv in projected)
         {
             var (store, job) = kv.Key;
             var rowKey = RowKey(store, job);
             var storeAcc = storeMonths.TryGetValue(data.Stores[store].Trim(), out var sm) ? sm : (storeMonths[data.Stores[store].Trim()] = new double[12]);
-            var acc = byStore.TryGetValue(rowKey, out var existing) ? existing : (byStore[rowKey] = new double[12]);
+            var storeRows = cellNeed.TryGetValue(data.Stores[store].Trim(), out var sr) ? sr : (cellNeed[data.Stores[store].Trim()] = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase));
+            var acc = storeRows.TryGetValue(rowKey, out var existing) ? existing : (storeRows[rowKey] = new double[12]);
             double? prev = null;
             for (int mon = 1; mon <= 12; mon++)
             {
@@ -754,15 +755,34 @@ public class WorkforcePlanningService : IWorkforcePlanningService
             }
         }
 
-        // Round each store-month once, then add the rounded cells, so every row and column adds up exactly.
-        foreach (var kv in byStore.OrderBy(k => k.Key, StringComparer.OrdinalIgnoreCase))
+        // Round each store-month once (all its jobs together), so every view adds up to the same figures. When the
+        // rows are not stores (job, payroll group, consultant), that rounded store-month total is shared out between
+        // the store's rows by largest remainder, so the rows still add up exactly to the store totals.
+        var byRow = new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (storeKey, storeRows) in cellNeed)
+        {
+            for (int i = 0; i < 12; i++)
+            {
+                var left = RoundNeed(storeMonths[storeKey][i]);
+                var parts = storeRows.Select(r => (Key: r.Key, Floor: (int)Math.Floor(r.Value[i]), Frac: r.Value[i] - Math.Floor(r.Value[i])))
+                    .OrderByDescending(x => x.Frac).ThenBy(x => x.Key, StringComparer.OrdinalIgnoreCase).ToList();
+                left -= parts.Sum(x => x.Floor);
+                for (int k = 0; k < parts.Count; k++)
+                {
+                    var n = parts[k].Floor + (k < left ? 1 : 0);
+                    if (!byRow.TryGetValue(parts[k].Key, out var months)) byRow[parts[k].Key] = months = new int[12];
+                    months[i] += n;
+                }
+            }
+        }
+        foreach (var kv in byRow.OrderBy(k => k.Key, StringComparer.OrdinalIgnoreCase))
         {
             var row = new HiringForecastRowDto
             {
                 Store = kv.Key,
                 OperationConsultant = dto.By == "store" && leaders.TryGetValue(kv.Key.Trim(), out var l) ? l.Oc : "",
             };
-            for (int i = 0; i < 12; i++) { row.Months[i] = RoundNeed(kv.Value[i]); row.Total += row.Months[i]; dto.MonthTotals[i] += row.Months[i]; }
+            for (int i = 0; i < 12; i++) { row.Months[i] = kv.Value[i]; row.Total += row.Months[i]; dto.MonthTotals[i] += row.Months[i]; }
             dto.GrandTotal += row.Total;
             dto.Rows.Add(row);
         }
