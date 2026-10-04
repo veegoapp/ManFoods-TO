@@ -55,7 +55,7 @@ public class WorkforcePlanningApiController : ControllerBase
     {
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetEmail();
-        return Ok(await _planning.GetAsync(year, month, store, jobs, role, assignedName, om, oc, soc, od));
+        return Ok(await _planning.GetAsync(year, month, store, jobs, role, assignedName, om, oc, soc, od, await EarlyLeaverRate.GetAsync(_ninetyDay, _cache)));
     }
 
     /// <summary>One store's jobs for a month (projected, actual, expected resignations, hiring need): the

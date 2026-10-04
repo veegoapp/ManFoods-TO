@@ -9,7 +9,7 @@ public interface IWorkforcePlanningService
     /// <paramref name="jobs"/> are optional comma-separated filters. Year/month
     /// default to the current period when it has projection data, else the latest.</summary>
     Task<WorkforcePlanningDto> GetAsync(int? year, int? month, string? stores, string? jobs, string role, string? assignedName,
-        string? om = null, string? oc = null, string? soc = null, string? od = null);
+        string? om = null, string? oc = null, string? soc = null, string? od = null, double earlyLeaverPercent = 0);
 
     /// <summary>Per-store fill for one exact year/month (empty when that month has no
     /// projection — it never falls back to another period), optionally narrowed to jobs.</summary>

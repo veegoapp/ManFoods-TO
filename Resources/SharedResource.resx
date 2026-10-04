@@ -1926,6 +1926,16 @@
   <data name="WP_KpiHiring" xml:space="preserve"><value>Hiring Need (est.)</value></data>
   <data name="WP_KpiHiringDesc" xml:space="preserve"><value>Shortage plus expected resignations</value></data>
   <data name="WP_ColHiring" xml:space="preserve"><value>Hiring need</value></data>
+  <data name="WP_ColSurplus" xml:space="preserve"><value>Surplus</value></data>
+  <data name="WP_ColHiringGross" xml:space="preserve"><value>Hiring need incl. early leavers</value></data>
+  <data name="WP_SubBefore90" xml:space="preserve"><value>before the 90-day top-up</value></data>
+  <data name="WP_SubWith90" xml:space="preserve"><value>incl. 90-day early leavers (+{0}%)</value></data>
+  <data name="WP_HowTitle" xml:space="preserve"><value>How these numbers are calculated</value></data>
+  <data name="WP_HowGap" xml:space="preserve"><value>Gap = Actual − Projected for the whole row. A job above its plan offsets a job below it, so the gap can hide real shortages.</value></data>
+  <data name="WP_HowSplit" xml:space="preserve"><value>Surplus = people above the plan, counted only in the jobs that are over. Shortage = people missing, counted only in the jobs that are short. So Gap = Surplus − Shortage, always.</value></data>
+  <data name="WP_HowAttrition" xml:space="preserve"><value>Expected resignations = the average monthly resignations of the last {0} roster months.</value></data>
+  <data name="WP_HowHiring" xml:space="preserve"><value>Hiring need = Shortage + Expected resignations. This is the number of people needed to reach the plan, before replacing new hires who leave early.</value></data>
+  <data name="WP_HowGross" xml:space="preserve"><value>Hiring need incl. early leavers = Hiring need ÷ (1 − {0}%), where {0}% is the share of hires who leave within 90 days company-wide. This is the figure the Hiring Forecast page shows for months with an uploaded roster.</value></data>
   <data name="WP_AttrNote" xml:space="preserve"><value>Hiring need = shortage + expected resignations, based on the average monthly resignations of the last {0} months. It is an estimate.</value></data>
   <data name="WP_NoAttrition" xml:space="preserve"><value>There is no resignation history yet, so the hiring need equals the shortage.</value></data>
   <data name="Action_Workforce_Staffing" xml:space="preserve"><value>Close the staffing gap: accelerate hiring and onboarding ahead of the shortfall.</value></data>
