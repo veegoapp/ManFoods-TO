@@ -2166,6 +2166,8 @@
   <data name="CT_In_Trend_D" xml:space="preserve"><value>من {0} ({1}) إلى {2} ({3}): تغيّر {4}%.</value></data>
   <data name="CT_In_Rose" xml:space="preserve"><value>زادوا</value></data>
   <data name="CT_In_Fell" xml:space="preserve"><value>قلّوا</value></data>
+  <data name="CT_In_PlanMore" xml:space="preserve"><value>أكثر</value></data>
+  <data name="CT_In_PlanFewer" xml:space="preserve"><value>أقل</value></data>
   <data name="CT_In_Moves_T" xml:space="preserve"><value>دخل {0} إلى قائمة المدربين وخرج {1}</value></data>
   <data name="CT_In_Moves_D" xml:space="preserve"><value>من الخارجين: استقال {0} ولا يزال {1} يعملون وخرجوا من القائمة (مقارنة بقائمة {2}).</value></data>
   <data name="CT_In_Resigned_T" xml:space="preserve"><value>استقال {0} مدرب خلال {1} أشهر</value></data>

@@ -85,7 +85,9 @@
      data-area-prefix="@((ViewContext.RouteData.Values["area"]?.ToString() ?? "Home") == "Admin" ? "/admin" : "/home")"
      data-title="@L["SP_PageTitle"]" data-subtitle="@L["SP_PageSub"]"
      data-no-store="@L["SP_NoStore"]" data-loading="@L["SP_Loading"]"
-     data-no-data="@L["SP_NoData"]" data-employees="@L["Common_Employees"]"
+     data-no-data="@L["SP_NoData"]" data-health-description="@L["SP_HealthDescription"]"
+     data-reason-type-new-hire-window="@L["EW_ReasonType_NewHireWindow"]" data-reason-type-store-history="@L["EW_ReasonType_StoreHistory"]" data-reason-type-role-history="@L["EW_ReasonType_RoleHistory"]"
+     data-reason-type-peak-window="@L["EW_ReasonType_PeakWindow"]" data-reason-type-gender-history="@L["EW_ReasonType_GenderHistory"]" data-reason-type-exit-interview-score="@L["EW_ReasonType_ExitInterviewScore"]" data-reason-type-store-leader-history="@L["EW_ReasonType_StoreLeaderHistory"]" data-employees="@L["Common_Employees"]"
      data-resignations="@L["Common_Resignations"]" data-percent="@L["Common_Percent"]">
     <div class="sp-hero">
         <div>
@@ -172,6 +174,8 @@
     const esc = value => sapEscape(value ?? '');
     const arr = value => Array.isArray(value) ? value : [];
     const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
+    const reasonTypes = { new_hire_window: d.reasonTypeNewHireWindow, store_history: d.reasonTypeStoreHistory, role_history: d.reasonTypeRoleHistory, peak_window: d.reasonTypePeakWindow, gender_history: d.reasonTypeGenderHistory, exit_interview_score: d.reasonTypeExitInterviewScore, store_leader_history: d.reasonTypeStoreLeaderHistory };
+    const reasonLabel = x => typeof x === 'string' ? x : (reasonTypes[x?.type] || x?.type || '');
     const labelOf = row => row?.label ?? row?.name ?? row?.storeName ?? row?.reason ?? '—';
     const valueOf = row => number(row?.value ?? row?.count ?? row?.total ?? row?.rate ?? row?.turnoverRate ?? row?.retentionRate ?? row?.positivePercent ?? row?.percentage ?? row?.earlyLeaverRate);
     const fmt = value => number(value).toLocaleString();
@@ -371,7 +375,7 @@
                 <div class="sp-health-hero">
                     <div class="sp-health-kicker">${esc('@L["SP_HealthKicker"]')}</div>
                     <div class="sp-health-title"><i class="bi ${health.icon}"></i>${esc(health.label)}</div>
-                    <p class="sp-health-copy">${esc('@L["SP_HealthDescription"]')}</p>
+                    <p class="sp-health-copy">${esc(d.healthDescription)}</p>
                     <div class="sp-health-meta">
                         <span class="sp-health-chip"><i class="bi bi-calendar3"></i>${esc(fromPeriod && toPeriod ? `${periodLabel(fromPeriod)} – ${periodLabel(toPeriod)}` : d.noData)}</span>
                         <span class="sp-health-chip"><i class="bi bi-broadcast-pin"></i>${esc(latestSignalText)}</span>
@@ -546,7 +550,7 @@
             ]);
         } else if (panel === 'warning') {
             const rows = arr(overviewData.watchlist);
-            const table = rows.length ? `<div class="sp-table-wrap"><table class="sp-table"><thead><tr><th>${esc('@L["EW_HireName"]')}</th><th>${esc('@L["EW_JobTitle"]')}</th><th>${esc('@L["EW_RiskScore"]')}</th><th>${esc('@L["EW_Reasons"]')}</th></tr></thead><tbody>${rows.slice(0,20).map(r => `<tr><td>${esc(r.employeeName ?? r.name)}</td><td>${esc(r.jobTitle)}</td><td>${esc(r.stars ?? r.riskScore ?? '—')}</td><td>${esc(Array.isArray(r.reasons) ? r.reasons.join(', ') : r.reason ?? '—')}</td></tr>`).join('')}</tbody></table></div>` : `<div class="sp-empty">${esc(d.noData)}</div>`;
+            const table = rows.length ? `<div class="sp-table-wrap"><table class="sp-table"><thead><tr><th>${esc('@L["EW_HireName"]')}</th><th>${esc('@L["EW_JobTitle"]')}</th><th>${esc('@L["EW_RiskScore"]')}</th><th>${esc('@L["EW_Reasons"]')}</th></tr></thead><tbody>${rows.slice(0,20).map(r => `<tr><td>${esc(r.employeeName ?? r.name)}</td><td>${esc(r.jobTitle)}</td><td>${esc(r.stars ?? r.riskScore ?? '—')}</td><td>${esc(Array.isArray(r.reasons) ? r.reasons.map(reasonLabel).join(', ') : r.reason ?? '—')}</td></tr>`).join('')}</tbody></table></div>` : `<div class="sp-empty">${esc(d.noData)}</div>`;
             html = renderCards([card('@L["SP_Watchlist"]','bi-person-exclamation',table,true)]);
         } else if (panel === 'exit') {
             const [reasons, wouldReturn, experience, workload, training, exitTrend] = await Promise.all([

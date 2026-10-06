@@ -2160,6 +2160,8 @@
   <data name="CT_In_Trend_D" xml:space="preserve"><value>From {0} ({1}) to {2} ({3}): {4}% change.</value></data>
   <data name="CT_In_Rose" xml:space="preserve"><value>rose</value></data>
   <data name="CT_In_Fell" xml:space="preserve"><value>fell</value></data>
+  <data name="CT_In_PlanMore" xml:space="preserve"><value>more</value></data>
+  <data name="CT_In_PlanFewer" xml:space="preserve"><value>fewer</value></data>
   <data name="CT_In_Moves_T" xml:space="preserve"><value>{0} joined the trainer list, {1} left</value></data>
   <data name="CT_In_Moves_D" xml:space="preserve"><value>Of those who left, {0} resigned and {1} are still working but off the list (compared with the {2} list).</value></data>
   <data name="CT_In_Resigned_T" xml:space="preserve"><value>{0} trainer(s) resigned in {1} months</value></data>
