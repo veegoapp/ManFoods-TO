@@ -53,6 +53,7 @@ const defsTable = ({ head, rows }, widths = [2600, 6800]) => new Table({
 const styles = {
   default: { document: { run: { font: FONT, size: 21 } } },
   paragraphStyles: [
+    { id: 'TOC1', name: 'toc 1', basedOn: 'Normal', next: 'Normal', run: { size: 26 }, paragraph: { spacing: { before: 0, after: 220, line: 360 }, tabStops: [{ type: 'right', position: 11000, leader: 'dot' }] } },
     { id: 'Heading1', name: 'Heading 1', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { font: FONT, size: 40, bold: true, color: RED }, paragraph: { spacing: { before: 120, after: 60 }, outlineLevel: 0 } },
     { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { font: FONT, size: 26, bold: true, color: BLK }, paragraph: { spacing: { before: 260, after: 100 }, keepNext: true, outlineLevel: 1, border: { left: { style: BorderStyle.SINGLE, size: 24, color: RED, space: 6 } } } },
   ],

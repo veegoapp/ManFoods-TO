@@ -15,8 +15,8 @@ module.exports = { title: 'Crew Trainers', blocks: [
   ] } },
   { look: 'Trainers vs the rule first - below 100% means you have fewer trainers than the rule asks for.' },
 
-  { h2: 'Step 3 - Read the Smart Insights' }, { img: 'insights', w: 520 },
-  { p: 'Plain sentences worked out from the numbers on the page: trainers against the rule, the stores most short or above the rule, whether extra trainers could cover gaps elsewhere, the projection against the rule, how the number of trainers changed, who joined or left the list, and how many resigned. They follow your filters.' },
+  { h2: 'Step 3 - Read the Smart Insights' }, { img: 'insights', w: 600 },
+  { p: 'Plain sentences worked out from the numbers on the page: trainers against the rule, the stores most short or above it, whether extra trainers could cover gaps, how the list changed and how many trainers resigned. They follow your filters.' },
   { decide: 'if some stores have extra trainers while others are short, consider moving trainers between them before recruiting new ones.' },
 
   { h2: 'Step 4 - How are trainers moving through the year?' }, { img: 'trainers_per_month', w: 600 },
