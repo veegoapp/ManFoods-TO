@@ -104,7 +104,7 @@ async function shoot(page, key, lang) {
         if (el.width) { await loc.evaluate((e, w) => { e.style.width = w + 'px'; e.style.maxWidth = w + 'px'; }, el.width); await page.waitForTimeout(1500); }   // re-render a wide card at half-card width
         const box = await loc.boundingBox(); if (!box) continue;
         let file = el.name;
-        if (el.each) file += '_' + (typeof el.each === 'string' ? slug(await loc.locator(el.each).first().innerText()) : i + 1);
+        if (el.each) file += '_' + ((typeof el.each === 'string' && slug(await loc.locator(el.each).first().innerText())) || i + 1);   // Arabic labels have no latin letters: fall back to the number
         targets.push({ file, box: { x: box.x, y: box.y, width: box.width, height: el.maxH ? Math.min(box.height, el.maxH) : box.height } });
       }
     }
