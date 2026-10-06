@@ -112,10 +112,11 @@ async function shoot(page, key, lang) {
   console.log(`${lang}/${key}: ${done.length} images -> ${done.join(', ')}`);
 }
 
-(async () => {
+if (require.main === module) (async () => {
   const [which = 'all', lang = 'en'] = process.argv.slice(2);
   if (!process.env.GUIDE_USER || !process.env.GUIDE_PASS) throw new Error('Set GUIDE_USER and GUIDE_PASS');
   const keys = which === 'all' ? Object.keys(PAGES) : [which];
   const { browser, page } = await openBrowser(lang);
   try { for (const k of keys) await shoot(page, k, lang); } finally { await browser.close(); }
 })().catch(e => { console.error(e.message); process.exit(1); });
+module.exports = { openBrowser, BASE, OUT, slug };

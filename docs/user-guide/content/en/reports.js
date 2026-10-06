@@ -43,4 +43,13 @@ module.exports = { title: 'Reports', blocks: [
     ['Exit Interviews Report', 'Reasons for leaving, engagement drivers, workload ratings, overall experience and anonymous comments, aggregated across all periods matching the selected filters.'],
   ] } },
   { decide: 'open the report you need, choose the period and filters on its page, and download it.' },
+
+  { h2: 'Inside a report (Report Detail)', pb: true },
+  { p: 'Click a report card to open that report\'s own page. It generates one downloadable Excel workbook. It does not show charts on screen: the filters on the page control exactly what data is written into the Excel file when you download it, so the export matches what you need. Use "Back" at the top to return to the list.' },
+  { img: 'reportdetail/header', w: 600 },
+  { img: 'reportdetail/filters', w: 600 },
+  { p: 'Which filters appear depends on the report: a period or year/months selector, Store / Operation Manager / Operation Consultant / Senior Operation Consultant / Operation Director and Job title filters, or, for comparison-style reports, two independent Period A / Period B panels. Leave a filter empty for "all". Reset Filters clears them.' },
+  { img: 'reportdetail/download', w: 600 },
+  { p: 'Whatever you set is built into the Excel file the moment you click Download Excel. To get a different slice of the data, change a filter and download again.' },
+  { note: 'some reports are large (for example Workforce Planning - Detailed Data). Download those only when you need the raw rows.' },
 ] };

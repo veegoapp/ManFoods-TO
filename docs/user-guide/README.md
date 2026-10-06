@@ -19,6 +19,9 @@ docs/user-guide/
 ## Whole guide in one go
 `node tools/build-all.js en` rebuilds the cover, the quick reference, every page in `content/order.json` and the contact page. It overwrites the page files, so only use it before pages have been edited by hand.
 
+## Inside pages
+Store Profile, Store Leader Profile, Action Center Detail and Report Detail are explained inside their parent page (Stores, Scorecard, Action Center, Reports). `node tools/capture-detail.js all en` captures them by following the same links a user clicks (navigation and tab clicks only; it never saves, closes or downloads anything). Their images live in `images/en/storeprofile|storeleaderprofile|actioncenterdetail|reportdetail/` and are referenced from the parent page's content as `'<folder>/<name>'`.
+
 ## Adding a page
 `node tools/capture.js <page> en` -> write `content/en/<page>.js` -> `node tools/build-page.js NN <page> en` -> merge. Page order = side-menu order. Page definitions live in `tools/pages.js`.
 

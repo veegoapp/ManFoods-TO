@@ -14,8 +14,9 @@ const run = (t, o = {}) => new TextRun({ text: t, font: FONT, color: BLK, size: 
 const para = (parts, o = {}) => new Paragraph({ spacing: { after: 90, line: 290 }, ...o, children: [].concat(parts).map(x => typeof x === 'string' ? run(x) : x) });
 const labelled = (label, text) => para([run(label + ' ', { bold: true }), run(text)]);
 
+const imgPath = (dir, name) => name.includes('/') ? path.join(ROOT, 'images', dir.split('/')[0], name + '.png') : path.join(ROOT, 'images', dir, name + '.png');
 const image = (dir, name, w = 560) => {
-  const f = path.join(ROOT, 'images', dir, name + '.png');
+  const f = imgPath(dir, name);
   const [pw, ph] = pngSize(f);
   const W = Math.min(w, 600);
   return new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, spacing: { before: 60, after: 120 }, children: [new ImageRun({ type: 'png', data: fs.readFileSync(f), transformation: { width: W, height: Math.round(W * ph / pw) } })] });
@@ -30,7 +31,7 @@ const imageGrid = (dir, names, perRow = 3, w = 190) => {
     while (chunk.length < perRow) chunk.push(null);
     rows.push(new TableRow({ cantSplit: true, children: chunk.map(n => new TableCell({
       width: { size: colW, type: WidthType.DXA }, borders: { top: none, bottom: none, left: none, right: none }, margins: { top: 40, bottom: 80, left: 40, right: 40 },
-      children: [n ? (() => { const f = path.join(ROOT, 'images', dir, n + '.png'); const [pw, ph] = pngSize(f); return new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: fs.readFileSync(f), transformation: { width: w, height: Math.round(w * ph / pw) } })] }); })() : new Paragraph({ children: [] })],
+      children: [n ? (() => { const f = imgPath(dir, n); const [pw, ph] = pngSize(f); return new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: fs.readFileSync(f), transformation: { width: w, height: Math.round(w * ph / pw) } })] }); })() : new Paragraph({ children: [] })],
     })) }));
   }
   return new Table({ alignment: AlignmentType.CENTER, width: { size: colW * perRow, type: WidthType.DXA }, columnWidths: Array(perRow).fill(colW), rows });
@@ -64,7 +65,7 @@ const PAGE = { size: { width: 11906, height: 16838 }, margin: { top: 1300, botto
 function render(blocks, dir) {
   const out = [];
   for (const b of blocks) {
-    if (b.h2) out.push(new Paragraph({ heading: D.HeadingLevel.HEADING_2, children: [new TextRun({ text: b.h2 })] }));
+    if (b.h2) out.push(new Paragraph({ heading: D.HeadingLevel.HEADING_2, pageBreakBefore: !!b.pb, children: [new TextRun({ text: b.h2 })] }));
     else if (b.where) out.push(para([run('Where to find it: ', { color: GREY, size: 19 }), run(b.where, { color: GREY, size: 19 })]));
     else if (b.p) out.push(para(b.p));
     else if (b.look) out.push(labelled('What to look at:', b.look));
