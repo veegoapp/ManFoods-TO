@@ -38,6 +38,6 @@ module.exports = { title: 'Hiring Forecast', blocks: [
   { note: 'for months that already have an uploaded employee list, hires = shortage + expected resignations (per store and job, as on Workforce Planning). Later months are simulated from the latest list: people expected to resign leave, then hires fill up to that month\'s projection. Expected resignations already include people who leave in their first 90 days.' },
 
   { h2: 'Step 7 - Who is responsible?' },
-  { img: 'group_oc', w: 520 }, { img: 'group_od', w: 520 }, { img: 'group_om', w: 520 }, { img: 'group_soc', w: 520 },
+  { img: 'group_oc', w: 600 }, { img: 'group_od', w: 600 }, { img: 'group_om', w: 600 }, { img: 'group_soc', w: 600 },
   { p: 'The same hires per month, rolled up by Operation Consultant, Director, Manager and Senior Consultant, with the number of stores each covers.' },
 ] };

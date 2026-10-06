@@ -32,7 +32,7 @@ module.exports = { title: 'Workforce Planning', blocks: [
   { p: 'Projected headcount for every month of the selected year (dashed line) and actual headcount for the months that already have an uploaded roster (solid line).' },
   { look: 'whether the solid line is moving towards the dashed line or away from it.' },
 
-  { h2: 'Step 6 - Payroll groups' }, { img: 'payroll_chart', w: 420 }, { img: 'payroll_table', w: 420 },
+  { h2: 'Step 6 - Payroll groups' }, { img: 'payroll_chart', w: 600 }, { img: 'payroll_table', w: 600 },
   { p: 'Planned and actual headcount for each payroll group, with the same numbers in a table you can sort by clicking a header. A job that nobody works in yet has no known payroll group and is listed as Unassigned.' },
 
   { h2: 'Step 7 - Which stores need attention?' }, { img: 'stores', w: 600 },
@@ -49,7 +49,7 @@ module.exports = { title: 'Workforce Planning', blocks: [
   { img: 'how', w: 600 },
 
   { h2: 'Step 8 - Who should you talk to?' },
-  { img: 'group_oc', w: 520 }, { img: 'group_od', w: 520 }, { img: 'group_om', w: 520 }, { img: 'group_soc', w: 520 },
+  { img: 'group_oc', w: 600 }, { img: 'group_od', w: 600 }, { img: 'group_om', w: 600 }, { img: 'group_soc', w: 600 },
   { p: 'The same figures rolled up by the people responsible for the stores: Operation Consultants, Directors, Managers and Senior Consultants. Each row shows how many stores it covers, their projected and actual headcount, the gap, the shortage, the expected resignations, the hiring need and a bar showing the fill rate.' },
   { defs: { head: ['Bar colour', 'Fill rate'], rows: [
     ['Green', '95-100%'], ['Amber', '85-95%'], ['Red', 'below 85%'], ['Blue', 'above 100%'],

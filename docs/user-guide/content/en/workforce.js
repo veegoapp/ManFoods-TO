@@ -15,15 +15,15 @@ module.exports = { title: 'Workforce Overview', blocks: [
   { look: 'the direction of the line over the year.' },
   { decide: 'a falling line means you are losing people faster than you add them. Use the filters to find which store or manager the drop comes from.' },
 
-  { h2: 'Step 4 - Is the team experienced enough?' }, { img: 'tenure', w: 420 },
+  { h2: 'Step 4 - Is the team experienced enough?' }, { img: 'tenure', w: 600 },
   { look: 'how tall the "< 3 months" and "3-6 months" bars are compared with "2+ years".' },
   { decide: 'a large share of new people means more coaching and closer follow-up. A team that is mostly 2+ years is stable, but check that you are still hiring for the future.' },
 
-  { h2: 'Step 5 - Who is on the team?' }, { img: 'jobtitle', w: 420 },
+  { h2: 'Step 5 - Who is on the team?' }, { img: 'jobtitle', w: 600 },
   { look: 'which roles carry most of your headcount, and whether a role you depend on looks thin.' },
-  { img: 'payroll', w: 420 },
+  { img: 'payroll', w: 600 },
   { look: 'the split between payroll groups.' },
-  { img: 'gender', w: 420 },
+  { img: 'gender', w: 600 },
   { look: 'the gender split of the current team, with counts and percentages.' },
 
   { h2: 'Step 6 - Which stores need attention?' }, { img: 'stores', w: 600 },
@@ -31,7 +31,7 @@ module.exports = { title: 'Workforce Overview', blocks: [
   { decide: 'compare stores with each other. A store with a much smaller team than similar stores is worth a conversation with its manager.' },
 
   { h2: 'Step 7 - Who should you talk to first?' },
-  { img: 'oc', w: 420 }, { img: 'od', w: 420 }, { img: 'om', w: 420 }, { img: 'soc', w: 420 },
+  { img: 'oc', w: 600 }, { img: 'od', w: 600 }, { img: 'om', w: 600 }, { img: 'soc', w: 600 },
   { look: "Turnover% next to each person's headcount. It is weighted across all their stores, and the coloured badge highlights the higher rates." },
   { decide: "start your conversations with the people whose Turnover% is highest, then filter the page by that person to see which of their stores drives it." },
 ] };
