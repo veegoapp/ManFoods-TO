@@ -38,7 +38,7 @@ async function shoot(page, key, lang) {
   const dir = path.join(OUT, lang, key); fs.mkdirSync(dir, { recursive: true });
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.goto(BASE + def.url, { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector(def.ready || 'canvas, tbody tr', { timeout: def.timeout || 90000 });
+  await page.waitForFunction(sel => [...document.querySelectorAll(sel)].some(e => e.offsetParent !== null), def.ready || 'canvas, tbody tr', { timeout: def.timeout || 90000 });
   await page.waitForTimeout(3000);
   const leaks = await maskPage(page, lang);
   if (leaks.length) throw new Error(`[${key}] real names still visible: ${leaks.join(' | ')}`);

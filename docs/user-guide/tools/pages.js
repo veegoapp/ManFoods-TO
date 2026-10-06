@@ -64,8 +64,8 @@ module.exports = {
     extra: [{ name: 'insights', sel: '#cmpInsightContainer' }, { name: 'kpis', sel: '#cmpKpiGrid' }] },
   retention:         { url: '/home/dashboard/retention', auto: true },
   exitinterviews:    { url: '/home/dashboard/exitinterviews', auto: true },
-  earlywarning:      { url: '/home/dashboard/earlywarning', auto: true },
-  scorecard:         { url: '/home/dashboard/scorecard', auto: true },
+  earlywarning:      { url: '/home/dashboard/earlywarning', auto: true, ready: '#ewHighRiskBody tr' },
+  scorecard:         { url: '/home/dashboard/scorecard', auto: true, ready: '#scBody tr' },
   actioncenter:      { url: '/home/dashboard/actioncenter', auto: true },
   stores:            { url: '/home/dashboard/stores', auto: true, timeout: 150000, maxH: 560 },
 };
