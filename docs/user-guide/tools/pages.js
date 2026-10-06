@@ -67,5 +67,17 @@ module.exports = {
   earlywarning:      { url: '/home/dashboard/earlywarning', auto: true, ready: '#ewHighRiskBody tr' },
   scorecard:         { url: '/home/dashboard/scorecard', auto: true, ready: '#scBody tr' },
   actioncenter:      { url: '/home/dashboard/actioncenter', auto: true },
-  stores:            { url: '/home/dashboard/stores', auto: true, timeout: 150000, maxH: 560 },
+  stores: { url: '/home/dashboard/stores', ready: '#storeCardsContainer > *', timeout: 150000, elements: [
+    { name: 'filters', sel: '.page-header' },
+    { name: 'kpi', sel: '#stSummaryCards .kpi-card', each: '.kpi-label' },
+    { name: 'insights', sel: '#stInsightsCard' },
+    { name: 'cards_row', sel: '#storeCardsContainer', maxH: 340 },
+  ] },
+  reports: { url: '/home/dashboard/reports', ready: '.row.g-4.mb-4', elements: [
+    { name: 'section', sel: '.page-content > .row.g-4.mb-4', each: true },
+  ] },
+  actionplanguide: { url: '/home/dashboard/actionplanguide', ready: '#apgAccordion', elements: [
+    { name: 'intro', sel: '.apg-card.chart-card' },
+    { name: 'accordion', sel: '#apgAccordion' },
+  ] },
 };

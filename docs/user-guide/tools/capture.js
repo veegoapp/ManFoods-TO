@@ -65,7 +65,7 @@ async function shoot(page, key, lang) {
       });
       return list;
     });
-    elements = [def.filters || { name: 'filters', union: 'select, .reset-filters-btn' }, { name: 'kpi', sel: '.kpi-card', each: '.kpi-label' }, ...(def.extra || [])];
+    elements = [def.filters || { name: 'filters', union: 'auto-filters' }, { name: 'kpi', sel: '.kpi-card', each: '.kpi-label' }, ...(def.extra || [])];
     const used = new Set();
     for (const f of found) {
       let n = slug((f.id || f.title || f.tid.replace(/Body$/, '') || 'insights').replace(/Card$/, ''));
@@ -73,11 +73,24 @@ async function shoot(page, key, lang) {
       elements.push({ name: n, sel: `[data-gcap="c${f.i}"]`, maxH: f.table ? (def.maxH || 640) : undefined });
     }
   }
+  const only = (process.argv[4] || '').split(',').filter(Boolean);
+  if (only.length) elements = elements.filter(e => only.some(o => e.name.startsWith(o)));
   for (const el of elements) {
     const targets = [];
     if (el.union) {
       if (!(await page.locator('select:visible, .reset-filters-btn:visible').count())) continue;
       const box = await page.evaluate(sel => {
+        if (sel === 'auto-filters') {
+          // from the top of the page header down to the lowest filter control that sits above the first card
+          const vis = e => e.offsetParent !== null && e.getBoundingClientRect().height > 0;
+          const first = [...document.querySelectorAll('.kpi-grid,.chart-card,.charts-grid,.cmp-kpi-grid')].filter(vis).map(e => e.getBoundingClientRect().top);
+          const limit = first.length ? Math.min(...first) : Infinity;
+          const hdr = document.querySelector('.page-header');
+          const rs = [hdr, ...document.querySelectorAll('.page-content select, .page-content input, .page-content button, .page-content [class*=select], .page-content [class*=dropdown], .page-content [class*=filter]')]
+            .filter(e => e && vis(e) && !e.closest('.page-guide-panel') && !e.classList.contains('page-guide-orb')).map(e => e.getBoundingClientRect()).filter(r => r.top < limit - 4 && r.width > 20);
+          const x = Math.min(...rs.map(a => a.left)), y = Math.min(...rs.map(a => a.top));
+          return { x, y, width: Math.max(...rs.map(a => a.right)) - x, height: Math.min(Math.max(...rs.map(a => a.bottom)), limit - 6) - y };
+        }
         const r = [...document.querySelectorAll(sel)].filter(e => e.offsetParent).map(e => (e.closest('[class*=select-wrap]') || e).getBoundingClientRect());
         const x = Math.min(...r.map(a => a.left)), y = Math.min(...r.map(a => a.top));
         return { x, y, width: Math.max(...r.map(a => a.right)) - x, height: Math.max(...r.map(a => a.bottom)) - y };
@@ -85,12 +98,12 @@ async function shoot(page, key, lang) {
       targets.push({ file: el.name, box: { x: Math.max(box.x - 8, 0), y: box.y - 8, width: box.width + 16, height: box.height + 16 } });
     } else {
       const base = page.locator(el.sel);
-      const n = el.each ? await base.count() : 1;
+      const n = el.each ? Math.min(await base.count(), el.limit || 99) : 1;
       for (let i = 0; i < n; i++) {
         const loc = el.xpath ? base.first().locator('xpath=' + el.xpath) : up(el.each ? base.nth(i) : base.first(), el.up);
         const box = await loc.boundingBox(); if (!box) continue;
         let file = el.name;
-        if (el.each) file += '_' + slug(await loc.locator(el.each).first().innerText());
+        if (el.each) file += '_' + (typeof el.each === 'string' ? slug(await loc.locator(el.each).first().innerText()) : i + 1);
         targets.push({ file, box: { x: box.x, y: box.y, width: box.width, height: el.maxH ? Math.min(box.height, el.maxH) : box.height } });
       }
     }

@@ -21,10 +21,12 @@ async function maskPage(page, lang = 'en') {
   const found = await page.evaluate(() => {
     const out = { stores: [], people: { oc: [], od: [], om: [], soc: [] } };
     document.querySelectorAll('select').forEach(sel => {
-      const k = sel.id.toLowerCase().replace(/select$/, '');
+      const k = sel.id.replace(/Select$/, '');
       const opts = [...sel.options].slice(1).map(o => o.text.trim()).filter(Boolean);
-      const role = /soc$/.test(k) ? 'soc' : /oc$/.test(k) ? 'oc' : /om$/.test(k) ? 'om' : /od$/.test(k) ? 'od' : null;
-      if (/store$/.test(k)) opts.forEach(t => { const m = t.match(/^(\d{5,})\s*\|\s*(.+)$/); if (m) out.stores.push([m[1], m[2].trim()]); });
+      // ids look like ocSelect / odSelect / ctOc / wpSoc - the role must be a whole word (not the end of "period")
+      const m = k.match(/^(soc|oc|om|od)$|[a-z](Soc|Oc|Om|Od)$/);
+      const role = m ? (m[1] || m[2]).toLowerCase() : null;
+      if (/store$/i.test(k)) opts.forEach(t => { const m = t.match(/^(\d{5,})\s*\|\s*(.+)$/); if (m) out.stores.push([m[1], m[2].trim()]); });
       else if (role) out.people[role].push(...opts);
     });
     // names that only appear inside table columns (store leaders, employees, responsible people)
@@ -70,7 +72,7 @@ async function maskPage(page, lang = 'en') {
     }
     for (const role of ['soc', 'oc', 'od', 'om', 'leader']) { // 'emp' is handled per table column (thousands of names would make this slow)
       Object.entries(map.people[role] || {}).sort((a, b) => b[0].length - a[0].length).forEach(([name, n]) => {
-        rules.push([new RegExp(esc(name), 'g'), (role === 'emp' ? labels.emp : labels[role]) + ' ' + dg(n)]);
+        rules.push([new RegExp((role === 'leader' ? '(?:' + esc(labels.leader) + '\\s+)?' : '') + esc(name), 'g'), labels[role] + ' ' + dg(n)]);
         secrets.push(name);
       });
     }

@@ -3,7 +3,7 @@ module.exports = { title: 'Comparisons', blocks: [
   { p: 'Use this page to see whether things got better or worse. It compares two periods side by side, Period A and Period B, each with its own independent filters. Every card, chart and table shows both periods together plus the change between them.' },
 
   { h2: 'Step 1 - Choose the two periods' }, { img: 'filters', w: 600 },
-  { p: 'Period A and Period B each have their own year, months, store, Operation Manager, Operation Consultant, Senior Operation Consultant and Operation Director filters - they do not have to match. "Copy to last year" fills Period B with the same filters as Period A but one year earlier, which is the quickest way to compare year over year.' },
+  { p: 'Period A and Period B each have their own year, months, store, Operation Manager, Operation Consultant, Senior Operation Consultant and Operation Director filters - they do not have to match. The "Same months as A, last year" button fills Period B with the same filters as Period A but one year earlier, which is the quickest way to compare year over year.' },
 
   { h2: 'Step 2 - Read the Smart Insights' }, { img: 'insights', w: 600 },
   { p: 'Automatic sentences that summarise how Period A compares with Period B for your current filters.' },
