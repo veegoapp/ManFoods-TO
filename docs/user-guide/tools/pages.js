@@ -62,8 +62,9 @@ module.exports = {
   comparisons:       { url: '/home/dashboard/comparisons', auto: true,
     filters: { name: 'filters', sel: '#cmpYearA', xpath: 'ancestor::div[contains(@class,"g-3")][1]' },
     extra: [{ name: 'insights', sel: '#cmpInsightContainer' }, { name: 'kpis', sel: '#cmpKpiGrid' }] },
-  retention:         { url: '/home/dashboard/retention', auto: true },
-  exitinterviews:    { url: '/home/dashboard/exitinterviews', auto: true },
+  retention:         { url: '/home/dashboard/retention', auto: true,
+    extra: [{ name: 'retention_by_job_title_half', sel: '#rtJobTitleChart', up: card, width: 541 }] },
+  exitinterviews:    { url: '/home/dashboard/exitinterviews', auto: true, maxH: 330 },   // the two comment tables are long lists: show the first rows only
   earlywarning:      { url: '/home/dashboard/earlywarning', auto: true, ready: '#ewHighRiskBody tr' },
   scorecard:         { url: '/home/dashboard/scorecard', auto: true, ready: '#scBody tr' },
   actioncenter:      { url: '/home/dashboard/actioncenter', auto: true },
@@ -75,9 +76,5 @@ module.exports = {
   ] },
   reports: { url: '/home/dashboard/reports', ready: '.row.g-4.mb-4', elements: [
     { name: 'section', sel: '.page-content > .row.g-4.mb-4', each: true },
-  ] },
-  actionplanguide: { url: '/home/dashboard/actionplanguide', ready: '#apgAccordion', elements: [
-    { name: 'intro', sel: '.apg-card.chart-card' },
-    { name: 'accordion', sel: '#apgAccordion' },
   ] },
 };

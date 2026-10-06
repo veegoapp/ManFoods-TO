@@ -24,7 +24,7 @@ module.exports = { title: 'Retention', blocks: [
 
   { h2: 'Step 6 - Who stays?' },
   { img: 'retention_by_gender', w: 600 }, { p: 'Share of the current team with 6+ months on the job, split by gender.' },
-  { img: 'retention_by_job_title', w: 600 }, { p: 'Share of each job title\'s current team that has been on the job 6+ months.' },
+  { img: 'retention_by_job_title_half', w: 600 }, { p: 'Share of each job title\'s current team that has been on the job 6+ months.' },
 
   { h2: 'Step 7 - Average tenure' },
   { img: 'best_5_stores_by_average_tenure', w: 600 }, { img: 'worst_5_stores_by_average_tenure', w: 600 },

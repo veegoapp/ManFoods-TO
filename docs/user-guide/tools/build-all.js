@@ -10,7 +10,7 @@ const lang = process.argv[2] || 'en';
 const { front = [], pages: order, back = [] } = require(path.join(ROOT, 'content', 'order.json'));
 execFileSync('node', [path.join(__dirname, 'build-front.js'), lang], { stdio: 'inherit' });
 const build = (prefix, slug) => {
-  if (!fs.existsSync(path.join(ROOT, 'content', lang, slug + '.js'))) return;
+  if (!slug || !fs.existsSync(path.join(ROOT, 'content', lang, slug + '.js'))) return;
   execFileSync('node', [path.join(__dirname, 'build-page.js'), prefix, slug, lang], { stdio: 'inherit' });
 };
 front.forEach((slug, i) => build('00' + 'abcdefgh'[i], slug));   // sorts right after 00-cover-contents

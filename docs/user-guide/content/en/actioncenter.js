@@ -42,7 +42,7 @@ module.exports = { title: 'Action Center', blocks: [
     ['Reason Concentration', '2 or more exit-interview reason responses where one reason is cited in 50% or more of them.'],
     ['Early-Warning Watchlist', '2 or more currently active employees flagged high-risk.'],
   ] } },
-  { p: 'A store only ever has one Active plan at a time: a new signal firing while a plan is open is added to that same plan. Severity (Medium / High / Critical) is worked out from how many signals are on the plan. Each plan gets a Target Resolution Date when it opens - 90 days out, or 30 days if it is already Critical - and resolves automatically once its store shows no signals for 2 consecutive evaluated periods. See the Action Plan Guide, next, for the full explanation.' },
+  { p: 'A store only ever has one Active plan at a time: a new signal firing while a plan is open is added to that same plan. Severity (Medium / High / Critical) is worked out from how many signals are on the plan. Each plan gets a Target Resolution Date when it opens - 90 days out, or 30 days if it is already Critical - and resolves automatically once its store shows no signals for 2 consecutive evaluated periods.' },
 
   { h2: 'Inside a store (Action Center Detail)', pb: true },
   { p: 'Click a store in the scorecard to open its own page. It is the single-store drill-down behind one row of the Action Center table: what specifically got flagged, the store\'s current metrics, its severity and Target Resolution Date, the recommended actions, and a place to track progress and leave notes until the plan is resolved. This page always shows one specific store. Use "Back" at the top to return.' },

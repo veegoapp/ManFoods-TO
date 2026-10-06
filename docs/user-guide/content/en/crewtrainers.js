@@ -16,7 +16,7 @@ module.exports = { title: 'Crew Trainers', blocks: [
   { look: 'Trainers vs the rule first - below 100% means you have fewer trainers than the rule asks for.' },
 
   { h2: 'Step 3 - Read the Smart Insights' }, { img: 'insights', w: 600 },
-  { p: 'A few plain sentences worked out from the numbers on the page: trainers against the rule, the stores most short and the stores above the rule, whether extra trainers could cover gaps elsewhere, what the projection plans against what the rule asks for, how the number of trainers changed since the first list, who joined or left the list, and how many trainers resigned. They follow your filters.' },
+  { p: 'Plain sentences worked out from the numbers on the page: trainers against the rule, the stores most short or above it, whether extra trainers could cover gaps, how the list changed and how many trainers resigned. They follow your filters.' },
   { decide: 'if some stores have extra trainers while others are short, consider moving trainers between them before recruiting new ones.' },
 
   { h2: 'Step 4 - How are trainers moving through the year?' }, { img: 'trainers_per_month', w: 600 },
@@ -27,7 +27,7 @@ module.exports = { title: 'Crew Trainers', blocks: [
   { p: 'Stores grouped by how many trainers they have against the rule: Over (more than required), Enough (exactly), Short (fewer), No trainers (required but none) and Not needed (none required and none present). Each group shows its stores, crew level, required, actual, gap vs rule, projected and gap vs plan.' },
   { look: 'the No trainers and Short groups.' },
 
-  { h2: 'Step 6 - Which stores need trainers?' }, { img: 'trainers_by_store', w: 600 },
+  { h2: 'Step 6 - Which stores need trainers?' },
   { defs: { head: ['Column', 'Meaning'], rows: [
     ['Crew level', 'The people the trainers train.'],
     ['Required', 'Crew level divided by 6, rounded to the nearest whole number (a half rounds up).'],
@@ -36,14 +36,16 @@ module.exports = { title: 'Crew Trainers', blocks: [
     ['Projected / Gap vs plan', 'The trainers in the projection, and actual minus projected.'],
     ['Status', 'Over, Enough, Short, No trainers, or Not needed (none required and none present).'],
   ] } },
+  { img: 'trainers_by_store', w: 600 },
   { p: 'Stores most short come first. Click a column title to sort, and use the search box to find a store or a consultant.' },
   { decide: 'agree with the responsible Operation Consultant how the top stores will reach the required number of trainers.' },
 
-  { h2: 'Step 7 - Who is responsible?' },
+  { h2: 'Step 7 - Who joined or left the trainer list?' }, { img: 'trainer_list_changes', w: 600 },
+  { p: 'Who joined and who left the trainer list compared with the previous uploaded list. For people who left, the status tells you why: Resigned (they appear in the resignations), Still working, off the list (still on this month\'s active list, so the allowance was removed or they moved), or Not on the roster.' },
+  { look: 'people marked "Still working, off the list" - they may be trainers that moved or lost their allowance by mistake.' },
+
+  { h2: 'Step 8 - Who is responsible?' },
   { img: 'operation_consultants', w: 600 }, { img: 'operation_directors', w: 600 }, { img: 'operation_managers', w: 600 }, { img: 'senior_operation_consultants', w: 600 },
   { p: 'The same figures rolled up by Operation Consultant, Director, Manager and Senior Consultant, with the number of stores each covers.' },
 
-  { h2: 'Step 8 - Who joined or left the trainer list?' }, { img: 'trainer_list_changes', w: 600 },
-  { p: 'Who joined and who left the trainer list compared with the previous uploaded list. For people who left, the status tells you why: Resigned (they appear in the resignations), Still working, off the list (still on this month\'s active list, so the allowance was removed or they moved), or Not on the roster.' },
-  { look: 'people marked "Still working, off the list" - they may be trainers that moved or lost their allowance by mistake.' },
 ] };
