@@ -15,17 +15,18 @@ const para = (parts, o = {}) => new Paragraph({ spacing: { after: 90, line: 290 
 const labelled = (label, text) => para([run(label + ' ', { bold: true }), run(text)]);
 
 const imgPath = (dir, name) => name.includes('/') ? path.join(ROOT, 'images', dir.split('/')[0], name + '.png') : path.join(ROOT, 'images', dir, name + '.png');
-const image = (dir, name, w = 560) => {
+const image = (dir, name, w = 560, keep = true) => {
   const f = imgPath(dir, name);
   const [pw, ph] = pngSize(f);
   const W = w >= 600 ? 730 : Math.min(w, 730);
-  return new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, spacing: { before: 60, after: 120 }, children: [new ImageRun({ type: 'png', data: fs.readFileSync(f), transformation: { width: W, height: Math.round(W * ph / pw) } })] });
+  return new Paragraph({ alignment: AlignmentType.CENTER, keepNext: keep, spacing: { before: 60, after: 120 }, children: [new ImageRun({ type: 'png', data: fs.readFileSync(f), transformation: { width: W, height: Math.round(W * ph / pw) } })] });
 };
 
 const none = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
-const imageGrid = (dir, names, perRow = 3, w = 190) => {
-  w = Math.round(w * 1.2);
+const imageGrid = (dir, names) => {
+  const n = names.length, perRow = Math.min(n, 4);   // up to 4 cards per row
   const colW = Math.floor(11000 / perRow);
+  const w = Math.min(175, Math.floor(colW / 15) - 16);
   const rows = [];
   for (let i = 0; i < names.length; i += perRow) {
     const chunk = names.slice(i, i + perRow);
@@ -108,7 +109,7 @@ function layoutSection(blocks, dir) {
       for (const m of it.imgs) { const [pw, ph] = pngSize(imgPath(dir, m.img)); const c = hs[1] < hs[0] ? 1 : 0; cols[c].push(image(dir, m.img, 345)); hs[c] += 345 * ph / pw; }
       out.push(twoCols(cols[0], cols[1]), ...capParas(it.caps));
     } else {
-      for (const m of it.imgs) out.push(image(dir, m.img, isHalf(dir, m.img) ? 420 : m.w || 600));
+      it.imgs.forEach((m, ix) => out.push(image(dir, m.img, isHalf(dir, m.img) ? 420 : m.w || 600, ix === it.imgs.length - 1 && it.caps.length > 0)));
       out.push(...capParas(it.caps));
     }
   }
@@ -133,7 +134,7 @@ function render(blocks, dir, flat) {
     else if (b.decide) out.push(labelled('Then decide:', b.decide));
     else if (b.note) out.push(labelled('Good to know:', b.note));
     else if (b.img) out.push(image(dir, b.img, b.w));
-    else if (b.grid) out.push(imageGrid(dir, b.grid, b.perRow || 3, b.w || 190), para('', { spacing: { after: 40 } }));
+    else if (b.grid) out.push(imageGrid(dir, b.grid), para('', { spacing: { after: 40 } }));
     else if (b.defs) out.push(defsTable(b.defs, b.widths), para('', { spacing: { after: 40 } }));
     else if (b.bullets) b.bullets.forEach(t => out.push(new Paragraph({ numbering: { reference: 'b', level: 0 }, spacing: { after: 60, line: 280 }, children: [].concat(t).map(x => typeof x === 'string' ? run(x) : x) })));
     else throw new Error('Unknown block ' + JSON.stringify(b).slice(0, 60));
