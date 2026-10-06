@@ -55,4 +55,17 @@ module.exports = {
       { name: 'group_soc', sel: '#hfGrpBodySoc', up: card },
     ],
   },
+  // pages below use automatic element detection (see capture.js, def.auto)
+  crewtrainers:      { url: '/home/dashboard/crewtrainers', auto: true },
+  turnover:          { url: '/home/dashboard/turnover', auto: true },
+  ninetydayturnover: { url: '/home/dashboard/ninetydayturnover', auto: true },
+  comparisons:       { url: '/home/dashboard/comparisons', auto: true,
+    filters: { name: 'filters', sel: '#cmpYearA', xpath: 'ancestor::div[contains(@class,"g-3")][1]' },
+    extra: [{ name: 'insights', sel: '#cmpInsightContainer' }, { name: 'kpis', sel: '#cmpKpiGrid' }] },
+  retention:         { url: '/home/dashboard/retention', auto: true },
+  exitinterviews:    { url: '/home/dashboard/exitinterviews', auto: true },
+  earlywarning:      { url: '/home/dashboard/earlywarning', auto: true },
+  scorecard:         { url: '/home/dashboard/scorecard', auto: true },
+  actioncenter:      { url: '/home/dashboard/actioncenter', auto: true },
+  stores:            { url: '/home/dashboard/stores', auto: true, timeout: 150000, maxH: 560 },
 };

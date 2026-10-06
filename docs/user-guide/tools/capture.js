@@ -38,10 +38,12 @@ async function shoot(page, key, lang) {
   const dir = path.join(OUT, lang, key); fs.mkdirSync(dir, { recursive: true });
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.goto(BASE + def.url, { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector(def.ready, { timeout: 90000 });
+  await page.waitForSelector(def.ready || 'canvas, tbody tr', { timeout: def.timeout || 90000 });
   await page.waitForTimeout(3000);
   const leaks = await maskPage(page, lang);
   if (leaks.length) throw new Error(`[${key}] real names still visible: ${leaks.join(' | ')}`);
+  // the portal sometimes shows an unrendered template placeholder where a "Provisional" badge belongs
+  await page.evaluate(word => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) if (n.nodeValue.includes('${ntdL.provisionalBadge}')) n.nodeValue = n.nodeValue.replace('${ntdL.provisionalBadge}', word); }, lang === 'ar' ? 'مبدئي' : 'Provisional');
   await page.addStyleTag({ content: '*{animation:none!important;transition:none!important}' });
   if (def.open) await page.evaluate(tags => tags.forEach(t => document.querySelectorAll(t).forEach(d => d.setAttribute('open', ''))), def.open);
   const h = await page.evaluate(() => document.documentElement.scrollHeight);
@@ -49,11 +51,34 @@ async function shoot(page, key, lang) {
   await page.waitForTimeout(1200);
   const up = (loc, cls) => cls ? loc.locator(`xpath=ancestor-or-self::*[contains(concat(" ",normalize-space(@class)," ")," ${cls} ") or local-name()="${cls}"][1]`) : loc;
   const done = [];
-  for (const el of def.elements) {
+  let elements = def.elements;
+  if (def.auto) {
+    // no hand-written selectors: filters + KPI cards + every top-level card, named from its id or heading
+    const found = await page.evaluate(() => {
+      const vis = e => e.offsetParent !== null;
+      const list = [];
+      [...document.querySelectorAll('.chart-card')].filter(vis).filter(e => !e.parentElement.closest('.chart-card')).forEach((c, i) => {
+        const h = c.querySelector('h5,h6,.chart-title,.card-title');
+        const r = c.getBoundingClientRect(); if (r.height < 60) return;
+        c.setAttribute('data-gcap', 'c' + i);
+        list.push({ i, id: c.id || '', tid: (c.querySelector('tbody') || {}).id || '', title: h ? h.innerText.trim().split('\n')[0] : '', table: !!c.querySelector('tbody tr') && !c.querySelector('canvas') });
+      });
+      return list;
+    });
+    elements = [def.filters || { name: 'filters', union: 'select, .reset-filters-btn' }, { name: 'kpi', sel: '.kpi-card', each: '.kpi-label' }, ...(def.extra || [])];
+    const used = new Set();
+    for (const f of found) {
+      let n = slug((f.id || f.title || f.tid.replace(/Body$/, '') || 'insights').replace(/Card$/, ''));
+      if (!n || used.has(n)) n = n + '_' + f.i; used.add(n);
+      elements.push({ name: n, sel: `[data-gcap="c${f.i}"]`, maxH: f.table ? (def.maxH || 640) : undefined });
+    }
+  }
+  for (const el of elements) {
     const targets = [];
     if (el.union) {
+      if (!(await page.locator('select:visible, .reset-filters-btn:visible').count())) continue;
       const box = await page.evaluate(sel => {
-        const r = [...document.querySelectorAll(sel)].filter(e => e.offsetParent).map(e => (e.closest('.wf-select-wrap') || e).getBoundingClientRect());
+        const r = [...document.querySelectorAll(sel)].filter(e => e.offsetParent).map(e => (e.closest('[class*=select-wrap]') || e).getBoundingClientRect());
         const x = Math.min(...r.map(a => a.left)), y = Math.min(...r.map(a => a.top));
         return { x, y, width: Math.max(...r.map(a => a.right)) - x, height: Math.max(...r.map(a => a.bottom)) - y };
       }, el.union);
@@ -62,7 +87,7 @@ async function shoot(page, key, lang) {
       const base = page.locator(el.sel);
       const n = el.each ? await base.count() : 1;
       for (let i = 0; i < n; i++) {
-        const loc = up(el.each ? base.nth(i) : base.first(), el.up);
+        const loc = el.xpath ? base.first().locator('xpath=' + el.xpath) : up(el.each ? base.nth(i) : base.first(), el.up);
         const box = await loc.boundingBox(); if (!box) continue;
         let file = el.name;
         if (el.each) file += '_' + slug(await loc.locator(el.each).first().innerText());

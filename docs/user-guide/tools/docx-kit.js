@@ -43,7 +43,7 @@ const cell = (t, w, hdr) => new TableCell({
   children: [new Paragraph({ children: [run(t, { bold: hdr || undefined, size: 19 })] })],
 });
 const defsTable = ({ head, rows }, widths = [2600, 6800]) => new Table({
-  width: { size: widths[0] + widths[1], type: WidthType.DXA }, columnWidths: widths,
+  width: { size: widths.reduce((a, b) => a + b, 0), type: WidthType.DXA }, columnWidths: widths,
   rows: [head, ...rows].map((r, i) => new TableRow({ cantSplit: true, tableHeader: i === 0, children: r.map((t, j) => cell(t, widths[j], i === 0)) })),
 });
 

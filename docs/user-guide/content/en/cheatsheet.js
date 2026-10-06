@@ -1,0 +1,26 @@
+module.exports = { title: 'Quick Reference', blocks: [
+  { p: 'One line per page: what it is for, and what to look at first. Most pages have filters at the top (period, store, Operation Manager, Operation Consultant, and so on), and every page has a red "Page Guide" button at the top right that explains the page.' },
+  { defs: { head: ['Page', 'Use it to', 'Look at first'], rows: [
+    ['Workforce Overview', 'See who works for you right now', 'Total headcount, tenure mix, store table'],
+    ['Workforce Planning', 'Compare planned headcount with actual', 'Fill Rate, Shortage, stores marked Understaffed'],
+    ['Hiring Forecast', 'Plan hires month by month', 'Busiest month, next 3 months'],
+    ['Crew Trainers', 'Check the 1-trainer-per-6-crew rule', 'Trainers vs the rule, stores with no trainers'],
+    ['Turnover', 'See who is leaving and where', 'Turnover Rate, reasons, stores at the top'],
+    ['90-Day Turnover', 'See new hires who leave within 90 days', '90-Day Rate, by store'],
+    ['Comparisons', 'Compare two periods', 'Change in Turnover Rate and 90-Day Rate'],
+    ['Retention', 'See how long people stay', '6-month retention, tenure cards'],
+    ['Exit Interviews', 'Understand why people leave', 'Positive sentiment, top reasons, engagement drivers'],
+    ['Early Warning', 'Spot people who may be about to leave', 'High-Risk table'],
+    ['Scorecard', 'Rank Store Leaders on four metrics', 'Turnover rate, flagged leaders'],
+    ['Action Center', 'Follow stores with an open Action Plan', 'Critical stores, severity, stalled plans'],
+    ['Stores', 'Browse every store at a glance', 'Health badge on each store card'],
+    ['Reports', 'Download Excel reports', 'Pick the report card you need'],
+  ] }, widths: [2300, 3300, 3800] },
+  { h2: 'Tips' },
+  { bullets: [
+    'Pick a store, manager or consultant in the filters and every chart and table on the page follows your choice.',
+    'Click a column header in a table to sort it (click again to reverse).',
+    'Open your avatar menu (top right) to switch between English and Arabic, or between light and dark mode.',
+    'Charts: hover over a bar or point to see its exact value.',
+  ] },
+] };

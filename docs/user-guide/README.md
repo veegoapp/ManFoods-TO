@@ -16,6 +16,9 @@ docs/user-guide/
 2. Re-merge: `python3 tools/merge.py en` (needs `pip install docxcompose`).
 3. PDF with the contents page filled in: `python3 tools/make_pdf.py en` (needs LibreOffice). In Word, open the merged `.docx`, accept "update fields" (or right-click the contents > Update Field).
 
+## Whole guide in one go
+`node tools/build-all.js en` rebuilds the cover, the quick reference, every page in `content/order.json` and the contact page. It overwrites the page files, so only use it before pages have been edited by hand.
+
 ## Adding a page
 `node tools/capture.js <page> en` -> write `content/en/<page>.js` -> `node tools/build-page.js NN <page> en` -> merge. Page order = side-menu order. Page definitions live in `tools/pages.js`.
 
