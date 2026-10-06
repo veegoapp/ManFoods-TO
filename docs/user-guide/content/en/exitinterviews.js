@@ -31,15 +31,15 @@ module.exports = { title: 'Exit Interviews', blocks: [
   { img: 'reason_for_workload_pressure', w: 600 },
   { p: 'Among employees who cited work pressure as a reason for leaving, a breakdown of what specifically they pointed to.' },
 
-  { h2: 'Step 7 - Engagement drivers' }, { img: 'drivers_chart', w: 600 }, { img: 'drivers_list', w: 600 },
+  { h2: 'Step 7 - Who is leaving?' }, { img: 'exit_interviews_by_job_title', w: 600 },
+  { p: 'Exit interview responses grouped by the departing employee\'s job title.' },
+
+  { h2: 'Step 8 - Engagement drivers' }, { img: 'drivers_chart', w: 600 }, { img: 'drivers_list', w: 600 },
   { p: 'The share of people who answered positively on each engagement driver, lowest first, shown as a chart and as the same list. The drivers at the top need the most attention.' },
   { decide: 'pick the lowest one or two drivers and agree with the Operation Consultant what will change in the stores concerned.' },
 
-  { h2: 'Step 8 - Who is leaving?' }, { img: 'exit_interviews_by_job_title', w: 600 },
-  { p: 'Exit interview responses grouped by the departing employee\'s job title.' },
-
-  { h2: 'Step 9 - Read what people wrote' }, { img: 'comments', w: 600 },
+  { h2: 'Step 9 - Read what people wrote' }, { img: 'comments', w: 560 },
   { p: 'The free-text comments departing employees left in their exit interview, searchable and filterable by question.' },
-  { img: 'what_would_change', w: 600 },
+  { img: 'what_would_change', w: 560 },
   { p: 'What departing employees said they would change about the job or store, sorted by store and date - a separate free-text field from the general comments table above.' },
 ] };

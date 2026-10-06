@@ -64,7 +64,7 @@ module.exports = {
     extra: [{ name: 'insights', sel: '#cmpInsightContainer' }, { name: 'kpis', sel: '#cmpKpiGrid' }] },
   retention:         { url: '/home/dashboard/retention', auto: true,
     extra: [{ name: 'retention_by_job_title_half', sel: '#rtJobTitleChart', up: card, width: 541 }] },
-  exitinterviews:    { url: '/home/dashboard/exitinterviews', auto: true },
+  exitinterviews:    { url: '/home/dashboard/exitinterviews', auto: true, maxH: 330 },   // the two comment tables are long lists: show the first rows only
   earlywarning:      { url: '/home/dashboard/earlywarning', auto: true, ready: '#ewHighRiskBody tr' },
   scorecard:         { url: '/home/dashboard/scorecard', auto: true, ready: '#scBody tr' },
   actioncenter:      { url: '/home/dashboard/actioncenter', auto: true },
