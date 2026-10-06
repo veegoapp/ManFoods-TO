@@ -179,7 +179,7 @@ const CT_I = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new Dictionary<
     ["Moves_T"] = L["CT_In_Moves_T"].Value, ["Moves_D"] = L["CT_In_Moves_D"].Value,
     ["Resigned_T"] = L["CT_In_Resigned_T"].Value, ["Resigned_D"] = L["CT_In_Resigned_D"].Value,
     ["NoData_T"] = L["CT_In_NoData_T"].Value, ["NoData_D"] = L["CT_In_NoData_D"].Value,
-    ["Rose"] = L["CT_In_Rose"].Value, ["Fell"] = L["CT_In_Fell"].Value,
+    ["Rose"] = L["CT_In_Rose"].Value, ["Fell"] = L["CT_In_Fell"].Value, ["PlanMore"] = L["CT_In_PlanMore"].Value, ["PlanFewer"] = L["CT_In_PlanFewer"].Value,
 }));
 
 const ctState = { year: '', month: '', store: '', oc: '', om: '', soc: '', od: '' };
@@ -303,7 +303,7 @@ function ctRenderInsights(d) {
         // What the projection plans against what the rule asks for
         if (d.hasProjection && k.projected !== k.required) {
             const less = k.projected < k.required;
-            add('bi-bullseye', less ? 'warning' : 'secondary', ctFmt(CT_I.PlanVsRule_T, less ? CT_I.Fell : CT_I.Rose),
+            add('bi-bullseye', less ? 'warning' : 'secondary', ctFmt(CT_I.PlanVsRule_T, less ? CT_I.PlanFewer : CT_I.PlanMore),
                 ctFmt(CT_I.PlanVsRule_D, k.projected, k.required, Math.abs(k.projected - k.required)));
         }
     }

@@ -749,7 +749,7 @@ function ntdRenderKpis(kpi) {
     el.innerHTML = `
         <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-people-fill"></i></div><div class="kpi-value">${kpi.totalHires}</div><div class="kpi-label">${ntdL.kpiHired}</div><div class="kpi-desc">${ntdL.kpiHiredDesc}</div></div>
         <div class="kpi-card"><div class="kpi-icon text-danger"><i class="bi bi-person-dash-fill"></i></div><div class="kpi-value text-danger">${kpi.earlyLeavers}</div><div class="kpi-label">${ntdL.kpiLeft}</div><div class="kpi-desc">${ntdL.kpiLeftDesc}</div></div>
-        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-graph-up"></i></div><div class="kpi-value">${kpi.rate.toFixed(1)}%${kpi.isProvisional ? ' <span class=\'badge\' style=\'font-size:10px;background:oklch(0.75 0.16 75 / .18);color:oklch(0.5 0.14 75)\'>${ntdL.provisionalBadge}</span>' : ''}</div><div class="kpi-label">${ntdL.kpiRate}</div><div class="kpi-desc">${ntdL.kpiRateDesc}</div></div>
+        <div class="kpi-card"><div class="kpi-icon"><i class="bi bi-graph-up"></i></div><div class="kpi-value">${kpi.rate.toFixed(1)}%${kpi.isProvisional ? ` <span class="badge" style="font-size:10px;background:oklch(0.75 0.16 75 / .18);color:oklch(0.5 0.14 75)">${ntdL.provisionalBadge}</span>` : ''}</div><div class="kpi-label">${ntdL.kpiRate}</div><div class="kpi-desc">${ntdL.kpiRateDesc}</div></div>
     `;
     document.getElementById('ntdProvisionalBanner').style.display = kpi.isProvisional ? '' : 'none';
 }
