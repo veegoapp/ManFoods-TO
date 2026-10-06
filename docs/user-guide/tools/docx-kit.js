@@ -39,15 +39,15 @@ const imageGrid = (dir, names) => {
   return new Table({ alignment: AlignmentType.CENTER, width: { size: colW * perRow, type: WidthType.DXA }, columnWidths: Array(perRow).fill(colW), rows });
 };
 
-const cell = (t, w, hdr) => new TableCell({
+const cell = (t, w, hdr, keep) => new TableCell({
   width: { size: w, type: WidthType.DXA }, margins: { top: 70, bottom: 70, left: 110, right: 110 },
   shading: { type: ShadingType.CLEAR, fill: hdr ? YEL : 'FFFFFF', color: 'auto' },
   borders: ['top', 'bottom', 'left', 'right'].reduce((a, k) => (a[k] = { style: BorderStyle.SINGLE, size: 4, color: 'D9D9D6' }, a), {}),
-  children: [new Paragraph({ children: [run(t, { bold: hdr || undefined, size: 19 })] })],
+  children: [new Paragraph({ keepNext: !!keep, children: [run(t, { bold: hdr || undefined, size: 19 })] })],
 });
 const defsTable = ({ head, rows }, widths = [2600, 6800]) => new Table({
   width: { size: widths.reduce((a, b) => a + b, 0), type: WidthType.DXA }, columnWidths: widths,
-  rows: [head, ...rows].map((r, i) => new TableRow({ cantSplit: true, tableHeader: i === 0, children: r.map((t, j) => cell(t, widths[j], i === 0)) })),
+  rows: [head, ...rows].map((r, i, all) => new TableRow({ cantSplit: true, tableHeader: i === 0, children: r.map((t, j) => cell(t, widths[j], i === 0, i < all.length - 1)) })),   // keepNext on every row but the last: the table never splits across pages
 });
 
 const styles = {
