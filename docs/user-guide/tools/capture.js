@@ -101,6 +101,7 @@ async function shoot(page, key, lang) {
       const n = el.each ? Math.min(await base.count(), el.limit || 99) : 1;
       for (let i = 0; i < n; i++) {
         const loc = el.xpath ? base.first().locator('xpath=' + el.xpath) : up(el.each ? base.nth(i) : base.first(), el.up);
+        if (el.width) { await loc.evaluate((e, w) => { e.style.width = w + 'px'; e.style.maxWidth = w + 'px'; }, el.width); await page.waitForTimeout(1500); }   // re-render a wide card at half-card width
         const box = await loc.boundingBox(); if (!box) continue;
         let file = el.name;
         if (el.each) file += '_' + (typeof el.each === 'string' ? slug(await loc.locator(el.each).first().innerText()) : i + 1);
