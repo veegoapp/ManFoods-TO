@@ -8,18 +8,10 @@ const RED = 'DA291C', YEL = 'FFC72C', BLK = '27251F', GREY = '666666';
 const FONT = 'Arial';
 const ROOT = path.join(__dirname, '..');
 const LOGO = path.join(ROOT, 'images', 'logo.png');
-// ---- language (en = left-to-right, ar = right-to-left) ----
-const LABELS = {
-  en: { where: 'Where to find it: ', look: 'What to look at:', decide: 'Then decide:', note: 'Good to know:', page: 'Page ', header: "McDonald's Egypt - Crew Insights Hub  |  User Guide" },
-  ar: { where: 'مكان الصفحة: ', look: 'ما الذي تنظر إليه:', decide: 'ثم قرّر:', note: 'مهم أن تعرف:', page: 'صفحة ', header: 'ماكدونالدز مصر - مركز رؤى القوى العاملة لطاقم العمل  |  دليل المستخدم' },
-};
-let RTL = false, LBL = LABELS.en;
-const setLang = lang => { RTL = lang === 'ar'; LBL = LABELS[lang] || LABELS.en; };
-const rtlP = () => RTL ? { bidirectional: true, alignment: AlignmentType.START } : {};
 const pngSize = f => { const b = fs.readFileSync(f); return [b.readUInt32BE(16), b.readUInt32BE(20)]; };
 
-const run = (t, o = {}) => new TextRun({ text: t, font: FONT, color: BLK, size: 21, ...(RTL ? { rightToLeft: true } : {}), ...o });
-const para = (parts, o = {}) => new Paragraph({ spacing: { after: 90, line: 290 }, ...rtlP(), ...o, children: [].concat(parts).map(x => typeof x === 'string' ? run(x) : x) });
+const run = (t, o = {}) => new TextRun({ text: t, font: FONT, color: BLK, size: 21, ...o });
+const para = (parts, o = {}) => new Paragraph({ spacing: { after: 90, line: 290 }, ...o, children: [].concat(parts).map(x => typeof x === 'string' ? run(x) : x) });
 const labelled = (label, text) => para([run(label + ' ', { bold: true }), run(text)]);
 
 const imgPath = (dir, name) => name.includes('/') ? path.join(ROOT, 'images', dir.split('/')[0], name + '.png') : path.join(ROOT, 'images', dir, name + '.png');
@@ -44,17 +36,16 @@ const imageGrid = (dir, names) => {
       children: [n ? (() => { const f = imgPath(dir, n); const [pw, ph] = pngSize(f); return new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: fs.readFileSync(f), transformation: { width: w, height: Math.round(w * ph / pw) } })] }); })() : new Paragraph({ children: [] })],
     })) }));
   }
-  return new Table({ visuallyRightToLeft: RTL, alignment: AlignmentType.CENTER, width: { size: colW * perRow, type: WidthType.DXA }, columnWidths: Array(perRow).fill(colW), rows });
+  return new Table({ alignment: AlignmentType.CENTER, width: { size: colW * perRow, type: WidthType.DXA }, columnWidths: Array(perRow).fill(colW), rows });
 };
 
 const cell = (t, w, hdr, keep) => new TableCell({
   width: { size: w, type: WidthType.DXA }, margins: { top: 70, bottom: 70, left: 110, right: 110 },
   shading: { type: ShadingType.CLEAR, fill: hdr ? YEL : 'FFFFFF', color: 'auto' },
   borders: ['top', 'bottom', 'left', 'right'].reduce((a, k) => (a[k] = { style: BorderStyle.SINGLE, size: 4, color: 'D9D9D6' }, a), {}),
-  children: [new Paragraph({ keepNext: !!keep, ...rtlP(), children: [run(t, { bold: hdr || undefined, size: 19 })] })],
+  children: [new Paragraph({ keepNext: !!keep, children: [run(t, { bold: hdr || undefined, size: 19 })] })],
 });
 const defsTable = ({ head, rows }, widths = [2600, 6800]) => new Table({
-  visuallyRightToLeft: RTL,
   width: { size: widths.reduce((a, b) => a + b, 0), type: WidthType.DXA }, columnWidths: widths,
   rows: [head, ...rows].map((r, i, all) => new TableRow({ cantSplit: true, tableHeader: i === 0, children: r.map((t, j) => cell(t, widths[j], i === 0, i < all.length - 1)) })),   // keepNext on every row but the last: the table never splits across pages
 });
@@ -69,8 +60,8 @@ const styles = {
 };
 const numbering = { config: [{ reference: 'b', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 540, hanging: 260 } } } }] }] };
 
-const header = () => new Header({ children: [new Paragraph({ ...rtlP(), border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: RED, space: 4 } }, children: [new ImageRun({ type: 'png', data: fs.readFileSync(LOGO), transformation: { width: 34, height: 30 } }), run('   ' + LBL.header, { bold: true, size: 18 })] })] });
-const footer = () => new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [run(LBL.page, { size: 16, color: GREY }), new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 16, color: GREY })] })] });
+const header = () => new Header({ children: [new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: RED, space: 4 } }, children: [new ImageRun({ type: 'png', data: fs.readFileSync(LOGO), transformation: { width: 34, height: 30 } }), run("   McDonald's Egypt - Crew Insights Hub  |  User Guide", { bold: true, size: 18 })] })] });
+const footer = () => new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [run('Page ', { size: 16, color: GREY }), new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 16, color: GREY })] })] });
 const PAGE = { size: { width: 11906, height: 16838 }, margin: { top: 1500, bottom: 994, left: 432, right: 432, header: 706, footer: 706 } };
 
 
@@ -78,9 +69,9 @@ const PAGE = { size: { width: 11906, height: 16838 }, margin: { top: 1500, botto
 // Screenshots narrower than ~1100 px are "half width" cards in the portal (it shows them two per row).
 const isHalf = (dir, n) => pngSize(imgPath(dir, n))[0] < 1100;
 const CAP = b => b.p || b.look || b.decide || b.note;
-const capParas = caps => caps.map(b => b.p ? para(b.p, { spacing: { after: 70, line: 270 } }) : b.look ? labelled(LBL.look, b.look) : b.decide ? labelled(LBL.decide, b.decide) : labelled(LBL.note, b.note));
+const capParas = caps => caps.map(b => b.p ? para(b.p, { spacing: { after: 70, line: 270 } }) : b.look ? labelled('What to look at:', b.look) : b.decide ? labelled('Then decide:', b.decide) : labelled('Good to know:', b.note));
 const cellOf = (w, children) => new TableCell({ width: { size: w, type: WidthType.DXA }, borders: { top: none, bottom: none, left: none, right: none }, margins: { top: 40, bottom: 60, left: 70, right: 70 }, children: children.length ? children : [new Paragraph({ children: [] })] });
-const twoCols = (left, right, wl = 5500, wr = 5500) => new Table({ visuallyRightToLeft: RTL, alignment: AlignmentType.CENTER, width: { size: wl + wr, type: WidthType.DXA }, columnWidths: [wl, wr], rows: [new TableRow({ children: [cellOf(wl, left), cellOf(wr, right)] })] });
+const twoCols = (left, right, wl = 5500, wr = 5500) => new Table({ alignment: AlignmentType.CENTER, width: { size: wl + wr, type: WidthType.DXA }, columnWidths: [wl, wr], rows: [new TableRow({ children: [cellOf(wl, left), cellOf(wr, right)] })] });
 const figureCol = (dir, c, w) => [image(dir, c.imgs[0].img, w), ...capParas(c.caps)];
 
 function parseSection(blocks) {
@@ -137,28 +128,25 @@ function render(blocks, dir, flat) {
   }
   const out = [];
   for (const b of blocks) {
-    if (b.h2) out.push(new Paragraph({ heading: D.HeadingLevel.HEADING_2, ...rtlP(), pageBreakBefore: !!b.pb, children: [new TextRun({ text: b.h2 })] }));
-    else if (b.where) out.push(para([run(LBL.where, { color: GREY, size: 19 }), run(b.where, { color: GREY, size: 19 })]));
+    if (b.h2) out.push(new Paragraph({ heading: D.HeadingLevel.HEADING_2, pageBreakBefore: !!b.pb, children: [new TextRun({ text: b.h2 })] }));
+    else if (b.where) out.push(para([run('Where to find it: ', { color: GREY, size: 19 }), run(b.where, { color: GREY, size: 19 })]));
     else if (b.p) out.push(para(b.p));
-    else if (b.look) out.push(labelled(LBL.look, b.look));
-    else if (b.decide) out.push(labelled(LBL.decide, b.decide));
-    else if (b.note) out.push(labelled(LBL.note, b.note));
+    else if (b.look) out.push(labelled('What to look at:', b.look));
+    else if (b.decide) out.push(labelled('Then decide:', b.decide));
+    else if (b.note) out.push(labelled('Good to know:', b.note));
     else if (b.img) out.push(image(dir, b.img, b.w));
     else if (b.grid) out.push(imageGrid(dir, b.grid), para('', { spacing: { after: 40 } }));
     else if (b.defs) out.push(defsTable(b.defs, b.widths), para('', { spacing: { after: 40 } }));
-    else if (b.bullets) b.bullets.forEach(t => out.push(new Paragraph({ numbering: { reference: 'b', level: 0 }, ...rtlP(), spacing: { after: 60, line: 280 }, children: [].concat(t).map(x => typeof x === 'string' ? run(x) : x) })));
+    else if (b.bullets) b.bullets.forEach(t => out.push(new Paragraph({ numbering: { reference: 'b', level: 0 }, spacing: { after: 60, line: 280 }, children: [].concat(t).map(x => typeof x === 'string' ? run(x) : x) })));
     else throw new Error('Unknown block ' + JSON.stringify(b).slice(0, 60));
   }
   return out;
 }
 
-// the right-to-left page style: the red bar of a step title sits on the right
-const stylesRtl = (() => { const s = JSON.parse(JSON.stringify(styles)); const h2 = s.paragraphStyles.find(x => x.id === 'Heading2'); if (h2.paragraph.border) { h2.paragraph.border = { right: h2.paragraph.border.left }; } return s; })();
 async function writePage(content, dir, outFile) {
-  setLang(dir.split('/')[0]);
-  const children = [new Paragraph({ heading: D.HeadingLevel.HEADING_1, ...rtlP(), pageBreakBefore: true, children: [new TextRun({ text: content.title, ...(RTL ? { rightToLeft: true } : {}) })] }), ...render(content.blocks, dir)];
-  const doc = new Document({ creator: "McDonald's Egypt", title: content.title, styles: RTL ? stylesRtl : styles, numbering, sections: [{ properties: { page: PAGE }, headers: { default: header() }, footers: { default: footer() }, children }] });
+  const children = [new Paragraph({ heading: D.HeadingLevel.HEADING_1, pageBreakBefore: true, children: [new TextRun({ text: content.title })] }), ...render(content.blocks, dir)];
+  const doc = new Document({ creator: "McDonald's Egypt", title: content.title, styles, numbering, sections: [{ properties: { page: PAGE }, headers: { default: header() }, footers: { default: footer() }, children }] });
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
   fs.writeFileSync(outFile, await Packer.toBuffer(doc));
 }
-module.exports = { setLang, D, RED, YEL, BLK, GREY, FONT, ROOT, LOGO, run, para, styles, numbering, header, footer, PAGE, writePage, render };
+module.exports = { D, RED, YEL, BLK, GREY, FONT, ROOT, LOGO, run, para, styles, numbering, header, footer, PAGE, writePage, render };
