@@ -77,8 +77,4 @@ module.exports = {
   reports: { url: '/home/dashboard/reports', ready: '.row.g-4.mb-4', elements: [
     { name: 'section', sel: '.page-content > .row.g-4.mb-4', each: true },
   ] },
-  actionplanguide: { url: '/home/dashboard/actionplanguide', ready: '#apgAccordion', elements: [
-    { name: 'intro', sel: '.apg-card.chart-card' },
-    { name: 'accordion', sel: '#apgAccordion' },
-  ] },
 };

@@ -1,5 +1,5 @@
 {
   "front": ["cheatsheet"],
-  "pages": ["workforce", "workforceplanning", "hiringforecast", "crewtrainers", "turnover", "ninetydayturnover", "comparisons", "retention", "exitinterviews", "earlywarning", "scorecard", "actioncenter", "actionplanguide", "stores", "reports"],
+  "pages": ["workforce", "workforceplanning", "hiringforecast", "crewtrainers", "turnover", "ninetydayturnover", "comparisons", "retention", "exitinterviews", "earlywarning", "scorecard", "actioncenter", null, "stores", "reports"],
   "back": ["contact"]
 }
