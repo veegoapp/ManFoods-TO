@@ -59,8 +59,9 @@ builder.Services.AddRateLimiter(options =>
     // any one anonymous caller exhaust the entire app's login budget and lock
     // every user (including Admin) out of authenticating. Same pattern as the
     // "api" policy below; ForwardedHeadersOptions above already resolves the
-    // real client IP behind the reverse proxy. Applies to /login, /adminlogin,
-    // Forgot Password, and Admin Recover (all carry [EnableRateLimiting("login")]).
+    // real client IP behind the reverse proxy. Applies to /login, /adminlogin and
+    // Forgot Password (all carry [EnableRateLimiting("login")]); Admin Recover has its
+    // own "recovery" policy below.
     options.AddPolicy("login", context =>
     {
         var key = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -71,6 +72,20 @@ builder.Services.AddRateLimiter(options =>
             QueueLimit = 0
         });
     });
+
+    // Admin Recovery Key check (POST /admin/account/recover). The key is 256 random
+    // bits, so guessing it is not realistic; what this limits is the CPU cost of one
+    // BCrypt verification per attempt. Unlike "login" it is deliberately NOT
+    // partitioned per client IP: an attacker rotating addresses (trivial with IPv6)
+    // would get a fresh budget each time. One shared bucket for the whole app, and
+    // only that endpoint uses it, so sign-in and the other forms are unaffected.
+    options.AddPolicy("recovery", context =>
+        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter("admin-recovery", _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+        {
+            Window = TimeSpan.FromMinutes(15),
+            PermitLimit = 10,
+            QueueLimit = 0
+        }));
 
     // Unlike "login" above (now per-IP too), the dashboard API surface gets
     // many parallel requests per page load from every logged-in user, so it
