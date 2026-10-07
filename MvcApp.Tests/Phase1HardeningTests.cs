@@ -74,7 +74,8 @@ public class Phase1HardeningTests : IClassFixture<AppFactory>
             b.UseEnvironment("Production");
             b.ConfigureServices(s => s.AddTransient<IStartupFilter, ThrowingStartupFilter>());
         });
-        var client = prod.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
+        // Production only accepts the portal's own hostname (AllowedHosts in appsettings.json).
+        var client = prod.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = new Uri("https://mcd-crew-hub.runasp.net") });
 
         var response = await client.GetAsync("/__boom");
         var body = await response.Content.ReadAsStringAsync();
@@ -82,6 +83,23 @@ public class Phase1HardeningTests : IClassFixture<AppFactory>
         Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
         Assert.Contains("Request ID:", body);
         Assert.DoesNotContain("secret-internal-detail", body);
+    }
+
+    // AllowedHosts: the portal's own hostname in Production (the hosting panel's AllowedHosts variable overrides
+    // appsettings.json there); Development keeps "*" (appsettings.Development.json) for localhost and Replit.
+    [Fact]
+    public async Task Production_AcceptsOnlyThePortalHostname()
+    {
+        using var prod = _app.WithWebHostBuilder(b => b.UseEnvironment("Production"));
+
+        var portal = prod.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = new Uri("https://mcd-crew-hub.runasp.net") });
+        Assert.Equal(HttpStatusCode.OK, (await portal.GetAsync("/login")).StatusCode);
+
+        foreach (var otherHost in new[] { "https://evil.example", "https://localhost" })
+        {
+            var other = prod.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = new Uri(otherHost) });
+            Assert.Equal(HttpStatusCode.BadRequest, (await other.GetAsync("/login")).StatusCode);
+        }
     }
 
     [Fact]

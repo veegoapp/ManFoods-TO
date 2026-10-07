@@ -59,8 +59,9 @@ builder.Services.AddRateLimiter(options =>
     // any one anonymous caller exhaust the entire app's login budget and lock
     // every user (including Admin) out of authenticating. Same pattern as the
     // "api" policy below; ForwardedHeadersOptions above already resolves the
-    // real client IP behind the reverse proxy. Applies to /login, /adminlogin,
-    // Forgot Password, and Admin Recover (all carry [EnableRateLimiting("login")]).
+    // real client IP behind the reverse proxy. Applies to /login, /adminlogin and
+    // Forgot Password (all carry [EnableRateLimiting("login")]); Admin Recover has its
+    // own "recovery" policy below.
     options.AddPolicy("login", context =>
     {
         var key = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -71,6 +72,20 @@ builder.Services.AddRateLimiter(options =>
             QueueLimit = 0
         });
     });
+
+    // Admin Recovery Key check (POST /admin/account/recover). The key is 256 random
+    // bits, so guessing it is not realistic; what this limits is the CPU cost of one
+    // BCrypt verification per attempt. Unlike "login" it is deliberately NOT
+    // partitioned per client IP: an attacker rotating addresses (trivial with IPv6)
+    // would get a fresh budget each time. One shared bucket for the whole app, and
+    // only that endpoint uses it, so sign-in and the other forms are unaffected.
+    options.AddPolicy("recovery", context =>
+        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter("admin-recovery", _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+        {
+            Window = TimeSpan.FromMinutes(15),
+            PermitLimit = 10,
+            QueueLimit = 0
+        }));
 
     // Unlike "login" above (now per-IP too), the dashboard API surface gets
     // many parallel requests per page load from every logged-in user, so it
@@ -226,6 +241,22 @@ app.Use(async (context, next) =>
     // wwwroot never match this prefix, so they're unaffected.
     if (context.Request.Path.StartsWithSegments("/api"))
         h["Cache-Control"] = "no-store";
+
+    // Signed-in HTML pages (Admin and Home dashboards, Change Password) carry HR data rendered
+    // on the server, so the browser must not keep them in its cache or back/forward cache —
+    // otherwise Back after Logout redisplays the last page. The endpoint is only known once
+    // routing has run, so this is decided when the response starts. Only endpoints guarded by
+    // a session-auth filter qualify: static files never reach routing (no endpoint), public
+    // pages such as /login have no such attribute, and non-HTML responses (downloads, JSON)
+    // are left alone. A Cache-Control already set by the action (e.g. [ResponseCache]) wins.
+    context.Response.OnStarting(() =>
+    {
+        if (context.GetEndpoint()?.Metadata.GetMetadata<MvcApp.Filters.SessionAuthFilterAttribute>() != null
+            && context.Response.ContentType?.StartsWith("text/html", StringComparison.OrdinalIgnoreCase) == true
+            && !context.Response.Headers.ContainsKey("Cache-Control"))
+            context.Response.Headers["Cache-Control"] = "no-store";
+        return Task.CompletedTask;
+    });
 
     await next();
 });

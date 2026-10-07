@@ -113,7 +113,7 @@ public class AccountController : Controller
     public IActionResult Recover() => View(new AdminRecoveryViewModel());
 
     [HttpPost, ValidateAntiForgeryToken]
-    [EnableRateLimiting("login")]
+    [EnableRateLimiting("recovery")]
     public async Task<IActionResult> Recover(AdminRecoveryViewModel vm)
     {
         if (!ModelState.IsValid) return View(vm);
