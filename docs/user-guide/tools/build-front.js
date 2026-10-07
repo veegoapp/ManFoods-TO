@@ -17,7 +17,8 @@ const [lang = 'en'] = process.argv.slice(2);
 const cover = [
   center([], { spacing: { before: 1800 } }),
   center([new ImageRun({ type: 'png', data: fs.readFileSync(K.LOGO), transformation: { width: 190, height: 167 } })], { spacing: { after: 400 } }),
-  center([t("McDonald's Egypt", { size: 32, color: K.GREY, bold: true })], { spacing: { after: 200 } }),
+  center([t("McDonald's Egypt", { size: 32, color: K.GREY, bold: true })], { spacing: { after: 40 } }),
+  center([t('Human Resources', { size: 26, color: K.GREY })], { spacing: { after: 200 } }),
   center([t('Crew Insights Hub', { size: 76, bold: true, color: K.RED })], { spacing: { after: 100 } }),
   center([t('User Guide', { size: 48, bold: true, color: K.BLK })], { border: { bottom: { style: BorderStyle.SINGLE, size: 24, color: K.YEL, space: 14 } }, spacing: { after: 400 } }),
   center([t('For Operations Managers', { size: 28, color: K.BLK })], { spacing: { before: 200, after: 2400 } }),
