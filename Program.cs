@@ -227,6 +227,22 @@ app.Use(async (context, next) =>
     if (context.Request.Path.StartsWithSegments("/api"))
         h["Cache-Control"] = "no-store";
 
+    // Signed-in HTML pages (Admin and Home dashboards, Change Password) carry HR data rendered
+    // on the server, so the browser must not keep them in its cache or back/forward cache —
+    // otherwise Back after Logout redisplays the last page. The endpoint is only known once
+    // routing has run, so this is decided when the response starts. Only endpoints guarded by
+    // a session-auth filter qualify: static files never reach routing (no endpoint), public
+    // pages such as /login have no such attribute, and non-HTML responses (downloads, JSON)
+    // are left alone. A Cache-Control already set by the action (e.g. [ResponseCache]) wins.
+    context.Response.OnStarting(() =>
+    {
+        if (context.GetEndpoint()?.Metadata.GetMetadata<MvcApp.Filters.SessionAuthFilterAttribute>() != null
+            && context.Response.ContentType?.StartsWith("text/html", StringComparison.OrdinalIgnoreCase) == true
+            && !context.Response.Headers.ContainsKey("Cache-Control"))
+            context.Response.Headers["Cache-Control"] = "no-store";
+        return Task.CompletedTask;
+    });
+
     await next();
 });
 
