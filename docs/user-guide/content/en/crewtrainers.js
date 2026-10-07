@@ -9,19 +9,19 @@ module.exports = { title: 'Crew Trainers', blocks: [
   { grid: ['kpi_trainers_vs_the_rule', 'kpi_crew_level', 'kpi_trainers_vs_plan', 'kpi_trainers_who_resigned'], perRow: 3, w: 190 },
   { defs: { head: ['Card', 'What it shows'], rows: [
     ['Trainers vs the rule', 'Actual trainers over the trainers required (one per 6 crew-level employees).'],
-    ['Crew level', 'The crew-level employees on the roster, the trainers themselves excluded.'],
+    ['Crew level', 'Roster employees in jobs marked Crew Level in Job Payroll Groups, trainers excluded.'],
     ['Trainers vs plan', 'Actual trainers over the trainers in the projection.'],
-    ['Trainers who resigned', 'Trainers who were on a list and resigned in the last 6 months.'],
+    ['Trainers who resigned', 'Trainers who were on a trainer list and resigned in the last 6 roster months.'],
   ] } },
-  { look: 'Trainers vs the rule first - below 100% means you have fewer trainers than the rule asks for.' },
+  { look: 'Trainers vs the rule first - when the first number is lower than the second you have fewer trainers than the rule asks for.' },
 
   { h2: 'Step 3 - Read the Smart Insights' }, { img: 'insights', w: 600 },
   { p: 'Plain sentences worked out from the numbers on the page: trainers against the rule, the stores most short or above it, whether extra trainers could cover gaps, how the list changed and how many trainers resigned. They follow your filters.' },
   { decide: 'if some stores have extra trainers while others are short, consider moving trainers between them before recruiting new ones.' },
 
   { h2: 'Step 4 - How are trainers moving through the year?' }, { img: 'trainers_per_month', w: 600 },
-  { p: 'Projected against actual Crew Trainers for each month of the year. Actual is the people on the uploaded list who are also on that month\'s active employee list, so a month without a list or a roster shows 0.' },
-  { look: 'whether the actual line follows the projection or falls away from it.' },
+  { p: 'Projected against actual Crew Trainers for each month that has a projection. Actual is the people on the uploaded list who are also on that month\'s active employee list; a month without a roster has no actual bar.' },
+  { look: 'whether the actual bar follows the projected bar or falls away from it.' },
 
   { h2: 'Step 5 - How many stores are short?' }, { img: 'ctcmp', w: 600 },
   { p: 'Stores grouped by how many trainers they have against the rule: Over (more than required), Enough (exactly), Short (fewer), No trainers (required but none) and Not needed (none required and none present). Each group shows its stores, crew level, required, actual, gap vs rule, projected and gap vs plan.' },
@@ -37,7 +37,7 @@ module.exports = { title: 'Crew Trainers', blocks: [
     ['Status', 'Over, Enough, Short, No trainers, or Not needed (none required and none present).'],
   ] } },
   { img: 'trainers_by_store', w: 600 },
-  { p: 'Stores most short come first. Click a column title to sort, and use the search box to find a store or a consultant.' },
+  { p: 'Stores with a projection for the month are listed, most short come first. Click a column title to sort, and use the search box to find a store or a consultant.' },
   { decide: 'agree with the responsible Operation Consultant how the top stores will reach the required number of trainers.' },
 
   { h2: 'Step 7 - Who joined or left the trainer list?' }, { img: 'trainer_list_changes', w: 600 },

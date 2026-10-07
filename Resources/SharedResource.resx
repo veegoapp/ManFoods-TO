@@ -323,20 +323,20 @@
   <data name="Guide_Comparisons_Chart_ExitReasons" xml:space="preserve"><value>The most common reasons recorded in exit interviews, Period A vs Period B, so you can see whether the same reasons dominate or the mix shifted.</value></data>
   <data name="Guide_Comparisons_Chart_ExitSentiment" xml:space="preserve"><value>Positive exit-interview sentiment and how many interviews were submitted, Period A vs Period B.</value></data>
   <data name="Guide_Comparisons_FilterNote" xml:space="preserve"><value>Period A and Period B each have their own year, months, store, Operation Manager, Operation Consultant, Senior Operation Consultant and Operation Director filters — they don't have to match. "Copy to last year" fills Period B with the same filters as Period A but one year earlier, as a shortcut for year-over-year comparisons.</value></data>
-  <data name="Guide_Retention_Overview" xml:space="preserve"><value>This page tracks how long employees stay, the opposite lens from Turnover. It's built around the 6-month retention milestone: for hires old enough to have reached (or resigned before) that milestone, are they still on the team? Employees hired too recently to have reached 180 days yet are excluded from milestone-based figures until they're eligible.</value></data>
-  <data name="Guide_Retention_Chart_Survival" xml:space="preserve"><value>The survival curve shows, for each tenure milestone (e.g. 30, 60, 90, 180 days), what percentage of hires eligible for that milestone are still employed — a classic HR "survival analysis" view of where people tend to drop off.</value></data>
-  <data name="Guide_Retention_Chart_LeaderboardTop" xml:space="preserve"><value>The stores with the best 6-month retention rate.</value></data>
-  <data name="Guide_Retention_Chart_LeaderboardBottom" xml:space="preserve"><value>The stores with the worst 6-month retention rate — worth a closer look.</value></data>
+  <data name="Guide_Retention_Overview" xml:space="preserve"><value>This page tracks how long employees stay, the opposite lens from Turnover. Most charts are snapshots of today's active team — how long people have been on the job, using 6 months (180 days) as the main benchmark. Two parts look at the past instead: the Smart Insights (hire-cohort retention) and the all-time "how soon people leave" chart.</value></data>
+  <data name="Guide_Retention_Chart_Survival" xml:space="preserve"><value>The Team Tenure Curve shows, for each tenure mark (Day 0, 1, 3, 6 months, 1, 1.5, 2, 3, 4 and 5 years), the percentage of today's active employees who have been on the job at least that long. It describes the current team, not hires over time, and ignores the Months filter.</value></data>
+  <data name="Guide_Retention_Chart_LeaderboardTop" xml:space="preserve"><value>The 5 stores with the highest share of their current team that has 6+ months on the job.</value></data>
+  <data name="Guide_Retention_Chart_LeaderboardBottom" xml:space="preserve"><value>The 5 stores with the lowest share of their current team that has 6+ months on the job — worth a closer look.</value></data>
   <data name="Guide_Retention_Chart_TenureByStore" xml:space="preserve"><value>Every store's headcount and a tenure-band mix (how many employees fall in each tenure range), so you can see whether a store's team is mostly new or mostly experienced.</value></data>
   <data name="Guide_Retention_Chart_JobTitle" xml:space="preserve"><value>Share of each job title's current team that has been on the job 6+ months.</value></data>
   <data name="Guide_Retention_Chart_Gender" xml:space="preserve"><value>Share of the current team with 6+ months on the job, split by gender.</value></data>
   <data name="Guide_Retention_Chart_StoreTenure" xml:space="preserve"><value>The stores with the highest and lowest average tenure of their current team, in months.</value></data>
   <data name="Guide_Retention_Chart_OcTenure" xml:space="preserve"><value>The Operation Consultants with the highest and lowest average tenure across their stores' current teams.</value></data>
   <data name="Guide_Retention_Chart_FirstResign" xml:space="preserve"><value>Of everyone who ever resigned (all-time, not limited to the selected period), how long they had been on the job before leaving — shows whether people tend to leave early or after settling in.</value></data>
-  <data name="Guide_Retention_Chart_HiringVolume" xml:space="preserve"><value>New hires per month, all-time — context for reading the retention charts above alongside how much hiring was actually happening.</value></data>
-  <data name="Guide_Retention_Milestones" xml:space="preserve"><value>Each card shows the share of today's active headcount that has reached a tenure milestone (6 months, 1 year, 2 years, etc.) — a snapshot of team experience, not a survival/eligibility rate.</value></data>
-  <data name="Guide_Retention_Chart_OcOm" xml:space="preserve"><value>Operation Consultants, Directors and Managers ranked by the average tenure of employees across all their stores.</value></data>
-  <data name="Guide_Retention_FilterNote" xml:space="preserve"><value>Choosing a Store, Operation Manager, Operation Consultant, Senior Operation Consultant or Operation Director filters every chart and table to just that selection. The Year/Months filter picks which hire cohort(s) to analyze — retention is always measured from each employee's own hire date, not from the filtered period itself.</value></data>
+  <data name="Guide_Retention_Chart_HiringVolume" xml:space="preserve"><value>New hires per month from the selected year onward (everyone hired that month, including people who have since left; ignores the Months filter) — context for reading the retention charts above alongside how much hiring was actually happening.</value></data>
+  <data name="Guide_Retention_Milestones" xml:space="preserve"><value>Each card shows the share of today's active headcount currently in a tenure band (under 6 months, 6-12 months, 1-2 years … 5+ years); the bands add up to 100% — a snapshot of team experience, not a survival/eligibility rate. Ignores the Months filter.</value></data>
+  <data name="Guide_Retention_Chart_OcOm" xml:space="preserve"><value>Operation Consultants, Senior Operation Consultants, Operation Directors and Operation Managers ranked, longest average tenure first, by the average tenure (in months) of the current team across all their stores.</value></data>
+  <data name="Guide_Retention_FilterNote" xml:space="preserve"><value>Choosing a Store, Operation Manager, Operation Consultant, Senior Operation Consultant, Operation Director or Job Title filters every chart and table to just that selection. The Year/Months filter only affects the Smart Insights (which hires they look at); every chart shows the current team from the latest roster, except Monthly Hiring Volume, which starts at the selected year.</value></data>
   <data name="Guide_ExitInterviews_Overview" xml:space="preserve"><value>This page summarizes what departing employees actually said in their exit interviews — reasons for leaving, whether they'd return, ratings on training/fairness/workload, and free-text comments — for resignations in the selected period.</value></data>
   <data name="Guide_ExitInterviews_Chart_Reasons" xml:space="preserve"><value>The reasons employees gave for resigning, ranked by how often each was cited.</value></data>
   <data name="Guide_ExitInterviews_Chart_Return" xml:space="preserve"><value>Whether departing employees said they'd consider returning to work here in the future.</value></data>
@@ -355,13 +355,13 @@
   <data name="Guide_EarlyWarning_Overview" xml:space="preserve"><value>This page flags currently-active employees who statistically resemble people who resigned in the past — before they actually leave. Each employee gets a 1-5 star risk score built from several weighted signals (how new they are, their store's/role's/store leader's resignation history, seasonal "peak" hiring windows, gender-based history, and exit-interview sentiment where available). Higher stars = higher predicted risk; employees above a threshold land on the High-Risk table and the fuller Watch List.</value></data>
   <data name="Guide_EarlyWarning_Chart_Reason" xml:space="preserve"><value>Which risk signal (reason) is driving flags most often across the watch list right now.</value></data>
   <data name="Guide_EarlyWarning_Chart_Store" xml:space="preserve"><value>Watch-listed employees grouped by store, so you can see which stores carry the most flight-risk headcount right now.</value></data>
-  <data name="Guide_EarlyWarning_Chart_HighRiskByStore" xml:space="preserve"><value>Only the highest-risk (4-5 star) employees, grouped by store.</value></data>
+  <data name="Guide_EarlyWarning_Chart_HighRiskByStore" xml:space="preserve"><value>The 5 stores with the most highest-risk (4-5 star) employees.</value></data>
   <data name="Guide_EarlyWarning_Chart_JobTitle" xml:space="preserve"><value>Watch-listed employees grouped by job title.</value></data>
   <data name="Guide_EarlyWarning_Chart_StarDist" xml:space="preserve"><value>How many watch-listed employees fall into each star rating (1 through 5), so you can see the overall risk distribution.</value></data>
-  <data name="Guide_EarlyWarning_Chart_Trend" xml:space="preserve"><value>How the size of the watch list has trended over time.</value></data>
+  <data name="Guide_EarlyWarning_Chart_Trend" xml:space="preserve"><value>Two lines — the total watch list and the High Risk (4-5 star) count — for every available month. Ignores the Year/Months filter.</value></data>
   <data name="Guide_EarlyWarning_Chart_HighRiskTable" xml:space="preserve"><value>Employees at 4-5 stars — the most urgent list — with their store, role, hire date, tenure so far, star score and the specific reasons that flagged them.</value></data>
-  <data name="Guide_EarlyWarning_Chart_WatchList" xml:space="preserve"><value>Everyone above the risk threshold who isn't already 4-5 stars (those are in the High Risk table above instead, so no one is listed twice), sortable and searchable, with the same detail columns as the High-Risk table.</value></data>
-  <data name="Guide_EarlyWarning_FilterNote" xml:space="preserve"><value>Choosing a Store filters every chart and both tables to just that store. The Year/Months filter changes which snapshot in time the risk scores are calculated for — since risk is about currently-active employees, this is normally left on the latest period.</value></data>
+  <data name="Guide_EarlyWarning_Chart_WatchList" xml:space="preserve"><value>Every flagged employee at 1-3 stars (those at 4-5 stars are in the High Risk table above instead, so no one is listed twice), sortable and searchable, with the same detail columns as the High-Risk table.</value></data>
+  <data name="Guide_EarlyWarning_FilterNote" xml:space="preserve"><value>Choosing a Store or Job Title filters every card, chart and table to that selection. The Year/Months filter picks which monthly roster the risk scores are calculated on (the latest selected month) — since risk is about currently-active employees, this is normally left on the latest period; the trend chart ignores it.</value></data>
   <data name="Guide_EarlyWarning_StarsCalc_Title" xml:space="preserve"><value>How the Star Rating Is Calculated</value></data>
   <data name="Guide_EarlyWarning_StarsCalc_Body" xml:space="preserve"><value><![CDATA[<p style="font-size:12.5px;color:var(--text-2);margin-bottom:10px">Every flagged employee starts at 0 points and gains points for each risk factor below that applies to them. The total (their risk score) is then mapped to a 1-5 star rating — 4-5 stars is what the High Risk table/charts use.</p>
 <table class="table table-sm" style="font-size:12px;margin-bottom:16px">
@@ -482,7 +482,7 @@
   <data name="Insight_WorkforceMaturityTitle" xml:space="preserve"><value>Workforce Maturity</value></data>
   <data name="Insight_WorkforceMaturityDesc" xml:space="preserve"><value>{0}% of the current active workforce has been here a year or more.</value></data>
   <data name="Page_Retention" xml:space="preserve"><value>Retention</value></data>
-  <data name="Page_RetentionSub" xml:space="preserve"><value>How long new hires actually stay — milestones, survival curve, and long-term trends</value></data>
+  <data name="Page_RetentionSub" xml:space="preserve"><value>How long people stay — Smart Insights, today's tenure mix, the team tenure curve, and long-term trends</value></data>
   <data name="Page_ExitInterviews" xml:space="preserve"><value>Exit Interviews</value></data>
   <data name="Page_ExitInterviewsSub" xml:space="preserve"><value>Why people are leaving, in aggregate — individual responses are never identified</value></data>
   <data name="Page_NinetyDay" xml:space="preserve"><value>90-Day Turnover</value></data>
@@ -825,7 +825,7 @@
   <data name="EW_HighRiskTable" xml:space="preserve"><value>High Risk Employees</value></data>
   <data name="EW_NoHighRiskData" xml:space="preserve"><value>No high-risk employees for this filter.</value></data>
   <data name="EW_InWatchList" xml:space="preserve"><value>In Watch List</value></data>
-  <data name="EW_HighRisk" xml:space="preserve"><value>High Risk (2+)</value></data>
+  <data name="EW_HighRisk" xml:space="preserve"><value>High Risk (4-5★)</value></data>
   <data name="EW_NewHireWindow" xml:space="preserve"><value>Still in first 90 days</value></data>
   <data name="EW_CompanyBaseline" xml:space="preserve"><value>Avg Early Leave Rate (Company)</value></data>
   <data name="EW_EmployeeCountSuffix" xml:space="preserve"><value>employees</value></data>
@@ -1109,7 +1109,7 @@
   <data name="EW_NoActiveEmployeeData" xml:space="preserve"><value>No Active Employee Data Yet</value></data>
   <data name="EW_NoActiveEmployeeDataSub" xml:space="preserve"><value>Upload workforce data with hire dates to see the early-warning watchlist here.</value></data>
   <data name="EW_KpiInWatchlistDesc" xml:space="preserve"><value>Active employees matching at least one risk factor</value></data>
-  <data name="EW_KpiHighRiskDesc" xml:space="preserve"><value>4-5★ risk score (3+ matching risk factors)</value></data>
+  <data name="EW_KpiHighRiskDesc" xml:space="preserve"><value>4-5★ risk score (5+ risk points)</value></data>
   <data name="EW_KpiNewHireWindowDesc" xml:space="preserve"><value>Still within their first 90 days of hire</value></data>
   <data name="EW_KpiBaselineDesc" xml:space="preserve"><value>Company-wide early-leaver rate used as the risk baseline</value></data>
   <data name="EW_NoWatchlistThisPeriod" xml:space="preserve"><value>No one is on the watchlist for this period.</value></data>

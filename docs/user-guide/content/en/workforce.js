@@ -3,8 +3,8 @@ module.exports = { title: 'Workforce Overview', blocks: [
   { p: 'Use this page to answer one question: who works for me right now, and is the team in good shape? It is a snapshot of your active headcount, so most charts here count current employees, not resignations (that is the Turnover page).' },
 
   { h2: 'Step 1 - Choose your scope' }, { img: 'filters', w: 600 },
-  { p: 'Pick a Store, Operation Manager, Operation Consultant, Senior Operation Consultant, Operation Director or Job, and every chart and table on the page switches to that selection. Press Reset Filters to return to the full picture.' },
-  { note: 'the From/To period changes the cards, the breakdown charts and the tables, but not the Headcount Over Time chart, which always shows the full history from the selected year.' },
+  { p: 'Pick a Store, Operation Manager, Operation Consultant, Senior Operation Consultant, Operation Director or Job, and the cards and charts switch to that selection (the Store filter does not narrow the "Headcount by Store" table, which lists all the stores in your selection). Press Reset Filters to return to the full picture.' },
+  { note: 'when you pick a From/To range, Total Headcount, New Hires and Resignations are added up over the months of the range, and the breakdown charts add up each month in the range. The "Headcount by Store" table uses only the To month. The Headcount Over Time chart ignores the To month and always shows every month from the From year to the latest upload.' },
 
   { h2: 'Step 2 - Read the headline numbers' },
   { grid: ['kpi_total_headcount', 'kpi_new_hires', 'kpi_resignations'], perRow: 3, w: 190 },

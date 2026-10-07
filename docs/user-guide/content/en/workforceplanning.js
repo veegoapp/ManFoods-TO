@@ -13,14 +13,14 @@ module.exports = { title: 'Workforce Planning', blocks: [
     ['Actual Headcount', 'Active employees in the same stores for that month.'],
     ['Gap', 'Actual minus projected. A positive (+) number is a surplus, a negative number is a shortage.'],
     ['Fill Rate', 'Actual as a share of projected headcount.'],
-    ['Shortage', 'The people missing in the jobs that are below their plan. A surplus in one job never covers another.'],
+    ['Shortage', 'The people missing in the jobs that are below their plan. A surplus in one job never covers another (the two Crew Trainer jobs are the only exception: within a store they are counted together).'],
     ['Hiring Need (est.)', 'The estimated hires required: the shortage plus the expected resignations.'],
   ] } },
   { look: 'Fill Rate and Shortage first, then Gap.' },
   { decide: 'a low Fill Rate means you are short. Treat Hiring Need as your first estimate of how many people to recruit. Remember that the Gap can hide real shortages, because a job above its plan offsets a job below it - the Shortage card does not.' },
 
   { h2: 'Step 3 - Read the Smart Insights' }, { img: 'insights', w: 600 },
-  { p: 'Automatic takeaways worked out from the numbers on this page for your current filters: overall staffing, the most understaffed store, the biggest shortage by job, how many stores are below plan, the estimated hiring need, the consultant with the biggest shortage, stores above projection and next month\'s plan. They update whenever you change a filter.' },
+  { p: 'Automatic takeaways worked out from the numbers on this page for your current filters: overall staffing, the most understaffed store, the biggest shortage by job, the payroll group with the lowest fill rate, how many stores are below 95% of their projection (understaffed and watch), the estimated hiring need, the consultant whose stores have the lowest fill rate, stores above projection and next month\'s plan. They update whenever you change a filter.' },
   { decide: 'read these first for a quick summary, then use the charts and tables below to dig into each point.' },
 
   { h2: 'Step 4 - Which jobs are short?' }, { img: 'byjob', w: 600 },
@@ -29,14 +29,14 @@ module.exports = { title: 'Workforce Planning', blocks: [
   { decide: 'those are the jobs to prioritise in recruitment.' },
 
   { h2: 'Step 5 - How is reality tracking against the plan?' }, { img: 'trend', w: 600 },
-  { p: 'Projected headcount for every month of the selected year (dashed line) and actual headcount for the months that already have an uploaded roster (solid line).' },
+  { p: 'Projected headcount for every month of the selected year that has a projection (dashed line) and actual headcount for the months that already have an uploaded roster (solid line).' },
   { look: 'whether the solid line is moving towards the dashed line or away from it.' },
 
   { h2: 'Step 6 - Payroll groups' }, { img: 'payroll_chart', w: 600 }, { img: 'payroll_table', w: 600 },
-  { p: 'Planned and actual headcount for each payroll group, with the same numbers in a table you can sort by clicking a header. A job that nobody works in yet has no known payroll group and is listed as Unassigned.' },
+  { p: 'Planned and actual headcount for each payroll group, with the same numbers in a table you can sort by clicking a header. A job that is not in the Job Payroll Groups list and that nobody works in yet has no known payroll group and is listed as Unassigned.' },
 
   { h2: 'Step 7 - Which stores need attention?' }, { img: 'stores', w: 600 },
-  { p: 'Every store with a projection for the month, largest shortage first. Click a column header to sort (click again to reverse). The search box also matches the consultant\'s name. Click a store to open its jobs and see where its numbers come from.' },
+  { p: 'Every store with a projection for the month, most negative Gap first. Click a column header to sort (click again to reverse). The search box also matches the consultant\'s name. Click a store to open its jobs and see where its numbers come from.' },
   { defs: { head: ['Status', 'Fill rate'], rows: [
     ['On track', '95-100% filled'],
     ['Watch', '85-95% filled'],

@@ -3,8 +3,8 @@ module.exports = { title: 'Turnover', blocks: [
   { p: 'Use this page to understand who is leaving and where. It tracks how many employees resigned and how that compares with headcount, broken down by month, job title, tenure, payroll group, gender and store. The cards at the top summarise the selected period; everything below drills into it.' },
 
   { h2: 'Step 1 - Choose the period and your scope' }, { img: 'filters', w: 600 },
-  { p: 'Pick a Store, Operation Manager, Operation Consultant, Senior Operation Consultant or Operation Director and every chart and table on the page switches to that selection. The From/To period narrows the cards, the job title / tenure / payroll / gender / reasons charts and the store table.' },
-  { note: 'the "Turnover Rate by Month" chart, the "Monthly Turnover Trend" chart and the full matrix always show the complete history from the selected year onward, because they are built to show trends over time.' },
+  { p: 'Pick a Store, Operation Manager, Operation Consultant, Senior Operation Consultant or Operation Director or Job and the cards, the charts and the matrix switch to that selection. The Store filter does not narrow the store table, the Operation Consultant / Director / Manager / Senior Consultant tables, or the Trend vs Prior Period card, which always cover all the stores you can access. The From/To period narrows the cards, the job title / tenure / payroll / gender charts, the store table and the leader tables.' },
+  { note: 'the "Turnover Rate by Month" chart always shows every uploaded month. The "Monthly Turnover Trend" chart and the full matrix always show every month from the From year to the latest upload, whatever From/To month you pick, because they are built to show trends over time.' },
 
   { h2: 'Step 2 - Read the headline numbers' },
   { grid: ['kpi_resignations', 'kpi_turnover_rate', 'kpi_trend_vs_prior_period'], perRow: 3, w: 190 },
@@ -16,7 +16,7 @@ module.exports = { title: 'Turnover', blocks: [
   { look: 'Turnover Rate and its trend. A green downward arrow means turnover improved against the prior period.' },
 
   { h2: 'Step 3 - Is turnover seasonal?' }, { img: 'turnover_rate_by_month', w: 600 },
-  { p: 'Turnover rate for every calendar month on record. Each bar = (resignations that month / average headcount that month) x 100. This chart always shows the full history and ignores the From/To filter, so you can see long-term seasonality.' },
+  { p: 'Turnover rate for every uploaded month (one bar per month and year). Each bar = (resignations that month / headcount that month) x 100. This chart ignores the From/To filter, so you can see long-term seasonality; the Store, leader and Job filters still apply.' },
   { look: 'months that regularly stand out.' },
   { decide: 'prepare extra hiring and retention effort ahead of the months that are usually worst.' },
 
@@ -30,17 +30,17 @@ module.exports = { title: 'Turnover', blocks: [
   { img: 'turnover_by_payroll_group', w: 600 },
   { p: 'Resignations grouped by payroll group for the selected period.' },
   { img: 'gender_breakdown', w: 600 },
-  { p: 'Gender split of the resignations in the selected period, with counts and percentages on the side.' },
+  { p: 'Gender split of the active employees in the selected period (each month in the From-To range added together), shown as a doughnut with counts and percentages on the side.' },
 
   { h2: 'Step 5 - Why are they leaving?' }, { img: 'reasons_for_leaving', w: 600 },
-  { p: 'Every resignation in the selected period grouped by the reason the employee gave for leaving.' },
+  { p: 'The reasons given in exit interviews, grouped by reason. Only employees who completed an exit interview are counted, not every resignation. The period filter applies only when From and To are in the same year; otherwise all exit interviews are used.' },
   { decide: 'the biggest reason is where your retention effort should go first.' },
 
   { h2: 'Step 6 - Is the trend improving?' }, { img: 'monthly_turnover_trend', w: 600 },
-  { p: 'Month-by-month turnover trend from the selected year to the latest upload, whatever To period you pick.' },
+  { p: 'Month-by-month turnover rate of the 6 stores with the highest average rate (or of the selected store), from the From year to the latest upload, whatever To period you pick.' },
 
   { h2: 'Step 7 - Which stores lose the most people?' }, { img: 'store_table', w: 600 },
-  { p: 'Every store in the selected period with its headcount, new hires, resignations and turnover rate (resignations / average headcount x 100). Click a column header to sort.' },
+  { p: 'Every store with employees in the selected period, with its headcount (added up over the months of the range), new hires, resignations and turnover rate (resignations / average headcount x 100). Rows start sorted by Turnover% (highest first). Click a column header to sort.' },
   { look: 'stores with the highest Turnover% and with resignations well above their new hires.' },
   { decide: 'talk to the Operation Consultant of the stores at the top and agree actions with them.' },
 

@@ -323,20 +323,20 @@
   <data name="Guide_Comparisons_Chart_ExitReasons" xml:space="preserve"><value>أكثر أسباب الاستقالة المسجّلة في مقابلات الخروج، الفترة A مقابل الفترة B، لمعرفة ما إذا كانت نفس الأسباب مستمرة أم تغيّر ترتيبها.</value></data>
   <data name="Guide_Comparisons_Chart_ExitSentiment" xml:space="preserve"><value>نسبة المشاعر الإيجابية في مقابلات الخروج وعدد المقابلات المُقدّمة، الفترة A مقابل الفترة B.</value></data>
   <data name="Guide_Comparisons_FilterNote" xml:space="preserve"><value>لكل من الفترة A والفترة B فلاتر مستقلة (السنة، الأشهر، الفرع، مدير التشغيل، استشاري العمليات، استشاري أول العمليات، مدير أول التشغيل) — وليس بالضرورة أن تتطابق. يقوم زر "نسخ إلى العام الماضي" بملء الفترة B بنفس فلاتر الفترة A ولكن بسنة أقدم بعام واحد، كطريقة سريعة للمقارنة السنوية.</value></data>
-  <data name="Guide_Retention_Overview" xml:space="preserve"><value>تتابع هذه الصفحة المدة التي يبقى فيها الموظفون في العمل، وهي الزاوية المعاكسة لصفحة معدل الدوران. تُبنى الصفحة على معيار الـ 6 أشهر: بالنسبة للموظفين الذين مضت على تعيينهم مدة كافية للوصول إلى هذا المعيار (أو الاستقالة قبله)، هل ما زالوا على رأس عملهم أم لا؟ يُستبعد الموظفون المعيَّنون حديثًا جدًا، ممن لم تصل مدة خدمتهم إلى 180 يومًا بعد، من الأرقام المبنية على هذا المعيار إلى أن يصبحوا مؤهلين له.</value></data>
-  <data name="Guide_Retention_Chart_Survival" xml:space="preserve"><value>يعرض منحنى البقاء، لكل مرحلة من مراحل مدة الخدمة (مثل 30 و60 و90 و180 يومًا)، نسبة الموظفين المؤهلين لهذه المرحلة والذين ما زالوا على رأس عملهم — وهي نظرة "تحليل البقاء" التقليدية في الموارد البشرية، لمعرفة الفترة التي يغادر فيها الموظفون غالبًا.</value></data>
-  <data name="Guide_Retention_Chart_LeaderboardTop" xml:space="preserve"><value>الفروع التي تتمتع بأفضل معدل استبقاء لمدة 6 أشهر.</value></data>
-  <data name="Guide_Retention_Chart_LeaderboardBottom" xml:space="preserve"><value>الفروع التي لديها أسوأ معدل استبقاء لمدة 6 أشهر — وتستحق مزيدًا من التركيز.</value></data>
+  <data name="Guide_Retention_Overview" xml:space="preserve"><value>تتابع هذه الصفحة المدة التي يبقى فيها الموظفون في العمل، وهي الزاوية المعاكسة لصفحة معدل الدوران. معظم الرسوم لقطات للفريق النشط حاليًا — كم مضى كل موظف في العمل، مع اعتبار 6 أشهر (180 يومًا) المعيار الرئيسي. جزءان ينظران إلى الماضي: الرؤى الذكية (استبقاء أفواج التعيين) ورسم "متى يغادر الموظفون" عبر كل الفترات.</value></data>
+  <data name="Guide_Retention_Chart_Survival" xml:space="preserve"><value>يعرض منحنى مدة خدمة الفريق، عند كل مرحلة (اليوم 0، شهر، 3 أشهر، 6 أشهر، سنة، سنة ونصف، 2 و3 و4 و5 سنوات)، نسبة الموظفين النشطين حاليًا الذين أمضوا هذه المدة على الأقل. يصف الفريق الحالي وليس التعيينات عبر الزمن، ولا يتأثر بفلتر الأشهر.</value></data>
+  <data name="Guide_Retention_Chart_LeaderboardTop" xml:space="preserve"><value>أعلى 5 فروع من حيث نسبة فريقها الحالي ممن أمضوا 6 أشهر أو أكثر في العمل.</value></data>
+  <data name="Guide_Retention_Chart_LeaderboardBottom" xml:space="preserve"><value>أقل 5 فروع من حيث نسبة فريقها الحالي ممن أمضوا 6 أشهر أو أكثر في العمل — وتستحق مزيدًا من التركيز.</value></data>
   <data name="Guide_Retention_Chart_TenureByStore" xml:space="preserve"><value>عدد الموظفين في كل فرع وتوزيع مدد الخدمة (عدد الموظفين في كل فئة مدة)، لمعرفة ما إذا كان فريق الفرع يغلب عليه الموظفون الجدد أم ذوو الخبرة.</value></data>
   <data name="Guide_Retention_Chart_JobTitle" xml:space="preserve"><value>نسبة الفريق الحالي في كل مسمى وظيفي ممن قضوا 6 أشهر أو أكثر في العمل.</value></data>
   <data name="Guide_Retention_Chart_Gender" xml:space="preserve"><value>نسبة الفريق الحالي ممن قضوا 6 أشهر أو أكثر في العمل، مقسّمة حسب الجنس.</value></data>
   <data name="Guide_Retention_Chart_StoreTenure" xml:space="preserve"><value>الفروع الأعلى والأقل في متوسط مدة خدمة فريقها الحالي، بالأشهر.</value></data>
   <data name="Guide_Retention_Chart_OcTenure" xml:space="preserve"><value>استشاريو العمليات الأعلى والأقل في متوسط مدة خدمة الفرق الحالية في فروعهم.</value></data>
   <data name="Guide_Retention_Chart_FirstResign" xml:space="preserve"><value>لكل من استقال على الإطلاق (بيانات كاملة، غير مقيّدة بالفترة المختارة)، كم من الوقت أمضى في العمل قبل أن يستقيل — يوضح ما إذا كان الموظفون يغادرون مبكرًا أم بعد فترة استقرار.</value></data>
-  <data name="Guide_Retention_Chart_HiringVolume" xml:space="preserve"><value>عدد التعيينات الجديدة شهريًا، لكل الفترات — سياق مساعد لقراءة الرسوم البيانية للاستبقاء بالأعلى جنبًا إلى جنب مع حجم التعيين الفعلي.</value></data>
-  <data name="Guide_Retention_Milestones" xml:space="preserve"><value>تعرض كل بطاقة نسبة القوى العاملة النشطة حاليًا التي وصلت إلى معيار مدة خدمة معيّن (6 أشهر، سنة، سنتان، وهكذا) — لقطة لخبرة الفريق، وليست معدل بقاء/أهلية.</value></data>
-  <data name="Guide_Retention_Chart_OcOm" xml:space="preserve"><value>استشاريو العمليات ومديرو أول التشغيل ومديرو التشغيل مرتبون حسب متوسط مدة خدمة الموظفين عبر جميع فروعهم.</value></data>
-  <data name="Guide_Retention_FilterNote" xml:space="preserve"><value>اختيار فرع أو مدير تشغيل أو استشاري عمليات أو استشاري أول عمليات أو مدير أول تشغيل يقوم بتصفية جميع الرسوم البيانية والجداول على هذا الاختيار فقط. يحدد فلتر السنة/الأشهر فوج (أفواج) التعيين التي سيتم تحليلها — إذ يُقاس الاستبقاء دائمًا اعتبارًا من تاريخ تعيين كل موظف نفسه، وليس من الفترة المُصفّاة ذاتها.</value></data>
+  <data name="Guide_Retention_Chart_HiringVolume" xml:space="preserve"><value>عدد التعيينات الجديدة شهريًا ابتداءً من السنة المختارة (كل من عُيّن في ذلك الشهر بمن فيهم من غادر لاحقًا؛ لا يتأثر بفلتر الأشهر) — سياق لقراءة رسوم الاستبقاء مع حجم التعيين الفعلي.</value></data>
+  <data name="Guide_Retention_Milestones" xml:space="preserve"><value>تعرض كل بطاقة نسبة القوى العاملة النشطة حاليًا الواقعة في فئة مدة خدمة (أقل من 6 أشهر، 6-12 شهرًا، 1-2 سنة … 5+ سنوات)؛ مجموع الفئات 100% — لقطة لخبرة الفريق وليست معدل بقاء. لا تتأثر بفلتر الأشهر.</value></data>
+  <data name="Guide_Retention_Chart_OcOm" xml:space="preserve"><value>استشاريو العمليات واستشاريو العمليات الأوائل ومديرو أول التشغيل ومديرو التشغيل مرتبون من الأطول إلى الأقصر حسب متوسط مدة خدمة الفريق الحالي (بالأشهر) عبر جميع فروعهم.</value></data>
+  <data name="Guide_Retention_FilterNote" xml:space="preserve"><value>اختيار فرع أو مدير تشغيل أو استشاري عمليات أو استشاري أول عمليات أو مدير أول تشغيل أو مسمى وظيفي يقوم بتصفية جميع الرسوم البيانية والجداول على هذا الاختيار فقط. يؤثر فلتر السنة/الأشهر على الرؤى الذكية فقط (أي التعيينات التي تحلّلها)؛ أما الرسوم فتعرض الفريق الحالي من أحدث قائمة موظفين، عدا رسم حجم التعيين الشهري فيبدأ من السنة المختارة.</value></data>
   <data name="Guide_ExitInterviews_Overview" xml:space="preserve"><value>تلخّص هذه الصفحة ما ذكره الموظفون المستقيلون فعليًا في مقابلات الخروج الخاصة بهم — أسباب الاستقالة، وإمكانية عودتهم مستقبلًا، وتقييمهم للتدريب والعدالة وضغط العمل، والتعليقات الحرة — للاستقالات في الفترة المختارة.</value></data>
   <data name="Guide_ExitInterviews_Chart_Reasons" xml:space="preserve"><value>الأسباب التي ذكرها الموظفون للاستقالة، مرتبة حسب عدد مرات تكرار كل سبب.</value></data>
   <data name="Guide_ExitInterviews_Chart_Return" xml:space="preserve"><value>ما إذا كان الموظفون المستقيلون قد أشاروا إلى احتمال عودتهم للعمل هنا مرة أخرى في المستقبل.</value></data>
@@ -355,13 +355,13 @@
   <data name="Guide_EarlyWarning_Overview" xml:space="preserve"><value>ترصد هذه الصفحة الموظفين العاملين حاليًا الذين يشبهون إحصائيًا من استقالوا سابقًا — قبل أن يغادروا فعليًا. يحصل كل موظف على تقييم مخاطرة من 1 إلى 5 نجوم، مبني على مجموعة من الإشارات المرجَّحة (مدى حداثة تعيينه، وتاريخ الاستقالات في فرعه ووظيفته ولدى مدير فرعه، ومواسم التعيين "الذروة"، والتاريخ حسب الجنس، وانطباع مقابلة الخروج إن وُجد). كلما زاد عدد النجوم ارتفعت المخاطرة المتوقعة؛ ويظهر الموظفون الذين يتجاوزون حدًا معينًا في جدول "الأعلى خطورة" وفي قائمة المراقبة الأشمل.</value></data>
   <data name="Guide_EarlyWarning_Chart_Reason" xml:space="preserve"><value>أي إشارة خطر (سبب) هي المسؤولة عن أكبر عدد من التنبيهات في قائمة المراقبة حاليًا.</value></data>
   <data name="Guide_EarlyWarning_Chart_Store" xml:space="preserve"><value>الموظفون المدرجون في قائمة المراقبة مقسّمون حسب الفرع، لمعرفة الفروع التي بها أكبر عدد من الموظفين المعرّضين لخطر الاستقالة حاليًا.</value></data>
-  <data name="Guide_EarlyWarning_Chart_HighRiskByStore" xml:space="preserve"><value>الموظفون الأعلى خطورة فقط (4-5 نجوم)، مقسّمون حسب الفرع.</value></data>
+  <data name="Guide_EarlyWarning_Chart_HighRiskByStore" xml:space="preserve"><value>أعلى 5 فروع من حيث عدد الموظفين الأعلى خطورة (4-5 نجوم).</value></data>
   <data name="Guide_EarlyWarning_Chart_JobTitle" xml:space="preserve"><value>الموظفون المدرجون في قائمة المراقبة مقسّمون حسب المسمى الوظيفي.</value></data>
   <data name="Guide_EarlyWarning_Chart_StarDist" xml:space="preserve"><value>عدد الموظفين في قائمة المراقبة ضمن كل تقييم نجوم (من 1 إلى 5)، لمعرفة توزيع المخاطرة بشكل عام.</value></data>
-  <data name="Guide_EarlyWarning_Chart_Trend" xml:space="preserve"><value>كيف تغيّر حجم قائمة المراقبة مع الوقت.</value></data>
+  <data name="Guide_EarlyWarning_Chart_Trend" xml:space="preserve"><value>خطّان — إجمالي قائمة المراقبة وعدد الأعلى خطورة (4-5 نجوم) — لكل شهر متاح. لا يتأثر بفلتر السنة/الأشهر.</value></data>
   <data name="Guide_EarlyWarning_Chart_HighRiskTable" xml:space="preserve"><value>الموظفون بتقييم 4-5 نجوم — الأكثر إلحاحًا — مع فرعهم ووظيفتهم وتاريخ تعيينهم ومدة خدمتهم حتى الآن وتقييم النجوم والأسباب المحددة التي أدت إلى التنبيه.</value></data>
-  <data name="Guide_EarlyWarning_Chart_WatchList" xml:space="preserve"><value>كل من هم فوق حد الخطورة ولم يصلوا بعد إلى 4-5 نجوم (هؤلاء موجودون في جدول الأعلى خطورة فوق بدلًا من ذلك، حتى لا يظهر أي موظف مرتين)، قابلة للترتيب والبحث، بنفس أعمدة التفاصيل الموجودة في جدول الأعلى خطورة.</value></data>
-  <data name="Guide_EarlyWarning_FilterNote" xml:space="preserve"><value>اختيار فرع يقوم بتصفية جميع الرسوم البيانية والجدولين على هذا الفرع فقط. يغيّر فلتر السنة/الأشهر اللحظة الزمنية التي يُحسب عندها تقييم المخاطرة — وبما أن المخاطرة تخص الموظفين العاملين حاليًا، فإنها تُترك عادة على أحدث فترة.</value></data>
+  <data name="Guide_EarlyWarning_Chart_WatchList" xml:space="preserve"><value>كل موظف مُعلَّم بخطورة 1-3 نجوم (من هم في 4-5 نجوم موجودون في جدول الأعلى خطورة فوق، حتى لا يظهر أي موظف مرتين)، قابلة للترتيب والبحث، بنفس أعمدة التفاصيل الموجودة في جدول الأعلى خطورة.</value></data>
+  <data name="Guide_EarlyWarning_FilterNote" xml:space="preserve"><value>اختيار فرع أو مسمى وظيفي يقوم بتصفية جميع البطاقات والرسوم والجداول على هذا الاختيار. يحدد فلتر السنة/الأشهر قائمة الموظفين الشهرية التي يُحسب عليها تقييم المخاطرة (آخر شهر مختار) — وبما أن المخاطرة تخص الموظفين العاملين حاليًا، فإنها تُترك عادة على أحدث فترة؛ ورسم الاتجاه لا يتأثر به.</value></data>
   <data name="Guide_EarlyWarning_StarsCalc_Title" xml:space="preserve"><value>طريقة حساب تقييم النجوم</value></data>
   <data name="Guide_EarlyWarning_StarsCalc_Body" xml:space="preserve"><value><![CDATA[<p style="font-size:12.5px;color:var(--text-2);margin-bottom:10px">كل موظف مُدرج في القائمة يبدأ من صفر نقطة، ويكتسب نقاطًا عن كل عامل خطورة من العوامل التالية ينطبق عليه. المجموع (سكور الخطورة) يتم تحويله بعد ذلك إلى تقييم نجوم من 1 إلى 5 — و4-5 نجوم هو المستخدم في جدول ورسومات الأعلى خطورة.</p>
 <table class="table table-sm" style="font-size:12px;margin-bottom:16px">
@@ -482,7 +482,7 @@
   <data name="Insight_WorkforceMaturityTitle" xml:space="preserve"><value>نضج القوى العاملة</value></data>
   <data name="Insight_WorkforceMaturityDesc" xml:space="preserve"><value>{0}% من القوى العاملة الحالية النشطة يعملون هنا منذ سنة أو أكثر.</value></data>
   <data name="Page_Retention" xml:space="preserve"><value>الاحتفاظ بالموظفين</value></data>
-  <data name="Page_RetentionSub" xml:space="preserve"><value>كم يبقى الموظفون الجدد — المعالم، منحنى البقاء، والاتجاهات</value></data>
+  <data name="Page_RetentionSub" xml:space="preserve"><value>كم يبقى الموظفون — الرؤى الذكية، توزيع مدد الخدمة الحالية، منحنى مدة خدمة الفريق، والاتجاهات</value></data>
   <data name="Page_ExitInterviews" xml:space="preserve"><value>مقابلات الخروج</value></data>
   <data name="Page_ExitInterviewsSub" xml:space="preserve"><value>لماذا يغادر الناس، بشكل إجمالي — لا تُحدد الردود الفردية أبدًا</value></data>
   <data name="Page_NinetyDay" xml:space="preserve"><value>دوران 90 يوم</value></data>
@@ -825,7 +825,7 @@
   <data name="EW_HighRiskTable" xml:space="preserve"><value>موظفون خطر عالٍ</value></data>
   <data name="EW_NoHighRiskData" xml:space="preserve"><value>لا يوجد موظفون في خطر عالٍ لهذا الفلتر.</value></data>
   <data name="EW_InWatchList" xml:space="preserve"><value>في قائمة المتابعة</value></data>
-  <data name="EW_HighRisk" xml:space="preserve"><value>خطر عالٍ (2+)</value></data>
+  <data name="EW_HighRisk" xml:space="preserve"><value>خطر عالٍ (4-5★)</value></data>
   <data name="EW_NewHireWindow" xml:space="preserve"><value>لا يزال في أول 90 يوم</value></data>
   <data name="EW_CompanyBaseline" xml:space="preserve"><value>متوسط معدل المغادرة المبكرة (الشركة)</value></data>
   <data name="EW_EmployeeCountSuffix" xml:space="preserve"><value>موظف</value></data>
@@ -1110,7 +1110,7 @@
   <data name="EW_NoActiveEmployeeData" xml:space="preserve"><value>لا توجد بيانات موظفين نشطين بعد</value></data>
   <data name="EW_NoActiveEmployeeDataSub" xml:space="preserve"><value>قم برفع بيانات القوى العاملة مع تواريخ التعيين لعرض قائمة الإنذار المبكر هنا.</value></data>
   <data name="EW_KpiInWatchlistDesc" xml:space="preserve"><value>الموظفون النشطون الذين ينطبق عليهم عامل خطر واحد على الأقل</value></data>
-  <data name="EW_KpiHighRiskDesc" xml:space="preserve"><value>درجة خطورة 4-5★ (3 عوامل خطر أو أكثر)</value></data>
+  <data name="EW_KpiHighRiskDesc" xml:space="preserve"><value>درجة خطورة 4-5★ (5 نقاط خطر أو أكثر)</value></data>
   <data name="EW_KpiNewHireWindowDesc" xml:space="preserve"><value>ما زالوا ضمن أول 90 يومًا من التعيين</value></data>
   <data name="EW_KpiBaselineDesc" xml:space="preserve"><value>معدل المغادرة المبكرة على مستوى الشركة المستخدم كخط أساس للخطورة</value></data>
   <data name="EW_NoWatchlistThisPeriod" xml:space="preserve"><value>لا يوجد أحد في قائمة المتابعة لهذه الفترة.</value></data>
