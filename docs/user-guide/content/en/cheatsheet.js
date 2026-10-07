@@ -1,5 +1,5 @@
 module.exports = { title: 'Quick Reference', blocks: [
-  { p: 'One line per page: what it is for, and what to look at first. Most pages have filters at the top (period, store, Operation Manager, Operation Consultant, and so on), and every page has a red "Page Guide" button at the top right that explains the page.' },
+  { p: 'One line per page: what it is for, and what to look at first. Most pages have filters at the top (period, store, Operation Manager, Operation Consultant, and so on), and almost every page has a red lightbulb "Page Guide" button at the top right that explains the page.' },
   { defs: { head: ['Page', 'Use it to', 'Look at first'], rows: [
     ['Workforce Overview', 'See who works for you right now', 'Total headcount, tenure mix, store table'],
     ['Workforce Planning', 'Compare planned headcount with actual', 'Fill Rate, Shortage, stores marked Understaffed'],
@@ -11,15 +11,15 @@ module.exports = { title: 'Quick Reference', blocks: [
     ['Retention', 'See how long people stay', '6-month retention, tenure cards'],
     ['Exit Interviews', 'Understand why people leave', 'Positive sentiment, top reasons, engagement drivers'],
     ['Early Warning', 'Spot people who may be about to leave', 'High-Risk table'],
-    ['Scorecard', 'Rank Store Leaders on four metrics', 'Turnover rate, flagged leaders'],
-    ['Action Center', 'Follow stores with an open Action Plan', 'Critical stores, severity, stalled plans'],
+    ['Scorecard', 'Rank Store Leaders on four metrics', 'Turnover rate, Above Average leaders, flagged consultants/managers'],
+    ['Action Center', 'Follow store health and open Action Plans', 'Critical stores, tier, stalled plans'],
     ['Stores', 'Browse every store at a glance', 'Health badge on each store card'],
     ['Reports', 'Download Excel reports', 'Pick the report card you need'],
   ] }, widths: [2300, 3300, 3800] },
   { h2: 'Tips' },
   { bullets: [
-    'Pick a store, manager or consultant in the filters and every chart and table on the page follows your choice.',
-    'Click a column header in a table to sort it (click again to reverse).',
+    'On pages that have filters, pick a store, manager or consultant and the charts and tables on that page follow your choice.',
+    'Where a table column header shows a sort arrow, click it to sort (click again to reverse).',
     'Open your avatar menu (top right) to switch between English and Arabic, or between light and dark mode.',
     'Charts: hover over a bar or point to see its exact value.',
   ] },

@@ -4,7 +4,7 @@ module.exports = { title: 'Hiring Forecast', blocks: [
 
   { h2: 'Step 1 - Choose your scope' }, { img: 'filters', w: 600 },
   { p: 'Year, Store, Job title and the Operation Consultant / Manager / Senior Consultant / Director selectors narrow the table and its totals. You only see the stores you have access to.' },
-  { note: 'the Month filter focuses the summary cards, the Smart Insights and the monthly chart on one month. The table below always shows the whole year.' },
+  { note: 'the Month filter focuses the summary cards, the Smart Insights and the jobs card on one month, and highlights that month in the monthly chart (the other bars fade). The main table and the leader tables always show the whole year.' },
 
   { h2: 'Step 2 - Read the summary cards' },
   { grid: ['kpi_hires_needed_in_the_year', 'kpi_busiest_month', 'kpi_next_3_months', 'kpi_store_with_most_hires'], perRow: 3, w: 190 },
@@ -17,7 +17,7 @@ module.exports = { title: 'Hiring Forecast', blocks: [
   { decide: 'plan your recruitment capacity around the busiest month and the next three months.' },
 
   { h2: 'Step 3 - Read the Smart Insights' }, { img: 'insights', w: 600 },
-  { p: 'A few plain sentences worked out from the table: the busiest month, whether the next 3 months are above or below the monthly average, whether monthly hiring rises or falls through the year, how concentrated the hiring is, the consultant whose stores need the most hires, and how many hires only replace early leavers. They follow your filters and the "View by" choice.' },
+  { p: 'A few plain sentences worked out from the table: the busiest month, whether the next 3 months are above or below the monthly average, whether monthly hiring rises or falls through the year, how concentrated the hiring is, and the consultant whose stores need the most hires. They follow your filters and the "View by" choice.' },
 
   { h2: 'Step 4 - When are the hires needed?' }, { img: 'monthly_chart', w: 600 },
   { p: 'Hires needed in each month. Dark bars are months that already have an uploaded employee list; light bars are forecast. Hover a bar to see the month and its number.' },
@@ -30,7 +30,7 @@ module.exports = { title: 'Hiring Forecast', blocks: [
   { p: 'Each cell is the number of people to hire in that month to reach the projection. Use "View by" above the table to group the rows by store (with its Operation Consultant), job, payroll group or Operation Consultant - the totals stay the same, only the grouping changes.' },
   { bullets: [
     'One column per month and a Total at the end. The last row adds up every row.',
-    'The darker the red, the more hires that month. A dash means the projection has no data for that month.',
+    'The darker the red, the more hires that month. A dash means there is nothing to forecast for that month: the projection has no data for it, or there is no employee list to start from.',
     '"Roster" months use the uploaded employee list; "Forecast" months are estimated from the latest roster.',
     'Click a column title to sort, and use the search box to find a row.',
   ] },
@@ -39,5 +39,5 @@ module.exports = { title: 'Hiring Forecast', blocks: [
 
   { h2: 'Step 7 - Who is responsible?' },
   { img: 'group_oc', w: 600 }, { img: 'group_od', w: 600 }, { img: 'group_om', w: 600 }, { img: 'group_soc', w: 600 },
-  { p: 'The same hires per month, rolled up by Operation Consultant, Director, Manager and Senior Consultant, with the number of stores each covers.' },
+  { p: 'The same hires per month, rolled up by Operation Consultant, Director, Manager and Senior Consultant, with the number of stores each covers. These tables are always grouped by store, whatever "View by" is set to.' },
 ] };

@@ -1,6 +1,6 @@
 module.exports = { title: 'Reports', blocks: [
   { where: 'Side menu  >  Reports' },
-  { p: 'Use this page to download Excel reports. It is a catalog of every downloadable report, grouped by section. Click any card to open that report\'s own page, where you pick a period and filters before downloading. This index page itself has no filters - it is just a directory.' },
+  { p: 'Use this page to download Excel reports. It is a catalog of the downloadable reports available to you, grouped by section. Click any card to open that report\'s own page, where you pick a period and filters before downloading. This index page itself has no filters - it is just a directory.' },
 
   { h2: 'Store Operations' },
   { defs: { head: ['Report', 'What it contains'], rows: [
@@ -11,7 +11,7 @@ module.exports = { title: 'Reports', blocks: [
 
   { h2: 'Workforce & Hiring' },
   { defs: { head: ['Report', 'What it contains'], rows: [
-    ['Workforce', 'Active workforce composition for the selected month (headcount by job title, payroll group, tenure and gender, gender count by store) plus the headcount trend over time.'],
+    ['Workforce', 'Employee-level roster plus active workforce composition for the selected month (headcount by job title, payroll group, tenure and gender, gender count by store) plus the headcount trend over time.'],
     ['Workforce Planning', 'Projected vs actual headcount by job and store: summary, by store, by job, by consultant and manager, the full data sheet and ready-made Excel pivot tables.'],
     ['Workforce Planning - Detailed Data', 'The full flat data sheet (one row per store, job and month) and the pivot tables behind the Workforce Planning report. It is large: download it only when you need to analyse the raw rows.'],
     ['Hiring Forecast', 'Hires needed per month for a year, by store, job, payroll group and by the people responsible for the stores, with the roster and forecast months marked.'],
@@ -20,9 +20,9 @@ module.exports = { title: 'Reports', blocks: [
   { h2: 'Turnover' },
   { defs: { head: ['Report', 'What it contains'], rows: [
     ['Turnover', 'Company-wide turnover trend across every uploaded period, the latest period broken down by store, the full resignation list, and aggregated breakdowns by job title and tenure.'],
-    ['Turnover Trend Matrix', 'One row per store and one column per month, showing Turnover % across all available periods from the selected year onward, with an average column.'],
+    ['Turnover Trend Matrix', 'One row per store and one column per month, showing Turnover % across all available periods from the selected year onward, with a Total column (the sum of the monthly rates).'],
     ['90-Day Turnover', 'Cohort trend, full list of early leavers, by-store rates and aggregated reasons across all available periods.'],
-    ['90-Day Trend Matrix', 'One row per store and one column per hire-cohort month, showing the 90-day early-leave rate across all available cohorts, with an average column.'],
+    ['90-Day Trend Matrix', 'One row per store and one column per hire-cohort month, showing the 90-day early-leave rate across all available cohorts, with a Total column (the sum of the cohort rates).'],
   ] }, widths: [2800, 8200] },
 
   { h2: 'Comparison' },
