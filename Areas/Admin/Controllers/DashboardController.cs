@@ -228,7 +228,7 @@ public class DashboardController : Controller
                 var hireYear = year > 0 ? year : (await _dashboard.GetAvailablePeriodsAsync()).Select(p => p.Year).DefaultIfEmpty(DateTime.Now.Year).Max();
                 return await DownloadWorkbookAsync(
                     await _reports.BuildNewHiresStatusReportAsync(hireYear, months, store, status, role, assignedName, om, oc, soc, od),
-                    $"New_Hires_Status_{hireYear}.xlsx");
+                    $"Hires_Tracker_{hireYear}.xlsx");
             }
             case "workforce":
                 return await DownloadWorkbookAsync(

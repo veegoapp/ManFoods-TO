@@ -7,7 +7,7 @@ using Xunit;
 
 namespace MvcApp.Tests;
 
-/// <summary>Who was hired in a period and whether they are still working — behind the New Hires Status report.</summary>
+/// <summary>Who was hired in a period and whether they are still working — behind the Hires Tracker report.</summary>
 public class NewHireStatusServiceTests
 {
     private static AppDbContext NewDb() =>
