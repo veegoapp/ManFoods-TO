@@ -953,7 +953,7 @@ public class ReportService : IReportService
         return wb;
     }
 
-    // ── New Hires Status ─────────────────────────────────────
+    // ── Hires Tracker ─────────────────────────────────────
     private static void WriteHireStatusBreakdown(XLWorkbook wb, string sheetName, string labelHeader, List<NewHireStatusRow> rows, Func<NewHireStatusRow, string> key)
     {
         var ws = AddSheet(wb, sheetName);
