@@ -36,6 +36,8 @@ public class ReportDefinition
     /// <summary>Multi-select Months filter, tied to the Year field — narrows which
     /// month columns appear in a trend-matrix-style export.</summary>
     public bool UsesMonths { get; set; }
+    /// <summary>Single-select hire-status filter (All / Active / Resigned) — New Hires Status report.</summary>
+    public bool UsesStatus { get; set; }
     /// <summary>Multi-select job-title filter (Workforce Planning report).</summary>
     public bool UsesJobs { get; set; }
     /// <summary>Two independent Period A / Period B filter panels (year, months,
@@ -90,6 +92,16 @@ public static class ReportCatalog
             PageKeys = new[] { "workforce" },
             Areas = new[] { AccessAreas.Analytics },
             UsesPeriod = true, UsesStore = true, UsesOmOc = true,
+        },
+        new ReportDefinition
+        {
+            Id = "new-hires-status", Section = "Workforce & Hiring", Title = "New Hires Status",
+            Description = "Everyone hired in the selected year or months — with whether they are still active or resigned, the resignation date, tenure, and gender, payroll group and job breakdowns.",
+            SectionKey = "Rep_Section_WorkforceHiring", TitleKey = "Rep_Title_NewHiresStatus", DescriptionKey = "Rep_Desc_NewHiresStatus",
+            Icon = "bi-person-check-fill", IconBg = "oklch(0.62 0.15 155 / .10)", IconColor = "oklch(0.5 0.15 155)",
+            PageKeys = new[] { "workforce" },
+            Areas = new[] { AccessAreas.Analytics },
+            UsesYear = true, UsesMonths = true, UsesStore = true, UsesOmOc = true, UsesStatus = true,
         },
         new ReportDefinition
         {

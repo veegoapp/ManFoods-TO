@@ -1921,6 +1921,12 @@
   <data name="Rep_Desc_WorkforcePlanningData" xml:space="preserve"><value>ورقة البيانات الكاملة (صف لكل فرع ووظيفة وشهر) وجداول Pivot جاهزة في Excel الخاصة بتقرير تخطيط القوى العاملة. ملف كبير: حمّله فقط عند الحاجة لتحليل الصفوف الخام.</value></data>
   <data name="Rep_Title_HiringForecast" xml:space="preserve"><value>توقعات التعيين</value></data>
   <data name="Rep_Desc_HiringForecast" xml:space="preserve"><value>التعيينات المطلوبة في كل شهر خلال سنة — حسب الفرع والوظيفة ومجموعة الرواتب والمسؤولين عن الفروع — مع تمييز أشهر القائمة الفعلية وأشهر التقدير.</value></data>
+  <data name="Rep_Title_NewHiresStatus" xml:space="preserve"><value>حالة المعيّنين الجدد</value></data>
+  <data name="Rep_Desc_NewHiresStatus" xml:space="preserve"><value>كل من تم تعيينه في السنة أو الأشهر المحددة — مع حالته (ما زال يعمل أو استقال) وتاريخ الاستقالة ومدة الخدمة، وتقسيمات حسب الجنس ومجموعة الرواتب والوظيفة.</value></data>
+  <data name="Rep_HireStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="Rep_HireStatus_All" xml:space="preserve"><value>الكل (يعمل ومستقيل)</value></data>
+  <data name="Rep_HireStatus_Active" xml:space="preserve"><value>ما زال يعمل</value></data>
+  <data name="Rep_HireStatus_Resigned" xml:space="preserve"><value>مستقيل</value></data>
   <data name="Rep_Title_CrewTrainers" xml:space="preserve"><value>مدرّبو الطاقم</value></data>
   <data name="Rep_Desc_CrewTrainers" xml:space="preserve"><value>المدرّبون مقابل الخطة وقاعدة مدرّب لكل 6 من الطاقم للشهر المحدد — حسب الفرع والمسؤولين، واتجاه السنة، ومن انضم لقائمة المدرّبين أو غادرها.</value></data>
   <data name="Rep_AllJobs" xml:space="preserve"><value>كل الوظائف</value></data>

@@ -166,6 +166,7 @@ builder.Services.AddScoped<IExitInterviewService, ExitInterviewService>();
 builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<INinetyDayTurnoverService, NinetyDayTurnoverService>();
 builder.Services.AddScoped<IRetentionService, RetentionService>();
+builder.Services.AddScoped<INewHireStatusService, NewHireStatusService>();
 builder.Services.AddScoped<IEarlyWarningService, EarlyWarningService>();
 builder.Services.AddScoped<IScorecardService, ScorecardService>();
 builder.Services.AddScoped<IStoreActionPlanService, StoreActionPlanService>();

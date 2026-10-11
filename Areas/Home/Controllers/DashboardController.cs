@@ -124,7 +124,7 @@ public class DashboardController : Controller
     [AccessArea(AccessAreas.Reports)]
     public async Task<IActionResult> Export(int month, int year, string reportType = "stores-overview",
         string? store = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null,
-        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null, string? jobs = null,
+        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null, string? jobs = null, string? status = null,
         [FromServices] IReportAccessService? reportAccess = null, [FromServices] IAccessAreaContext? areaContext = null)
     {
         var role = HttpContext.Session.GetRole();
@@ -221,6 +221,13 @@ public class DashboardController : Controller
                 return await DownloadWorkbookAsync(
                     await _reports.BuildCrewTrainerReportAsync(year, month, store, role, assignedName, om, oc, soc, od),
                     year > 0 && month > 0 ? $"Crew_Trainers_{year}_{month:D2}.xlsx" : "Crew_Trainers.xlsx");
+            case "new-hires-status":
+            {
+                var hireYear = year > 0 ? year : (await _dashboard.GetAvailablePeriodsAsync()).Select(p => p.Year).DefaultIfEmpty(DateTime.Now.Year).Max();
+                return await DownloadWorkbookAsync(
+                    await _reports.BuildNewHiresStatusReportAsync(hireYear, months, store, status, role, assignedName, om, oc, soc, od),
+                    $"New_Hires_Status_{hireYear}.xlsx");
+            }
             case "workforce":
                 return await DownloadWorkbookAsync(
                     await _reports.BuildWorkforceReportAsync(month, year, role, assignedName, store, om, oc, soc, od),
