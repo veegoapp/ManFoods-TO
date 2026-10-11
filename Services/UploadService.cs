@@ -40,7 +40,7 @@ public class UploadService : IUploadService
     // from them is now stale: Scorecard's historical records
     // (ScorecardService.LoadHistoricalRecordsAsync), 90-Day Turnover's active-hires/
     // resignation-tenures (NinetyDayTurnoverService), Retention's employee cohorts
-    // (RetentionService), and Early Warning's historical records/resigned-ID list
+    // (RetentionService), the New Hires Status records (NewHireStatusService), and Early Warning's historical records/resigned-ID list
     // (EarlyWarningService).
     private void InvalidateScorecardHistoricalCache()
     {
@@ -50,6 +50,7 @@ public class UploadService : IUploadService
         _cache.Remove(NinetyDayTurnoverService.ActiveHiresCacheKey);
         _cache.Remove(NinetyDayTurnoverService.ResignationTenuresCacheKey);
         _cache.Remove(RetentionService.EmployeeCohortsCacheKey);
+        _cache.Remove(NewHireStatusService.RecordsCacheKey);
         _cache.Remove(EarlyWarningService.HistoricalRecordsCacheKey);
         _cache.Remove(EarlyWarningService.ResignedEmployeeIdsCacheKey);
     }

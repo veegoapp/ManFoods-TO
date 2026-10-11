@@ -18,6 +18,10 @@ public interface IReportService
     Task<XLWorkbook> BuildActionCenterReportAsync(string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null);
     Task<XLWorkbook> BuildStoresOverviewReportAsync(int month, int year, string role, string? assignedName, string? om = null, string? oc = null, string? soc = null, string? od = null);
     Task<XLWorkbook> BuildWorkforceReportAsync(int month, int year, string role, string? assignedName, string? store = null, string? om = null, string? oc = null, string? soc = null, string? od = null, int? sinceYear = null);
+    /// <summary>Everyone hired in a year (optionally some months of it) with whether they are still working or
+    /// resigned — a Summary sheet and one row per person. <paramref name="status"/> is "active", "resigned" or null for all.</summary>
+    Task<XLWorkbook> BuildNewHiresStatusReportAsync(int year, string? months, string? store, string? status, string role, string? assignedName,
+        string? om = null, string? oc = null, string? soc = null, string? od = null);
     /// <summary>Projected vs actual headcount by job and store for a year: Summary, By Store, By Job,
     /// By Consultant &amp; Manager and the Hiring Plan. The heavy Data sheet and pivots are in
     /// <see cref="BuildWorkforcePlanningDataReportAsync"/>.</summary>

@@ -1915,6 +1915,12 @@
   <data name="Rep_Desc_WorkforcePlanningData" xml:space="preserve"><value>The full flat data sheet (one row per store, job and month) and ready-made Excel pivot tables behind the Workforce Planning report. Large: download it only when you need to analyse the raw rows.</value></data>
   <data name="Rep_Title_HiringForecast" xml:space="preserve"><value>Hiring Forecast</value></data>
   <data name="Rep_Desc_HiringForecast" xml:space="preserve"><value>Hires needed per month for a year — by store, job, payroll group and by the people responsible for the stores — with the roster and forecast months marked.</value></data>
+  <data name="Rep_Title_NewHiresStatus" xml:space="preserve"><value>New Hires Status</value></data>
+  <data name="Rep_Desc_NewHiresStatus" xml:space="preserve"><value>Everyone hired in the selected year or months — with whether they are still active or resigned, the resignation date, tenure, and gender, payroll group and job breakdowns.</value></data>
+  <data name="Rep_HireStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="Rep_HireStatus_All" xml:space="preserve"><value>All (active &amp; resigned)</value></data>
+  <data name="Rep_HireStatus_Active" xml:space="preserve"><value>Still active</value></data>
+  <data name="Rep_HireStatus_Resigned" xml:space="preserve"><value>Resigned</value></data>
   <data name="Rep_Title_CrewTrainers" xml:space="preserve"><value>Crew Trainers</value></data>
   <data name="Rep_Desc_CrewTrainers" xml:space="preserve"><value>Trainers against the plan and the 1-trainer-per-6-crew rule for the selected month — by store and by the people responsible, the year's trend, and who joined or left the trainer list.</value></data>
   <data name="Rep_AllJobs" xml:space="preserve"><value>All job titles</value></data>

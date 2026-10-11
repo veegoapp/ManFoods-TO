@@ -14,7 +14,8 @@ module.exports = { title: 'Reports', blocks: [
     ['Workforce', 'Employee-level roster plus active workforce composition for the selected month (headcount by job title, payroll group, tenure and gender, gender count by store) plus the headcount trend over time.'],
     ['Workforce Planning', 'Projected vs actual headcount by job and store: summary, by store, by job, by consultant and manager, the full data sheet and ready-made Excel pivot tables.'],
     ['Workforce Planning - Detailed Data', 'The full flat data sheet (one row per store, job and month) and the pivot tables behind the Workforce Planning report. It is large: download it only when you need to analyse the raw rows.'],
-    ['Hiring Forecast', 'Hires needed per month for a year, by store, job, payroll group and by the people responsible for the stores, with the roster and forecast months marked.'],
+    ['New Hires Status', 'Everyone hired in the selected year or months, with whether they are still active or resigned, the resignation date and tenure, plus gender, payroll group, job and store breakdowns. Filters: year, months, store, Operation Manager/Consultant and status.'],
+    ['Hiring Forecast','Hires needed per month for a year, by store, job, payroll group and by the people responsible for the stores, with the roster and forecast months marked.'],
   ] }, widths: [2800, 8200] },
 
   { h2: 'Turnover' },

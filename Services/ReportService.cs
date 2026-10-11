@@ -52,6 +52,7 @@ public class ReportService : IReportService
     private readonly IAccessAreaContext _areaContext;
     private readonly IWorkforcePlanningService _planning;
     private readonly ICrewTrainerService? _trainers;
+    private readonly INewHireStatusService? _newHires;
 
     public ReportService(
         IDashboardService dashboard,
@@ -64,8 +65,10 @@ public class ReportService : IReportService
         IStoreService stores,
         IAccessAreaContext areaContext,
         IWorkforcePlanningService planning,
-        ICrewTrainerService? trainers = null)
+        ICrewTrainerService? trainers = null,
+        INewHireStatusService? newHires = null)
     {
+        _newHires = newHires;
         _dashboard = dashboard;
         _ninetyDay = ninetyDay;
         _retention = retention;
@@ -947,6 +950,106 @@ public class ReportService : IReportService
     {
         var wb = new XLWorkbook();
         await AddWorkforceSheetsAsync(wb, month, year, role, assignedName, store, om, oc, soc, od, sinceYear);
+        return wb;
+    }
+
+    // ── New Hires Status ─────────────────────────────────────
+    private static void WriteHireStatusBreakdown(XLWorkbook wb, string sheetName, string labelHeader, List<NewHireStatusRow> rows, Func<NewHireStatusRow, string> key)
+    {
+        var ws = AddSheet(wb, sheetName);
+        StyleHeader(ws, new[] { labelHeader, "Hired", "Active", "Resigned", "Not On Latest Roster", "Still Active %" });
+        var groups = rows.GroupBy(r => string.IsNullOrWhiteSpace(key(r)) ? "Unspecified" : key(r))
+            .OrderByDescending(g => g.Count()).ThenBy(g => g.Key).ToList();
+        for (int i = 0; i < groups.Count; i++)
+        {
+            var g = groups[i];
+            var active = g.Count(r => r.Status == NewHireStatuses.Active);
+            ws.Cell(i + 2, 1).Value = SafeText(g.Key);
+            SetIntCell(ws.Cell(i + 2, 2), g.Count());
+            SetIntCell(ws.Cell(i + 2, 3), active);
+            SetIntCell(ws.Cell(i + 2, 4), g.Count(r => r.Status == NewHireStatuses.Resigned));
+            SetIntCell(ws.Cell(i + 2, 5), g.Count(r => r.Status == NewHireStatuses.NotOnLatestRoster));
+            SetPercentCell(ws.Cell(i + 2, 6), g.Count() == 0 ? 0 : active * 100.0 / g.Count());
+        }
+        Finalize(ws);
+    }
+
+    public async Task<XLWorkbook> BuildNewHiresStatusReportAsync(int year, string? months, string? store, string? status, string role, string? assignedName,
+        string? om = null, string? oc = null, string? soc = null, string? od = null)
+    {
+        var wb = new XLWorkbook();
+        if (_newHires == null) throw new InvalidOperationException("New hires status service is not available.");
+
+        var rows = await _newHires.GetAsync(role, assignedName, year, ParseMonthList(months), MultiValueFilter.Split(store), status);
+        var leadership = await BuildLeadershipMapAsync(role, assignedName);
+
+        var oms = MultiValueFilter.Split(om);
+        var ocs = MultiValueFilter.Split(oc);
+        var socs = MultiValueFilter.Split(soc);
+        var ods = MultiValueFilter.Split(od);
+        if (oms != null || ocs != null || socs != null || ods != null)
+        {
+            rows = rows.Where(r =>
+            {
+                leadership.TryGetValue(StoreKey(r.Store), out var l);
+                if (oms != null && !oms.Contains(l?.OperationManager ?? "")) return false;
+                if (ocs != null && !ocs.Contains(l?.OperationConsultant ?? "")) return false;
+                if (socs != null && !socs.Contains(l?.SeniorOperationConsultant ?? "")) return false;
+                if (ods != null && !ods.Contains(l?.OperationDirector ?? "")) return false;
+                return true;
+            }).ToList();
+        }
+
+        var asOf = DateOnly.FromDateTime(DateTime.Now);
+        var active = rows.Count(r => r.Status == NewHireStatuses.Active);
+        var resigned = rows.Count(r => r.Status == NewHireStatuses.Resigned);
+        var notOnRoster = rows.Count(r => r.Status == NewHireStatuses.NotOnLatestRoster);
+        var early = rows.Count(r => r.LeftWithin90Days);
+
+        var wsSummary = AddSheet(wb, "Summary");
+        StyleHeader(wsSummary, new[] { "Metric", "Value" });
+        wsSummary.Cell(2, 1).Value = "Hire Period";
+        wsSummary.Cell(2, 2).Value = DescribePeriodScope(months, year);
+        wsSummary.Cell(3, 1).Value = "Status Filter";
+        wsSummary.Cell(3, 2).Value = NewHireStatuses.Normalize(status) ?? "All";
+        wsSummary.Cell(4, 1).Value = "As Of";
+        wsSummary.Cell(4, 2).Value = asOf.ToString(DateFormat);
+        wsSummary.Cell(5, 1).Value = "Hired"; SetIntCell(wsSummary.Cell(5, 2), rows.Count);
+        wsSummary.Cell(6, 1).Value = "Still Active"; SetIntCell(wsSummary.Cell(6, 2), active);
+        wsSummary.Cell(7, 1).Value = "Resigned"; SetIntCell(wsSummary.Cell(7, 2), resigned);
+        wsSummary.Cell(8, 1).Value = "Not On Latest Roster (no resignation record)"; SetIntCell(wsSummary.Cell(8, 2), notOnRoster);
+        wsSummary.Cell(9, 1).Value = "Resigned Within 90 Days"; SetIntCell(wsSummary.Cell(9, 2), early);
+        wsSummary.Cell(10, 1).Value = "Still Active %";
+        SetPercentCell(wsSummary.Cell(10, 2), rows.Count == 0 ? 0 : active * 100.0 / rows.Count);
+        Finalize(wsSummary);
+
+        WriteHireStatusBreakdown(wb, "By Gender", "Gender", rows, r => r.Gender);
+        WriteHireStatusBreakdown(wb, "By Payroll Group", "Payroll Group", rows, r => r.PayrollGroup);
+        WriteHireStatusBreakdown(wb, "By Job Title", "Job Title", rows, r => r.JobTitle);
+        WriteHireStatusBreakdown(wb, "By Store", "Store", rows, r => r.Store);
+
+        var ws = AddSheet(wb, "New Hires");
+        StyleHeader(ws, new[] { "Employee ID", "Name", "Store" }.Concat(LeadershipHeaders)
+            .Concat(new[] { "Job Title", "Payroll Group", "Cost Center", "Gender", "Hire Date", "Status", "Resignation Date", "Tenure (days)", "Resigned Within 90 Days" }).ToArray());
+        for (int i = 0; i < rows.Count; i++)
+        {
+            var e = rows[i];
+            ws.Cell(i + 2, 1).Value = SafeText(e.EmployeeId);
+            ws.Cell(i + 2, 2).Value = SafeText(e.Name);
+            ws.Cell(i + 2, 3).Value = SafeText(e.Store);
+            int col = WriteLeadershipCells(ws, i + 2, 4, leadership, e.Store);
+            ws.Cell(i + 2, col).Value = SafeText(e.JobTitle);
+            ws.Cell(i + 2, col + 1).Value = SafeText(e.PayrollGroup);
+            ws.Cell(i + 2, col + 2).Value = SafeText(e.CostCenter);
+            ws.Cell(i + 2, col + 3).Value = SafeText(e.Gender);
+            SetDateCell(ws.Cell(i + 2, col + 4), e.HireDate);
+            ws.Cell(i + 2, col + 5).Value = e.Status;
+            if (e.ResignationDate.HasValue) SetDateCell(ws.Cell(i + 2, col + 6), e.ResignationDate.Value);
+            else ws.Cell(i + 2, col + 6).Value = "—";
+            SetIntCell(ws.Cell(i + 2, col + 7), e.TenureDays);
+            ws.Cell(i + 2, col + 8).Value = e.Status == NewHireStatuses.Resigned ? (e.LeftWithin90Days ? "Yes" : "No") : "—";
+        }
+        Finalize(ws);
         return wb;
     }
 
