@@ -141,10 +141,16 @@ public class CrewTrainerService : ICrewTrainerService
         var universe = new HashSet<string>(dto.ByStore.Select(r => r.Store.Trim()), StringComparer.OrdinalIgnoreCase);
 
         var resigned = (await GetResignedAsync(dto.Year, dto.Month)).Count(r => universe.Contains((r.Store ?? "").Trim()));
+        // The summary card, the insights and the Excel summary work on the whole selection: the trainers required are the
+        // total crew level ÷ 6, rounded once. The stores table (and the roll-ups by consultant, manager...) still round each
+        // store separately, so its Required column can add up to a little more than this.
+        var totalCrew = dto.ByStore.Sum(r => r.CrewLevel);
+        var totalActual = dto.ByStore.Sum(r => r.Actual);
+        var totalRequired = RequiredTrainers(totalCrew);
         dto.Kpis = new CrewTrainerKpiDto
         {
-            Projected = dto.ByStore.Sum(r => r.Projected), Actual = dto.ByStore.Sum(r => r.Actual), Gap = dto.ByStore.Sum(r => r.Gap),
-            CrewLevel = dto.ByStore.Sum(r => r.CrewLevel), Required = dto.ByStore.Sum(r => r.Required), GapRule = dto.ByStore.Sum(r => r.GapRule),
+            Projected = dto.ByStore.Sum(r => r.Projected), Actual = totalActual, Gap = dto.ByStore.Sum(r => r.Gap),
+            CrewLevel = totalCrew, Required = totalRequired, GapRule = totalActual - totalRequired,
             Resigned = resigned, LookbackMonths = ResignationLookbackMonths,
         };
         dto.Trend = samePeriod ? plan.Trend : new List<PlanningTrendPointDto>();
