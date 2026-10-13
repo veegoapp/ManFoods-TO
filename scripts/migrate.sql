@@ -703,7 +703,7 @@ INSERT INTO dbo.page_visibility (page_key, role, is_hidden, updated_by_name, upd
 SELECT p.page_key, r.role, p.is_hidden, p.updated_by_name, p.updated_at
 FROM dbo.page_visibility p
 CROSS JOIN (VALUES ('HR'), ('User'), ('Operation_Manager'), ('Operation_Consultant'), ('Head_Manager'),
-                   ('Senior_Operation_Consultant'), ('Operation_Director')) AS r(role)
+                   ('Senior_Operation_Consultant'), ('Operation_Director'), ('Trainer')) AS r(role)
 WHERE p.role = ''
   AND NOT EXISTS (SELECT 1 FROM dbo.page_visibility x WHERE x.page_key = p.page_key AND x.role = r.role);
 DELETE FROM dbo.page_visibility WHERE role = '';
@@ -787,4 +787,28 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_activity_logs_category
     CREATE INDEX ix_activity_logs_category_occurred_at ON dbo.activity_logs (category, occurred_at DESC) INCLUDE (success);
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_activity_logs_action_occurred_at' AND object_id = OBJECT_ID('dbo.activity_logs'))
     CREATE INDEX ix_activity_logs_action_occurred_at ON dbo.activity_logs (action, occurred_at DESC) INCLUDE (success, category);
+GO
+
+-- ── trainer_consultants / trainer_settings ───────────────────────────────
+-- The "Trainer" role (training-centre staff): which Operation Consultants each Trainer is responsible for
+-- (the Trainer sees the stores those consultants manage in the latest Store Reference period) and whether the
+-- Trainer may also write (Action Plan notes/tasks) or is read-only. Emails are stored trimmed and lower-cased.
+-- New tables only — nothing existing is altered. Safe to run again.
+IF OBJECT_ID('dbo.trainer_consultants', 'U') IS NULL
+    CREATE TABLE dbo.trainer_consultants (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        trainer_email NVARCHAR(256) NOT NULL,
+        consultant_email NVARCHAR(256) NOT NULL
+    );
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_trainer_consultants_pair' AND object_id = OBJECT_ID('dbo.trainer_consultants'))
+    CREATE UNIQUE INDEX ux_trainer_consultants_pair ON dbo.trainer_consultants (trainer_email, consultant_email);
+GO
+
+IF OBJECT_ID('dbo.trainer_settings', 'U') IS NULL
+    CREATE TABLE dbo.trainer_settings (
+        trainer_email NVARCHAR(256) NOT NULL PRIMARY KEY,
+        can_edit BIT NOT NULL DEFAULT 0
+    );
 GO

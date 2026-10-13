@@ -15,7 +15,7 @@ public static class UserPages
     /// Admin is not here: the Admin portal is not affected by page visibility.</summary>
     public static readonly IReadOnlyList<string> Roles = new[]
     {
-        HrRole, "User", "Operation_Manager", "Operation_Consultant", "Head_Manager", "Senior_Operation_Consultant", "Operation_Director",
+        HrRole, "User", "Operation_Manager", "Operation_Consultant", "Head_Manager", "Senior_Operation_Consultant", "Operation_Director", "Trainer",
     };
 
     public static bool IsKnownRole(string? role) => role != null && Roles.Contains(role);

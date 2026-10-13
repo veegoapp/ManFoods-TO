@@ -25,10 +25,12 @@ public class DashboardController : Controller
     private readonly ILogger<DashboardController> _logger;
     private readonly IStringLocalizer<SharedResource> _L;
     private readonly IActivityLogWriter _activity;
+    private readonly ITrainerService _trainers;
 
-    public DashboardController(IUploadService uploads, IUserService users, IDashboardService dashboard, IStoreService stores, IOtpService otp, IReportService reports, IWorkforcePlanningService planning, IBackgroundJobTracker jobTracker, ILogger<DashboardController> logger, IStringLocalizer<SharedResource> localizer, IActivityLogWriter activity)
+    public DashboardController(ITrainerService trainers, IUploadService uploads, IUserService users, IDashboardService dashboard, IStoreService stores, IOtpService otp, IReportService reports, IWorkforcePlanningService planning, IBackgroundJobTracker jobTracker, ILogger<DashboardController> logger, IStringLocalizer<SharedResource> localizer, IActivityLogWriter activity)
     {
         _activity = activity;
+        _trainers = trainers;
         _uploads = uploads;
         _users = users;
         _dashboard = dashboard;
@@ -577,7 +579,7 @@ public class DashboardController : Controller
             ws.Cell(2, 3).Value = "Ahmed Mohamed"; ws.Cell(2, 4).Value = "Operation_Consultant";
             ws.Cell(3, 1).Value = "sara@manfoods.com"; ws.Cell(3, 2).Value = "+201098765432";
             ws.Cell(3, 3).Value = "Sara Ali"; ws.Cell(3, 4).Value = "User";
-            ws.Cell(5, 1).Value = "Assigned Name and Role are optional — leave blank and the account is created as a plain \"User\". Valid Role values: Admin, User, HR, Operation_Manager, Operation_Consultant, Head_Manager, Senior_Operation_Consultant, Operation_Director.";
+            ws.Cell(5, 1).Value = "Assigned Name and Role are optional — leave blank and the account is created as a plain \"User\". Valid Role values: Admin, User, HR, Operation_Manager, Operation_Consultant, Head_Manager, Senior_Operation_Consultant, Operation_Director, Trainer.";
             ws.Cell(5, 1).Style.Font.Italic = true;
 
             // Role column dropdown, restricted to the roles the app recognizes.
@@ -761,15 +763,49 @@ public class DashboardController : Controller
     {
         var user = await _users.GetByIdAsync(id, HttpContext.Session.GetEmail());
         if (user == null) return NotFound();
-        return View(new MvcApp.Models.ViewModels.EditUserViewModel { Id = user.Id, Email = user.Email, Phone = user.Phone, Role = user.Role, AssignedName = user.AssignedName });
+        var vm = new MvcApp.Models.ViewModels.EditUserViewModel { Id = user.Id, Email = user.Email, Phone = user.Phone, Role = user.Role, AssignedName = user.AssignedName };
+        // The Trainer tables are only read for an account that already is a Trainer, so every other
+        // account's page behaves exactly as before.
+        if (user.Role == UserManagementPolicy.TrainerRole)
+        {
+            var saved = await _trainers.GetAsync(user.Email);
+            vm.TrainerConsultants = saved.ConsultantEmails.ToList();
+            vm.TrainerCanEdit = saved.CanEdit;
+        }
+        return await EditUserViewAsync(vm);
+    }
+
+    /// <summary>Shows the Edit User page with the Trainer panel's list of Operation Consultants filled in.</summary>
+    private async Task<IActionResult> EditUserViewAsync(MvcApp.Models.ViewModels.EditUserViewModel vm)
+    {
+        vm.ConsultantOptions = await _trainers.GetConsultantOptionsAsync();
+        return View("EditUser", vm);
+    }
+
+    /// <summary>Keeps the Trainer tables in step with an edit: saves the picks for a Trainer, follows an email
+    /// change, and clears them when the account stops being a Trainer.</summary>
+    private async Task SyncTrainerAsync(string? roleBefore, string? emailBefore, MvcApp.Models.ViewModels.UserViewModel updated, MvcApp.Models.ViewModels.EditUserViewModel vm)
+    {
+        var wasTrainer = roleBefore == UserManagementPolicy.TrainerRole;
+        if (updated.Role == UserManagementPolicy.TrainerRole)
+        {
+            if (wasTrainer && emailBefore != null && !string.Equals(emailBefore, updated.Email, StringComparison.OrdinalIgnoreCase))
+                await _trainers.RenameAsync(emailBefore, updated.Email);
+            await _trainers.SaveAsync(updated.Email, vm.TrainerConsultants, vm.TrainerCanEdit);
+        }
+        else if (wasTrainer && emailBefore != null)
+        {
+            await _trainers.RemoveAsync(emailBefore);
+        }
     }
 
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> EditUser(int id, MvcApp.Models.ViewModels.EditUserViewModel vm)
     {
         vm.Id = id;
-        if (!ModelState.IsValid) return View(vm);
-        var roleBefore = (await _users.GetByIdAsync(id, HttpContext.Session.GetEmail()))?.Role;
+        if (!ModelState.IsValid) return await EditUserViewAsync(vm);
+        var before = await _users.GetByIdAsync(id, HttpContext.Session.GetEmail());
+        var roleBefore = before?.Role;
         var (updated, error) = await _users.UpdateAsync(id, vm, HttpContext.Session.GetEmail());
         if (error == "last-admin")
         {
@@ -779,29 +815,30 @@ public class DashboardController : Controller
         if (error == "duplicate-email")
         {
             ModelState.AddModelError(nameof(vm.Email), _L["Msg_EmailAlreadyExists"].Value);
-            return View(vm);
+            return await EditUserViewAsync(vm);
         }
         if (error == "invalid-role")
         {
             ModelState.AddModelError(nameof(vm.Role), _L["Msg_InvalidRole"].Value);
-            return View(vm);
+            return await EditUserViewAsync(vm);
         }
         if (error == "role-forbidden")
         {
             ModelState.AddModelError(nameof(vm.Role), _L["Msg_RoleForbidden"].Value);
-            return View(vm);
+            return await EditUserViewAsync(vm);
         }
         if (error == "super-admin-protected")
         {
             ModelState.AddModelError(nameof(vm.Email), _L["Msg_SuperAdminProtected"].Value);
-            return View(vm);
+            return await EditUserViewAsync(vm);
         }
         if (error == "use-change-password")
         {
             ModelState.AddModelError(nameof(vm.Password), _L["Msg_UseChangePasswordForSelf"].Value);
-            return View(vm);
+            return await EditUserViewAsync(vm);
         }
         if (updated == null) return NotFound();
+        await SyncTrainerAsync(roleBefore, before?.Email, updated, vm);
         await AuditAsync(ActivityActions.UserUpdate, $"user id {id}, role now {updated.Role}", id);
         if (roleBefore != null && !string.Equals(roleBefore, updated.Role, StringComparison.Ordinal))
             await AuditAsync(ActivityActions.RoleChange, $"{roleBefore} -> {updated.Role}", id);
@@ -812,7 +849,9 @@ public class DashboardController : Controller
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> DeleteUser(int id)
     {
+        var doomed = await _users.GetByIdAsync(id, HttpContext.Session.GetEmail());
         var (success, error) = await _users.DeleteAsync(id, HttpContext.Session.GetEmail());
+        if (success && doomed?.Role == UserManagementPolicy.TrainerRole) await _trainers.RemoveAsync(doomed.Email);
         if (success) await AuditAsync(ActivityActions.UserDelete, $"user id {id}", id);
         else if (error is "last-admin" or "super-admin-protected") await AuditDeniedAsync(ActivityActions.UserDelete, error, $"user id {id}, reason {error}", id);
         TempData[success ? "Success" : "Error"] = error switch

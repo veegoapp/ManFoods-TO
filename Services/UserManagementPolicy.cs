@@ -14,11 +14,15 @@ namespace MvcApp.Services;
 /// </summary>
 public static class UserManagementPolicy
 {
+    /// <summary>Training-centre staff: sees the stores of the Operation Consultants picked for them
+    /// (see TrainerService), read-only unless the Admin ticks "can edit".</summary>
+    public const string TrainerRole = "Trainer";
+
     /// <summary>The full set of role values the app recognizes.</summary>
     public static readonly IReadOnlyList<string> ValidRoles = new[]
     {
         "Admin", "User", "HR", "Operation_Manager", "Operation_Consultant",
-        "Head_Manager", "Senior_Operation_Consultant", "Operation_Director",
+        "Head_Manager", "Senior_Operation_Consultant", "Operation_Director", TrainerRole,
     };
 
     public static bool IsValidRole(string? role) =>

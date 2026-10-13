@@ -31,6 +31,8 @@ public class AppDbContext : DbContext
     public DbSet<LoginHistory> LoginHistories { get; set; }
     public DbSet<ActivityLog> ActivityLogs { get; set; }
     public DbSet<PageAccessConfig> PageAccessConfigs { get; set; }
+    public DbSet<TrainerConsultant> TrainerConsultants { get; set; }
+    public DbSet<TrainerSetting> TrainerSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -109,6 +111,20 @@ public class AppDbContext : DbContext
             .HasDatabaseName("ux_job_payroll_groups_job");
         modelBuilder.Entity<JobPayrollGroup>().Property(j => j.JobTitle).HasMaxLength(200);
         modelBuilder.Entity<JobPayrollGroup>().Property(j => j.PayrollGroup).HasMaxLength(200);
+
+        // Trainer → Operation Consultant picks, and each Trainer's edit/read-only flag — same
+        // names and sizes as scripts/migrate.sql (same fresh-DB caveat as above).
+        modelBuilder.Entity<TrainerConsultant>(e =>
+        {
+            e.Property(t => t.TrainerEmail).HasMaxLength(256);
+            e.Property(t => t.ConsultantEmail).HasMaxLength(256);
+            e.HasIndex(t => new { t.TrainerEmail, t.ConsultantEmail }).IsUnique().HasDatabaseName("ux_trainer_consultants_pair");
+        });
+        modelBuilder.Entity<TrainerSetting>(e =>
+        {
+            e.HasKey(t => t.TrainerEmail);
+            e.Property(t => t.TrainerEmail).HasMaxLength(256);
+        });
 
         // Per-area access configuration — one row per area, keyed by the area
         // string (same fresh-DB caveat as above).

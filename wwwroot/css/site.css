@@ -804,6 +804,7 @@ html[dir="rtl"] .page-guide-panel { border-inline-start: 0; border-inline-end: 1
 .role-Head_Manager                   { background: var(--danger-bg);    color: var(--danger);  border: 1px solid rgba(239,68,68,.25); }
 .role-Senior_Operation_Consultant    { background: var(--warning-bg);   color: var(--warning); border: 1px solid rgba(245,158,11,.25); }
 .role-Operation_Director             { background: rgba(109,93,251,.12); color: var(--red);    border: 1px solid rgba(109,93,251,.25); }
+.role-Trainer                        { background: rgba(20,184,166,.12); color: #14b8a6;       border: 1px solid rgba(20,184,166,.25); }
 
 /* ══ EMPTY STATE ══════════════════════════════════════ */
 .empty-state { text-align: center; padding: 60px 0; color: var(--text-3); }
@@ -1127,6 +1128,7 @@ a:hover { color: #fff; }
 [data-theme="light"] .role-Head_Manager { background: rgba(220,38,38,.08); color: #DC2626; border-color: rgba(220,38,38,.2); }
 [data-theme="light"] .role-Senior_Operation_Consultant { background: rgba(217,119,6,.08); color: #D97706; border-color: rgba(217,119,6,.2); }
 [data-theme="light"] .role-Operation_Director { background: rgba(109,93,251,.08); color: #6D5DFB; border-color: rgba(109,93,251,.2); }
+[data-theme="light"] .role-Trainer { background: rgba(13,148,136,.08); color: #0f766e; border-color: rgba(13,148,136,.2); }
 
 /* KPI card in light mode */
 [data-theme="light"] .kpi-card::after { background: rgba(109,93,251,.04); }

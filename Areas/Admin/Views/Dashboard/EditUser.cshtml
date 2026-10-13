@@ -63,9 +63,63 @@
                     <option value="Head_Manager">@L["Role_HeadManager"]</option>
                     <option value="Senior_Operation_Consultant">@L["Role_SeniorOperationConsultant"]</option>
                     <option value="Operation_Director">@L["Role_OperationDirector"]</option>
+                    <option value="Trainer">@L["Role_Trainer"]</option>
                 </optgroup>
             </select>
+        </div>
+
+        @* Trainer only: which Operation Consultants this Trainer covers, and edit vs. read-only. *@
+        @{
+            var pickedEmails = new HashSet<string>(Model.TrainerConsultants ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+            var listedEmails = new HashSet<string>(Model.ConsultantOptions.Select(c => c.Email), StringComparer.OrdinalIgnoreCase);
+            var staleEmails = pickedEmails.Where(e => !listedEmails.Contains(e)).ToList();
+        }
+        <div class="mb-4" id="trainerPanel" @(Model.Role == "Trainer" ? "" : "hidden")>
+            <label class="form-label-dark">@L["Trainer_Consultants"]</label>
+            <p class="text-muted-custom small mb-2">@L["Trainer_ConsultantsHelp"]</p>
+            @if (!Model.ConsultantOptions.Any() && staleEmails.Count == 0)
+            {
+                <p class="text-muted-custom small">@L["Trainer_NoConsultants"]</p>
+            }
+            <div style="max-height:280px;overflow:auto;padding:8px 12px;border:1px solid var(--border, rgba(148,163,184,.25));border-radius:8px">
+                @{ var tcIndex = 0; }
+                @foreach (var c in Model.ConsultantOptions)
+                {
+                    tcIndex++;
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="TrainerConsultants" id="tc_@tcIndex" value="@c.Email" checked="@pickedEmails.Contains(c.Email)" />
+                        <label class="form-check-label" for="tc_@tcIndex">@c.Name <span class="text-muted-custom small">@c.Email</span></label>
+                    </div>
+                }
+                @* Picked earlier but absent from the latest Store Reference file: kept ticked so saving never drops them silently. *@
+                @foreach (var email in staleEmails)
+                {
+                    tcIndex++;
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="TrainerConsultants" id="tc_@tcIndex" value="@email" checked />
+                        <label class="form-check-label" for="tc_@tcIndex">@email <span class="text-muted-custom small">@L["Trainer_NotInLatestFile"]</span></label>
+                    </div>
+                }
+            </div>
+            <div class="form-check mt-3">
+                <input asp-for="TrainerCanEdit" class="form-check-input" />
+                <label asp-for="TrainerCanEdit" class="form-check-label">@L["Trainer_CanEdit"]</label>
+                <p class="text-muted-custom small mb-0">@L["Trainer_CanEditHelp"]</p>
+            </div>
         </div>
         <button type="submit" class="btn btn-primary w-100">@L["EU_SaveChanges"]</button>
     </form>
 </div>
+
+@section Scripts {
+<script>
+(function () {
+    const role = document.getElementById('Role');
+    const panel = document.getElementById('trainerPanel');
+    if (!role || !panel) return;
+    const sync = () => { panel.hidden = role.value !== 'Trainer'; };
+    role.addEventListener('change', sync);
+    sync();
+})();
+</script>
+}
