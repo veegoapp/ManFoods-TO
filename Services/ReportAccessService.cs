@@ -9,8 +9,9 @@ public interface IReportAccessService
 {
     /// <summary>The first of the report's areas that is restricted (Settings → Access), or null when none is: the
     /// export then keeps the Reports area, whose setting still applies on top. Running under a restricted area
-    /// gives a restricted role only its own stores; Reports can narrow a report but never widen it.</summary>
-    Task<string?> ResolveRestrictedAreaAsync(ReportDefinition report);
+    /// gives a restricted role only its own stores; Reports can narrow a report but never widen it. With
+    /// <paramref name="forTrainer"/> the Trainer column of Settings → Access is read instead of the regular one.</summary>
+    Task<string?> ResolveRestrictedAreaAsync(ReportDefinition report, bool forTrainer = false);
 }
 
 public sealed class ReportAccessService : IReportAccessService
@@ -19,10 +20,12 @@ public sealed class ReportAccessService : IReportAccessService
 
     public ReportAccessService(IAccessPolicyService policy) => _policy = policy;
 
-    public async Task<string?> ResolveRestrictedAreaAsync(ReportDefinition report)
+    public async Task<string?> ResolveRestrictedAreaAsync(ReportDefinition report, bool forTrainer = false)
     {
+        // A Trainer follows its own column of Settings → Access; the area returned is still the plain area name
+        // (StoreAccessService looks up the Trainer's row for it).
         foreach (var area in report.Areas)
-            if (await _policy.IsRestrictedAsync(area)) return area;
+            if (await _policy.IsRestrictedAsync(forTrainer ? AccessAreas.TrainerKey(area) : area)) return area;
         return null;
     }
 }

@@ -110,6 +110,21 @@ public class SettingsApiController : ControllerBase
         return Ok();
     }
 
+    // The Trainer column of the same matrix (rows keyed "trainer:<area>"; never saved = own stores).
+    [HttpGet("access-policy/trainer"), RequireRole("Admin")]
+    public async Task<IActionResult> GetTrainerAccessPolicy() => Ok(await _accessPolicy.GetAllForTrainerAsync());
+
+    [HttpPost("access-policy/trainer"), ValidateAntiForgeryToken, RequireRole("Admin")]
+    public async Task<IActionResult> SaveTrainerAccessPolicy([FromBody] SaveAccessPolicyRequest request)
+    {
+        if (request?.Settings == null || request.Settings.Count == 0)
+            return BadRequest(_L["Api_NoAccessSettings"].Value);
+        var adminName = HttpContext.Session.GetAssignedName() ?? HttpContext.Session.GetEmail();
+        var changes = await _accessPolicy.SaveForTrainerAsync(request.Settings, adminName);
+        await _activity.LogAsync(new ActivityEntry { Action = Models.ActivityActions.SettingsAccessPolicy, Details = changes.Count == 0 ? "no changes" : string.Join("; ", changes) });
+        return Ok();
+    }
+
     // ── Pages hidden from the User interface ─────────────────────────────────
 
     [HttpGet("page-visibility"), RequireRole("Admin")]

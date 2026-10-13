@@ -58,6 +58,7 @@ public class AdminOnlyAreasAuthorizationTests : IClassFixture<AppFactory>
 
     [Theory]
     [InlineData("/api/settings/access-policy")]
+    [InlineData("/api/settings/access-policy/trainer")]
     [InlineData("/api/settings/page-visibility")]
     [InlineData("/api/settings/recommendation-templates")]
     [InlineData("/api/settings/color-rules/turnover-total")]
@@ -99,6 +100,7 @@ public class AdminOnlyAreasAuthorizationTests : IClassFixture<AppFactory>
 
     [Theory]
     [InlineData("GET", "/api/settings/access-policy")]
+    [InlineData("GET", "/api/settings/access-policy/trainer")]
     [InlineData("GET", "/api/settings/page-visibility")]
     [InlineData("GET", "/api/settings/recommendation-templates")]
     [InlineData("GET", "/api/action-plan-role/stores")]
@@ -106,6 +108,7 @@ public class AdminOnlyAreasAuthorizationTests : IClassFixture<AppFactory>
     [InlineData("GET", "/api/action-plan-severity/history")]
     [InlineData("GET", "/api/activity-logs")]
     [InlineData("POST", "/api/settings/access-policy")]
+    [InlineData("POST", "/api/settings/access-policy/trainer")]
     [InlineData("POST", "/api/settings/page-visibility")]
     [InlineData("POST", "/api/settings/recommendation-templates")]
     [InlineData("POST", "/api/settings/color-rules/turnover-total")]

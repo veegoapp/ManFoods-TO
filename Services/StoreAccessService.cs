@@ -89,7 +89,7 @@ public class StoreAccessService : IStoreAccessService
     {
         if (UnrestrictedRoles.Contains(role)) return null;
 
-        if (await IsAreaOpenForRoleAsync()) return null; // widened to full access
+        if (await IsAreaOpenForRoleAsync(role)) return null; // widened to full access
 
         return await ComputeOwnStoreNamesAsync(role, email);
     }
@@ -104,14 +104,25 @@ public class StoreAccessService : IStoreAccessService
         return await ComputeOwnStoreNamesAsync(role, email);
     }
 
-    private async Task<bool> IsAreaOpenForRoleAsync()
+    private async Task<bool> IsAreaOpenForRoleAsync(string role)
     {
         if (_policy == null) return false; // no config wired (e.g. tests) → restricted
         var area = _areaContext?.Area;
 
         if (string.IsNullOrEmpty(area)) return false;          // untagged endpoint → safe: own-stores
-        if (area == AccessAreas.Shared) return await _policy.AnyOpenAsync(); // dropdowns widen if anything is open
-        return !await _policy.IsRestrictedAsync(area);          // explicit area → open iff configured open
+
+        // A Trainer has its own column in Settings → Access (rows keyed "trainer:<area>"); every other restricted
+        // role keeps using the regular column exactly as before.
+        var trainer = role == UserManagementPolicy.TrainerRole;
+
+        if (area == AccessAreas.Shared)                         // dropdowns widen if anything is open
+        {
+            if (!trainer) return await _policy.AnyOpenAsync();
+            foreach (var a in AccessAreas.All)
+                if (!await _policy.IsRestrictedAsync(AccessAreas.TrainerKey(a))) return true;
+            return false;
+        }
+        return !await _policy.IsRestrictedAsync(trainer ? AccessAreas.TrainerKey(area) : area); // explicit area → open iff configured open
     }
 
     private async Task<List<string>> ComputeOwnStoreNamesAsync(string role, string? email)
