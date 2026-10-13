@@ -730,12 +730,21 @@
   <data name="Role_SeniorOperationConsultant" xml:space="preserve"><value>Senior Operation Consultant</value></data>
   <data name="Role_OperationDirector" xml:space="preserve"><value>Operation Director</value></data>
   <data name="Role_Trainer" xml:space="preserve"><value>Trainer</value></data>
-  <data name="Trainer_Consultants" xml:space="preserve"><value>Operation Consultants this Trainer covers</value></data>
-  <data name="Trainer_ConsultantsHelp" xml:space="preserve"><value>From the latest Store Reference file. The Trainer sees the stores these consultants manage, and nothing else.</value></data>
-  <data name="Trainer_NoConsultants" xml:space="preserve"><value>No Operation Consultants found — upload a Store Reference file first.</value></data>
   <data name="Trainer_NotInLatestFile" xml:space="preserve"><value>(not in the latest Store Reference file)</value></data>
   <data name="Trainer_CanEdit" xml:space="preserve"><value>Can edit (add Action Plan notes and complete tasks)</value></data>
   <data name="Trainer_CanEditHelp" xml:space="preserve"><value>Unticked = read-only: the Trainer can view the data but cannot change anything.</value></data>
+  <data name="Trainer_Coverage" xml:space="preserve"><value>Stores this Trainer covers</value></data>
+  <data name="Trainer_CoverageHelp" xml:space="preserve"><value>Tick a person to cover all of their stores (this follows the latest Store Reference file every month), or open a person and tick individual stores (these stay fixed).</value></data>
+  <data name="Trainer_StoresWord" xml:space="preserve"><value>stores</value></data>
+  <data name="Trainer_NoStores" xml:space="preserve"><value>No stores found — upload a Store Reference file first.</value></data>
+  <data name="Trainer_ExpandAll" xml:space="preserve"><value>Expand all</value></data>
+  <data name="Trainer_CollapseAll" xml:space="preserve"><value>Collapse all</value></data>
+  <data name="Trainer_ClearAll" xml:space="preserve"><value>Clear selection</value></data>
+  <data name="Trainer_WillSee" xml:space="preserve"><value>The Trainer will see</value></data>
+  <data name="Trainer_WholeGroups" xml:space="preserve"><value>Whole groups (follow the monthly file)</value></data>
+  <data name="Trainer_IndividualStores" xml:space="preserve"><value>Individual stores (stay fixed)</value></data>
+  <data name="Trainer_None" xml:space="preserve"><value>None</value></data>
+  <data name="Trainer_Unassigned" xml:space="preserve"><value>Stores with no reporting line</value></data>
 
   <!-- Reports -->
   <data name="Rep_TurnoverWorkforce" xml:space="preserve"><value>Turnover &amp; Workforce</value></data>

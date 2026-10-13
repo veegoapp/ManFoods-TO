@@ -34,6 +34,9 @@ public class StoreAccessService : IStoreAccessService
     private static readonly TimeSpan OwnStoresTtl = TimeSpan.FromMinutes(5);
     private static CancellationTokenSource _reset = new();
     public static void InvalidateCache() => Interlocked.Exchange(ref _reset, new CancellationTokenSource()).Cancel();
+    /// <summary>A token that fires at the next <see cref="InvalidateCache"/> — for other caches that depend on the
+    /// Store Reference file (the Trainer coverage tree).</summary>
+    public static IChangeToken ChangeToken() => new CancellationChangeToken(_reset.Token);
 
     // The one place that knows which StoreReference email column each
     // restricted role is matched against. Adding a future role (once its
@@ -160,14 +163,22 @@ public class StoreAccessService : IStoreAccessService
         var normalized = (email ?? "").Trim().ToLowerInvariant();
         if (string.IsNullOrEmpty(normalized)) return new List<string>();
 
-        var consultants = await _db.TrainerConsultants
+        var items = await _db.TrainerCoverages
             .Where(t => t.TrainerEmail == normalized)
-            .Select(t => t.ConsultantEmail)
+            .Select(t => new { t.Kind, t.Value })
             .ToListAsync();
-        if (consultants.Count == 0) return new List<string>();
+        if (items.Count == 0) return new List<string>();
 
-        // Same latest-period rule as every other role, so a consultant's rotation to other
-        // stores moves the Trainer's view with it.
+        List<string> Of(string kind) => items.Where(i => i.Kind == kind).Select(i => i.Value).ToList();
+        var directors = Of(CoverageKinds.Director);
+        var managers = Of(CoverageKinds.Manager);
+        var seniors = Of(CoverageKinds.SeniorConsultant);
+        var consultants = Of(CoverageKinds.Consultant);
+        var headManagers = Of(CoverageKinds.HeadManager);
+        var fixedStores = Of(CoverageKinds.Store);
+
+        // Same latest-period rule as every other role, so a person's rotation to other stores moves
+        // the Trainer's view with it. A fixed store only counts while it is still in that period.
         var latest = await _db.StoreReferences
             .OrderByDescending(s => s.Year).ThenByDescending(s => s.Month)
             .Select(s => new { s.Month, s.Year })
@@ -175,7 +186,13 @@ public class StoreAccessService : IStoreAccessService
         if (latest == null) return new List<string>();
 
         return await _db.StoreReferences
-            .Where(s => s.Month == latest.Month && s.Year == latest.Year && consultants.Contains(s.OperationConsultantEmail.ToLower()))
+            .Where(s => s.Month == latest.Month && s.Year == latest.Year
+                && (directors.Contains(s.OperationDirectorEmail.ToLower())
+                    || managers.Contains(s.OperationManagerEmail.ToLower())
+                    || seniors.Contains(s.SeniorOperationConsultantEmail.ToLower())
+                    || consultants.Contains(s.OperationConsultantEmail.ToLower())
+                    || headManagers.Contains(s.HeadManagerEmail.ToLower())
+                    || fixedStores.Contains(s.StoreName)))
             .Select(s => s.StoreName)
             .Distinct()
             .ToListAsync();

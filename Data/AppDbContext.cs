@@ -31,7 +31,7 @@ public class AppDbContext : DbContext
     public DbSet<LoginHistory> LoginHistories { get; set; }
     public DbSet<ActivityLog> ActivityLogs { get; set; }
     public DbSet<PageAccessConfig> PageAccessConfigs { get; set; }
-    public DbSet<TrainerConsultant> TrainerConsultants { get; set; }
+    public DbSet<TrainerCoverage> TrainerCoverages { get; set; }
     public DbSet<TrainerSetting> TrainerSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -112,13 +112,14 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<JobPayrollGroup>().Property(j => j.JobTitle).HasMaxLength(200);
         modelBuilder.Entity<JobPayrollGroup>().Property(j => j.PayrollGroup).HasMaxLength(200);
 
-        // Trainer → Operation Consultant picks, and each Trainer's edit/read-only flag — same
+        // What each Trainer covers (a person or a fixed store), and each Trainer's edit/read-only flag — same
         // names and sizes as scripts/migrate.sql (same fresh-DB caveat as above).
-        modelBuilder.Entity<TrainerConsultant>(e =>
+        modelBuilder.Entity<TrainerCoverage>(e =>
         {
             e.Property(t => t.TrainerEmail).HasMaxLength(256);
-            e.Property(t => t.ConsultantEmail).HasMaxLength(256);
-            e.HasIndex(t => new { t.TrainerEmail, t.ConsultantEmail }).IsUnique().HasDatabaseName("ux_trainer_consultants_pair");
+            e.Property(t => t.Kind).HasMaxLength(20);
+            e.Property(t => t.Value).HasMaxLength(450);
+            e.HasIndex(t => new { t.TrainerEmail, t.Kind, t.Value }).IsUnique().HasDatabaseName("ux_trainer_coverage_item");
         });
         modelBuilder.Entity<TrainerSetting>(e =>
         {
