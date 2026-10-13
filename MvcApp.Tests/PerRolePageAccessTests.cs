@@ -280,11 +280,11 @@ public class PerRolePageAccessTests : IClassFixture<AppFactory>
             Assert.Contains("newpage", await svc.GetHiddenAsync(role));
         Assert.DoesNotContain("workforce", await svc.GetHiddenAsync("User")); // ordinary pages are unaffected
 
-        // the Admin opens it for User and the five operational roles
+        // the Admin opens it for User and the six operational roles (incl. Trainer)
         var open = UserPages.Roles.Where(r => r != "HR").ToDictionary(r => r, _ => false);
         await svc.SaveAsync(new Dictionary<string, Dictionary<string, bool>> { ["newpage"] = open }, "admin");
         foreach (var role in UserPages.Roles) Assert.DoesNotContain("newpage", await svc.GetHiddenAsync(role));
-        Assert.Equal(6, await db.PageVisibilities.CountAsync(p => p.PageKey == "newpage")); // stored explicitly, so a later default change cannot flip it
+        Assert.Equal(7, await db.PageVisibilities.CountAsync(p => p.PageKey == "newpage")); // stored explicitly, so a later default change cannot flip it
 
         // and closes it again for just one role
         await svc.SaveAsync(new Dictionary<string, Dictionary<string, bool>> { ["newpage"] = new() { ["Head_Manager"] = true } }, "admin");

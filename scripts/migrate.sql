@@ -703,7 +703,7 @@ INSERT INTO dbo.page_visibility (page_key, role, is_hidden, updated_by_name, upd
 SELECT p.page_key, r.role, p.is_hidden, p.updated_by_name, p.updated_at
 FROM dbo.page_visibility p
 CROSS JOIN (VALUES ('HR'), ('User'), ('Operation_Manager'), ('Operation_Consultant'), ('Head_Manager'),
-                   ('Senior_Operation_Consultant'), ('Operation_Director')) AS r(role)
+                   ('Senior_Operation_Consultant'), ('Operation_Director'), ('Trainer')) AS r(role)
 WHERE p.role = ''
   AND NOT EXISTS (SELECT 1 FROM dbo.page_visibility x WHERE x.page_key = p.page_key AND x.role = r.role);
 DELETE FROM dbo.page_visibility WHERE role = '';
