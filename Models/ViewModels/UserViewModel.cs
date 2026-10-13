@@ -89,4 +89,13 @@ public class EditUserViewModel
 
     [Required]
     public string Role { get; set; } = "";
+
+    // Trainer role only — ignored for every other role.
+    /// <summary>Emails of the Operation Consultants this Trainer covers (the ticked boxes).</summary>
+    public List<string>? TrainerConsultants { get; set; }
+    /// <summary>Ticked = the Trainer may also write (Action Plan notes/tasks); unticked = read-only.</summary>
+    public bool TrainerCanEdit { get; set; }
+    /// <summary>Choices for the Trainer panel — filled by the controller, never posted.</summary>
+    [Microsoft.AspNetCore.Mvc.ModelBinding.BindNever]
+    public List<MvcApp.Services.ConsultantOption> ConsultantOptions { get; set; } = new();
 }

@@ -14,10 +14,11 @@
         "Head_Manager" => L["Role_HeadManager"].Value,
         "Senior_Operation_Consultant" => L["Role_SeniorOperationConsultant"].Value,
         "Operation_Director" => L["Role_OperationDirector"].Value,
+        "Trainer" => L["Role_Trainer"].Value,
         _ => role,
     };
 
-    var restrictedRoles = new HashSet<string> { "Operation_Manager", "Operation_Consultant", "Head_Manager", "Senior_Operation_Consultant", "Operation_Director" };
+    var restrictedRoles = new HashSet<string> { "Operation_Manager", "Operation_Consultant", "Head_Manager", "Senior_Operation_Consultant", "Operation_Director", "Trainer" };
     // "Active" means the user has actually completed their first-login
     // password setup — a system-generated temporary password already sits
     // in PasswordHash from creation, so HasPassword alone isn't enough.
@@ -153,7 +154,7 @@
             </div>
             <select id="usRoleFilter" class="form-select form-select-dark form-select-sm us-role-filter">
                 <option value="">@L["Users_FilterAllRoles"]</option>
-                @foreach (var r in new[] { "Admin", "User", "HR", "Operation_Manager", "Operation_Consultant", "Head_Manager", "Senior_Operation_Consultant", "Operation_Director" })
+                @foreach (var r in new[] { "Admin", "User", "HR", "Operation_Manager", "Operation_Consultant", "Head_Manager", "Senior_Operation_Consultant", "Operation_Director", "Trainer" })
                 {
                     <option value="@r">@RoleLabel(r)</option>
                 }

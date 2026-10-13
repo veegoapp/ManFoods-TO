@@ -35,7 +35,7 @@ public class StoreActionPlanApiController : ControllerBase
     // per-store inside StoreActionPlanService — this attribute is just the
     // outer gate covering every role that could possibly be delegated.
     [HttpPost("{store}/notes"), ValidateAntiForgeryToken]
-    [RequireRole("Operation_Manager", "Operation_Consultant", "Head_Manager", "Senior_Operation_Consultant", "Operation_Director")]
+    [RequireRole("Operation_Manager", "Operation_Consultant", "Head_Manager", "Senior_Operation_Consultant", "Operation_Director", "Trainer")]
     public async Task<IActionResult> AddNote(string store, [FromBody] AddNoteRequest request)
     {
         if (string.IsNullOrWhiteSpace(request?.NoteText)) return BadRequest(_L["Api_NoteTextRequired"].Value);
@@ -201,7 +201,7 @@ public class StoreActionPlanApiController : ControllerBase
     }
 
     [HttpPost("recommendations/{id:int}/toggle"), ValidateAntiForgeryToken]
-    [RequireRole("Admin", "Operation_Manager", "Operation_Consultant", "Head_Manager", "Senior_Operation_Consultant", "Operation_Director")]
+    [RequireRole("Admin", "Operation_Manager", "Operation_Consultant", "Head_Manager", "Senior_Operation_Consultant", "Operation_Director", "Trainer")]
     public async Task<IActionResult> ToggleRecommendation(int id, [FromBody] ToggleRecommendationRequest request)
     {
         var role = HttpContext.Session.GetRole();

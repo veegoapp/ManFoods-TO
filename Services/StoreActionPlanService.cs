@@ -89,6 +89,10 @@ public class StoreActionPlanService : IStoreActionPlanService
         // matches the store's own email column for that role, so it's safe
         // to grant notes access purely on "is this the delegated role."
         var canAddNotes = responsible != null && role == responsible.Role;
+        // A Trainer who was given edit rights may write on every store they cover, whoever the
+        // plan's responsible role is; a read-only Trainer never gets the note box.
+        if (role == UserManagementPolicy.TrainerRole)
+            canAddNotes = await _storeAccess.CanManageStoreAsync(role, email, storeName);
 
         if (plan == null)
         {
@@ -158,8 +162,13 @@ public class StoreActionPlanService : IStoreActionPlanService
         if (string.IsNullOrWhiteSpace(noteText)) return (false, "Note text is required.", null);
         if (InputLimits.Exceeds(noteText.Trim(), InputLimits.NoteText)) return (false, $"Note is too long (maximum {InputLimits.NoteText} characters).", null);
 
-        var effectiveRole = await _actionPlanRoles.GetEffectiveRoleAsync(storeName);
-        if (effectiveRole == null || role != effectiveRole) return (false, "Not permitted to add notes.", null);
+        // A Trainer is not a delegable Action Plan role: their write right comes from the "can edit"
+        // flag, checked by CanManageStoreAsync below.
+        if (role != UserManagementPolicy.TrainerRole)
+        {
+            var effectiveRole = await _actionPlanRoles.GetEffectiveRoleAsync(storeName);
+            if (effectiveRole == null || role != effectiveRole) return (false, "Not permitted to add notes.", null);
+        }
         // Write permission ignores the access-area widening — even if the Action
         // Center view is opened company-wide, a restricted role may only add notes
         // to stores it actually owns.
@@ -1137,8 +1146,11 @@ public class StoreActionPlanService : IStoreActionPlanService
 
         if (role != "Admin")
         {
-            var effectiveRole = await _actionPlanRoles.GetEffectiveRoleAsync(plan.StoreName);
-            if (effectiveRole == null || role != effectiveRole) return false;
+            if (role != UserManagementPolicy.TrainerRole)
+            {
+                var effectiveRole = await _actionPlanRoles.GetEffectiveRoleAsync(plan.StoreName);
+                if (effectiveRole == null || role != effectiveRole) return false;
+            }
             // Own-store write check — never widened by the Action Center area toggle.
             if (!await _storeAccess.CanManageStoreAsync(role, email, plan.StoreName)) return false;
         }

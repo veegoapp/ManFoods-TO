@@ -127,6 +127,10 @@ public class StoreAccessService : IStoreAccessService
 
     private async Task<List<string>> LoadOwnStoreNamesAsync(string role, string? email)
     {
+        // A Trainer has no email column of their own: they own the stores of the Operation
+        // Consultants the Admin picked for them (trainer_consultants).
+        if (role == UserManagementPolicy.TrainerRole) return await LoadTrainerStoreNamesAsync(email);
+
         // A role that isn't Admin/User but also isn't one of the known
         // store-restricted roles (e.g. an invalid/misspelled Bulk Upload
         // role) has no email column to match against, so it gets zero
@@ -149,6 +153,32 @@ public class StoreAccessService : IStoreAccessService
         q = q.Where(BuildEmailEqualsPredicate(emailColumn, normalized));
 
         return await q.Select(s => s.StoreName).Distinct().ToListAsync();
+    }
+
+    private async Task<List<string>> LoadTrainerStoreNamesAsync(string? email)
+    {
+        var normalized = (email ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(normalized)) return new List<string>();
+
+        var consultants = await _db.TrainerConsultants
+            .Where(t => t.TrainerEmail == normalized)
+            .Select(t => t.ConsultantEmail)
+            .ToListAsync();
+        if (consultants.Count == 0) return new List<string>();
+
+        // Same latest-period rule as every other role, so a consultant's rotation to other
+        // stores moves the Trainer's view with it.
+        var latest = await _db.StoreReferences
+            .OrderByDescending(s => s.Year).ThenByDescending(s => s.Month)
+            .Select(s => new { s.Month, s.Year })
+            .FirstOrDefaultAsync();
+        if (latest == null) return new List<string>();
+
+        return await _db.StoreReferences
+            .Where(s => s.Month == latest.Month && s.Year == latest.Year && consultants.Contains(s.OperationConsultantEmail.ToLower()))
+            .Select(s => s.StoreName)
+            .Distinct()
+            .ToListAsync();
     }
 
     private static Expression<Func<StoreReference, bool>> BuildEmailEqualsPredicate(
@@ -175,8 +205,19 @@ public class StoreAccessService : IStoreAccessService
     {
         if (!IsRestrictedRole(role)) return true;
 
+        // A Trainer is read-only unless the Admin ticked "can edit" for them.
+        if (role == UserManagementPolicy.TrainerRole && !await TrainerCanEditAsync(email)) return false;
+
         var own = await GetOwnStoreNamesAsync(role, email);
         return own != null && own.Any(s => string.Equals(s, storeName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task<bool> TrainerCanEditAsync(string? email)
+    {
+        var normalized = (email ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(normalized)) return false;
+        return await _db.TrainerSettings.AsNoTracking()
+            .Where(t => t.TrainerEmail == normalized).Select(t => t.CanEdit).FirstOrDefaultAsync();
     }
 
     public async Task<ResponsibleParty?> GetResponsiblePartyAsync(string storeName)

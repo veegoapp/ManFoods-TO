@@ -156,6 +156,7 @@ builder.Services.AddScoped<IUploadService, UploadService>();
 builder.Services.AddScoped<IDataFreshnessService, DataFreshnessService>();
 builder.Services.AddSingleton<IBackgroundJobTracker, BackgroundJobTracker>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITrainerService, TrainerService>();
 builder.Services.AddScoped<ISessionValidationService, SessionValidationService>();
 builder.Services.AddScoped<IStoreService, StoreService>();
 builder.Services.AddScoped<IStoreAccessService, StoreAccessService>();

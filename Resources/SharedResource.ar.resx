@@ -729,6 +729,13 @@
   <data name="Role_HeadManager" xml:space="preserve"><value>مدير أول المطعم</value></data>
   <data name="Role_SeniorOperationConsultant" xml:space="preserve"><value>استشاري أول العمليات</value></data>
   <data name="Role_OperationDirector" xml:space="preserve"><value>مدير أول التشغيل</value></data>
+  <data name="Role_Trainer" xml:space="preserve"><value>مدرب</value></data>
+  <data name="Trainer_Consultants" xml:space="preserve"><value>استشاريو العمليات الذين يغطيهم هذا المدرب</value></data>
+  <data name="Trainer_ConsultantsHelp" xml:space="preserve"><value>من آخر ملف Store Reference. يرى المدرب مطاعم هؤلاء الاستشاريين فقط.</value></data>
+  <data name="Trainer_NoConsultants" xml:space="preserve"><value>لا يوجد استشاريو عمليات — ارفع ملف Store Reference أولًا.</value></data>
+  <data name="Trainer_NotInLatestFile" xml:space="preserve"><value>(غير موجود في آخر ملف Store Reference)</value></data>
+  <data name="Trainer_CanEdit" xml:space="preserve"><value>يمكنه التعديل (إضافة ملاحظات خطة العمل وإكمال المهام)</value></data>
+  <data name="Trainer_CanEditHelp" xml:space="preserve"><value>بدون علامة = قراءة فقط: يرى المدرب البيانات ولا يستطيع تغيير أي شيء.</value></data>
 
   <!-- Reports -->
   <data name="Rep_TurnoverWorkforce" xml:space="preserve"><value>الدوران والقوى العاملة</value></data>
