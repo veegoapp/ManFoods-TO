@@ -1844,6 +1844,9 @@
   <data name="Set_Access_Sub" xml:space="preserve"><value>Control what restricted roles (Operation Consultant, Operation Manager, Head Manager, etc.) can see per area. Checked = restricted to their own stores; unchecked = open to all stores (view only — Action Plan writing always stays limited to their own stores). Everything defaults to restricted.</value></data>
   <data name="Set_Access_Restricted" xml:space="preserve"><value>Own stores</value></data>
   <data name="Set_Access_Open" xml:space="preserve"><value>All stores</value></data>
+  <data name="Set_Access_ColRoles" xml:space="preserve"><value>Operation roles</value></data>
+  <data name="Set_Access_ColTrainers" xml:space="preserve"><value>Trainers</value></data>
+  <data name="Set_Access_TrainerNote" xml:space="preserve"><value>The Trainers column works the same way but applies to the Trainer role only. Nothing is saved for it until you press Save, and until then every area is Own stores for Trainers.</value></data>
   <data name="Api_NoAccessSettings" xml:space="preserve"><value>No access settings were provided.</value></data>
   <data name="Set_Access_Area_analytics" xml:space="preserve"><value>Workforce, Turnover &amp; Comparisons</value></data>
   <data name="Set_Access_Area_retention" xml:space="preserve"><value>Retention</value></data>

@@ -136,7 +136,7 @@ public class DashboardController : Controller
         if (definition != null)
         {
             if (!definition.IsVisible(await _visibility.GetHiddenAsync(role))) return StatusCode(StatusCodes.Status403Forbidden);
-            if (reportAccess != null && areaContext != null && await reportAccess.ResolveRestrictedAreaAsync(definition) is { } restrictedArea)
+            if (reportAccess != null && areaContext != null && await reportAccess.ResolveRestrictedAreaAsync(definition, role == UserManagementPolicy.TrainerRole) is { } restrictedArea)
                 areaContext.Area = restrictedArea;
         }
         store = string.IsNullOrWhiteSpace(store) ? null : store;

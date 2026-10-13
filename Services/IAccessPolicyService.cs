@@ -24,4 +24,11 @@ public interface IAccessPolicyService
     /// are written; unknown keys are ignored. Returns one line per area whose value actually changed
     /// (for the Activity Log), empty when nothing changed.</summary>
     Task<List<string>> SaveAsync(Dictionary<string, bool> settings, string? adminName);
+
+    /// <summary>The Trainer column: the same area → is-restricted map, but for the Trainer role only
+    /// (a Trainer area that was never saved is restricted).</summary>
+    Task<Dictionary<string, bool>> GetAllForTrainerAsync();
+
+    /// <summary>Persists the Trainer column. Same rules as <see cref="SaveAsync"/>; the regular column is not touched.</summary>
+    Task<List<string>> SaveForTrainerAsync(Dictionary<string, bool> settings, string? adminName);
 }

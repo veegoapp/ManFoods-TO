@@ -33,6 +33,7 @@ public class AccessPolicyService : IAccessPolicyService
     private static bool Resolve(Dictionary<string, bool> map, string areaKey)
     {
         if (map.TryGetValue(areaKey, out var restricted)) return restricted;
+        if (AccessAreas.IsTrainerKey(areaKey)) return true; // a Trainer area nobody saved yet: own stores
         if (AccessAreas.FormerlyShared.TryGetValue(areaKey, out var parent) && map.TryGetValue(parent, out var parentRestricted)) return parentRestricted;
         return true;
     }
@@ -48,7 +49,8 @@ public class AccessPolicyService : IAccessPolicyService
     public async Task<bool> AnyOpenAsync()
     {
         var map = await LoadAsync();
-        return map.Values.Any(restricted => !restricted);
+        // Only the regular column: the Trainer rows share the table but must never widen the other roles' dropdowns.
+        return map.Any(kv => !AccessAreas.IsTrainerKey(kv.Key) && !kv.Value);
     }
 
     public async Task<Dictionary<string, bool>> GetAllAsync()
@@ -60,13 +62,30 @@ public class AccessPolicyService : IAccessPolicyService
             StringComparer.OrdinalIgnoreCase);
     }
 
-    public async Task<List<string>> SaveAsync(Dictionary<string, bool> settings, string? adminName)
+    public async Task<Dictionary<string, bool>> GetAllForTrainerAsync()
     {
-        var before = await GetAllAsync();
+        var map = await LoadAsync();
+        return AccessAreas.All.ToDictionary(
+            a => a,
+            a => Resolve(map, AccessAreas.TrainerKey(a)),
+            StringComparer.OrdinalIgnoreCase);
+    }
+
+    public Task<List<string>> SaveAsync(Dictionary<string, bool> settings, string? adminName) =>
+        SaveCoreAsync(settings, adminName, trainer: false);
+
+    public Task<List<string>> SaveForTrainerAsync(Dictionary<string, bool> settings, string? adminName) =>
+        SaveCoreAsync(settings, adminName, trainer: true);
+
+    private async Task<List<string>> SaveCoreAsync(Dictionary<string, bool> settings, string? adminName, bool trainer)
+    {
+        string KeyOf(string area) => trainer ? AccessAreas.TrainerKey(area) : area;
+
+        var before = trainer ? await GetAllForTrainerAsync() : await GetAllAsync();
         var changes = new List<string>();
         foreach (var area in AccessAreas.All)
             if (settings.TryGetValue(area, out var wanted) && before[area] != wanted)
-                changes.Add($"{area}: {Scope(before[area])} → {Scope(wanted)}");
+                changes.Add($"{(trainer ? "trainer " : "")}{area}: {Scope(before[area])} → {Scope(wanted)}");
         var now = DateTime.UtcNow;
         var existing = await _db.PageAccessConfigs.ToListAsync();
         var byKey = existing.ToDictionary(r => r.AreaKey, StringComparer.OrdinalIgnoreCase);
@@ -74,7 +93,8 @@ public class AccessPolicyService : IAccessPolicyService
         foreach (var area in AccessAreas.All)
         {
             if (!settings.TryGetValue(area, out var isRestricted)) continue;
-            if (byKey.TryGetValue(area, out var row))
+            var key = KeyOf(area);
+            if (byKey.TryGetValue(key, out var row))
             {
                 row.IsRestricted = isRestricted;
                 row.UpdatedByName = adminName;
@@ -84,7 +104,7 @@ public class AccessPolicyService : IAccessPolicyService
             {
                 _db.PageAccessConfigs.Add(new PageAccessConfig
                 {
-                    AreaKey = area, IsRestricted = isRestricted, UpdatedByName = adminName, UpdatedAt = now,
+                    AreaKey = key, IsRestricted = isRestricted, UpdatedByName = adminName, UpdatedAt = now,
                 });
             }
         }

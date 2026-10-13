@@ -14,7 +14,8 @@ public class ReportAccessTests
         public Task<bool> IsRestrictedAsync(string areaKey) => Task.FromResult(Restricted.Contains(areaKey));
         public Task<bool> AnyOpenAsync() => Task.FromResult(true);
         public Task<Dictionary<string, bool>> GetAllAsync() => Task.FromResult(new Dictionary<string, bool>());
-        public Task<List<string>> SaveAsync(Dictionary<string, bool> settings, string? adminName) => Task.FromResult(new List<string>());
+        public Task<List<string>> SaveAsync(Dictionary<string, bool> settings, string? adminName) => Task.FromResult(new List<string>());        public Task<Dictionary<string, bool>> GetAllForTrainerAsync() => Task.FromResult(new Dictionary<string, bool>());
+        public Task<List<string>> SaveForTrainerAsync(Dictionary<string, bool> settings, string? adminName) => Task.FromResult(new List<string>());
     }
 
     [Fact]

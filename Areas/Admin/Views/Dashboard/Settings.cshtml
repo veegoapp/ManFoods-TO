@@ -177,6 +177,8 @@
 <div id="setTabAccess" hidden
      data-restricted="@L["Set_Access_Restricted"]"
      data-open="@L["Set_Access_Open"]"
+     data-col-roles="@L["Set_Access_ColRoles"]"
+     data-col-trainers="@L["Set_Access_ColTrainers"]"
      data-area-analytics="@L["Set_Access_Area_analytics"]"
      data-area-workforce_planning="@L["Set_Access_Area_workforce_planning"]"
      data-area-hiring_forecast="@L["Set_Access_Area_hiring_forecast"]"
@@ -203,7 +205,8 @@
      data-desc-scorecard="@L["Set_Access_Desc_scorecard"]"
      data-desc-action_center="@L["Set_Access_Desc_action_center"]"
      data-desc-reports="@L["Set_Access_Desc_reports"]">
-    <p class="text-muted-custom mb-4">@L["Set_Access_Sub"]</p>
+    <p class="text-muted-custom mb-2">@L["Set_Access_Sub"]</p>
+    <p class="text-muted-custom mb-4">@L["Set_Access_TrainerNote"]</p>
     <div class="chart-card set-card">
         <div style="padding:12px 20px 20px" id="setAccessRows"></div>
         <div style="padding:0 20px 20px" class="d-flex align-items-center gap-3">
@@ -404,56 +407,81 @@ async function setAccessInit() {
     setAccessLoaded = true;
     const el = document.getElementById('setTabAccess');
     const A = { restricted: el.getAttribute('data-restricted'), open: el.getAttribute('data-open') };
-    let map = {};
+    let map = {}, trainerMap = {};
     try {
         const r = await fetch('/api/settings/access-policy');
         if (r.ok) map = await r.json();
     } catch { /* fall through to defaults */ }
+    try {
+        const r = await fetch('/api/settings/access-policy/trainer');
+        if (r.ok) trainerMap = await r.json();
+    } catch { /* fall through to defaults */ }
+
+    const RESTRICTED_COLOR = 'oklch(0.6 0.14 75)', OPEN_COLOR = 'oklch(0.5 0.15 155)';
+    const GRID = 'display:grid;grid-template-columns:minmax(0,1fr) 150px 150px;gap:12px;align-items:start';
+    const stateText = restricted => restricted ? A.restricted : A.open;
+    const stateColor = restricted => restricted ? RESTRICTED_COLOR : OPEN_COLOR;
+    const checkbox = attr => `style="width:18px;height:18px;accent-color:var(--red);flex-shrink:0;margin-top:1px" ${attr}`;
+
+    const header = `<div class="set-rule-row" style="${GRID};font-size:12px;font-weight:700;color:var(--text-3)">
+        <span></span><span>${setAccessEsc(el.getAttribute('data-col-roles'))}</span><span>${setAccessEsc(el.getAttribute('data-col-trainers'))}</span></div>`;
 
     const rows = SET_ACCESS_AREAS.map(area => {
-        const restricted = map[area] !== false; // default restricted
+        const restricted = map[area] !== false;               // default restricted
+        const trainerRestricted = trainerMap[area] !== false; // default restricted
         const label = el.getAttribute('data-area-' + area) || area;
         const desc = el.getAttribute('data-desc-' + area) || '';
         const isSub = area === 'ninety_day_leavers' || area === 'exit_comments';
-        return `<div class="set-rule-row" style="align-items:flex-start;${isSub ? 'padding-left:26px' : ''}">
-            <label class="set-access-toggle" style="min-width:0;flex:1;cursor:pointer;display:flex;gap:12px;align-items:flex-start">
-                <input type="checkbox" data-area="${area}" ${restricted ? 'checked' : ''} style="width:18px;height:18px;margin-top:2px;accent-color:var(--red);flex-shrink:0">
-                <span>
-                    <span style="font-weight:700;font-size:13.5px">${isSub ? '↳ ' : ''}${setAccessEsc(label)}</span>
-                    <span style="display:block;font-size:12px;color:var(--text-3);margin-top:2px">${setAccessEsc(desc)}</span>
-                </span>
+        return `<div class="set-rule-row" style="${GRID};${isSub ? 'padding-left:26px' : ''}">
+            <span>
+                <span style="font-weight:700;font-size:13.5px">${isSub ? '↳ ' : ''}${setAccessEsc(label)}</span>
+                <span style="display:block;font-size:12px;color:var(--text-3);margin-top:2px">${setAccessEsc(desc)}</span>
+            </span>
+            <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;white-space:nowrap">
+                <input type="checkbox" data-area="${area}" ${restricted ? 'checked' : ''} ${checkbox('')}>
+                <span data-state="${area}" style="font-size:11px;font-weight:700;margin-top:2px;color:${stateColor(restricted)}">${setAccessEsc(stateText(restricted))}</span>
             </label>
-            <span data-state="${area}" style="font-size:11px;font-weight:700;white-space:nowrap;color:${restricted ? 'oklch(0.6 0.14 75)' : 'oklch(0.5 0.15 155)'}">${restricted ? setAccessEsc(A.restricted) : setAccessEsc(A.open)}</span>
+            <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;white-space:nowrap">
+                <input type="checkbox" data-trainer-area="${area}" ${trainerRestricted ? 'checked' : ''} ${checkbox('')}>
+                <span data-tstate="${area}" style="font-size:11px;font-weight:700;margin-top:2px;color:${stateColor(trainerRestricted)}">${setAccessEsc(stateText(trainerRestricted))}</span>
+            </label>
         </div>`;
     }).join('');
-    document.getElementById('setAccessRows').innerHTML = rows;
+    document.getElementById('setAccessRows').innerHTML = `<div style="overflow-x:auto"><div style="min-width:560px">${header}${rows}</div></div>`;
 
-    document.querySelectorAll('#setAccessRows input[type=checkbox]').forEach(cb => {
-        cb.addEventListener('change', () => {
-            const area = cb.dataset.area;
-            const stateEl = document.querySelector(`#setAccessRows [data-state="${area}"]`);
-            stateEl.textContent = cb.checked ? A.restricted : A.open;
-            stateEl.style.color = cb.checked ? 'oklch(0.6 0.14 75)' : 'oklch(0.5 0.15 155)';
+    const bind = (selector, stateAttr, datasetKey) => {
+        document.querySelectorAll(selector).forEach(cb => {
+            cb.addEventListener('change', () => {
+                const area = cb.dataset[datasetKey];
+                const stateEl = document.querySelector(`#setAccessRows [${stateAttr}="${area}"]`);
+                stateEl.textContent = stateText(cb.checked);
+                stateEl.style.color = stateColor(cb.checked);
+            });
         });
-    });
+    };
+    bind('#setAccessRows input[data-area]', 'data-state', 'area');
+    bind('#setAccessRows input[data-trainer-area]', 'data-tstate', 'trainerArea');
 }
 
 async function setAccessSave() {
     const setL = document.getElementById('setL').dataset;
     const btn = document.getElementById('setAccessSaveBtn');
     const status = document.getElementById('setAccessStatus');
-    const settings = {};
-    document.querySelectorAll('#setAccessRows input[type=checkbox]').forEach(cb => { settings[cb.dataset.area] = cb.checked; });
+    const settings = {}, trainerSettings = {};
+    document.querySelectorAll('#setAccessRows input[data-area]').forEach(cb => { settings[cb.dataset.area] = cb.checked; });
+    document.querySelectorAll('#setAccessRows input[data-trainer-area]').forEach(cb => { trainerSettings[cb.dataset.trainerArea] = cb.checked; });
 
     btn.disabled = true;
     status.textContent = setL.saving || '';
+    const post = (url, body) => fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value },
+        body: JSON.stringify({ settings: body })
+    });
     try {
-        const r = await fetch('/api/settings/access-policy', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value },
-            body: JSON.stringify({ settings })
-        });
-        status.textContent = r.ok ? setL.saved : setL.saveFailed;
+        const r = await post('/api/settings/access-policy', settings);
+        const t = await post('/api/settings/access-policy/trainer', trainerSettings);
+        status.textContent = r.ok && t.ok ? setL.saved : setL.saveFailed;
     } catch {
         status.textContent = setL.saveFailed;
     } finally {

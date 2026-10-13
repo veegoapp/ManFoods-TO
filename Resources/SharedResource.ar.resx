@@ -1850,6 +1850,9 @@
   <data name="Set_Access_Sub" xml:space="preserve"><value>تحكّم في ما تراه الأدوار المقيّدة (Operation Consultant، Operation Manager، Head Manager، إلخ) لكل منطقة. متشيّك = مقيّد بمطاعمه؛ غير متشيّك = مفتوح لكل المطاعم (عرض فقط — الكتابة في خطة الإجراء تظل محصورة في مطاعمه دايمًا). الافتراضي: الكل مقيّد.</value></data>
   <data name="Set_Access_Restricted" xml:space="preserve"><value>مطاعمه</value></data>
   <data name="Set_Access_Open" xml:space="preserve"><value>كل المطاعم</value></data>
+  <data name="Set_Access_ColRoles" xml:space="preserve"><value>أدوار التشغيل</value></data>
+  <data name="Set_Access_ColTrainers" xml:space="preserve"><value>المدربون</value></data>
+  <data name="Set_Access_TrainerNote" xml:space="preserve"><value>عمود المدربين يعمل بنفس الطريقة لكنه يخص دور المدرب فقط. لا يُحفظ له شيء قبل الضغط على حفظ، وإلى ذلك الحين كل المناطق «مطاعمه فقط» للمدربين.</value></data>
   <data name="Api_NoAccessSettings" xml:space="preserve"><value>لم يتم توفير أي إعدادات صلاحيات.</value></data>
   <data name="Set_Access_Area_analytics" xml:space="preserve"><value>القوى العاملة والدوران والمقارنات</value></data>
   <data name="Set_Access_Area_retention" xml:space="preserve"><value>الاحتفاظ</value></data>

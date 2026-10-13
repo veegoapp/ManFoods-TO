@@ -32,6 +32,14 @@ public static class AccessAreas
     /// stay own-stores otherwise. Never appears in the Settings matrix.</summary>
     public const string Shared          = "shared";
 
+    /// <summary>Settings → Access has a second column for the Trainer role. Its rows live in the same table as the
+    /// regular ones, under the area key with this prefix (for example "trainer:analytics"), so the regular column and
+    /// everything that reads it are untouched. A Trainer row that was never saved means restricted (own stores).</summary>
+    public const string TrainerPrefix = "trainer:";
+
+    public static string TrainerKey(string area) => TrainerPrefix + area;
+    public static bool IsTrainerKey(string? key) => key != null && key.StartsWith(TrainerPrefix, StringComparison.OrdinalIgnoreCase);
+
     /// <summary>Areas that were part of another area before they got their own row. Until an Admin saves the
     /// Access settings (which writes a row for every area), a missing row follows the area it used to share,
     /// so splitting an area off never changes what a role can see.</summary>
