@@ -769,20 +769,20 @@ public class DashboardController : Controller
         if (user.Role == UserManagementPolicy.TrainerRole)
         {
             var saved = await _trainers.GetAsync(user.Email);
-            vm.TrainerConsultants = saved.ConsultantEmails.ToList();
+            vm.TrainerCoverage = saved.Coverage.ToList();
             vm.TrainerCanEdit = saved.CanEdit;
         }
         return await EditUserViewAsync(vm);
     }
 
-    /// <summary>Shows the Edit User page with the Trainer panel's list of Operation Consultants filled in.</summary>
+    /// <summary>Shows the Edit User page with the Trainer panel's reporting-line tree filled in.</summary>
     private async Task<IActionResult> EditUserViewAsync(MvcApp.Models.ViewModels.EditUserViewModel vm)
     {
-        vm.ConsultantOptions = await _trainers.GetConsultantOptionsAsync();
+        vm.CoverageTree = await _trainers.GetTreeAsync();
         return View("EditUser", vm);
     }
 
-    /// <summary>Keeps the Trainer tables in step with an edit: saves the picks for a Trainer, follows an email
+    /// <summary>Keeps the Trainer tables in step with an edit: saves the coverage for a Trainer, follows an email
     /// change, and clears them when the account stops being a Trainer.</summary>
     private async Task SyncTrainerAsync(string? roleBefore, string? emailBefore, MvcApp.Models.ViewModels.UserViewModel updated, MvcApp.Models.ViewModels.EditUserViewModel vm)
     {
@@ -791,7 +791,7 @@ public class DashboardController : Controller
         {
             if (wasTrainer && emailBefore != null && !string.Equals(emailBefore, updated.Email, StringComparison.OrdinalIgnoreCase))
                 await _trainers.RenameAsync(emailBefore, updated.Email);
-            await _trainers.SaveAsync(updated.Email, vm.TrainerConsultants, vm.TrainerCanEdit);
+            await _trainers.SaveAsync(updated.Email, vm.TrainerCoverage, vm.TrainerCanEdit, replaceCoverage: vm.TrainerCoverageSent);
         }
         else if (wasTrainer && emailBefore != null)
         {

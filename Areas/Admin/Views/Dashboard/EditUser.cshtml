@@ -15,7 +15,7 @@
         </div>
         <div><h6 class="mb-0">@(string.IsNullOrWhiteSpace(Model.AssignedName) ? Model.Email : Model.AssignedName)</h6><p class="text-muted-custom mb-0 small">@Model.Email</p></div>
     </div>
-    <form asp-area="Admin" asp-controller="Dashboard" asp-action="EditUser" asp-route-id="@Model.Id" method="post">
+    <form id="editUserForm" asp-area="Admin" asp-controller="Dashboard" asp-action="EditUser" asp-route-id="@Model.Id" method="post">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="alert-banner alert-error-banner mb-3"></div>
 
@@ -68,44 +68,63 @@
             </select>
         </div>
 
-        @* Trainer only: which Operation Consultants this Trainer covers, and edit vs. read-only. *@
+        @* Trainer only: what this Trainer covers — the reporting-line tree, a checkbox at every level — and edit vs. read-only. *@
         @{
-            var pickedEmails = new HashSet<string>(Model.TrainerConsultants ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
-            var listedEmails = new HashSet<string>(Model.ConsultantOptions.Select(c => c.Email), StringComparer.OrdinalIgnoreCase);
-            var staleEmails = pickedEmails.Where(e => !listedEmails.Contains(e)).ToList();
+            string LevelLabel(string kind) => kind switch
+            {
+                "od" => L["Role_OperationDirector"].Value,
+                "om" => L["Common_OperationManager"].Value,
+                "soc" => L["Role_SeniorOperationConsultant"].Value,
+                "oc" => L["Common_OperationConsultant"].Value,
+                "hm" => L["Role_HeadManager"].Value,
+                _ => kind,
+            };
+            object MapNode(MvcApp.Services.CoverageNode n) =>
+                new { k = n.Kind, n = n.Name, e = n.Email, c = n.Children.Select(x => MapNode(x)).ToList(), s = n.Stores };
+            var tcJson = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                roots = Model.CoverageTree.Roots.Select(x => MapNode(x)).ToList(),
+                unassigned = Model.CoverageTree.Unassigned,
+                saved = Model.TrainerCoverage ?? new List<string>(),
+                labels = new { od = LevelLabel("od"), om = LevelLabel("om"), soc = LevelLabel("soc"), oc = LevelLabel("oc"), hm = LevelLabel("hm") },
+                unassignedLabel = L["Trainer_Unassigned"].Value,
+                none = L["Trainer_None"].Value,
+                notInFile = L["Trainer_NotInLatestFile"].Value,
+            });
         }
         <div class="mb-4" id="trainerPanel" @(Model.Role == "Trainer" ? "" : "hidden")>
-            <label class="form-label-dark">@L["Trainer_Consultants"]</label>
-            <p class="text-muted-custom small mb-2">@L["Trainer_ConsultantsHelp"]</p>
-            @if (!Model.ConsultantOptions.Any() && staleEmails.Count == 0)
+            <label class="form-label-dark">@L["Trainer_Coverage"]</label>
+            <p class="text-muted-custom small mb-2">@L["Trainer_CoverageHelp"]</p>
+            <div class="tc-legend">
+                <span class="tc-tag tc-od">@LevelLabel("od")</span><span class="tc-sep">›</span>
+                <span class="tc-tag tc-om">@LevelLabel("om")</span><span class="tc-sep">›</span>
+                <span class="tc-tag tc-soc">@LevelLabel("soc")</span><span class="tc-sep">›</span>
+                <span class="tc-tag tc-oc">@LevelLabel("oc")</span><span class="tc-sep">›</span>
+                <span class="tc-tag tc-hm">@LevelLabel("hm")</span><span class="tc-sep">›</span>
+                <span class="text-muted-custom small">@L["Trainer_StoresWord"]</span>
+            </div>
+            @if (!Model.CoverageTree.Roots.Any() && !Model.CoverageTree.Unassigned.Any())
             {
-                <p class="text-muted-custom small">@L["Trainer_NoConsultants"]</p>
+                <p class="text-muted-custom small">@L["Trainer_NoStores"]</p>
             }
-            <div style="max-height:280px;overflow:auto;padding:8px 12px;border:1px solid var(--border, rgba(148,163,184,.25));border-radius:8px">
-                @{ var tcIndex = 0; }
-                @foreach (var c in Model.ConsultantOptions)
-                {
-                    tcIndex++;
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="TrainerConsultants" id="tc_@tcIndex" value="@c.Email" checked="@pickedEmails.Contains(c.Email)" />
-                        <label class="form-check-label" for="tc_@tcIndex">@c.Name <span class="text-muted-custom small">@c.Email</span></label>
-                    </div>
-                }
-                @* Picked earlier but absent from the latest Store Reference file: kept ticked so saving never drops them silently. *@
-                @foreach (var email in staleEmails)
-                {
-                    tcIndex++;
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="TrainerConsultants" id="tc_@tcIndex" value="@email" checked />
-                        <label class="form-check-label" for="tc_@tcIndex">@email <span class="text-muted-custom small">@L["Trainer_NotInLatestFile"]</span></label>
-                    </div>
-                }
+            <div class="tc-actions">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="tcExpand">@L["Trainer_ExpandAll"]</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="tcCollapse">@L["Trainer_CollapseAll"]</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="tcClear">@L["Trainer_ClearAll"]</button>
+            </div>
+            <div class="tc-tree" id="tcTree"></div>
+            <div class="tc-summary">
+                <div>@L["Trainer_WillSee"] <b id="tcCount">0</b> @L["Trainer_StoresWord"]</div>
+                <div class="tc-sumrow"><span class="text-muted-custom small">@L["Trainer_WholeGroups"]</span><div class="tc-chips" id="tcGroups"></div></div>
+                <div class="tc-sumrow"><span class="text-muted-custom small">@L["Trainer_IndividualStores"]</span><div class="tc-chips" id="tcSingles"></div></div>
+                <div class="tc-sumrow" id="tcStaleRow" hidden><span class="text-muted-custom small">@L["Trainer_NotInLatestFile"]</span><div class="tc-chips" id="tcStale"></div></div>
             </div>
             <div class="form-check mt-3">
                 <input asp-for="TrainerCanEdit" class="form-check-input" />
                 <label asp-for="TrainerCanEdit" class="form-check-label">@L["Trainer_CanEdit"]</label>
                 <p class="text-muted-custom small mb-0">@L["Trainer_CanEditHelp"]</p>
             </div>
+            <script type="application/json" id="tcData">@Html.Raw(tcJson)</script>
         </div>
         <button type="submit" class="btn btn-primary w-100">@L["EU_SaveChanges"]</button>
     </form>
@@ -120,6 +139,163 @@
     const sync = () => { panel.hidden = role.value !== 'Trainer'; };
     role.addEventListener('change', sync);
     sync();
+
+    // ── Trainer coverage tree ─────────────────────────────────────────────────
+    const dataEl = document.getElementById('tcData');
+    const treeEl = document.getElementById('tcTree');
+    if (!dataEl || !treeEl) return;
+    let data;
+    try { data = JSON.parse(dataEl.textContent); } catch (e) { return; }
+
+    const chevron = '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const nodes = [];            // every person (or the Unassigned bucket)
+    const leaves = [];           // every store
+    const people = Object.create(null);   // "kind|email" -> { nodes: [], leaves: [] }  (a person can appear under several parents)
+    const leafByName = Object.create(null);
+    const explicit = Object.create(null);  // people the Admin ticked themselves: only these are saved as "whole group" entries
+    let uid = 0;
+
+    function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+    function makeStore(name, parent) {
+        const id = 'tcs' + (++uid);
+        const node = el('div', 'tc-node');
+        const head = el('div', 'tc-head');
+        head.appendChild(el('span', 'tc-chev tc-leaf'));
+        const box = el('input'); box.type = 'checkbox'; box.id = id;
+        const lab = el('label', 'tc-name tc-store', name); lab.htmlFor = id;
+        head.appendChild(box); head.appendChild(lab);
+        node.appendChild(head);
+        const leaf = { name: name, box: box, parent: parent };
+        leaves.push(leaf);
+        leafByName[name] = leaf;
+        return node;
+    }
+
+    function makeGroup(d, parent) {
+        const id = 'tcg' + (++uid);
+        const key = d.k ? d.k + '|' + d.e : null;
+        const node = el('div', 'tc-node');
+        const head = el('div', 'tc-head');
+        const chev = el('button', 'tc-chev'); chev.type = 'button'; chev.innerHTML = chevron;
+        chev.setAttribute('aria-expanded', 'false');
+        const box = el('input'); box.type = 'checkbox'; box.id = id;
+        const lab = el('label', 'tc-name', d.n); lab.htmlFor = id;
+        head.appendChild(chev); head.appendChild(box); head.appendChild(lab);
+        if (d.k) head.appendChild(el('span', 'tc-tag tc-' + d.k, data.labels[d.k]));
+        const count = el('span', 'tc-count'); head.appendChild(count);
+        node.appendChild(head);
+        const kids = el('div', 'tc-kids'); kids.hidden = true;
+        node.appendChild(kids);
+        const g = { d: d, key: key, box: box, parent: parent, kids: kids, chev: chev, count: count, leaves: [] };
+        nodes.push(g);
+        if (key) { (people[key] = people[key] || { nodes: [], leaves: [] }).nodes.push(g); }
+        (d.c || []).forEach(function (c) { kids.appendChild(makeGroup(c, g).node); });
+        (d.s || []).forEach(function (s) { kids.appendChild(makeStore(s, g)); });
+        g.node = node;
+        chev.addEventListener('click', function () { setOpen(g, kids.hidden); });
+        box.addEventListener('change', function () {
+            // Ticking a person ticks all of that person's stores, wherever they appear in the tree.
+            const set = g.key ? people[g.key].leaves : g.leaves;
+            if (g.key) { if (box.checked) explicit[g.key] = true; else delete explicit[g.key]; }
+            set.forEach(function (l) { l.box.checked = box.checked; });
+            refresh();
+        });
+        return g;
+    }
+
+    function setOpen(g, open) { g.kids.hidden = !open; g.chev.setAttribute('aria-expanded', String(open)); }
+    function ancestors(x) { const out = []; for (let p = x.parent; p; p = p.parent) out.push(p); return out; }
+
+    (data.roots || []).forEach(function (r) { treeEl.appendChild(makeGroup(r, null).node); });
+    if ((data.unassigned || []).length) {
+        treeEl.appendChild(makeGroup({ n: data.unassignedLabel, c: [], s: data.unassigned }, null).node);
+    }
+    leaves.forEach(function (l) { ancestors(l).forEach(function (a) { a.leaves.push(l); if (a.key) people[a.key].leaves.indexOf(l) < 0 && people[a.key].leaves.push(l); }); });
+    // A node's own leaves were collected above; a person's leaves are the union over all its appearances.
+
+    const personFull = function (key) { const p = people[key]; return !!p && p.leaves.length > 0 && p.leaves.every(function (l) { return l.box.checked; }); };
+
+    // Saved coverage -> boxes. Entries that no longer exist in the latest file are kept as "stale" chips.
+    const stale = [];
+    (data.saved || []).forEach(function (entry) {
+        const cut = entry.indexOf('|');
+        const kind = entry.slice(0, cut), value = entry.slice(cut + 1);
+        if (kind === 'store') {
+            if (leafByName[value]) leafByName[value].box.checked = true; else stale.push(entry);
+        } else if (people[kind + '|' + value]) {
+            explicit[kind + '|' + value] = true;
+            people[kind + '|' + value].leaves.forEach(function (l) { l.box.checked = true; });
+        } else stale.push(entry);
+    });
+    const staleBoxes = [];
+    const staleEl = document.getElementById('tcStale');
+    stale.forEach(function (entry, i) {
+        const chip = el('label', 'tc-chip');
+        const box = el('input'); box.type = 'checkbox'; box.checked = true; box.dataset.entry = entry;
+        chip.appendChild(box); chip.appendChild(document.createTextNode(' ' + entry.slice(entry.indexOf('|') + 1)));
+        staleEl.appendChild(chip); staleBoxes.push(box);
+    });
+    document.getElementById('tcStaleRow').hidden = stale.length === 0;
+
+    // Which entries would be saved: the people the Admin ticked (while all their stores are still ticked) and are not
+    // already covered by a ticked person above them, plus every other ticked store as a fixed store. A person whose
+    // stores merely all happen to be ticked is not promoted to a group.
+    const holds = function (key) { return !!explicit[key] && personFull(key); };
+    function selection() {
+        const covered = function (key) {
+            return people[key].nodes.every(function (n) { return ancestors(n).some(function (a) { return a.key && holds(a.key); }); });
+        };
+        const groups = Object.keys(explicit).filter(function (k) { return holds(k) && !covered(k); });
+        const singles = leaves.filter(function (l) {
+            return l.box.checked && !ancestors(l).some(function (a) { return a.key && holds(a.key); });
+        });
+        return { groups: groups, singles: singles };
+    }
+
+    function chips(host, items) {
+        host.textContent = '';
+        if (!items.length) { host.appendChild(el('span', 'text-muted-custom small', data.none)); return; }
+        items.forEach(function (t) { host.appendChild(el('span', 'tc-chip', t)); });
+    }
+
+    function refresh() {
+        nodes.forEach(function (g) {
+            const on = g.leaves.filter(function (l) { return l.box.checked; }).length, n = g.leaves.length;
+            g.box.checked = n > 0 && on === n;
+            g.box.indeterminate = on > 0 && on < n;
+            g.count.textContent = on + ' / ' + n;
+        });
+        const sel = selection();
+        const names = {};
+        sel.groups.forEach(function (k) { const n = people[k].nodes[0]; names[k] = n.d.n + ' (' + data.labels[n.d.k] + ')'; });
+        document.getElementById('tcCount').textContent = leaves.filter(function (l) { return l.box.checked; }).length;
+        chips(document.getElementById('tcGroups'), sel.groups.map(function (k) { return names[k]; }));
+        chips(document.getElementById('tcSingles'), sel.singles.map(function (l) { return l.name; }));
+    }
+    treeEl.addEventListener('change', refresh);
+
+    // Start with every ancestor of a ticked store open, so the saved choice is visible.
+    leaves.filter(function (l) { return l.box.checked; }).forEach(function (l) { ancestors(l).forEach(function (a) { setOpen(a, true); }); });
+    refresh();
+
+    document.getElementById('tcExpand').addEventListener('click', function () { nodes.forEach(function (g) { setOpen(g, true); }); });
+    document.getElementById('tcCollapse').addEventListener('click', function () { nodes.forEach(function (g) { setOpen(g, false); }); });
+    document.getElementById('tcClear').addEventListener('click', function () { Object.keys(explicit).forEach(function (k) { delete explicit[k]; }); leaves.forEach(function (l) { l.box.checked = false; }); staleBoxes.forEach(function (b) { b.checked = false; }); refresh(); });
+
+    // On save, send the choice as "kind|value" entries. The "sent" flag tells the server this page's script ran,
+    // so a page that failed to load can never wipe what was saved.
+    document.getElementById('editUserForm').addEventListener('submit', function (ev) {
+        const form = ev.currentTarget;
+        form.querySelectorAll('input[data-tc]').forEach(function (n) { n.remove(); });
+        if (role.value !== 'Trainer') return;
+        const add = function (name, value) { const i = el('input'); i.type = 'hidden'; i.name = name; i.value = value; i.dataset.tc = '1'; form.appendChild(i); };
+        const sel = selection();
+        sel.groups.forEach(function (k) { add('TrainerCoverage', k); });
+        sel.singles.forEach(function (l) { add('TrainerCoverage', 'store|' + l.name); });
+        staleBoxes.forEach(function (b) { if (b.checked) add('TrainerCoverage', b.dataset.entry); });
+        add('TrainerCoverageSent', 'true');
+    });
 })();
 </script>
 }

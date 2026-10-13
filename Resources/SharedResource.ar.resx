@@ -730,12 +730,21 @@
   <data name="Role_SeniorOperationConsultant" xml:space="preserve"><value>استشاري أول العمليات</value></data>
   <data name="Role_OperationDirector" xml:space="preserve"><value>مدير أول التشغيل</value></data>
   <data name="Role_Trainer" xml:space="preserve"><value>مدرب</value></data>
-  <data name="Trainer_Consultants" xml:space="preserve"><value>استشاريو العمليات الذين يغطيهم هذا المدرب</value></data>
-  <data name="Trainer_ConsultantsHelp" xml:space="preserve"><value>من آخر ملف Store Reference. يرى المدرب مطاعم هؤلاء الاستشاريين فقط.</value></data>
-  <data name="Trainer_NoConsultants" xml:space="preserve"><value>لا يوجد استشاريو عمليات — ارفع ملف Store Reference أولًا.</value></data>
   <data name="Trainer_NotInLatestFile" xml:space="preserve"><value>(غير موجود في آخر ملف Store Reference)</value></data>
   <data name="Trainer_CanEdit" xml:space="preserve"><value>يمكنه التعديل (إضافة ملاحظات خطة العمل وإكمال المهام)</value></data>
   <data name="Trainer_CanEditHelp" xml:space="preserve"><value>بدون علامة = قراءة فقط: يرى المدرب البيانات ولا يستطيع تغيير أي شيء.</value></data>
+  <data name="Trainer_Coverage" xml:space="preserve"><value>المطاعم التي يغطيها هذا المدرب</value></data>
+  <data name="Trainer_CoverageHelp" xml:space="preserve"><value>علّم شخصًا لتغطية كل مطاعمه (يتبع آخر ملف Store Reference كل شهر)، أو افتح الشخص وعلّم مطاعم بعينها (تبقى ثابتة).</value></data>
+  <data name="Trainer_StoresWord" xml:space="preserve"><value>مطعم</value></data>
+  <data name="Trainer_NoStores" xml:space="preserve"><value>لا توجد مطاعم — ارفع ملف Store Reference أولًا.</value></data>
+  <data name="Trainer_ExpandAll" xml:space="preserve"><value>فتح الكل</value></data>
+  <data name="Trainer_CollapseAll" xml:space="preserve"><value>طي الكل</value></data>
+  <data name="Trainer_ClearAll" xml:space="preserve"><value>إلغاء التحديد</value></data>
+  <data name="Trainer_WillSee" xml:space="preserve"><value>سيرى المدرب</value></data>
+  <data name="Trainer_WholeGroups" xml:space="preserve"><value>مجموعات كاملة (تتبع الملف الشهري)</value></data>
+  <data name="Trainer_IndividualStores" xml:space="preserve"><value>مطاعم بعينها (تبقى ثابتة)</value></data>
+  <data name="Trainer_None" xml:space="preserve"><value>لا شيء</value></data>
+  <data name="Trainer_Unassigned" xml:space="preserve"><value>مطاعم بدون خط تبعية</value></data>
 
   <!-- Reports -->
   <data name="Rep_TurnoverWorkforce" xml:space="preserve"><value>الدوران والقوى العاملة</value></data>

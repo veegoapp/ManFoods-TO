@@ -812,3 +812,28 @@ IF OBJECT_ID('dbo.trainer_settings', 'U') IS NULL
         can_edit BIT NOT NULL DEFAULT 0
     );
 GO
+
+-- ── trainer_coverage ─────────────────────────────────────────────────────
+-- Replaces trainer_consultants: what a Trainer covers is now any level of the reporting line (Director, Manager,
+-- Senior OC, Consultant, Head Manager — kind od/om/soc/oc/hm, value = the person's email) or one fixed store
+-- (kind store, value = the store name). Existing Consultant picks are copied over as kind 'oc'. The old table is
+-- left in place, unused, so this change can be rolled back; it is safe to drop later. Safe to run again.
+IF OBJECT_ID('dbo.trainer_coverage', 'U') IS NULL
+    CREATE TABLE dbo.trainer_coverage (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        trainer_email NVARCHAR(256) NOT NULL,
+        kind NVARCHAR(20) NOT NULL,
+        value NVARCHAR(450) NOT NULL
+    );
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_trainer_coverage_item' AND object_id = OBJECT_ID('dbo.trainer_coverage'))
+    CREATE UNIQUE INDEX ux_trainer_coverage_item ON dbo.trainer_coverage (trainer_email, kind, value);
+GO
+
+IF OBJECT_ID('dbo.trainer_consultants', 'U') IS NOT NULL
+    INSERT INTO dbo.trainer_coverage (trainer_email, kind, value)
+    SELECT c.trainer_email, 'oc', c.consultant_email
+    FROM dbo.trainer_consultants c
+    WHERE NOT EXISTS (SELECT 1 FROM dbo.trainer_coverage x WHERE x.trainer_email = c.trainer_email AND x.kind = 'oc' AND x.value = c.consultant_email);
+GO
