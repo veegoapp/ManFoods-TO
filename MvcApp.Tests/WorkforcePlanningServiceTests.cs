@@ -1114,7 +1114,8 @@ public class CrewTrainerServiceTests
         var b = Assert.Single(dto.ByStore, r => r.Store == "2 | B");
         Assert.Equal(7, b.CrewLevel); Assert.Equal(1, b.Required); Assert.Equal(0, b.Actual); Assert.Equal(-1, b.GapRule);
         Assert.Equal("2 | B", dto.ByStore[0].Store);                                             // the store most short of trainers (by the rule) comes first
-        Assert.Equal(21, dto.Kpis.CrewLevel); Assert.Equal(3, dto.Kpis.Required); Assert.Equal(2, dto.Kpis.Actual); Assert.Equal(-1, dto.Kpis.GapRule);
+        Assert.Equal(3, dto.ByStore.Sum(r => r.Required));                                       // the stores table rounds each store: 2 + 1
+        Assert.Equal(21, dto.Kpis.CrewLevel); Assert.Equal(4, dto.Kpis.Required); Assert.Equal(2, dto.Kpis.Actual); Assert.Equal(-2, dto.Kpis.GapRule); // the cards round the total once: 21 ÷ 6 = 3.5 → 4
     }
 
     [Fact]

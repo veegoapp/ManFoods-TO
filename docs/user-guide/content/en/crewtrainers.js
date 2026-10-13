@@ -8,7 +8,7 @@ module.exports = { title: 'Crew Trainers', blocks: [
   { h2: 'Step 2 - Read the summary cards' },
   { grid: ['kpi_trainers_vs_the_rule', 'kpi_crew_level', 'kpi_trainers_vs_plan', 'kpi_trainers_who_resigned'], perRow: 3, w: 190 },
   { defs: { head: ['Card', 'What it shows'], rows: [
-    ['Trainers vs the rule', 'Actual trainers over the trainers required (one per 6 crew-level employees).'],
+    ['Trainers vs the rule', 'Actual trainers over the trainers required (one per 6 crew-level employees). The required number is the total crew level divided by 6, rounded once; the Stores table rounds each store separately, so its Required column can add up to a little more.'],
     ['Crew level', 'Roster employees in jobs marked Crew Level in Job Payroll Groups, trainers excluded.'],
     ['Trainers vs plan', 'Actual trainers over the trainers in the projection.'],
     ['Trainers who resigned', 'Trainers who were on a trainer list and resigned in the last 6 roster months.'],
