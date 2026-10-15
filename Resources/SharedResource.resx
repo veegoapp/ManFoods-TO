@@ -140,6 +140,8 @@
   <data name="DM_DownloadHistory" xml:space="preserve"><value>Download History</value></data>
   <data name="DM_NoUploads" xml:space="preserve"><value>No uploads yet</value></data>
   <data name="DM_Download" xml:space="preserve"><value>Download</value></data>
+  <data name="Pw_ShowPassword" xml:space="preserve"><value>Show password</value></data>
+  <data name="Pw_HidePassword" xml:space="preserve"><value>Hide password</value></data>
   <data name="DM_Preview" xml:space="preserve"><value>Preview</value></data>
   <data name="DM_SystemResult" xml:space="preserve"><value>System Result</value></data>
   <data name="Msg_ExitDuplicatesSkipped" xml:space="preserve"><value>{0} duplicated response(s) were skipped — see System Result in the upload history.</value></data>
