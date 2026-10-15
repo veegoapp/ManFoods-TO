@@ -141,6 +141,8 @@
   <data name="DM_NoUploads" xml:space="preserve"><value>No uploads yet</value></data>
   <data name="DM_Download" xml:space="preserve"><value>Download</value></data>
   <data name="DM_Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="DM_SystemResult" xml:space="preserve"><value>System Result</value></data>
+  <data name="Msg_ExitDuplicatesSkipped" xml:space="preserve"><value>{0} duplicated response(s) were skipped — see System Result in the upload history.</value></data>
   <data name="DM_Loading" xml:space="preserve"><value>Loading…</value></data>
   <data name="DM_PreviewFailed" xml:space="preserve"><value>Failed to load preview.</value></data>
   <data name="DM_PreviewEmpty" xml:space="preserve"><value>This file has no data to preview.</value></data>

@@ -432,7 +432,7 @@ public class UploadService : IUploadService
         string Get(IXLRow row, string header) =>
             headerMap.TryGetValue(NormalizeHeader(header), out var col) ? row.Cell(col).GetString().Trim() : "";
 
-        var parsed = new List<(string ResponseId, string EmployeeId, DateTime? Completed, ExitInterview Row)>();
+        var allParsed = new List<(string ResponseId, string EmployeeId, DateTime? Completed, ExitInterview Row)>();
 
         foreach (var row in ws.RowsUsed().Skip(1))
         {
@@ -441,9 +441,9 @@ public class UploadService : IUploadService
             if (string.IsNullOrWhiteSpace(responseId) && string.IsNullOrWhiteSpace(employeeId)) continue;
 
             // The current template has no Forms "ID" column (it was trimmed out),
-            // so fall back to a synthetic key built from row content that will be
-            // identical across re-uploads of the same response but distinct across
-            // different ones — Upsert-by-response-id still works without a real ID.
+            // so fall back to a synthetic key built from row content. It only
+            // fills the unique forms_response_id column — duplicates are decided
+            // below by employee + completion time, not by this key.
             if (string.IsNullOrWhiteSpace(responseId))
                 responseId = $"{employeeId}|{Get(row, "المطعم")}|{Get(row, "Start time")}|{Get(row, "Completion time")}";
 
@@ -507,8 +507,51 @@ public class UploadService : IUploadService
                 FinalCommentsText = NullIfEmpty(Get(row, "هل هناك أي شيء ترغب في مشاركته معنا قبل مغادرتك؟")),
             };
 
-            parsed.Add((responseId, employeeId, completed, interview));
+            allParsed.Add((responseId, employeeId, completed, interview));
         }
+
+        // Uploads only ever add. A row is "Duplicated" (skipped) when the same
+        // employee already has a response with the same completion time — either
+        // stored earlier or higher up in this same file. Rows with no employee id
+        // or no completion time can't be compared, so they are added as Success.
+        // One query, limited to the employee ids in the file (never the whole table).
+        static string DupKey(string employeeId, DateTime completed) =>
+            employeeId.Trim() + "\u0001" + (completed.Ticks - completed.Ticks % TimeSpan.TicksPerSecond);
+
+        var fileEmployeeIds = allParsed.Where(p => !string.IsNullOrWhiteSpace(p.EmployeeId)).Select(p => p.EmployeeId).Distinct().ToList();
+        var existingRows = fileEmployeeIds.Count == 0
+            ? new List<(string EmployeeId, DateTime? SubmittedAt, string FormsResponseId)>()
+            : (await _db.ExitInterviews.AsNoTracking()
+                .Where(e => fileEmployeeIds.Contains(e.EmployeeId))
+                .Select(e => new { e.EmployeeId, e.SubmittedAt, e.FormsResponseId })
+                .ToListAsync()).Select(e => (e.EmployeeId, e.SubmittedAt, e.FormsResponseId)).ToList();
+
+        var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var usedResponseIds = new HashSet<string>(existingRows.Select(e => e.FormsResponseId), StringComparer.Ordinal);
+        foreach (var e in existingRows)
+            if (e.SubmittedAt.HasValue && !string.IsNullOrWhiteSpace(e.EmployeeId))
+                seenKeys.Add(DupKey(e.EmployeeId, e.SubmittedAt.Value));
+
+        var outcomes = new List<(ExitInterview Row, bool Duplicated)>();
+        var parsed = new List<(string ResponseId, string EmployeeId, DateTime? Completed, ExitInterview Row)>();
+        foreach (var p in allParsed)
+        {
+            var duplicated = !string.IsNullOrWhiteSpace(p.EmployeeId) && p.Completed.HasValue
+                && !seenKeys.Add(DupKey(p.EmployeeId, p.Completed.Value));
+            outcomes.Add((p.Row, duplicated));
+            if (duplicated) continue;
+
+            // forms_response_id is unique in the database, so a new row that would
+            // still collide (e.g. two time-less rows of the same employee/store)
+            // gets a short suffix instead of failing the whole upload.
+            if (!usedResponseIds.Add(p.Row.FormsResponseId))
+            {
+                p.Row.FormsResponseId += "|" + Guid.NewGuid().ToString("N")[..8];
+                usedResponseIds.Add(p.Row.FormsResponseId);
+            }
+            parsed.Add(p);
+        }
+        var duplicatedCount = outcomes.Count(o => o.Duplicated);
 
         // Job Title comes from the employee's most recent resignation record
         // (best-effort only — a miss here just leaves JobTitle blank, it no longer
@@ -575,16 +618,35 @@ public class UploadService : IUploadService
             }
         }
 
-        // Upsert by Forms response id: re-exporting the full response history
-        // from Microsoft Forms must not duplicate previously imported rows.
-        var responseIds = parsed.Where(p => !string.IsNullOrWhiteSpace(p.ResponseId)).Select(p => p.ResponseId).ToList();
-        if (responseIds.Count > 0)
-            await _db.ExitInterviews.Where(e => responseIds.Contains(e.FormsResponseId)).ExecuteDeleteAsync();
         if (parsed.Count > 0)
             await _db.ExitInterviews.AddRangeAsync(parsed.Select(p => p.Row));
 
+        // Per-row outcome workbook, downloadable later from the upload history.
+        byte[] resultBytes;
+        using (var rwb = new XLWorkbook())
+        {
+            var rws = rwb.AddWorksheet("System Result");
+            string[] heads = { "#", "Employee ID", "Store", "Job Title", "Completion time", "Result" };
+            for (var c = 0; c < heads.Length; c++) rws.Cell(1, c + 1).Value = heads[c];
+            rws.Row(1).Style.Font.Bold = true;
+            for (var i = 0; i < outcomes.Count; i++)
+            {
+                var (r, duplicated) = outcomes[i];
+                rws.Cell(i + 2, 1).Value = i + 1;
+                rws.Cell(i + 2, 2).Value = r.EmployeeId;
+                rws.Cell(i + 2, 3).Value = r.Store;
+                rws.Cell(i + 2, 4).Value = r.JobTitle;
+                rws.Cell(i + 2, 5).Value = r.SubmittedAt.HasValue ? r.SubmittedAt.Value.ToString("yyyy-MM-dd HH:mm:ss") : "";
+                rws.Cell(i + 2, 6).Value = duplicated ? "Duplicated" : "Success";
+            }
+            rws.Columns().AdjustToContents();
+            using var rms = new MemoryStream();
+            rwb.SaveAs(rms);
+            resultBytes = rms.ToArray();
+        }
+
         var now = DateTime.UtcNow;
-        _db.UploadLogs.Add(new UploadLog { FileType = "exit_interviews", FileName = file.FileName, Month = now.Month, Year = now.Year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName) });
+        _db.UploadLogs.Add(new UploadLog { FileType = "exit_interviews", FileName = file.FileName, Month = now.Month, Year = now.Year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName), ResultContent = resultBytes });
         await _db.SaveChangesAsync();
 
         var missingStore = parsed.Count(p => string.IsNullOrWhiteSpace(p.Row.Store));
@@ -593,6 +655,8 @@ public class UploadService : IUploadService
             : string.Format(_L["Msg_ExitProcessed"].Value, parsed.Count);
         if (unmatchedStoreNames.Count > 0)
             message += " " + string.Format(_L["Msg_ExitUnmatchedStores"].Value, unmatchedStoreNames.Count, string.Join(", ", unmatchedStoreNames.OrderBy(s => s)));
+        if (duplicatedCount > 0)
+            message += " " + string.Format(_L["Msg_ExitDuplicatesSkipped"].Value, duplicatedCount);
         return (true, message, parsed.Count);
     }
 
@@ -978,7 +1042,7 @@ public class UploadService : IUploadService
     public async Task<(List<UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize, string sort = "date", string dir = "desc", string? kind = null)
     {
         var logs = await _db.UploadLogs.OrderByDescending(l => l.UploadDate)
-            .Select(l => new { l.Id, l.FileType, l.FileName, l.Month, l.Year, l.UploadDate, l.UploadedBy, HasFile = l.FileContent != null })
+            .Select(l => new { l.Id, l.FileType, l.FileName, l.Month, l.Year, l.UploadDate, l.UploadedBy, HasFile = l.FileContent != null, HasResult = l.ResultContent != null })
             .ToListAsync();
 
         var items = new List<UploadHistoryItem>();
@@ -1005,7 +1069,7 @@ public class UploadService : IUploadService
                 UploadDate = l.UploadDate,
                 UploadedBy = l.UploadedBy,
                 PrimaryLogId = l.Id,
-                Files = new List<UploadFileRef> { new() { LogId = l.Id, FileType = l.FileType, FileName = l.FileName, HasFile = l.HasFile } },
+                Files = new List<UploadFileRef> { new() { LogId = l.Id, FileType = l.FileType, FileName = l.FileName, HasFile = l.HasFile, HasResult = l.HasResult } },
             });
         }
 
@@ -1086,6 +1150,14 @@ public class UploadService : IUploadService
         var log = await _db.UploadLogs.AsNoTracking().FirstOrDefaultAsync(l => l.Id == id);
         if (log?.FileContent == null) return null;
         return (log.FileContent, log.ContentType ?? "application/octet-stream", log.FileName);
+    }
+
+    public async Task<(byte[] Content, string FileName)?> GetResultFileAsync(int id)
+    {
+        var log = await _db.UploadLogs.AsNoTracking().Where(l => l.Id == id)
+            .Select(l => new { l.ResultContent, l.FileName }).FirstOrDefaultAsync();
+        if (log?.ResultContent == null) return null;
+        return (log.ResultContent, $"{Path.GetFileNameWithoutExtension(log.FileName)} - System Result.xlsx");
     }
 
     public async Task<UploadFilePreview?> PreviewFileAsync(int logId, int maxRows = 300, string? sheet = null)
@@ -1232,9 +1304,9 @@ public class UploadService : IUploadService
         }
 
         // exit_interviews is intentionally excluded from period-cascading
-        // deletion: each upload is a full, cumulative Forms export upserted
-        // by response id, not a single month/year snapshot, so deleting one
-        // log entry must not wipe data or other log rows.
+        // deletion: each upload only adds new responses on top of the earlier
+        // ones, not a single month/year snapshot, so deleting one log entry
+        // must not wipe data or other log rows.
         _db.UploadLogs.Remove(log);
         await _db.SaveChangesAsync();
     }

@@ -667,6 +667,17 @@ public class DashboardController : Controller
         return File(file.Value.Content, file.Value.ContentType, file.Value.FileName);
     }
 
+    [RequireAdminAuth]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> DownloadUploadResult(int id)
+    {
+        var result = await _uploads.GetResultFileAsync(id);
+        if (result == null) return NotFound();
+        return File(result.Value.Content,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            result.Value.FileName);
+    }
+
     [HttpGet("admin/dashboard/preview-upload-file")]
     [RequireAdminAuth]
     public async Task<IActionResult> PreviewUploadFile([FromQuery] int id, [FromQuery] string? sheet = null)

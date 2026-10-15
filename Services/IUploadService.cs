@@ -44,6 +44,8 @@ public interface IUploadService
     Task<List<MvcApp.Models.ViewModels.UploadHistoryItem>> GetAllHistoryAsync();
     Task DeleteLogAsync(int id);
     Task<(byte[] Content, string ContentType, string FileName)?> GetFileAsync(int id);
+    /// <summary>The saved Success/Duplicated per-row workbook of an exit-interview upload, or null.</summary>
+    Task<(byte[] Content, string FileName)?> GetResultFileAsync(int id);
 
     /// <summary>Reads a single uploaded file's raw bytes and returns its first
     /// sheet as a header row + capped data rows, for an in-portal preview.</summary>

@@ -461,6 +461,12 @@
                                             <a class="dm-file-chip" asp-area="Admin" asp-controller="Dashboard" asp-action="DownloadUploadFile" asp-route-id="@f.LogId" title="@f.FileName">
                                                 <i class="bi bi-download"></i>@f.FileName
                                             </a>
+                                            @if (f.HasResult)
+                                            {
+                                                <a class="dm-file-chip-preview" asp-area="Admin" asp-controller="Dashboard" asp-action="DownloadUploadResult" asp-route-id="@f.LogId" title="@L["DM_SystemResult"]">
+                                                    <i class="bi bi-clipboard-check"></i>
+                                                </a>
+                                            }
                                         </span>
                                     }
                                     else

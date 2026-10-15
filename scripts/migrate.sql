@@ -255,18 +255,21 @@ BEGIN
         upload_date DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
         uploaded_by NVARCHAR(MAX) NOT NULL DEFAULT '',
         file_content VARBINARY(MAX) NULL,
-        content_type NVARCHAR(MAX) NULL
+        content_type NVARCHAR(MAX) NULL,
+        result_content VARBINARY(MAX) NULL
     );
 END
 
 -- CREATE TABLE ... IF NOT EXISTS above is a no-op on a table that already
 -- exists with an older shape, so columns added after the table's first
--- deploy (like these two) never land on existing databases. Backfill them
+-- deploy (like these) never land on existing databases. Backfill them
 -- explicitly.
 IF COL_LENGTH('dbo.upload_logs', 'file_content') IS NULL
     ALTER TABLE dbo.upload_logs ADD file_content VARBINARY(MAX) NULL;
 IF COL_LENGTH('dbo.upload_logs', 'content_type') IS NULL
     ALTER TABLE dbo.upload_logs ADD content_type NVARCHAR(MAX) NULL;
+IF COL_LENGTH('dbo.upload_logs', 'result_content') IS NULL
+    ALTER TABLE dbo.upload_logs ADD result_content VARBINARY(MAX) NULL;
 
 -- ── ai_usage_daily ────────────────────────────
 IF OBJECT_ID('dbo.ai_usage_daily', 'U') IS NULL

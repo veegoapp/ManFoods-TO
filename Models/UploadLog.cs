@@ -33,6 +33,11 @@ public class UploadLog
     [Column("content_type")]
     public string? ContentType { get; set; }
 
+    // Per-row outcome workbook (Success / Duplicated) generated at upload time;
+    // only the exit-interview upload fills it.
+    [Column("result_content")]
+    public byte[]? ResultContent { get; set; }
+
     [NotMapped]
     public bool HasFile { get; set; }
 }
