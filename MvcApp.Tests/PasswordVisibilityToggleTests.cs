@@ -54,4 +54,17 @@ public class PasswordVisibilityToggleTests : IClassFixture<AppFactory>
         Assert.Contains("data-show-label=\"إظهار كلمة المرور\"", html);
         Assert.Contains("data-hide-label=\"إخفاء كلمة المرور\"", html);
     }
+
+    [Theory]
+    [InlineData("/adminlogin")]
+    [InlineData("/login")]
+    public async Task UpdatePasswordPopupHint_IsAllowedToWrap_ButTheSignInDividerStaysOnOneLine(string url)
+    {
+        var html = await (await _app.NewClient().GetAsync(url)).Content.ReadAsStringAsync();
+
+        // the long "Minimum 12 characters, with ..." sentence in the popup wraps inside the card ...
+        Assert.Contains(".setup-modal-backdrop .divider span { white-space: normal;", html);
+        // ... while the short "Sign in to continue" label keeps its one-line style
+        Assert.Contains(".divider span { font-size: 11px; color: var(--text-3); font-weight: 400; white-space: nowrap; }", html);
+    }
 }
