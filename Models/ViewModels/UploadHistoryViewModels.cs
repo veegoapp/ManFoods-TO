@@ -6,6 +6,8 @@ public class UploadFileRef
     public string FileType { get; set; } = "";
     public string FileName { get; set; } = "";
     public bool HasFile { get; set; }
+    /// <summary>True when a per-row Success/Duplicated result workbook was saved for this upload.</summary>
+    public bool HasResult { get; set; }
 }
 
 /// <summary>

@@ -16,6 +16,12 @@ public class ExitInterview
     [Column("forms_response_id")]
     public string FormsResponseId { get; set; } = "";
 
+    // The upload (upload_logs.id) this response came from, so that upload can be
+    // replaced or deleted together with its own responses. Null for rows that
+    // pre-date this column and could not be attributed to a single upload.
+    [Column("upload_log_id")]
+    public int? UploadLogId { get; set; }
+
     [Column("employee_id")]
     public string EmployeeId { get; set; } = "";
 

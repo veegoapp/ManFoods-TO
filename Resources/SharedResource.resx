@@ -141,6 +141,8 @@
   <data name="DM_NoUploads" xml:space="preserve"><value>No uploads yet</value></data>
   <data name="DM_Download" xml:space="preserve"><value>Download</value></data>
   <data name="DM_Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="DM_SystemResult" xml:space="preserve"><value>System Result</value></data>
+  <data name="Msg_ExitDuplicatesSkipped" xml:space="preserve"><value>{0} duplicated response(s) were skipped — see System Result in the upload history.</value></data>
   <data name="DM_Loading" xml:space="preserve"><value>Loading…</value></data>
   <data name="DM_PreviewFailed" xml:space="preserve"><value>Failed to load preview.</value></data>
   <data name="DM_PreviewEmpty" xml:space="preserve"><value>This file has no data to preview.</value></data>
@@ -159,7 +161,11 @@
   <data name="DM_JobFailed" xml:space="preserve"><value>Failed</value></data>
   <data name="DM_UpdateFileConfirm" xml:space="preserve"><value>Update file for</value></data>
   <data name="DM_DeleteConfirmPeriod" xml:space="preserve"><value>Delete this month's data? This removes all three files (Active Employees, Resignations, Store Reference) and their data from the database.</value></data>
-  <data name="DM_DeleteConfirmExit" xml:space="preserve"><value>Delete this exit-interview upload log? (The responses themselves stay in the system.)</value></data>
+  <data name="DM_DeleteConfirmExit" xml:space="preserve"><value>Delete this exit-interview upload? All responses that came from this file will be deleted too.</value></data>
+  <data name="DM_ExitUpdateTitle" xml:space="preserve"><value>Update Exit Interview File</value></data>
+  <data name="DM_ExitUpdateSub" xml:space="preserve"><value>The responses that came from this file will be replaced by the new file. Other uploads stay untouched.</value></data>
+  <data name="DM_ExitUpdateConfirm" xml:space="preserve"><value>Replace this upload? The responses that came from the old file will be deleted and the new file will be added instead.</value></data>
+  <data name="Msg_ExitUpdateNotFound" xml:space="preserve"><value>The exit-interview upload to update was not found.</value></data>
   <data name="DM_PageSummary" xml:space="preserve"><value>Showing page {0} of {1} ({2} total)</value></data>
   <data name="DM_MonthlyDataBadge" xml:space="preserve"><value>Monthly Data</value></data>
   <data name="DM_ExitInterviewsBadge" xml:space="preserve"><value>Exit Interviews</value></data>

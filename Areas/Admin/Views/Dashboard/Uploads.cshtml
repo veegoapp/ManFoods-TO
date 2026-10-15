@@ -432,7 +432,10 @@
                     <tr>
                         <th class="px-3 py-2 dm-sortable" onclick="location.href='@sortUrl("type")'">@L["Upload_FileType"]@Html.Raw(currentSort == "type" ? (currentDir == "asc" ? " <i class=\"bi bi-caret-up-fill\"></i>" : " <i class=\"bi bi-caret-down-fill\"></i>") : "")</th>
                         <th class="px-3 py-2 dm-sortable" onclick="location.href='@sortUrl("name")'">@L["Upload_FileName"]@Html.Raw(currentSort == "name" ? (currentDir == "asc" ? " <i class=\"bi bi-caret-up-fill\"></i>" : " <i class=\"bi bi-caret-down-fill\"></i>") : "")</th>
-                        <th class="px-3 py-2 dm-sortable" onclick="location.href='@sortUrl("period")'">@L["Upload_Period"]@Html.Raw(currentSort == "period" ? (currentDir == "asc" ? " <i class=\"bi bi-caret-up-fill\"></i>" : " <i class=\"bi bi-caret-down-fill\"></i>") : "")</th>
+                        @if (currentTab != "exit")
+                        {
+                            <th class="px-3 py-2 dm-sortable" onclick="location.href='@sortUrl("period")'">@L["Upload_Period"]@Html.Raw(currentSort == "period" ? (currentDir == "asc" ? " <i class=\"bi bi-caret-up-fill\"></i>" : " <i class=\"bi bi-caret-down-fill\"></i>") : "")</th>
+                        }
                         <th class="px-3 py-2 dm-sortable" onclick="location.href='@sortUrl("uploadedby")'">@L["Upload_UploadedBy"]@Html.Raw(currentSort == "uploadedby" ? (currentDir == "asc" ? " <i class=\"bi bi-caret-up-fill\"></i>" : " <i class=\"bi bi-caret-down-fill\"></i>") : "")</th>
                         <th class="px-3 py-2 dm-sortable" onclick="location.href='@sortUrl("date")'">@L["Upload_Date"]@Html.Raw(currentSort == "date" ? (currentDir == "asc" ? " <i class=\"bi bi-caret-up-fill\"></i>" : " <i class=\"bi bi-caret-down-fill\"></i>") : "")</th>
                         <th class="px-3 py-2"></th>
@@ -461,6 +464,12 @@
                                             <a class="dm-file-chip" asp-area="Admin" asp-controller="Dashboard" asp-action="DownloadUploadFile" asp-route-id="@f.LogId" title="@f.FileName">
                                                 <i class="bi bi-download"></i>@f.FileName
                                             </a>
+                                            @if (f.HasResult)
+                                            {
+                                                <a class="dm-file-chip-preview" asp-area="Admin" asp-controller="Dashboard" asp-action="DownloadUploadResult" asp-route-id="@f.LogId" title="@L["DM_SystemResult"]">
+                                                    <i class="bi bi-clipboard-check"></i>
+                                                </a>
+                                            }
                                         </span>
                                     }
                                     else
@@ -469,9 +478,12 @@
                                     }
                                 }
                             </td>
-                            <td class="px-3 py-2 text-muted-custom">
-                                @((isPeriod || isTrainer) ? new DateTime(item.Year!.Value, item.Month!.Value, 1).ToString("MMMM yyyy") : isJobProj ? item.Year!.Value.ToString() : "—")
-                            </td>
+                            @if (currentTab != "exit")
+                            {
+                                <td class="px-3 py-2 text-muted-custom">
+                                    @((isPeriod || isTrainer) ? new DateTime(item.Year!.Value, item.Month!.Value, 1).ToString("MMMM yyyy") : isJobProj ? item.Year!.Value.ToString() : "—")
+                                </td>
+                            }
                             <td class="px-3 py-2 text-muted-custom">@item.UploadedBy</td>
                             <td class="px-3 py-2 text-muted-custom small">@item.UploadDate.ToString("MMM dd, yyyy HH:mm")</td>
                             <td class="px-3 py-2">
@@ -480,6 +492,14 @@
                                     {
                                         <button type="button" class="dm-action-btn update"
                                                 onclick="dmOpenUpdateModal(@item.Month, @item.Year, '@(new DateTime(item.Year!.Value, item.Month!.Value, 1).ToString("MMMM yyyy"))')">
+                                            <i class="bi bi-arrow-repeat"></i>@L["DM_UpdateFile"]
+                                        </button>
+                                    }
+                                    else if (item.Kind == "exit_interviews")
+                                    {
+                                        <button type="button" class="dm-action-btn update"
+                                                data-log-id="@item.PrimaryLogId" data-file-name="@item.Files.FirstOrDefault()?.FileName"
+                                                onclick="dmOpenExitUpdateModal(this.dataset.logId, this.dataset.fileName)">
                                             <i class="bi bi-arrow-repeat"></i>@L["DM_UpdateFile"]
                                         </button>
                                     }
@@ -578,6 +598,41 @@
     </div>
 </div>
 
+<div class="modal fade" id="dmExitUpdateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:460px">
+        <div class="modal-content" style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius)">
+            <div class="modal-header" style="border-bottom:1px solid var(--card-border)">
+                <h6 class="modal-title fw-bold" style="color:var(--text)"><i class="bi bi-arrow-repeat me-2" style="color:oklch(0.5 0.18 25)"></i>@L["DM_ExitUpdateTitle"]</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:var(--btn-close-filter,none)"></button>
+            </div>
+            <form id="dmExitUpdateForm" asp-area="Admin" asp-controller="Dashboard" asp-action="UpdateExitInterviews"
+                  method="post" enctype="multipart/form-data" data-change-label="@L["DM_ChangeFile"]"
+                  onsubmit="return confirm('@L["DM_ExitUpdateConfirm"].Value')">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="dmExitUpdateId"/>
+                <div class="modal-body px-4 py-3">
+                    <p class="text-muted-custom small mb-3">
+                        @L["DM_ExitUpdateSub"]
+                        <strong id="dmExitUpdateFileName" style="color:var(--text)"></strong>
+                    </p>
+                    <div class="dm-dropzone" id="dmZoneExitUpdate" data-title="@L["UL_ExitInterviews"]">
+                        <i class="bi bi-chat-square-text-fill dm-dropzone-icon"></i>
+                        <div class="dm-dropzone-title">@L["UL_ExitInterviews"]</div>
+                        <div class="dm-dropzone-hint" data-role="hint">@L["DM_DropzoneHint"]</div>
+                        <input type="file" name="file" accept=".xlsx,.xls" required>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--card-border)">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">@L["Common_Cancel"]</button>
+                    <button type="submit" class="dm-btn-submit btn-sm">
+                        <i class="bi bi-cloud-upload me-1"></i>@L["DM_UpdateFileSubmit"]
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="dmPreviewModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width:90vw">
         <div class="modal-content" style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius)">
@@ -627,7 +682,18 @@ function dmSetupDropzone(zoneId) {
     });
 }
 
-['dmZone1', 'dmZone2', 'dmZone3', 'dmZoneExit', 'dmZoneJobProj', 'dmZoneCrewTrainer', 'dmZoneJobGroup'].forEach(dmSetupDropzone);
+['dmZone1', 'dmZone2', 'dmZone3', 'dmZoneExit', 'dmZoneExitUpdate', 'dmZoneJobProj', 'dmZoneCrewTrainer', 'dmZoneJobGroup'].forEach(dmSetupDropzone);
+
+/* Update an earlier exit-interview upload: same pick-a-file dialog as the monthly
+   Update File, but it replaces that one sheet's responses. */
+function dmOpenExitUpdateModal(logId, fileName) {
+    document.getElementById('dmExitUpdateId').value = logId;
+    document.getElementById('dmExitUpdateFileName').textContent = fileName || '';
+    const input = document.querySelector('#dmZoneExitUpdate input[type="file"]');
+    input.value = '';
+    input.dispatchEvent(new Event('change')); // re-renders the dropzone back to its empty hint
+    new bootstrap.Modal(document.getElementById('dmExitUpdateModal')).show();
+}
 
 /* Month/year combos that already have data — re-uploading one deletes and
    replaces its rows (and the old Excel files themselves) with no other undo,

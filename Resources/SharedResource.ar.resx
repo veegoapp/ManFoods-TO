@@ -141,6 +141,8 @@
   <data name="DM_NoUploads" xml:space="preserve"><value>مفيش رفعات لسه</value></data>
   <data name="DM_Download" xml:space="preserve"><value>تحميل</value></data>
   <data name="DM_Preview" xml:space="preserve"><value>معاينة</value></data>
+  <data name="DM_SystemResult" xml:space="preserve"><value>System Result</value></data>
+  <data name="Msg_ExitDuplicatesSkipped" xml:space="preserve"><value>تم تخطي {0} من الردود المكررة — راجع System Result في سجل الرفع.</value></data>
   <data name="DM_Loading" xml:space="preserve"><value>جارٍ التحميل…</value></data>
   <data name="DM_PreviewFailed" xml:space="preserve"><value>فشل تحميل المعاينة.</value></data>
   <data name="DM_PreviewEmpty" xml:space="preserve"><value>لا توجد بيانات في هذا الملف للمعاينة.</value></data>
@@ -159,7 +161,11 @@
   <data name="DM_JobFailed" xml:space="preserve"><value>فشلت</value></data>
   <data name="DM_UpdateFileConfirm" xml:space="preserve"><value>تحديث ملف لشهر</value></data>
   <data name="DM_DeleteConfirmPeriod" xml:space="preserve"><value>حذف بيانات الشهر ده؟ ده هيمسح الثلاث ملفات (الأكتيف ليست، الاستقالات، مرجع الفروع) وبياناتهم من الداتا بيز.</value></data>
-  <data name="DM_DeleteConfirmExit" xml:space="preserve"><value>حذف سجل رفع مقابلات الخروج ده؟ (الردود نفسها هتفضل موجودة في النظام)</value></data>
+  <data name="DM_DeleteConfirmExit" xml:space="preserve"><value>حذف رفعة مقابلات الخروج دي؟ كل الردود اللي جت من الملف ده هتتحذف كمان.</value></data>
+  <data name="DM_ExitUpdateTitle" xml:space="preserve"><value>تحديث ملف مقابلات الخروج</value></data>
+  <data name="DM_ExitUpdateSub" xml:space="preserve"><value>الردود اللي جت من الملف ده هتتبدّل بالملف الجديد. باقي الرفعات مش هتتأثر.</value></data>
+  <data name="DM_ExitUpdateConfirm" xml:space="preserve"><value>تبديل الرفعة دي؟ الردود اللي جت من الملف القديم هتتحذف والملف الجديد هيتضاف مكانها.</value></data>
+  <data name="Msg_ExitUpdateNotFound" xml:space="preserve"><value>رفعة مقابلات الخروج المطلوب تحديثها مش موجودة.</value></data>
   <data name="DM_PageSummary" xml:space="preserve"><value>عرض صفحة {0} من {1} ({2} إجمالي)</value></data>
   <data name="DM_MonthlyDataBadge" xml:space="preserve"><value>بيانات شهرية</value></data>
   <data name="DM_ExitInterviewsBadge" xml:space="preserve"><value>مقابلات خروج</value></data>

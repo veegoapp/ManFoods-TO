@@ -351,6 +351,25 @@ public class DashboardController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
+    public async Task<IActionResult> UpdateExitInterviews(int id, IFormFile? file)
+    {
+        if (file == null) return RedirectToUploads(error: _L["Msg_SelectFile"].Value, tab: UploadTabs.Exit);
+        try
+        {
+            var email = HttpContext.Session.GetEmail();
+            var (_, msg, _) = await _uploads.UpdateExitInterviewsAsync(id, file, email);
+            await LogUploadAsync("exit_interviews", "update", true);
+            return RedirectToUploads(success: msg, tab: UploadTabs.Exit);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exit interviews update failed for upload log {LogId}", id);
+            await LogUploadAsync("exit_interviews", "update", false, ex);
+            return RedirectToUploads(error: string.Format(_L["Msg_ExitUploadFailed"].Value, UploadErrorDetail(ex)), tab: UploadTabs.Exit);
+        }
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> UploadJobProjections(MvcApp.Models.ViewModels.JobProjectionUploadViewModel vm)
     {
         if (!ModelState.IsValid || vm.File == null) return RedirectToUploads(error: _L["Msg_SelectFile"].Value, tab: UploadTabs.JobProjections);
@@ -665,6 +684,17 @@ public class DashboardController : Controller
         var file = await _uploads.GetFileAsync(id);
         if (file == null) return NotFound();
         return File(file.Value.Content, file.Value.ContentType, file.Value.FileName);
+    }
+
+    [RequireAdminAuth]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> DownloadUploadResult(int id)
+    {
+        var result = await _uploads.GetResultFileAsync(id);
+        if (result == null) return NotFound();
+        return File(result.Value.Content,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            result.Value.FileName);
     }
 
     [HttpGet("admin/dashboard/preview-upload-file")]
