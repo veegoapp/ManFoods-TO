@@ -108,6 +108,11 @@
         .divider { display: flex; align-items: center; gap: 10px; margin: 22px 0 18px; }
         .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--card-border); }
         .divider span { font-size: 11px; color: var(--text-3); font-weight: 400; white-space: nowrap; }
+        /* The Update Password popup's hint is a full sentence (longer than the popup is wide), so unlike the
+           short "Sign in to continue" label it must be allowed to wrap and stay inside the card. */
+        .setup-modal-backdrop .divider { display: block; text-align: center; }
+        .setup-modal-backdrop .divider::before, .setup-modal-backdrop .divider::after { display: none; }
+        .setup-modal-backdrop .divider span { white-space: normal; line-height: 1.5; }
 
         .field-wrap { position: relative; margin-bottom: 16px; }
         .field-wrap .fi { position: absolute; left: 14px; top: calc(50% + 13px); transform: translateY(-50%); color: var(--text-3); font-size: 15px; pointer-events: none; transition: color .2s; }
@@ -359,5 +364,6 @@
         });
     })();
     </script>
+    <script src="~/js/password-toggle.js" data-show-label="@L["Pw_ShowPassword"]" data-hide-label="@L["Pw_HidePassword"]" asp-append-version="true"></script>
 </body>
 </html>

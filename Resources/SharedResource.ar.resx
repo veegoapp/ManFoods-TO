@@ -140,6 +140,8 @@
   <data name="DM_DownloadHistory" xml:space="preserve"><value>تحميل السجل</value></data>
   <data name="DM_NoUploads" xml:space="preserve"><value>مفيش رفعات لسه</value></data>
   <data name="DM_Download" xml:space="preserve"><value>تحميل</value></data>
+  <data name="Pw_ShowPassword" xml:space="preserve"><value>إظهار كلمة المرور</value></data>
+  <data name="Pw_HidePassword" xml:space="preserve"><value>إخفاء كلمة المرور</value></data>
   <data name="DM_Preview" xml:space="preserve"><value>معاينة</value></data>
   <data name="DM_SystemResult" xml:space="preserve"><value>System Result</value></data>
   <data name="Msg_ExitDuplicatesSkipped" xml:space="preserve"><value>تم تخطي {0} من الردود المكررة — راجع System Result في سجل الرفع.</value></data>
