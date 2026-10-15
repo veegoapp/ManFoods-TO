@@ -236,12 +236,20 @@ BEGIN
         work_pressure_reason_text NVARCHAR(MAX) NULL,
         what_would_change_text NVARCHAR(MAX) NULL,
         what_learned_text NVARCHAR(MAX) NULL,
-        final_comments_text NVARCHAR(MAX) NULL
+        final_comments_text NVARCHAR(MAX) NULL,
+        upload_log_id INT NULL
     );
 END
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_exit_interviews_forms_response_id' AND object_id = OBJECT_ID('dbo.exit_interviews'))
     CREATE UNIQUE INDEX ux_exit_interviews_forms_response_id
         ON dbo.exit_interviews (forms_response_id) WHERE forms_response_id <> '';
+
+-- Which upload each response came from (so one upload can be replaced/deleted
+-- with its own responses). Added after the table's first deploy, so backfill it.
+IF COL_LENGTH('dbo.exit_interviews', 'upload_log_id') IS NULL
+    ALTER TABLE dbo.exit_interviews ADD upload_log_id INT NULL;
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_exit_interviews_upload_log_id' AND object_id = OBJECT_ID('dbo.exit_interviews'))
+    EXEC(N'CREATE INDEX ix_exit_interviews_upload_log_id ON dbo.exit_interviews (upload_log_id)');
 
 -- ── upload_logs ───────────────────────────────
 IF OBJECT_ID('dbo.upload_logs', 'U') IS NULL
@@ -270,6 +278,14 @@ IF COL_LENGTH('dbo.upload_logs', 'content_type') IS NULL
     ALTER TABLE dbo.upload_logs ADD content_type NVARCHAR(MAX) NULL;
 IF COL_LENGTH('dbo.upload_logs', 'result_content') IS NULL
     ALTER TABLE dbo.upload_logs ADD result_content VARBINARY(MAX) NULL;
+
+-- Attribute exit_interviews rows that pre-date exit_interviews.upload_log_id (see
+-- that table above). Only safe when there is exactly one exit-interview upload on
+-- record: then every existing response came from it. With several (or none) they
+-- stay NULL rather than being guessed. Placed here because it reads upload_logs;
+-- dynamic SQL because the column may not exist yet when this batch is compiled.
+IF (SELECT COUNT(*) FROM dbo.upload_logs WHERE file_type = 'exit_interviews') = 1
+    EXEC(N'UPDATE dbo.exit_interviews SET upload_log_id = (SELECT TOP 1 id FROM dbo.upload_logs WHERE file_type = ''exit_interviews'') WHERE upload_log_id IS NULL');
 
 -- ── ai_usage_daily ────────────────────────────
 IF OBJECT_ID('dbo.ai_usage_daily', 'U') IS NULL

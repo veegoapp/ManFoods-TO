@@ -43,6 +43,9 @@ public interface IUploadService
     Task<(List<MvcApp.Models.ViewModels.UploadHistoryItem> Items, int TotalCount)> GetHistoryPagedAsync(int page, int pageSize, string sort = "date", string dir = "desc", string? kind = null);
     Task<List<MvcApp.Models.ViewModels.UploadHistoryItem>> GetAllHistoryAsync();
     Task DeleteLogAsync(int id);
+    /// <summary>Replaces one earlier exit-interview upload (its own responses are removed
+    /// and the new file's take their place).</summary>
+    Task<(bool success, string message, int rows)> UpdateExitInterviewsAsync(int logId, IFormFile file, string uploadedBy);
     Task<(byte[] Content, string ContentType, string FileName)?> GetFileAsync(int id);
     /// <summary>The saved Success/Duplicated per-row workbook of an exit-interview upload, or null.</summary>
     Task<(byte[] Content, string FileName)?> GetResultFileAsync(int id);

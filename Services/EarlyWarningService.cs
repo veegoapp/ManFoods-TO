@@ -28,7 +28,7 @@ public class EarlyWarningService : IEarlyWarningService
     // uncached inside GetWatchlistAsync's body — whose own cache key includes
     // store — so a per-store caller (StoreActionPlanService's detection loop)
     // re-ran them once per store instead of once per run.
-    private const string StoreExitScoresCacheKey = "early-warning:store-exit-scores";
+    public const string StoreExitScoresCacheKey ="early-warning:store-exit-scores";
     private const string StoreReferenceRowsCacheKey = "early-warning:store-reference-rows";
 
     // Short-lived cache for the fully-scored watchlist itself, keyed by its

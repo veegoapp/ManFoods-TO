@@ -351,6 +351,25 @@ public class DashboardController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
+    public async Task<IActionResult> UpdateExitInterviews(int id, IFormFile? file)
+    {
+        if (file == null) return RedirectToUploads(error: _L["Msg_SelectFile"].Value, tab: UploadTabs.Exit);
+        try
+        {
+            var email = HttpContext.Session.GetEmail();
+            var (_, msg, _) = await _uploads.UpdateExitInterviewsAsync(id, file, email);
+            await LogUploadAsync("exit_interviews", "update", true);
+            return RedirectToUploads(success: msg, tab: UploadTabs.Exit);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exit interviews update failed for upload log {LogId}", id);
+            await LogUploadAsync("exit_interviews", "update", false, ex);
+            return RedirectToUploads(error: string.Format(_L["Msg_ExitUploadFailed"].Value, UploadErrorDetail(ex)), tab: UploadTabs.Exit);
+        }
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, RequireAdminAuth]
     public async Task<IActionResult> UploadJobProjections(MvcApp.Models.ViewModels.JobProjectionUploadViewModel vm)
     {
         if (!ModelState.IsValid || vm.File == null) return RedirectToUploads(error: _L["Msg_SelectFile"].Value, tab: UploadTabs.JobProjections);

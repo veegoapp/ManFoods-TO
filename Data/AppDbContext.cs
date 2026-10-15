@@ -59,6 +59,11 @@ public class AppDbContext : DbContext
             e.HasIndex(x => new { x.Action, x.OccurredAt }).IsDescending(false, true).IncludeProperties(x => new { x.Success, x.Category }).HasDatabaseName("ix_activity_logs_action_occurred_at");
         });
 
+        // Replacing/deleting one exit-interview upload looks its responses up by upload id.
+        modelBuilder.Entity<ExitInterview>()
+            .HasIndex(e => e.UploadLogId)
+            .HasDatabaseName("ix_exit_interviews_upload_log_id");
+
         modelBuilder.Entity<StoreActionPlan>()
             .HasIndex(p => p.StoreName)
             .IsUnique()

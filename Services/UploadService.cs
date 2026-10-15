@@ -409,9 +409,23 @@ public class UploadService : IUploadService
 
     private static string? NullIfEmpty(string s) => string.IsNullOrWhiteSpace(s) ? null : s;
 
-    public async Task<(bool, string, int)> UploadExitInterviewsAsync(IFormFile file, string uploadedBy)
+    public Task<(bool, string, int)> UploadExitInterviewsAsync(IFormFile file, string uploadedBy) =>
+        ProcessExitInterviewsAsync(file, uploadedBy, null);
+
+    // Replaces one earlier upload: its own responses are removed and the new file's
+    // take their place (the history row, and so its buttons, stay the same).
+    public Task<(bool, string, int)> UpdateExitInterviewsAsync(int logId, IFormFile file, string uploadedBy) =>
+        ProcessExitInterviewsAsync(file, uploadedBy, logId);
+
+    private async Task<(bool, string, int)> ProcessExitInterviewsAsync(IFormFile file, string uploadedBy, int? replaceLogId)
     {
         await ValidateFileAsync(file);
+        UploadLog? target = null;
+        if (replaceLogId.HasValue)
+        {
+            target = await _db.UploadLogs.FirstOrDefaultAsync(l => l.Id == replaceLogId.Value && l.FileType == "exit_interviews");
+            if (target == null) throw new InvalidOperationException(_L["Msg_ExitUpdateNotFound"].Value);
+        }
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms);
         var fileBytes = ms.ToArray();
@@ -510,11 +524,20 @@ public class UploadService : IUploadService
             allParsed.Add((responseId, employeeId, completed, interview));
         }
 
-        // Uploads only ever add. A row is "Duplicated" (skipped) when the same
-        // employee already has a response with the same completion time — either
-        // stored earlier or higher up in this same file. Rows with no employee id
-        // or no completion time can't be compared, so they are added as Success.
-        // One query, limited to the employee ids in the file (never the whole table).
+        // Everything below that writes runs in one transaction, so a failure part-way
+        // through (e.g. while replacing an upload) never leaves responses deleted
+        // without the new ones saved.
+        await using var tx = await _db.Database.BeginTransactionAsync();
+        if (target != null)
+            await _db.ExitInterviews.Where(e => e.UploadLogId == target.Id).ExecuteDeleteAsync();
+
+        // An upload only adds to what is already stored (other than the upload it
+        // replaces, removed just above). A row is "Duplicated" (skipped) when the
+        // same employee already has a response with the same completion time —
+        // either stored earlier or higher up in this same file. Rows with no
+        // employee id or no completion time can't be compared, so they are added as
+        // Success. One query, limited to the employee ids in the file (never the
+        // whole table).
         static string DupKey(string employeeId, DateTime completed) =>
             employeeId.Trim() + "\u0001" + (completed.Ticks - completed.Ticks % TimeSpan.TicksPerSecond);
 
@@ -618,9 +641,6 @@ public class UploadService : IUploadService
             }
         }
 
-        if (parsed.Count > 0)
-            await _db.ExitInterviews.AddRangeAsync(parsed.Select(p => p.Row));
-
         // Per-row outcome workbook, downloadable later from the upload history.
         byte[] resultBytes;
         using (var rwb = new XLWorkbook())
@@ -646,8 +666,24 @@ public class UploadService : IUploadService
         }
 
         var now = DateTime.UtcNow;
-        _db.UploadLogs.Add(new UploadLog { FileType = "exit_interviews", FileName = file.FileName, Month = now.Month, Year = now.Year, UploadedBy = uploadedBy, FileContent = fileBytes, ContentType = GetContentType(file.FileName), ResultContent = resultBytes });
+        var log = target ?? new UploadLog { FileType = "exit_interviews" };
+        log.FileName = file.FileName;
+        log.Month = now.Month;
+        log.Year = now.Year;
+        log.UploadDate = now;
+        log.UploadedBy = uploadedBy;
+        log.FileContent = fileBytes;
+        log.ContentType = GetContentType(file.FileName);
+        log.ResultContent = resultBytes;
+        if (target == null) _db.UploadLogs.Add(log);
+        await _db.SaveChangesAsync(); // gives a new log its id before the responses point at it
+
+        foreach (var p in parsed) p.Row.UploadLogId = log.Id;
+        if (parsed.Count > 0)
+            await _db.ExitInterviews.AddRangeAsync(parsed.Select(p => p.Row));
         await _db.SaveChangesAsync();
+        await tx.CommitAsync();
+        _cache.Remove(EarlyWarningService.StoreExitScoresCacheKey); // cached per-store exit scores read this table
 
         var missingStore = parsed.Count(p => string.IsNullOrWhiteSpace(p.Row.Store));
         var message = missingStore > 0
@@ -1303,10 +1339,23 @@ public class UploadService : IUploadService
             return;
         }
 
-        // exit_interviews is intentionally excluded from period-cascading
-        // deletion: each upload only adds new responses on top of the earlier
-        // ones, not a single month/year snapshot, so deleting one log entry
-        // must not wipe data or other log rows.
+        if (log.FileType == "exit_interviews")
+        {
+            // exit_interviews is intentionally excluded from period-cascading
+            // deletion: each upload only adds responses on top of the earlier
+            // ones, not a single month/year snapshot. Deleting an upload removes
+            // that upload's own responses (and nothing from other uploads).
+            // Responses that pre-date the upload_log_id column and were never
+            // attributed to an upload are left alone.
+            await using var etx = await _db.Database.BeginTransactionAsync();
+            await _db.ExitInterviews.Where(e => e.UploadLogId == log.Id).ExecuteDeleteAsync();
+            _db.UploadLogs.Remove(log);
+            await _db.SaveChangesAsync();
+            await etx.CommitAsync();
+            _cache.Remove(EarlyWarningService.StoreExitScoresCacheKey);
+            return;
+        }
+
         _db.UploadLogs.Remove(log);
         await _db.SaveChangesAsync();
     }

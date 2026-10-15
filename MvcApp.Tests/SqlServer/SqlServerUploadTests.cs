@@ -38,6 +38,7 @@ public class SqlServerUploadTests : IClassFixture<SqlServerHostFixture>, IAsyncL
             await db.ActiveEmployees.ExecuteDeleteAsync();
             await db.Resignations.ExecuteDeleteAsync();
             await db.StoreReferences.ExecuteDeleteAsync();
+            await db.ExitInterviews.ExecuteDeleteAsync();
             await db.UploadLogs.ExecuteDeleteAsync();
         });
     }
@@ -207,5 +208,75 @@ public class SqlServerUploadTests : IClassFixture<SqlServerHostFixture>, IAsyncL
             }
             Assert.Equal(0, await db.ActiveEmployees.CountAsync(e => e.Month == 5 && e.Year == 2026));
         });
+    }
+
+    // ── exit interviews: append-only uploads, duplicate skipping, per-upload update/delete ──
+
+    private static readonly string[] ExitHeaders = { "ID", "الرقم الوظيفى", "المطعم", "Completion time" };
+
+    private static IFormFile ExitFile(string name, params (string Employee, string Completed)[] rows) =>
+        TestFiles.Form(TestFiles.Workbook(ExitHeaders,
+            rows.Select(r => new[] { "", r.Employee, "Store A", r.Completed })), name);
+
+    private Task<(bool, string, int)> UploadExitAsync(IFormFile file) =>
+        _fx.InScopeAsync(sp => sp.GetRequiredService<IUploadService>().UploadExitInterviewsAsync(file, Uploader));
+
+    private Task<int> ExitLogIdAsync(string fileName) =>
+        DbAsync(db => db.UploadLogs.Where(l => l.FileType == "exit_interviews" && l.FileName == fileName).Select(l => l.Id).SingleAsync());
+
+    [SqlServerFact]
+    public async Task ExitUpload_OnlyAdds_AndSkipsTheSameEmployeeAtTheSameCompletionTime()
+    {
+        await UploadExitAsync(ExitFile("a.xlsx", ("100", "2025-03-01 10:00:00"), ("200", "2025-03-02 10:00:00")));
+        // 100@same time is a duplicate; 100@later time (re-hired and left again) is a new response.
+        var (_, _, added) = await UploadExitAsync(ExitFile("b.xlsx", ("100", "2025-03-01 10:00:00"), ("100", "2026-04-01 09:00:00")));
+
+        Assert.Equal(1, added);
+        Assert.Equal(3, await DbAsync(db => db.ExitInterviews.CountAsync()));
+        Assert.Equal(2, await DbAsync(db => db.UploadLogs.CountAsync(l => l.FileType == "exit_interviews")));
+        Assert.Equal(2, await DbAsync(db => db.ExitInterviews.CountAsync(e => e.EmployeeId == "100")));
+    }
+
+    [SqlServerFact]
+    public async Task ExitUpload_RowsWithoutACompletionTime_AreAlwaysAdded()
+    {
+        await UploadExitAsync(ExitFile("a.xlsx", ("100", ""), ("100", "")));
+        await UploadExitAsync(ExitFile("b.xlsx", ("100", "")));
+
+        Assert.Equal(3, await DbAsync(db => db.ExitInterviews.CountAsync()));
+    }
+
+    [SqlServerFact]
+    public async Task ExitUpdate_ReplacesOnlyThatUploadsResponses()
+    {
+        await UploadExitAsync(ExitFile("a.xlsx", ("100", "2025-03-01 10:00:00"), ("200", "2025-03-02 10:00:00")));
+        await UploadExitAsync(ExitFile("b.xlsx", ("300", "2025-05-01 10:00:00")));
+        var aId = await ExitLogIdAsync("a.xlsx");
+
+        await _fx.InScopeAsync(sp => sp.GetRequiredService<IUploadService>()
+            .UpdateExitInterviewsAsync(aId, ExitFile("a2.xlsx", ("100", "2025-03-01 10:00:00")), Uploader));
+
+        // a's two old responses were replaced by one; b's response is untouched.
+        Assert.Equal(2, await DbAsync(db => db.ExitInterviews.CountAsync()));
+        Assert.Equal(1, await DbAsync(db => db.ExitInterviews.CountAsync(e => e.EmployeeId == "100")));
+        Assert.Equal(0, await DbAsync(db => db.ExitInterviews.CountAsync(e => e.EmployeeId == "200")));
+        Assert.Equal(1, await DbAsync(db => db.ExitInterviews.CountAsync(e => e.EmployeeId == "300")));
+        // Same history row, now pointing at the new file.
+        Assert.Equal(2, await DbAsync(db => db.UploadLogs.CountAsync(l => l.FileType == "exit_interviews")));
+        Assert.Equal(aId, await ExitLogIdAsync("a2.xlsx"));
+    }
+
+    [SqlServerFact]
+    public async Task ExitDelete_RemovesThatUploadsResponsesOnly()
+    {
+        await UploadExitAsync(ExitFile("a.xlsx", ("100", "2025-03-01 10:00:00"), ("200", "2025-03-02 10:00:00")));
+        await UploadExitAsync(ExitFile("b.xlsx", ("300", "2025-05-01 10:00:00")));
+        var aId = await ExitLogIdAsync("a.xlsx");
+
+        await _fx.InScopeAsync(sp => sp.GetRequiredService<IUploadService>().DeleteLogAsync(aId));
+
+        Assert.Equal(1, await DbAsync(db => db.ExitInterviews.CountAsync()));
+        Assert.Equal(1, await DbAsync(db => db.ExitInterviews.CountAsync(e => e.EmployeeId == "300")));
+        Assert.Equal(1, await DbAsync(db => db.UploadLogs.CountAsync(l => l.FileType == "exit_interviews")));
     }
 }
