@@ -29,7 +29,7 @@ public static class PeriodLimits
     private static readonly string[] YearParameters = { "year", "fromYear", "toYear", "sinceYear", "yearB" };
     private static readonly string[] MonthListParameters = { "months", "monthsB" };
     private static readonly string[] FilterListParameters =
-        { "store", "om", "oc", "soc", "od", "jobs", "storeB", "omB", "ocB", "socB", "odB" };
+        { "store", "om", "oc", "soc", "od", "jobs", "storeB", "omB", "ocB", "socB", "odB", "jobsB" };
 
     public static bool IsValidMonth(int month) => month is >= 1 and <= 12;
     public static bool IsValidYear(int year) => year is >= MinYear and <= MaxYear;
