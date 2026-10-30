@@ -94,6 +94,7 @@ public class DashboardController : Controller
                 ? (await trainers.GetAsync(null, null, null, role, assignedName)).Periods
                 : await _dashboard.GetAvailablePeriodsAsync();
         if (usesProjection) ViewBag.Jobs = await _planning.GetProjectionJobsAsync();
+        else if (reportType == "comparisons") ViewBag.Jobs = await _dashboard.GetJobTitlesAsync(null, null, role, assignedName);
         var stores = await _stores.GetStoresAsync(null, null, role, assignedName);
         ViewBag.Stores = stores.Select(s => s.StoreName).Distinct().OrderBy(s => s).ToList();
         ViewBag.OperationManagers = await _dashboard.GetOperationManagersAsync(null, null, role, assignedName);
@@ -128,7 +129,7 @@ public class DashboardController : Controller
     [AccessArea(AccessAreas.Reports)]
     public async Task<IActionResult> Export(int month, int year, string reportType = "stores-overview",
         string? store = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null,
-        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null, string? jobs = null, string? status = null,
+        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null, string? jobs = null, string? status = null, string? topic = null, string? jobsB = null,
         [FromServices] IReportAccessService? reportAccess = null, [FromServices] IAccessAreaContext? areaContext = null)
     {
         var role = HttpContext.Session.GetRole();
@@ -156,15 +157,24 @@ public class DashboardController : Controller
         odB = string.IsNullOrWhiteSpace(odB) ? null : odB;
         monthsB = string.IsNullOrWhiteSpace(monthsB) ? null : monthsB;
         jobs = string.IsNullOrWhiteSpace(jobs) ? null : jobs;
+        jobsB = string.IsNullOrWhiteSpace(jobsB) ? null : jobsB;
 
         switch (reportType)
         {
             case "comparisons":
-                return await DownloadWorkbookAsync(
-                    await _reports.BuildComparisonReportAsync(role, assignedName,
-                        year > 0 ? year : null, months, store, om, oc, soc, od,
-                        yearB, monthsB, storeB, omB, ocB, socB, odB),
-                    "Comparison_Report.xlsx");
+                try
+                {
+                    return await DownloadWorkbookAsync(
+                        await _reports.BuildComparisonReportAsync(role, assignedName,
+                            year > 0 ? year : null, months, store, om, oc, soc, od,
+                            yearB, monthsB, storeB, omB, ocB, socB, odB,
+                            topic, jobs, jobsB),
+                        $"Comparison_{ComparisonTopics.Normalize(topic)}.xlsx");
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return BadRequest(ex.Message);   // a store / job filter the topic cannot honour
+                }
             case "stores":
                 return await DownloadWorkbookAsync(
                     await _reports.BuildStoreComparisonReportAsync(month, year, role, assignedName, om, oc, soc, od),

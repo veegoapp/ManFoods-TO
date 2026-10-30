@@ -1715,6 +1715,7 @@ public class ReportService : IReportService
         public string? Months;
         public string? Store;
         public string? Om, Oc, Soc, Od;
+        public string? Job;
         public string Label = "";
         public int AnchorMonth;
     }
@@ -1762,6 +1763,10 @@ public class ReportService : IReportService
 
         foreach (var side in new[] { a, b })
         {
+            // A year without months means "the whole year": use the months that actually have data (as the page does),
+            // so averages and per-month figures are not diluted by months that were never uploaded.
+            if (string.IsNullOrWhiteSpace(side.Months) && yearMonths.TryGetValue(side.Year, out var dataMonths))
+                side.Months = string.Join(",", dataMonths);
             var monthList = MultiValueFilter.Split(side.Months)?.Select(int.Parse).ToList();
             side.AnchorMonth = monthList is { Count: > 0 } ? monthList.Max() : DateTime.Now.Month;
             side.Label = DescribePeriodScope(side.Months, side.Year);
@@ -1770,90 +1775,469 @@ public class ReportService : IReportService
         return (a, b);
     }
 
-    private async Task<(int Headcount, int NewHires, int Resignations, double TurnoverRate, int NinetyHires, int NinetyEarly, double NinetyRate)> LoadComparisonKpisAsync(
-        ComparisonSide side, string role, string? assignedName)
+    private static int MonthCount(ComparisonSide side) => Math.Max(1, MultiValueFilter.Split(side.Months)?.Count ?? 12);
+
+    /// <summary>Counts are summed over the months of a side, so two sides of a different length are compared as monthly averages.</summary>
+    private static double PerMonth(ComparisonSide side, double value, bool uneven) => uneven ? Math.Round(value / MonthCount(side), 1) : value;
+
+    private sealed record CompareRow(string Metric, double A, double B, bool Percent);
+
+    private static void SetCountCell(IXLCell cell, double value, bool fractional)
     {
-        var kpi = await _dashboard.GetKpisAsync(side.AnchorMonth, side.Year, side.Store, role, assignedName,
-            om: side.Om, oc: side.Oc, soc: side.Soc, od: side.Od, months: side.Months);
-        var ninety = await _ninetyDay.GetKpiAsync(side.AnchorMonth, side.Year, side.Store, role, assignedName,
-            om: side.Om, oc: side.Oc, soc: side.Soc, od: side.Od, months: side.Months);
-        return (kpi.TotalHeadcount, kpi.NewHires, kpi.TotalResignations, kpi.TurnoverRate, ninety.TotalHires, ninety.EarlyLeavers, ninety.Rate);
+        cell.Value = value;
+        cell.Style.NumberFormat.Format = fractional ? "#,##0.0" : "#,##0";
     }
 
-    private static void WriteKpiCompareRow(IXLWorksheet ws, int row, string metric, double a, double b, bool asPercent)
+    /// <summary>Metric | A | B | Delta (A − B) — the shape of every summary sheet of the comparison report.</summary>
+    private static void WriteCompareTable(IXLWorksheet ws, string labelHeader, ComparisonSide a, ComparisonSide b, IReadOnlyList<CompareRow> rows, bool fractionalCounts)
     {
-        ws.Cell(row, 1).Value = metric;
-        if (asPercent) { SetPercentCell(ws.Cell(row, 2), a); SetPercentCell(ws.Cell(row, 3), b); SetPercentCell(ws.Cell(row, 4), a - b); }
-        else { SetIntCell(ws.Cell(row, 2), (int)a); SetIntCell(ws.Cell(row, 3), (int)b); SetIntCell(ws.Cell(row, 4), (int)(a - b)); }
+        StyleHeader(ws, new[] { labelHeader, $"Period A ({a.Label})", $"Period B ({b.Label})", "Delta (A − B)" });
+        for (var i = 0; i < rows.Count; i++)
+        {
+            var r = rows[i];
+            var row = i + 2;
+            ws.Cell(row, 1).Value = SafeText(r.Metric);
+            if (r.Percent)
+            {
+                SetPercentCell(ws.Cell(row, 2), r.A);
+                SetPercentCell(ws.Cell(row, 3), r.B);
+                SetPercentCell(ws.Cell(row, 4), r.A - r.B);
+            }
+            else
+            {
+                SetCountCell(ws.Cell(row, 2), r.A, fractionalCounts);
+                SetCountCell(ws.Cell(row, 3), r.B, fractionalCounts);
+                SetCountCell(ws.Cell(row, 4), r.A - r.B, fractionalCounts);
+            }
+        }
+        Finalize(ws);
     }
+
+    private static void AddComparisonNotes(IXLWorksheet ws, params string?[] notes)
+    {
+        var row = (ws.LastRowUsed()?.RowNumber() ?? 1) + 2;
+        foreach (var note in notes)
+        {
+            if (string.IsNullOrEmpty(note)) continue;
+            var cell = ws.Cell(row++, 1);
+            cell.Value = note;
+            cell.Style.Font.Italic = true;
+            cell.Style.Font.FontColor = XLColor.FromHtml("#6B6B6B");
+        }
+    }
+
+    private static string? UnevenNote(ComparisonSide a, ComparisonSide b, string what) =>
+        MonthCount(a) == MonthCount(b) ? null
+            : $"Side A covers {MonthCount(a)} month(s) and side B covers {MonthCount(b)}, so {what} are shown as monthly averages.";
+
+    private const string RatesNote = "Rates are totals for each period (not monthly), so a longer period naturally shows a higher rate than a shorter one.";
+
+    private static string? StoreSheetNote(ComparisonSide a, ComparisonSide b) =>
+        a.Store != null || b.Store != null ? "The per-store sheet is not included because a store filter is applied." : null;
+
+    private static string BlankAs(string? label, string blank = "(not set)") => string.IsNullOrWhiteSpace(label) ? blank : label;
 
     public async Task<XLWorkbook> BuildComparisonReportAsync(string role, string? assignedName,
         int? yearA = null, string? monthsA = null, string? storeA = null, string? omA = null, string? ocA = null, string? socA = null, string? odA = null,
-        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null)
+        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null,
+        string? topic = null, string? jobA = null, string? jobB = null)
     {
-        var wb = new XLWorkbook();
+        topic = ComparisonTopics.Normalize(topic);
         var (a, b) = await ResolveComparisonSidesAsync(yearA, monthsA, storeA, omA, ocA, socA, odA, yearB, monthsB, storeB, omB, ocB, socB, odB);
+        a.Job = string.IsNullOrWhiteSpace(jobA) ? null : jobA;
+        b.Job = string.IsNullOrWhiteSpace(jobB) ? null : jobB;
 
-        var kpiA = await LoadComparisonKpisAsync(a, role, assignedName);
-        var kpiB = await LoadComparisonKpisAsync(b, role, assignedName);
+        // Same rule as the Comparisons page: a filter the topic's data cannot honour is refused, not silently dropped.
+        var ignored = new List<string>();
+        if (ComparisonTopics.IgnoresStore(topic) && (a.Store != null || b.Store != null)) ignored.Add("Store");
+        if (ComparisonTopics.IgnoresJob(topic) && (a.Job != null || b.Job != null)) ignored.Add("Job Title");
+        if (ignored.Count > 0)
+            throw new InvalidOperationException($"The {string.Join(" and ", ignored)} filter does not apply to this topic. Clear it on A and B, or choose another topic.");
 
-        var wsKpi = AddSheet(wb, "Comparison KPIs");
-        StyleHeader(wsKpi, new[] { "Metric", $"Period A ({a.Label})", $"Period B ({b.Label})", "Delta (A − B)" });
-        WriteKpiCompareRow(wsKpi, 2, "Total Headcount", kpiA.Headcount, kpiB.Headcount, false);
-        WriteKpiCompareRow(wsKpi, 3, "New Hires", kpiA.NewHires, kpiB.NewHires, false);
-        WriteKpiCompareRow(wsKpi, 4, "Resignations", kpiA.Resignations, kpiB.Resignations, false);
-        WriteKpiCompareRow(wsKpi, 5, "Turnover Rate", kpiA.TurnoverRate, kpiB.TurnoverRate, true);
-        WriteKpiCompareRow(wsKpi, 6, "90-Day Total Hires", kpiA.NinetyHires, kpiB.NinetyHires, false);
-        WriteKpiCompareRow(wsKpi, 7, "90-Day Early Leavers", kpiA.NinetyEarly, kpiB.NinetyEarly, false);
-        WriteKpiCompareRow(wsKpi, 8, "90-Day Early Leave Rate", kpiA.NinetyRate, kpiB.NinetyRate, true);
-        Finalize(wsKpi);
+        var wb = new XLWorkbook();
+        switch (topic)
+        {
+            case ComparisonTopics.Breakdown: await AddComparisonBreakdownSheetsAsync(wb, a, b, role, assignedName); break;
+            case ComparisonTopics.Ninety: await AddComparisonNinetySheetsAsync(wb, a, b, role, assignedName); break;
+            case ComparisonTopics.Workforce: await AddComparisonWorkforceSheetsAsync(wb, a, b, role, assignedName); break;
+            case ComparisonTopics.Retention: await AddComparisonRetentionSheetAsync(wb, a, b, role, assignedName); break;
+            case ComparisonTopics.Scorecard: await AddComparisonScorecardSheetsAsync(wb, a, b, role, assignedName); break;
+            case ComparisonTopics.Exit: await AddComparisonExitSheetsAsync(wb, a, b, role, assignedName); break;
+            case ComparisonTopics.Drivers: await AddComparisonDriversSheetAsync(wb, a, b, role, assignedName); break;
+            default: await AddComparisonTurnoverSheetsAsync(wb, a, b, role, assignedName); break;
+        }
+        return wb;
+    }
+
+    private Task<DashboardKpiViewModel> LoadComparisonKpiAsync(ComparisonSide s, string role, string? assignedName) =>
+        _dashboard.GetKpisAsync(s.AnchorMonth, s.Year, s.Store, role, assignedName,
+            om: s.Om, oc: s.Oc, soc: s.Soc, od: s.Od, months: s.Months, jobTitles: s.Job);
+
+    private Task<List<StoreComparisonRow>> LoadComparisonStoresAsync(ComparisonSide s, string role, string? assignedName) =>
+        _dashboard.GetStoreComparisonAsync(s.AnchorMonth, s.Year, role, assignedName,
+            om: s.Om, oc: s.Oc, soc: s.Soc, od: s.Od, months: s.Months, jobTitles: s.Job);
+
+    private static ExitInterviewFilter ExitFilterOf(ComparisonSide s) => new()
+    {
+        Store = s.Store, OperationConsultant = s.Oc, OperationManager = s.Om,
+        SeniorOperationConsultant = s.Soc, OperationDirector = s.Od,
+        Year = s.Year, Months = s.Months, Jobs = s.Job,
+    };
+
+    // ── Topic: Turnover ───────────────────────────────────────
+    private async Task AddComparisonTurnoverSheetsAsync(XLWorkbook wb, ComparisonSide a, ComparisonSide b, string role, string? assignedName)
+    {
+        var kpiA = await LoadComparisonKpiAsync(a, role, assignedName);
+        var kpiB = await LoadComparisonKpiAsync(b, role, assignedName);
+        var uneven = MonthCount(a) != MonthCount(b);
+        string Tag(string metric, string suffix) => uneven ? $"{metric} ({suffix})" : metric;
+
+        var wsKpi = AddSheet(wb, "Turnover KPIs");
+        WriteCompareTable(wsKpi, "Metric", a, b, new[]
+        {
+            new CompareRow(Tag("Total Headcount", "monthly avg"), PerMonth(a, kpiA.TotalHeadcount, uneven), PerMonth(b, kpiB.TotalHeadcount, uneven), false),
+            new CompareRow(Tag("New Hires", "per month"), PerMonth(a, kpiA.NewHires, uneven), PerMonth(b, kpiB.NewHires, uneven), false),
+            new CompareRow(Tag("Resignations", "per month"), PerMonth(a, kpiA.TotalResignations, uneven), PerMonth(b, kpiB.TotalResignations, uneven), false),
+            new CompareRow("Turnover Rate", kpiA.TurnoverRate, kpiB.TurnoverRate, true),
+        }, uneven);
+        AddComparisonNotes(wsKpi, UnevenNote(a, b, "counts"), uneven ? RatesNote : null, StoreSheetNote(a, b));
+        if (a.Store != null || b.Store != null) return;
 
         var leadership = await BuildLeadershipMapAsync(role, assignedName);
+        var rowsA = (await LoadComparisonStoresAsync(a, role, assignedName)).ToDictionary(r => r.StoreName, r => r.TurnoverRate);
+        var rowsB = (await LoadComparisonStoresAsync(b, role, assignedName)).ToDictionary(r => r.StoreName, r => r.TurnoverRate);
+        var stores = rowsA.Keys.Union(rowsB.Keys).OrderBy(x => x).ToList();
 
-        var turnoverA = await _dashboard.GetStoreComparisonAsync(a.AnchorMonth, a.Year, role, assignedName, om: a.Om, oc: a.Oc, soc: a.Soc, od: a.Od, months: a.Months);
-        var turnoverB = await _dashboard.GetStoreComparisonAsync(b.AnchorMonth, b.Year, role, assignedName, om: b.Om, oc: b.Oc, soc: b.Soc, od: b.Od, months: b.Months);
-        var turnoverBByStore = turnoverB.ToDictionary(r => r.StoreName, r => r.TurnoverRate);
-        var allTurnoverStores = turnoverA.Select(r => r.StoreName).Union(turnoverBByStore.Keys).OrderBy(s => s).ToList();
-        var turnoverAByStore = turnoverA.ToDictionary(r => r.StoreName, r => r.TurnoverRate);
-
-        var wsTurnover = AddSheet(wb, "Turnover By Store (A vs B)");
-        StyleHeader(wsTurnover, new[] { "Store" }.Concat(LeadershipHeaders)
+        var ws = AddSheet(wb, "Turnover By Store (A vs B)");
+        StyleHeader(ws, new[] { "Store" }.Concat(LeadershipHeaders)
             .Concat(new[] { $"Turnover Rate A ({a.Label})", $"Turnover Rate B ({b.Label})", "Delta (A − B)" }).ToArray());
-        for (int i = 0; i < allTurnoverStores.Count; i++)
+        for (var i = 0; i < stores.Count; i++)
         {
-            var store = allTurnoverStores[i];
-            wsTurnover.Cell(i + 2, 1).Value = SafeText(store);
-            int col = WriteLeadershipCells(wsTurnover, i + 2, 2, leadership, store);
-            var rateA = turnoverAByStore.GetValueOrDefault(store);
-            var rateB = turnoverBByStore.GetValueOrDefault(store);
-            SetPercentCell(wsTurnover.Cell(i + 2, col), rateA);
-            SetPercentCell(wsTurnover.Cell(i + 2, col + 1), rateB);
-            SetPercentCell(wsTurnover.Cell(i + 2, col + 2), rateA - rateB);
+            var store = stores[i];
+            ws.Cell(i + 2, 1).Value = SafeText(store);
+            var col = WriteLeadershipCells(ws, i + 2, 2, leadership, store);
+            var rateA = rowsA.GetValueOrDefault(store);
+            var rateB = rowsB.GetValueOrDefault(store);
+            SetPercentCell(ws.Cell(i + 2, col), rateA);
+            SetPercentCell(ws.Cell(i + 2, col + 1), rateB);
+            SetPercentCell(ws.Cell(i + 2, col + 2), rateA - rateB);
         }
-        Finalize(wsTurnover);
+        Finalize(ws);
+        AddComparisonNotes(ws, uneven ? RatesNote : null);
+    }
 
-        var ninetyA = await _ninetyDay.GetByStoreAsync(a.AnchorMonth, a.Year, role, assignedName, om: a.Om, oc: a.Oc, soc: a.Soc, od: a.Od, months: a.Months);
-        var ninetyB = await _ninetyDay.GetByStoreAsync(b.AnchorMonth, b.Year, role, assignedName, om: b.Om, oc: b.Oc, soc: b.Soc, od: b.Od, months: b.Months);
-        var ninetyBByStore = ninetyB.ToDictionary(r => r.Label, r => r.Value);
-        var ninetyAByStore = ninetyA.ToDictionary(r => r.Label, r => r.Value);
-        var allNinetyStores = ninetyAByStore.Keys.Union(ninetyBByStore.Keys).OrderBy(s => s).ToList();
+    // ── Topic: Turnover Breakdown ─────────────────────────────
+    private async Task AddComparisonBreakdownSheetsAsync(XLWorkbook wb, ComparisonSide a, ComparisonSide b, string role, string? assignedName)
+    {
+        var uneven = MonthCount(a) != MonthCount(b);
 
-        var wsNinety = AddSheet(wb, "90-Day By Store (A vs B)");
-        StyleHeader(wsNinety, new[] { "Store" }.Concat(LeadershipHeaders)
+        async Task AddAsync(string sheetName, string labelHeader, Func<ComparisonSide, Task<List<ChartDataItem>>> load, bool keepOrder)
+        {
+            var rowsA = await load(a);
+            var rowsB = await load(b);
+            var mapA = rowsA.GroupBy(r => BlankAs(r.Label)).ToDictionary(g => g.Key, g => (double)g.Sum(x => x.Value));
+            var mapB = rowsB.GroupBy(r => BlankAs(r.Label)).ToDictionary(g => g.Key, g => (double)g.Sum(x => x.Value));
+            var labels = rowsA.Select(r => BlankAs(r.Label)).Concat(rowsB.Select(r => BlankAs(r.Label))).Distinct().ToList();
+            if (!keepOrder)   // tenure buckets keep their natural order; the rest rank by the combined A+B count
+                labels = labels.OrderByDescending(l => mapA.GetValueOrDefault(l) + mapB.GetValueOrDefault(l)).ThenBy(l => l).ToList();
+
+            var ws = AddSheet(wb, sheetName);
+            var suffix = uneven ? " per month" : "";
+            StyleHeader(ws, new[] { labelHeader, $"Resignations{suffix} A ({a.Label})", $"Resignations{suffix} B ({b.Label})", "Delta (A − B)" });
+            for (var i = 0; i < labels.Count; i++)
+            {
+                var valueA = PerMonth(a, mapA.GetValueOrDefault(labels[i]), uneven);
+                var valueB = PerMonth(b, mapB.GetValueOrDefault(labels[i]), uneven);
+                ws.Cell(i + 2, 1).Value = SafeText(labels[i]);
+                SetCountCell(ws.Cell(i + 2, 2), valueA, uneven);
+                SetCountCell(ws.Cell(i + 2, 3), valueB, uneven);
+                SetCountCell(ws.Cell(i + 2, 4), valueA - valueB, uneven);
+            }
+            Finalize(ws);
+            AddComparisonNotes(ws, UnevenNote(a, b, "counts"));
+        }
+
+        await AddAsync("By Job Title", "Job Title", s => _dashboard.GetTurnoverByJobTitleAsync(s.AnchorMonth, s.Year, s.Store, role, assignedName,
+            om: s.Om, oc: s.Oc, soc: s.Soc, od: s.Od, months: s.Months, jobTitles: s.Job), false);
+        await AddAsync("By Tenure", "Tenure", s => _dashboard.GetTurnoverByTenureAsync(s.AnchorMonth, s.Year, s.Store, role, assignedName,
+            om: s.Om, oc: s.Oc, soc: s.Soc, od: s.Od, months: s.Months, jobTitles: s.Job), true);
+        await AddAsync("By Payroll Group", "Payroll Group", s => _dashboard.GetTurnoverByPayrollGroupAsync(s.AnchorMonth, s.Year, s.Store, role, assignedName,
+            om: s.Om, oc: s.Oc, soc: s.Soc, od: s.Od, months: s.Months, jobTitles: s.Job), false);
+    }
+
+    // ── Topic: 90-Day Turnover ────────────────────────────────
+    private async Task AddComparisonNinetySheetsAsync(XLWorkbook wb, ComparisonSide a, ComparisonSide b, string role, string? assignedName)
+    {
+        var kpiA = await _ninetyDay.GetKpiAsync(a.AnchorMonth, a.Year, a.Store, role, assignedName, om: a.Om, oc: a.Oc, soc: a.Soc, od: a.Od, months: a.Months);
+        var kpiB = await _ninetyDay.GetKpiAsync(b.AnchorMonth, b.Year, b.Store, role, assignedName, om: b.Om, oc: b.Oc, soc: b.Soc, od: b.Od, months: b.Months);
+        var uneven = MonthCount(a) != MonthCount(b);
+        string Tag(string metric) => uneven ? $"{metric} (per month)" : metric;
+
+        var wsKpi = AddSheet(wb, "90-Day KPIs");
+        WriteCompareTable(wsKpi, "Metric", a, b, new[]
+        {
+            new CompareRow(Tag("90-Day Total Hires"), PerMonth(a, kpiA.TotalHires, uneven), PerMonth(b, kpiB.TotalHires, uneven), false),
+            new CompareRow(Tag("90-Day Early Leavers"), PerMonth(a, kpiA.EarlyLeavers, uneven), PerMonth(b, kpiB.EarlyLeavers, uneven), false),
+            new CompareRow("90-Day Early Leave Rate", kpiA.Rate, kpiB.Rate, true),
+        }, uneven);
+        AddComparisonNotes(wsKpi, UnevenNote(a, b, "counts"), uneven ? RatesNote : null, StoreSheetNote(a, b));
+        if (a.Store != null || b.Store != null) return;
+
+        var leadership = await BuildLeadershipMapAsync(role, assignedName);
+        var rowsA = (await _ninetyDay.GetByStoreAsync(a.AnchorMonth, a.Year, role, assignedName, om: a.Om, oc: a.Oc, soc: a.Soc, od: a.Od, months: a.Months))
+            .ToDictionary(r => r.Label, r => r.Value);
+        var rowsB = (await _ninetyDay.GetByStoreAsync(b.AnchorMonth, b.Year, role, assignedName, om: b.Om, oc: b.Oc, soc: b.Soc, od: b.Od, months: b.Months))
+            .ToDictionary(r => r.Label, r => r.Value);
+        var stores = rowsA.Keys.Union(rowsB.Keys).OrderBy(x => x).ToList();
+
+        var ws = AddSheet(wb, "90-Day By Store (A vs B)");
+        StyleHeader(ws, new[] { "Store" }.Concat(LeadershipHeaders)
             .Concat(new[] { $"90-Day Rate A ({a.Label})", $"90-Day Rate B ({b.Label})", "Delta (A − B)" }).ToArray());
-        for (int i = 0; i < allNinetyStores.Count; i++)
+        for (var i = 0; i < stores.Count; i++)
         {
-            var store = allNinetyStores[i];
-            wsNinety.Cell(i + 2, 1).Value = SafeText(store);
-            int col = WriteLeadershipCells(wsNinety, i + 2, 2, leadership, store);
-            var rateA = ninetyAByStore.GetValueOrDefault(store);
-            var rateB = ninetyBByStore.GetValueOrDefault(store);
-            SetPercentCell(wsNinety.Cell(i + 2, col), rateA);
-            SetPercentCell(wsNinety.Cell(i + 2, col + 1), rateB);
-            SetPercentCell(wsNinety.Cell(i + 2, col + 2), rateA - rateB);
+            var store = stores[i];
+            ws.Cell(i + 2, 1).Value = SafeText(store);
+            var col = WriteLeadershipCells(ws, i + 2, 2, leadership, store);
+            var rateA = rowsA.GetValueOrDefault(store);
+            var rateB = rowsB.GetValueOrDefault(store);
+            SetPercentCell(ws.Cell(i + 2, col), rateA);
+            SetPercentCell(ws.Cell(i + 2, col + 1), rateB);
+            SetPercentCell(ws.Cell(i + 2, col + 2), rateA - rateB);
         }
-        Finalize(wsNinety);
+        Finalize(ws);
+    }
 
-        return wb;
+    // ── Topic: Workforce ──────────────────────────────────────
+    private async Task AddComparisonWorkforceSheetsAsync(XLWorkbook wb, ComparisonSide a, ComparisonSide b, string role, string? assignedName)
+    {
+        var kpiA = await LoadComparisonKpiAsync(a, role, assignedName);
+        var kpiB = await LoadComparisonKpiAsync(b, role, assignedName);
+        var uneven = MonthCount(a) != MonthCount(b);
+        string Tag(string metric, string suffix) => uneven ? $"{metric} ({suffix})" : metric;
+
+        var wsKpi = AddSheet(wb, "Workforce KPIs");
+        WriteCompareTable(wsKpi, "Metric", a, b, new[]
+        {
+            new CompareRow(Tag("Total Headcount", "monthly avg"), PerMonth(a, kpiA.TotalHeadcount, uneven), PerMonth(b, kpiB.TotalHeadcount, uneven), false),
+            new CompareRow(Tag("New Hires", "per month"), PerMonth(a, kpiA.NewHires, uneven), PerMonth(b, kpiB.NewHires, uneven), false),
+            new CompareRow(Tag("Resignations", "per month"), PerMonth(a, kpiA.TotalResignations, uneven), PerMonth(b, kpiB.TotalResignations, uneven), false),
+        }, uneven);
+        AddComparisonNotes(wsKpi, UnevenNote(a, b, "counts"), StoreSheetNote(a, b));
+        if (a.Store != null || b.Store != null) return;
+
+        var leadership = await BuildLeadershipMapAsync(role, assignedName);
+        var rowsA = (await LoadComparisonStoresAsync(a, role, assignedName)).ToDictionary(r => r.StoreName);
+        var rowsB = (await LoadComparisonStoresAsync(b, role, assignedName)).ToDictionary(r => r.StoreName);
+        var stores = rowsA.Keys.Union(rowsB.Keys).OrderBy(x => x).ToList();
+
+        // Headcount is the sum over the months (the dashboard's convention) — the monthly average when the sides differ in length.
+        double Headcount(ComparisonSide s, StoreComparisonRow? r) => r == null ? 0 : uneven ? Math.Round(r.AvgHeadcount, 1) : r.Headcount;
+
+        var ws = AddSheet(wb, "Workforce By Store (A vs B)");
+        var suffix = uneven ? " per month" : "";
+        StyleHeader(ws, new[] { "Store" }.Concat(LeadershipHeaders).Concat(new[]
+        {
+            uneven ? "Avg Headcount A" : "Headcount A", uneven ? "Avg Headcount B" : "Headcount B", "Delta (A − B)",
+            $"New Hires{suffix} A", $"New Hires{suffix} B", "Delta (A − B)",
+            $"Resignations{suffix} A", $"Resignations{suffix} B", "Delta (A − B)",
+        }).ToArray());
+        for (var i = 0; i < stores.Count; i++)
+        {
+            var store = stores[i];
+            rowsA.TryGetValue(store, out var ra);
+            rowsB.TryGetValue(store, out var rb);
+            ws.Cell(i + 2, 1).Value = SafeText(store);
+            var col = WriteLeadershipCells(ws, i + 2, 2, leadership, store);
+            var values = new[]
+            {
+                (Headcount(a, ra), Headcount(b, rb)),
+                (PerMonth(a, ra?.NewHires ?? 0, uneven), PerMonth(b, rb?.NewHires ?? 0, uneven)),
+                (PerMonth(a, ra?.Resignations ?? 0, uneven), PerMonth(b, rb?.Resignations ?? 0, uneven)),
+            };
+            foreach (var (valueA, valueB) in values)
+            {
+                SetCountCell(ws.Cell(i + 2, col), valueA, uneven);
+                SetCountCell(ws.Cell(i + 2, col + 1), valueB, uneven);
+                SetCountCell(ws.Cell(i + 2, col + 2), valueA - valueB, uneven);
+                col += 3;
+            }
+        }
+        Finalize(ws);
+        AddComparisonNotes(ws, UnevenNote(a, b, "headcount, hires and resignations"));
+    }
+
+    // ── Topic: Retention ──────────────────────────────────────
+    private async Task AddComparisonRetentionSheetAsync(XLWorkbook wb, ComparisonSide a, ComparisonSide b, string role, string? assignedName)
+    {
+        Task<List<RetentionMilestoneItem>> Load(ComparisonSide s)
+        {
+            var months = MultiValueFilter.Split(s.Months)?.Select(int.Parse).ToList() ?? new List<int>();
+            return _retention.GetMilestonesAsync(s.Store, role, assignedName,
+                fromMonth: months.Count > 0 ? months.Min() : 1, fromYear: s.Year,
+                toMonth: months.Count > 0 ? months.Max() : 12, toYear: s.Year,
+                om: s.Om, oc: s.Oc, soc: s.Soc, od: s.Od, months: s.Months);
+        }
+        var rowsA = (await Load(a)).ToDictionary(r => r.Label);
+        var rowsB = (await Load(b)).ToDictionary(r => r.Label);
+        var labels = rowsA.Values.Concat(rowsB.Values).GroupBy(r => r.Label).Select(g => (Label: g.Key, Days: g.Min(x => x.Days))).OrderBy(x => x.Days).Select(x => x.Label).ToList();
+
+        var ws = AddSheet(wb, "Retention Milestones");
+        StyleHeader(ws, new[] { "Milestone", $"Retention A ({a.Label})", $"Retention B ({b.Label})", "Delta (A − B)", "Hires A", "Hires B", "Retained A", "Retained B" });
+        for (var i = 0; i < labels.Count; i++)
+        {
+            rowsA.TryGetValue(labels[i], out var ra);
+            rowsB.TryGetValue(labels[i], out var rb);
+            // A milestone with no eligible hires has no rate (blank, as on the page).
+            double? rateA = ra != null && ra.TotalHires > 0 ? ra.RetentionRate : null;
+            double? rateB = rb != null && rb.TotalHires > 0 ? rb.RetentionRate : null;
+            ws.Cell(i + 2, 1).Value = SafeText(labels[i]);
+            SetNullablePercentCell(ws.Cell(i + 2, 2), rateA);
+            SetNullablePercentCell(ws.Cell(i + 2, 3), rateB);
+            SetNullablePercentCell(ws.Cell(i + 2, 4), rateA.HasValue && rateB.HasValue ? rateA.Value - rateB.Value : null);
+            SetIntCell(ws.Cell(i + 2, 5), ra?.TotalHires ?? 0);
+            SetIntCell(ws.Cell(i + 2, 6), rb?.TotalHires ?? 0);
+            SetIntCell(ws.Cell(i + 2, 7), ra?.Retained ?? 0);
+            SetIntCell(ws.Cell(i + 2, 8), rb?.Retained ?? 0);
+        }
+        Finalize(ws);
+        AddComparisonNotes(ws, "Each milestone counts only hire cohorts old enough to have reached it, so the two sides can be based on different numbers of hires.");
+    }
+
+    // ── Topic: Scorecard ──────────────────────────────────────
+    private async Task AddComparisonScorecardSheetsAsync(XLWorkbook wb, ComparisonSide a, ComparisonSide b, string role, string? assignedName)
+    {
+        var scA = await _scorecard.GetRollupAsync(role, assignedName, a.Om, a.Oc, a.Soc, a.Od, a.Months, a.Year);
+        var scB = await _scorecard.GetRollupAsync(role, assignedName, b.Om, b.Oc, b.Soc, b.Od, b.Months, b.Year);
+
+        static IReadOnlyList<(string Level, List<RollupRow> Rows)> Levels(ScorecardRollupResult sc) => new[]
+        {
+            ("Operation Consultant", sc.ByOperationConsultant), ("Operation Manager", sc.ByOperationManager),
+            ("Senior Operation Consultant", sc.BySeniorOperationConsultant), ("Operation Director", sc.ByOperationDirector),
+        };
+        // Every level lists each store leader once, so the level with the most leaders gives the company-wide figures.
+        static (int Leaders, int Flagged) Overall(ScorecardRollupResult sc)
+        {
+            var best = Levels(sc).Select(l => l.Rows).OrderByDescending(r => r.Sum(x => x.TotalLeaders)).FirstOrDefault() ?? new List<RollupRow>();
+            return (best.Sum(x => x.TotalLeaders), best.Sum(x => x.FlaggedLeaders));
+        }
+        var (leadersA, flaggedA) = Overall(scA);
+        var (leadersB, flaggedB) = Overall(scB);
+
+        var wsSummary = AddSheet(wb, "Scorecard Summary");
+        WriteCompareTable(wsSummary, "Metric", a, b, new[]
+        {
+            new CompareRow("Average Leader Turnover Rate", scA.AverageTurnoverRate, scB.AverageTurnoverRate, true),
+            new CompareRow("Store Leaders", leadersA, leadersB, false),
+            new CompareRow("Flagged Leaders (above-average turnover)", flaggedA, flaggedB, false),
+            new CompareRow("Flagged Leaders %", leadersA > 0 ? flaggedA * 100.0 / leadersA : 0, leadersB > 0 ? flaggedB * 100.0 / leadersB : 0, true),
+        }, false);
+        AddComparisonNotes(wsSummary, "A leader is flagged when their turnover rate is above the average. The Store and Job Title filters do not apply to this topic.");
+
+        var ws = AddSheet(wb, "Flagged By Supervisor");
+        StyleHeader(ws, new[]
+        {
+            "Level", "Name", $"Leaders A ({a.Label})", "Flagged A", "Flagged % A", $"Leaders B ({b.Label})", "Flagged B", "Flagged % B", "Delta % (A − B)",
+        });
+        var row = 2;
+        var levelsA = Levels(scA);
+        var levelsB = Levels(scB);
+        for (var l = 0; l < levelsA.Count; l++)
+        {
+            var mapA = levelsA[l].Rows.ToDictionary(r => r.Name);
+            var mapB = levelsB[l].Rows.ToDictionary(r => r.Name);
+            var names = mapA.Keys.Union(mapB.Keys)
+                .OrderByDescending(n => (mapA.GetValueOrDefault(n)?.FlaggedPercent ?? 0) + (mapB.GetValueOrDefault(n)?.FlaggedPercent ?? 0))
+                .ThenBy(n => n).ToList();
+            foreach (var name in names)
+            {
+                mapA.TryGetValue(name, out var ra);
+                mapB.TryGetValue(name, out var rb);
+                ws.Cell(row, 1).Value = levelsA[l].Level;
+                ws.Cell(row, 2).Value = SafeText(name);
+                SetIntCell(ws.Cell(row, 3), ra?.TotalLeaders ?? 0);
+                SetIntCell(ws.Cell(row, 4), ra?.FlaggedLeaders ?? 0);
+                SetPercentCell(ws.Cell(row, 5), ra?.FlaggedPercent ?? 0);
+                SetIntCell(ws.Cell(row, 6), rb?.TotalLeaders ?? 0);
+                SetIntCell(ws.Cell(row, 7), rb?.FlaggedLeaders ?? 0);
+                SetPercentCell(ws.Cell(row, 8), rb?.FlaggedPercent ?? 0);
+                SetPercentCell(ws.Cell(row, 9), (ra?.FlaggedPercent ?? 0) - (rb?.FlaggedPercent ?? 0));
+                row++;
+            }
+        }
+        Finalize(ws);
+    }
+
+    // ── Topic: Exit Interviews ────────────────────────────────
+    private async Task AddComparisonExitSheetsAsync(XLWorkbook wb, ComparisonSide a, ComparisonSide b, string role, string? assignedName)
+    {
+        var reasonsA = await _exitInterviews.GetReasonsForLeavingAsync(ExitFilterOf(a), role, assignedName);
+        var reasonsB = await _exitInterviews.GetReasonsForLeavingAsync(ExitFilterOf(b), role, assignedName);
+        var sentimentA = await _exitInterviews.GetSentimentSummaryAsync(ExitFilterOf(a), role, assignedName);
+        var sentimentB = await _exitInterviews.GetSentimentSummaryAsync(ExitFilterOf(b), role, assignedName);
+
+        // Shares of each side's own answers — a count would only reflect how many interviews each period had.
+        var totalA = reasonsA.Sum(r => r.Value);
+        var totalB = reasonsB.Sum(r => r.Value);
+        var mapA = reasonsA.GroupBy(r => BlankAs(r.Label)).ToDictionary(g => g.Key, g => g.Sum(x => x.Value));
+        var mapB = reasonsB.GroupBy(r => BlankAs(r.Label)).ToDictionary(g => g.Key, g => g.Sum(x => x.Value));
+        double ShareA(string reason) => totalA > 0 ? mapA.GetValueOrDefault(reason) * 100.0 / totalA : 0;
+        double ShareB(string reason) => totalB > 0 ? mapB.GetValueOrDefault(reason) * 100.0 / totalB : 0;
+        var reasons = mapA.Keys.Union(mapB.Keys).OrderByDescending(r => ShareA(r) + ShareB(r)).ThenBy(r => r).ToList();
+
+        var ws = AddSheet(wb, "Exit Reasons");
+        StyleHeader(ws, new[] { "Reason for Leaving", $"Count A ({a.Label})", "Share A", $"Count B ({b.Label})", "Share B", "Delta (A − B)" });
+        for (var i = 0; i < reasons.Count; i++)
+        {
+            ws.Cell(i + 2, 1).Value = SafeText(reasons[i]);
+            SetIntCell(ws.Cell(i + 2, 2), mapA.GetValueOrDefault(reasons[i]));
+            SetPercentCell(ws.Cell(i + 2, 3), ShareA(reasons[i]));
+            SetIntCell(ws.Cell(i + 2, 4), mapB.GetValueOrDefault(reasons[i]));
+            SetPercentCell(ws.Cell(i + 2, 5), ShareB(reasons[i]));
+            SetPercentCell(ws.Cell(i + 2, 6), ShareA(reasons[i]) - ShareB(reasons[i]));
+        }
+        Finalize(ws);
+        AddComparisonNotes(ws, "Share = the reason's count as a percentage of that side's own answers, so sides with a different number of interviews stay comparable.");
+
+        var wsSentiment = AddSheet(wb, "Exit Sentiment");
+        WriteCompareTable(wsSentiment, "Metric", a, b, new[]
+        {
+            new CompareRow("Positive Sentiment", sentimentA.PositivePercent, sentimentB.PositivePercent, true),
+            new CompareRow("Exit Interviews", sentimentA.TotalResponses, sentimentB.TotalResponses, false),
+        }, false);
+        AddComparisonNotes(wsSentiment, "Positive sentiment = positive answers to Would Return and Overall Experience divided by all non-empty answers.");
+    }
+
+    // ── Topic: Engagement Drivers ─────────────────────────────
+    private async Task AddComparisonDriversSheetAsync(XLWorkbook wb, ComparisonSide a, ComparisonSide b, string role, string? assignedName)
+    {
+        const int MinAnswers = 10;
+        var driversA = (await _exitInterviews.GetEngagementDriversAsync(ExitFilterOf(a), role, assignedName)).ToDictionary(d => d.Label);
+        var driversB = (await _exitInterviews.GetEngagementDriversAsync(ExitFilterOf(b), role, assignedName)).ToDictionary(d => d.Label);
+        var rows = driversA.Keys.Union(driversB.Keys)
+            .Select(label =>
+            {
+                driversA.TryGetValue(label, out var da);
+                driversB.TryGetValue(label, out var db);
+                return (Label: label, A: da?.PositivePercent ?? 0, B: db?.PositivePercent ?? 0, NA: da?.TotalResponses ?? 0, NB: db?.TotalResponses ?? 0);
+            })
+            .Where(r => r.NA > 0 || r.NB > 0)
+            .OrderBy(r => r.A - r.B).ThenBy(r => r.Label)   // weakest change first, as on the page
+            .ToList();
+
+        var ws = AddSheet(wb, "Engagement Drivers");
+        StyleHeader(ws, new[] { "Driver", $"Positive A ({a.Label})", $"Positive B ({b.Label})", "Delta (A − B)", "Answers A", "Answers B", "Note" });
+        for (var i = 0; i < rows.Count; i++)
+        {
+            var r = rows[i];
+            ws.Cell(i + 2, 1).Value = SafeText(r.Label);
+            SetPercentCell(ws.Cell(i + 2, 2), r.A);
+            SetPercentCell(ws.Cell(i + 2, 3), r.B);
+            SetPercentCell(ws.Cell(i + 2, 4), r.A - r.B);
+            SetIntCell(ws.Cell(i + 2, 5), r.NA);
+            SetIntCell(ws.Cell(i + 2, 6), r.NB);
+            ws.Cell(i + 2, 7).Value = r.NA < MinAnswers || r.NB < MinAnswers ? $"Low sample (fewer than {MinAnswers} answers)" : "";
+        }
+        Finalize(ws);
+        AddComparisonNotes(ws, "Positive = positive answers divided by all non-empty answers to the question. Rows are ordered by change (A − B), weakest first.");
     }
 }

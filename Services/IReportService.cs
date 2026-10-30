@@ -40,8 +40,11 @@ public interface IReportService
     /// <summary>Period A vs Period B comparison — mirrors the Comparisons dashboard
     /// page's own two-sided filter shape (independent year/months/store/OM/OC/SOC/OD
     /// per side). A null side value falls back to that side's dashboard-page default
-    /// (A = latest year, all months; B = the same months one year earlier).</summary>
+    /// (A = latest year, all months; B = the same months one year earlier). <paramref name="topic"/> is one of
+    /// <see cref="ComparisonTopics.All"/> (the Comparisons page's topics); each topic is its own set of sheets.
+    /// Throws <see cref="InvalidOperationException"/> when a store / job filter is set for a topic that cannot honour it.</summary>
     Task<XLWorkbook> BuildComparisonReportAsync(string role, string? assignedName,
         int? yearA = null, string? monthsA = null, string? storeA = null, string? omA = null, string? ocA = null, string? socA = null, string? odA = null,
-        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null);
+        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null,
+        string? topic = null, string? jobA = null, string? jobB = null);
 }

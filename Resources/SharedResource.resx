@@ -1285,7 +1285,7 @@
   <data name="Rep_Section_Turnover" xml:space="preserve"><value>Turnover</value></data>
   <data name="Rep_Section_Comparison" xml:space="preserve"><value>Comparison</value></data>
   <data name="Rep_Title_Comparisons" xml:space="preserve"><value>Comparison</value></data>
-  <data name="Rep_Desc_Comparisons" xml:space="preserve"><value>Side-by-side Period A vs Period B — Headcount, New Hires, Resignations, Turnover Rate, and 90-Day Early Leave Rate, company-wide and per store.</value></data>
+  <data name="Rep_Desc_Comparisons" xml:space="preserve"><value>Period A vs Period B for the one topic you choose — Turnover, Turnover Breakdown, 90-Day, Workforce, Retention, Scorecard, Exit Interviews or Engagement Drivers — with the same filters as the Comparisons page. Each topic is its own set of sheets.</value></data>
   <data name="Rep_Section_PerformanceRisk" xml:space="preserve"><value>Performance &amp; Risk</value></data>
   <data name="Rep_Section_ExitInterviews" xml:space="preserve"><value>Exit Interviews</value></data>
   <data name="Rep_Title_ActionCenter" xml:space="preserve"><value>Action Center</value></data>
@@ -1319,6 +1319,8 @@
   <data name="Rep_Filters" xml:space="preserve"><value>Filters</value></data>
   <data name="Rep_FiltersHint" xml:space="preserve"><value>— leave a filter empty for "all"</value></data>
   <data name="CMP_ReportFiltersHint" xml:space="preserve"><value>— pick what each side (A and B) is comparing; leave a field empty for "all"</value></data>
+  <data name="CMP_ReportChoose" xml:space="preserve"><value>Choose a topic…</value></data>
+  <data name="CMP_ReportNeedTopic" xml:space="preserve"><value>Please choose what you want to compare first (Turnover, Workforce, Retention…), then download the report.</value></data>
   <data name="Month_January" xml:space="preserve"><value>January</value></data>
   <data name="Month_February" xml:space="preserve"><value>February</value></data>
   <data name="Month_March" xml:space="preserve"><value>March</value></data>

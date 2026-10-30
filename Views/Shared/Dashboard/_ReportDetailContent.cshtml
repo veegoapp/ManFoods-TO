@@ -113,6 +113,22 @@ else
                 <i class="bi bi-arrow-counterclockwise"></i>@L["Common_ResetFilters"]
             </button>
         </div>
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-md-5 col-lg-4">
+                <label class="form-label small text-muted-custom mb-1" for="rd-topic">@L["CMP_ChooseTitle"]</label>
+                <select id="rd-topic" class="form-select form-select-dark form-select-sm">
+                    <option value="">@L["CMP_ReportChoose"]</option>
+                    <option value="turnover">@L["CMP_Grp_turnover"]</option>
+                    <option value="breakdown">@L["CMP_Grp_breakdown"]</option>
+                    <option value="ninety">@L["CMP_Grp_ninety"]</option>
+                    <option value="workforce">@L["CMP_Grp_workforce"]</option>
+                    <option value="retention">@L["CMP_Grp_retention"]</option>
+                    <option value="scorecard">@L["CMP_Grp_scorecard"]</option>
+                    <option value="exit">@L["CMP_Grp_exit"]</option>
+                    <option value="drivers">@L["CMP_Grp_drivers"]</option>
+                </select>
+            </div>
+        </div>
         <div class="row g-3">
             @foreach (var side in new[] { "a", "b" })
             {
@@ -173,6 +189,13 @@ else
                                 <select id="rd-od-@side" class="form-select form-select-dark form-select-sm">
                                     <option value="">@L["Common_OperationDirectors"]</option>
                                     @foreach (var d in ods) { <option value="@d">@d</option> }
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-muted-custom mb-1">@L["Common_JobTitle"]</label>
+                                <select id="rd-job-@side" class="form-select form-select-dark form-select-sm">
+                                    <option value="">@L["Rep_AllJobs"]</option>
+                                    @foreach (var j in projJobs) { <option value="@j">@j</option> }
                                 </select>
                             </div>
                         </div>
@@ -485,6 +508,8 @@ function rdResetFilters() {
     const statusEl = document.getElementById('rd-status');
     if (statusEl) statusEl.selectedIndex = 0;
     ['months', 'store', 'job', 'om', 'oc', 'soc', 'od'].forEach(p => document.getElementById(`rd-${p}-clearall`)?.click());
+    const topicEl = document.getElementById('rd-topic');
+    if (topicEl) topicEl.selectedIndex = 0;
     if (RD_REPORT_ID === 'comparisons') rdInitComparisonSides();
 }
 
@@ -513,11 +538,16 @@ function rdInitComparisonSides() {
         if (!yearEl) return;
         yearEl.innerHTML = '<option value="">' + '@L["Common_Default"]' + '</option>'
             + rdYears.map(y => `<option value="${y}">${y}</option>`).join('');
-        ['store', 'om', 'oc', 'soc', 'od'].forEach(f => { const el = document.getElementById(`rd-${f}-${side}`); if (el) el.selectedIndex = 0; });
+        ['store', 'om', 'oc', 'soc', 'od', 'job'].forEach(f => { const el = document.getElementById(`rd-${f}-${side}`); if (el) el.selectedIndex = 0; });
         rdUpdateComparisonMonths(side);
     });
 }
 
+const RD_NEED_TOPIC = '@L["CMP_ReportNeedTopic"]';
+const RD_UNSUPPORTED = '@L["CMP_UnsupportedPopup"]';
+const RD_FILTER_NAMES = { store: '@L["Common_StoreName"]', job: '@L["Common_JobTitle"]' };
+/* Filters a topic's data cannot honour — the same rule as the Comparisons page and the server (which answers 400). */
+const RD_CMP_UNSUPPORTED = { ninety: ['job'], retention: ['job'], scorecard: ['store', 'job'] };
 const RD_PREPARING = '@L["Common_Preparing"]';
 const RD_FAILED = '@L["Common_DownloadFailed"]';
 let rdDownloading = false;
@@ -552,6 +582,12 @@ function rdDownload() {
     const p = new URLSearchParams({ reportType: RD_REPORT_ID });
 
     if (RD_REPORT_ID === 'comparisons') {
+        const topic = document.getElementById('rd-topic')?.value;
+        if (!topic) { alert(RD_NEED_TOPIC); return; }
+        const blocked = (RD_CMP_UNSUPPORTED[topic] || [])
+            .filter(f => document.getElementById(`rd-${f}-a`)?.value || document.getElementById(`rd-${f}-b`)?.value);
+        if (blocked.length) { alert(RD_UNSUPPORTED.replace('{0}', blocked.map(f => RD_FILTER_NAMES[f]).join(', '))); return; }
+        p.set('topic', topic);
         const yearA = document.getElementById('rd-year-a')?.value;
         if (yearA) p.set('year', yearA);
         const monthsA = rdMonthsAMs.getSelected();
@@ -566,6 +602,10 @@ function rdDownload() {
             const b = document.getElementById(`rd-${f}-b`)?.value;
             if (b) p.set(f === 'store' ? 'storeB' : `${f}B`, b);
         });
+        const jobA = document.getElementById('rd-job-a')?.value;
+        if (jobA) p.set('jobs', jobA);
+        const jobB = document.getElementById('rd-job-b')?.value;
+        if (jobB) p.set('jobsB', jobB);
         rdStartDownload(__AREA_PREFIX + '/dashboard/export?' + p.toString());
         return;
     }

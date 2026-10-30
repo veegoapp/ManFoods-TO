@@ -1291,7 +1291,7 @@
   <data name="Rep_Section_Turnover" xml:space="preserve"><value>معدل الدوران</value></data>
   <data name="Rep_Section_Comparison" xml:space="preserve"><value>المقارنة</value></data>
   <data name="Rep_Title_Comparisons" xml:space="preserve"><value>المقارنة</value></data>
-  <data name="Rep_Desc_Comparisons" xml:space="preserve"><value>مقارنة جنبًا إلى جنب بين الفترة A والفترة B — عدد الموظفين، التعيينات الجديدة، الاستقالات، معدل الدوران، ومعدل ترك العمل خلال 90 يوم، على مستوى الشركة وكل فرع.</value></data>
+  <data name="Rep_Desc_Comparisons" xml:space="preserve"><value>مقارنة بين الفترة A والفترة B للموضوع اللي تختاره — معدل الدوران، تفصيل الدوران، الـ 90 يوم، القوى العاملة، الاحتفاظ، تقييم القادة، مقابلات الخروج أو محاور الانخراط — بنفس فلاتر صفحة المقارنة. كل موضوع له شيتات خاصة بيه.</value></data>
   <data name="Rep_Section_PerformanceRisk" xml:space="preserve"><value>الأداء والمخاطر</value></data>
   <data name="Rep_Section_ExitInterviews" xml:space="preserve"><value>مقابلات إنهاء الخدمة</value></data>
   <data name="Rep_Title_ActionCenter" xml:space="preserve"><value>مركز الإجراءات</value></data>
@@ -1325,6 +1325,8 @@
   <data name="Rep_Filters" xml:space="preserve"><value>الفلاتر</value></data>
   <data name="Rep_FiltersHint" xml:space="preserve"><value>— اترك الفلتر فارغًا لتحديد "الكل"</value></data>
   <data name="CMP_ReportFiltersHint" xml:space="preserve"><value>— حدد ما تتم مقارنته في كل جانب (A وB)؛ اترك الحقل فارغًا لتحديد "الكل"</value></data>
+  <data name="CMP_ReportChoose" xml:space="preserve"><value>اختار الموضوع…</value></data>
+  <data name="CMP_ReportNeedTopic" xml:space="preserve"><value>من فضلك اختار الأول إيه اللي عايز تقارنه (معدل الدوران، القوى العاملة، الاحتفاظ…) وبعدين نزّل التقرير.</value></data>
   <data name="Month_January" xml:space="preserve"><value>يناير</value></data>
   <data name="Month_February" xml:space="preserve"><value>فبراير</value></data>
   <data name="Month_March" xml:space="preserve"><value>مارس</value></data>
