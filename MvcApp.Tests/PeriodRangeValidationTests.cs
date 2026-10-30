@@ -112,6 +112,9 @@ public class PeriodRangeValidationTests : IClassFixture<AppFactory>
     {
         Assert.NotNull(Check(new() { ["store"] = string.Join(",", Enumerable.Range(0, PeriodLimits.MaxFilterValues + 1).Select(i => "s" + i)) }));
         Assert.NotNull(Check(new() { ["jobs"] = new string('x', PeriodLimits.MaxFilterValueLength + 1) }));
+        // the Comparison report's per-side job filter is validated like every other filter list
+        Assert.NotNull(Check(new() { ["jobsB"] = string.Join(",", Enumerable.Range(0, PeriodLimits.MaxFilterValues + 1).Select(i => "j" + i)) }));
+        Assert.NotNull(Check(new() { ["jobsB"] = new string('x', PeriodLimits.MaxFilterValueLength + 1) }));
         Assert.Null(Check(new() { ["store"] = string.Join(",", Enumerable.Range(0, PeriodLimits.MaxFilterValues).Select(i => "s" + i)) }));
     }
 

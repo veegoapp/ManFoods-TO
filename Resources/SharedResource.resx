@@ -1321,6 +1321,7 @@
   <data name="CMP_ReportFiltersHint" xml:space="preserve"><value>— pick what each side (A and B) is comparing; leave a field empty for "all"</value></data>
   <data name="CMP_ReportChoose" xml:space="preserve"><value>Choose a topic…</value></data>
   <data name="CMP_ReportNeedTopic" xml:space="preserve"><value>Please choose what you want to compare first (Turnover, Workforce, Retention…), then download the report.</value></data>
+  <data name="CMP_ReportUnsupported" xml:space="preserve"><value>This topic cannot use the {0} filter. Clear it on A and B, or choose another topic, then download again.</value></data>
   <data name="Month_January" xml:space="preserve"><value>January</value></data>
   <data name="Month_February" xml:space="preserve"><value>February</value></data>
   <data name="Month_March" xml:space="preserve"><value>March</value></data>

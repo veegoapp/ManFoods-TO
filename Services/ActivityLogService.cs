@@ -25,6 +25,9 @@ public class ActivityLogService : IActivityLogService
     /// <summary>Most rows one Excel export carries (same ceiling as the page's paging depth).</summary>
     public const int MaxExportRows = MaxDepth;
     private const string SecurityOverviewCacheKey = "activity-logs:security-overview";
+    // Bumped by Clear History, so overviews and user profiles cached from the deleted rows are never served again.
+    private static int _cacheGeneration;
+    private static string OverviewKey => $"{SecurityOverviewCacheKey}:{_cacheGeneration}";
     private const int UserWindowDays = 90;
     /// <summary>Latest activities shown in the user drill-down.</summary>
     public const int UserRecentRows = 100;
@@ -91,7 +94,7 @@ public class ActivityLogService : IActivityLogService
 
     public async Task<ActivitySecurityOverview> GetSecurityOverviewAsync()
     {
-        if (_cache.TryGetValue(SecurityOverviewCacheKey, out ActivitySecurityOverview? cached) && cached != null) return cached;
+        if (_cache.TryGetValue(OverviewKey, out ActivitySecurityOverview? cached) && cached != null) return cached;
 
         var overview = new ActivitySecurityOverview();
         try
@@ -125,7 +128,7 @@ public class ActivityLogService : IActivityLogService
             return overview; // table not migrated yet — the page shows its "unavailable" notice; do not cache zeros
         }
 
-        _cache.Set(SecurityOverviewCacheKey, overview, TimeSpan.FromMinutes(1));
+        _cache.Set(OverviewKey, overview, TimeSpan.FromMinutes(1));
         return overview;
     }
 
@@ -136,7 +139,7 @@ public class ActivityLogService : IActivityLogService
         var profile = new ActivityUserProfile { Email = e, WindowDays = UserWindowDays };
         if (e.Length == 0) return profile;
 
-        var cacheKey = "activity-logs:user:" + e;
+        var cacheKey = $"activity-logs:user:{_cacheGeneration}:{e}";
         if (_cache.TryGetValue(cacheKey, out ActivityUserProfile? cached) && cached != null) return cached;
 
         try
@@ -505,7 +508,6 @@ public class ActivityLogService : IActivityLogService
     {
         var scope = Resolve(request, DateTime.UtcNow);
         if (scope == null) return null;
-        _cache.Remove(SecurityOverviewCacheKey);
         var selected = Select(_db.ActivityLogs, scope.Value);
 
         int deleted;
@@ -526,6 +528,7 @@ public class ActivityLogService : IActivityLogService
                 deleted += batch.Count;
             }
         }
+        Interlocked.Increment(ref _cacheGeneration);
         return (deleted, ToPreview(deleted, scope.Value));
     }
 }
