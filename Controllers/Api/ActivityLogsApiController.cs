@@ -41,7 +41,7 @@ public class ActivityLogsApiController : ControllerBase
 
     /// <summary>Everything one account did in the last 90 days (drill-down panel).</summary>
     [HttpGet("user"), RequireSuperAdmin]
-    public async Task<IActionResult> User([FromQuery] string? email)
+    public async Task<IActionResult> UserActivity([FromQuery] string? email)
     {
         if (string.IsNullOrWhiteSpace(email) || email.Length > 256) return BadRequest(new { error = _L["ActLog_LoadFailed"].Value });
         return Ok(await _logs.GetUserProfileAsync(email));

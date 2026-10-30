@@ -661,8 +661,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         dto.OperationConsultants = Options(l => l.Oc); dto.OperationManagers = Options(l => l.Om);
         dto.SeniorOperationConsultants = Options(l => l.Soc); dto.OperationDirectors = Options(l => l.Od);
 
-        // Where the forecast starts: the latest uploaded roster.
-        var rosterKeys = await GetRosterPeriodKeysAsync();
+        // Where the forecast starts: the latest uploaded roster (rosterKeys is read once, above, for the default year).
         var baseline = rosterKeys.Count > 0 ? rosterKeys[0] : 0;
         dto.HasRoster = baseline > 0;
         dto.BaselineYear = baseline / 100; dto.BaselineMonth = baseline % 100;

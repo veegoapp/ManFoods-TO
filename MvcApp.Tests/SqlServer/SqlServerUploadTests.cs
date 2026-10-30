@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using MvcApp.Data;
 using MvcApp.Services;
@@ -40,6 +41,8 @@ public class SqlServerUploadTests : IClassFixture<SqlServerHostFixture>, IAsyncL
             await db.StoreReferences.ExecuteDeleteAsync();
             await db.ExitInterviews.ExecuteDeleteAsync();
             await db.UploadLogs.ExecuteDeleteAsync();
+            // The deletes above bypass the upload service, which is what clears the cached list of uploaded periods.
+            sp.GetRequiredService<IMemoryCache>().Remove(DashboardService.AvailablePeriodsCacheKey);
         });
     }
 
