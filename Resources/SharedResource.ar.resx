@@ -1219,6 +1219,22 @@
   <data name="Chart_ExitDriversCompare" xml:space="preserve"><value>محاور الانخراط — A مقابل B</value></data>
   <data name="CMP_ExitDriversSub" xml:space="preserve"><value>نسبة الإجابات الإيجابية لكل سؤال في مقابلات الخروج، مرتبة حسب التغيّر (A − B) من الأضعف</value></data>
   <data name="CMP_BasisExitDrivers" xml:space="preserve"><value>الأساس: الإجابات الإيجابية ÷ كل الإجابات غير الفارغة لكل سؤال في مقابلات الخروج، للفترات والفلاتر المختارة (عدد الإجابات بين قوسين). الصفوف التي فيها أقل من 10 إجابات في أحد الجانبين تظهر باهتة.</value></data>
+  <data name="CMP_ChooseTitle" xml:space="preserve"><value>إيه اللي عايز تقارنه؟</value></data>
+  <data name="CMP_ChooseSub" xml:space="preserve"><value>حدّد الفلاتر اللي فوق (اختياري)، اختار موضوع واحد، وبعدين اضغط مقارنة. مفيش بيانات بتتحمّل قبل كده.</value></data>
+  <data name="CMP_Grp_turnover" xml:space="preserve"><value>معدل الدوران</value></data>
+  <data name="CMP_Grp_ninety" xml:space="preserve"><value>دوران الـ 90 يوم</value></data>
+  <data name="CMP_Grp_workforce" xml:space="preserve"><value>القوى العاملة</value></data>
+  <data name="CMP_Grp_retention" xml:space="preserve"><value>الاحتفاظ بالموظفين</value></data>
+  <data name="CMP_Grp_exit" xml:space="preserve"><value>مقابلات الخروج</value></data>
+  <data name="CMP_Grp_drivers" xml:space="preserve"><value>محاور الانخراط</value></data>
+  <data name="CMP_CompareBtn" xml:space="preserve"><value>مقارنة</value></data>
+  <data name="CMP_Comparing" xml:space="preserve"><value>جاري المقارنة…</value></data>
+  <data name="CMP_StaleNote" xml:space="preserve"><value>الفلاتر أو الموضوع اتغيّروا — اضغط مقارنة لتحديث النتائج.</value></data>
+  <data name="CMP_EmptyHint" xml:space="preserve"><value>اختار اللي عايز تقارنه وبعدين اضغط مقارنة عشان تظهر النتائج.</value></data>
+  <data name="CMP_NeedGroup" xml:space="preserve"><value>من فضلك اختار الأول إيه اللي عايز تقارنه (معدل الدوران، القوى العاملة، الاحتفاظ…) وبعدين اضغط مقارنة.</value></data>
+  <data name="CMP_NeedMonths" xml:space="preserve"><value>اختار شهر واحد على الأقل لكل من A وB قبل المقارنة.</value></data>
+  <data name="CMP_LoadFailed" xml:space="preserve"><value>مقدرناش نحمّل المقارنة. اتأكد من الاتصال وحاول تاني.</value></data>
+  <data name="CMP_Ok" xml:space="preserve"><value>حسنًا</value></data>
   <data name="CMP_Overall" xml:space="preserve"><value>الإجمالي العام</value></data>
   <data name="CMP_TitleNoChange" xml:space="preserve"><value>{0}: بدون تغيير</value></data>
   <data name="CMP_TitleImproved" xml:space="preserve"><value>تحسّن {0}</value></data>

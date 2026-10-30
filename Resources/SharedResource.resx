@@ -1213,6 +1213,22 @@
   <data name="Chart_ExitDriversCompare" xml:space="preserve"><value>Engagement Drivers — A vs B</value></data>
   <data name="CMP_ExitDriversSub" xml:space="preserve"><value>Positive answers per exit-interview question, ordered by change (A − B), weakest first</value></data>
   <data name="CMP_BasisExitDrivers" xml:space="preserve"><value>Basis: positive answers divided by all non-empty answers to each exit-interview question, for the selected periods and filters (answer counts in brackets). Rows with fewer than 10 answers on either side are dimmed.</value></data>
+  <data name="CMP_ChooseTitle" xml:space="preserve"><value>What do you want to compare?</value></data>
+  <data name="CMP_ChooseSub" xml:space="preserve"><value>Set the filters above (optional), pick one topic, then press Compare. Nothing is loaded until you do.</value></data>
+  <data name="CMP_Grp_turnover" xml:space="preserve"><value>Turnover</value></data>
+  <data name="CMP_Grp_ninety" xml:space="preserve"><value>90-Day Turnover</value></data>
+  <data name="CMP_Grp_workforce" xml:space="preserve"><value>Workforce</value></data>
+  <data name="CMP_Grp_retention" xml:space="preserve"><value>Retention</value></data>
+  <data name="CMP_Grp_exit" xml:space="preserve"><value>Exit Interviews</value></data>
+  <data name="CMP_Grp_drivers" xml:space="preserve"><value>Engagement Drivers</value></data>
+  <data name="CMP_CompareBtn" xml:space="preserve"><value>Compare</value></data>
+  <data name="CMP_Comparing" xml:space="preserve"><value>Comparing…</value></data>
+  <data name="CMP_StaleNote" xml:space="preserve"><value>Filters or topic changed — press Compare to update the results.</value></data>
+  <data name="CMP_EmptyHint" xml:space="preserve"><value>Choose what to compare, then press Compare to see the results.</value></data>
+  <data name="CMP_NeedGroup" xml:space="preserve"><value>Please choose what you want to compare first (Turnover, Workforce, Retention…), then press Compare.</value></data>
+  <data name="CMP_NeedMonths" xml:space="preserve"><value>Select at least one month for both A and B before comparing.</value></data>
+  <data name="CMP_LoadFailed" xml:space="preserve"><value>The comparison could not be loaded. Please check your connection and try again.</value></data>
+  <data name="CMP_Ok" xml:space="preserve"><value>OK</value></data>
   <data name="CMP_Overall" xml:space="preserve"><value>Overall</value></data>
   <data name="CMP_TitleNoChange" xml:space="preserve"><value>{0}: No Change</value></data>
   <data name="CMP_TitleImproved" xml:space="preserve"><value>{0} Improved</value></data>
