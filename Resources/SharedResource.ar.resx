@@ -2341,6 +2341,7 @@
   <data name="ActLog_Act_settings_access_policy" xml:space="preserve"><value>تغيير سياسة الوصول</value></data>
   <data name="ActLog_Act_settings_page_visibility" xml:space="preserve"><value>تغيير ظهور الصفحات</value></data>
   <data name="ActLog_Act_activity_logs_clear" xml:space="preserve"><value>مسح السجل</value></data>
+  <data name="ActLog_Act_activity_logs_export" xml:space="preserve"><value>تصدير سجل النشاط</value></data>
   <data name="ActLog_Act_access_denied" xml:space="preserve"><value>إجراء أدمن غير مصرّح / محظور</value></data>
   <data name="ActLog_Flt_login" xml:space="preserve"><value>تسجيل دخول</value></data>
   <data name="ActLog_Flt_failed-login" xml:space="preserve"><value>دخول فاشل</value></data>
@@ -2357,6 +2358,7 @@
   <data name="ActLog_Flt_recovery-key" xml:space="preserve"><value>مفتاح الاسترداد</value></data>
   <data name="ActLog_Flt_settings" xml:space="preserve"><value>تغييرات الإعدادات</value></data>
   <data name="ActLog_Flt_clear-history" xml:space="preserve"><value>مسح السجل</value></data>
+  <data name="ActLog_Flt_export-logs" xml:space="preserve"><value>تصدير سجل النشاط</value></data>
   <data name="ActLog_Flt_denied" xml:space="preserve"><value>إجراء أدمن غير مصرّح / محظور</value></data>
   <data name="ActLog_Act_report_download" xml:space="preserve"><value>تحميل تقرير</value></data>
   <data name="ActLog_Act_action_plan_note" xml:space="preserve"><value>ملاحظة على خطة العمل</value></data>

@@ -93,6 +93,7 @@ public static class ActivityActions
     public const string SettingsAccessPolicy = "settings.access-policy";
     public const string SettingsPageVisibility = "settings.page-visibility";
     public const string ActivityLogsClear = "activity-logs.clear";
+    public const string ActivityLogsExport = "activity-logs.export";
     public const string AccessDenied = "access.denied";
 
     public const string ReportDownload = "report.download";

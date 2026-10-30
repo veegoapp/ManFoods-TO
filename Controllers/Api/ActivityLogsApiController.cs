@@ -58,6 +58,12 @@ public class ActivityLogsApiController : ControllerBase
         [FromQuery] DateOnly? from, [FromQuery] DateOnly? to)
     {
         var bytes = await _logs.ExportAsync(new ActivityLogQuery { Search = search, Action = action, Status = status, FromDay = from, ToDay = to });
+        // The log holds emails and IP addresses — who took a copy is itself worth recording (the filters, never the search text).
+        await _writer.LogAsync(new ActivityEntry
+        {
+            Action = ActivityActions.ActivityLogsExport,
+            Details = $"action={action ?? "all"}; status={status ?? "all"}; from={from:yyyy-MM-dd}; to={to:yyyy-MM-dd}; search={(string.IsNullOrWhiteSpace(search) ? "no" : "yes")}",
+        });
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Activity_Logs_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx");
     }
 

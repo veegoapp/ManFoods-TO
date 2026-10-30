@@ -56,6 +56,7 @@ public class ActivityLogService : IActivityLogService
         ["recovery-key"] = new[] { ActivityActions.RecoveryKeyRegenerate, ActivityActions.RecoveryKeyUse },
         ["settings"] = new[] { ActivityActions.SettingsAccessPolicy, ActivityActions.SettingsPageVisibility },
         ["clear-history"] = new[] { ActivityActions.ActivityLogsClear },
+        ["export-logs"] = new[] { ActivityActions.ActivityLogsExport },
         ["denied"] = new[] { ActivityActions.AccessDenied },
     };
 

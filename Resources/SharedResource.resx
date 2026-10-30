@@ -2335,6 +2335,7 @@
   <data name="ActLog_Act_settings_access_policy" xml:space="preserve"><value>Access Policy Changed</value></data>
   <data name="ActLog_Act_settings_page_visibility" xml:space="preserve"><value>Page Visibility Changed</value></data>
   <data name="ActLog_Act_activity_logs_clear" xml:space="preserve"><value>Clear History</value></data>
+  <data name="ActLog_Act_activity_logs_export" xml:space="preserve"><value>Export Activity Logs</value></data>
   <data name="ActLog_Act_access_denied" xml:space="preserve"><value>Unauthorized / Blocked Admin Action</value></data>
   <data name="ActLog_Flt_login" xml:space="preserve"><value>Login</value></data>
   <data name="ActLog_Flt_failed-login" xml:space="preserve"><value>Failed Login</value></data>
@@ -2351,6 +2352,7 @@
   <data name="ActLog_Flt_recovery-key" xml:space="preserve"><value>Recovery Key</value></data>
   <data name="ActLog_Flt_settings" xml:space="preserve"><value>Settings Changes</value></data>
   <data name="ActLog_Flt_clear-history" xml:space="preserve"><value>Clear History</value></data>
+  <data name="ActLog_Flt_export-logs" xml:space="preserve"><value>Export Activity Logs</value></data>
   <data name="ActLog_Flt_denied" xml:space="preserve"><value>Unauthorized / Blocked Admin Action</value></data>
   <data name="ActLog_Act_report_download" xml:space="preserve"><value>Report Download</value></data>
   <data name="ActLog_Act_action_plan_note" xml:space="preserve"><value>Action Plan Note</value></data>
