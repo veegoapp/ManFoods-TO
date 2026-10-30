@@ -1328,6 +1328,34 @@
   <data name="CMP_ReportChoose" xml:space="preserve"><value>اختار الموضوع…</value></data>
   <data name="CMP_ReportNeedTopic" xml:space="preserve"><value>من فضلك اختار الأول إيه اللي عايز تقارنه (معدل الدوران، القوى العاملة، الاحتفاظ…) وبعدين نزّل التقرير.</value></data>
   <data name="CMP_ReportUnsupported" xml:space="preserve"><value>الموضوع ده مش بيشتغل بفلتر {0}. امسحه من A وB أو اختار موضوع تاني، وبعدين نزّل التقرير تاني.</value></data>
+  <data name="CMP_Tab_overview" xml:space="preserve"><value>نظرة عامة</value></data>
+  <data name="CMP_Tab_trend" xml:space="preserve"><value>الاتجاه</value></data>
+  <data name="CMP_Tab_teams" xml:space="preserve"><value>الفرق</value></data>
+  <data name="CMP_Tab_stores" xml:space="preserve"><value>المطاعم</value></data>
+  <data name="CMP_Tab_composition" xml:space="preserve"><value>التركيبة</value></data>
+  <data name="CMP_Tab_cohorts" xml:space="preserve"><value>دفعات التعيين</value></data>
+  <data name="CMP_Tab_breakdown" xml:space="preserve"><value>التفصيل</value></data>
+  <data name="CMP_Tab_tenure" xml:space="preserve"><value>مدة بقاء الفريق</value></data>
+  <data name="CMP_Tab_experience" xml:space="preserve"><value>التجربة</value></data>
+  <data name="CMP_Tab_more" xml:space="preserve"><value>المزيد</value></data>
+  <data name="CMP_Tab_supervisors" xml:space="preserve"><value>المشرفون</value></data>
+  <data name="CMP_Tab_leaders" xml:space="preserve"><value>القادة</value></data>
+  <data name="CMP_VsSuffix" xml:space="preserve"><value> — A مقابل B</value></data>
+  <data name="CMP_BasisSnapshot" xml:space="preserve"><value>لقطة للفريق في آخر شهر من كل جانب.</value></data>
+  <data name="CMP_NoStoreBreakdown" xml:space="preserve"><value>عرض المطاعم محتاج إن الجانبين يغطّوا كل المطاعم — امسح فلتر المطعم من A وB وبعدين اضغط مقارنة.</value></data>
+  <data name="CMP_Series_resignations" xml:space="preserve"><value>الاستقالات شهرياً</value></data>
+  <data name="CMP_Series_hires" xml:space="preserve"><value>التعيينات الجديدة شهرياً</value></data>
+  <data name="CMP_Series_headcount" xml:space="preserve"><value>عدد الموظفين شهرياً</value></data>
+  <data name="CMP_Series_net" xml:space="preserve"><value>صافي التغيّر شهرياً (التعيينات − الاستقالات)</value></data>
+  <data name="CMP_Cohort_hires" xml:space="preserve"><value>التعيينات لكل شهر تعيين</value></data>
+  <data name="CMP_Cohort_leavers" xml:space="preserve"><value>المغادرون المبكرون لكل شهر تعيين</value></data>
+  <data name="CMP_Movers_improved" xml:space="preserve"><value>المطاعم الأكثر تحسّناً</value></data>
+  <data name="CMP_Movers_worsened" xml:space="preserve"><value>المطاعم الأكثر تراجعاً</value></data>
+  <data name="CMP_LeadersImproved" xml:space="preserve"><value>القادة الأكثر تحسّناً (معدل الدوران)</value></data>
+  <data name="CMP_LeadersWorsened" xml:space="preserve"><value>القادة الأكثر تراجعاً (معدل الدوران)</value></data>
+  <data name="CMP_StoresRetention" xml:space="preserve"><value>المطاعم — الاحتفاظ ومدة الخدمة</value></data>
+  <data name="CMP_StoresHeadcount" xml:space="preserve"><value>المطاعم — عدد الموظفين والتعيينات والاستقالات</value></data>
+  <data name="CMP_StaleTab" xml:space="preserve"><value>الفلاتر أو الموضوع اتغيّروا من آخر مقارنة. اضغط مقارنة الأول، وبعدين افتح التاب ده.</value></data>
   <data name="Month_January" xml:space="preserve"><value>يناير</value></data>
   <data name="Month_February" xml:space="preserve"><value>فبراير</value></data>
   <data name="Month_March" xml:space="preserve"><value>مارس</value></data>

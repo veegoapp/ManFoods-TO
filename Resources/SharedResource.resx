@@ -1322,6 +1322,34 @@
   <data name="CMP_ReportChoose" xml:space="preserve"><value>Choose a topic…</value></data>
   <data name="CMP_ReportNeedTopic" xml:space="preserve"><value>Please choose what you want to compare first (Turnover, Workforce, Retention…), then download the report.</value></data>
   <data name="CMP_ReportUnsupported" xml:space="preserve"><value>This topic cannot use the {0} filter. Clear it on A and B, or choose another topic, then download again.</value></data>
+  <data name="CMP_Tab_overview" xml:space="preserve"><value>Overview</value></data>
+  <data name="CMP_Tab_trend" xml:space="preserve"><value>Trend</value></data>
+  <data name="CMP_Tab_teams" xml:space="preserve"><value>Teams</value></data>
+  <data name="CMP_Tab_stores" xml:space="preserve"><value>Stores</value></data>
+  <data name="CMP_Tab_composition" xml:space="preserve"><value>Composition</value></data>
+  <data name="CMP_Tab_cohorts" xml:space="preserve"><value>Cohorts</value></data>
+  <data name="CMP_Tab_breakdown" xml:space="preserve"><value>Breakdown</value></data>
+  <data name="CMP_Tab_tenure" xml:space="preserve"><value>Team Tenure</value></data>
+  <data name="CMP_Tab_experience" xml:space="preserve"><value>Experience</value></data>
+  <data name="CMP_Tab_more" xml:space="preserve"><value>More</value></data>
+  <data name="CMP_Tab_supervisors" xml:space="preserve"><value>Supervisors</value></data>
+  <data name="CMP_Tab_leaders" xml:space="preserve"><value>Leaders</value></data>
+  <data name="CMP_VsSuffix" xml:space="preserve"><value> — A vs B</value></data>
+  <data name="CMP_BasisSnapshot" xml:space="preserve"><value>Snapshot of the team at the last month of each side.</value></data>
+  <data name="CMP_NoStoreBreakdown" xml:space="preserve"><value>The store view needs both sides to cover all stores — clear the store filter on A and B, then press Compare.</value></data>
+  <data name="CMP_Series_resignations" xml:space="preserve"><value>Resignations per Month</value></data>
+  <data name="CMP_Series_hires" xml:space="preserve"><value>New Hires per Month</value></data>
+  <data name="CMP_Series_headcount" xml:space="preserve"><value>Headcount per Month</value></data>
+  <data name="CMP_Series_net" xml:space="preserve"><value>Net Change per Month (hires − resignations)</value></data>
+  <data name="CMP_Cohort_hires" xml:space="preserve"><value>Hires per Cohort Month</value></data>
+  <data name="CMP_Cohort_leavers" xml:space="preserve"><value>Early Leavers per Cohort Month</value></data>
+  <data name="CMP_Movers_improved" xml:space="preserve"><value>Stores That Improved the Most</value></data>
+  <data name="CMP_Movers_worsened" xml:space="preserve"><value>Stores That Worsened the Most</value></data>
+  <data name="CMP_LeadersImproved" xml:space="preserve"><value>Leaders Who Improved the Most (turnover)</value></data>
+  <data name="CMP_LeadersWorsened" xml:space="preserve"><value>Leaders Who Worsened the Most (turnover)</value></data>
+  <data name="CMP_StoresRetention" xml:space="preserve"><value>Stores — Retention and Tenure</value></data>
+  <data name="CMP_StoresHeadcount" xml:space="preserve"><value>Stores — Headcount, Hires and Resignations</value></data>
+  <data name="CMP_StaleTab" xml:space="preserve"><value>The filters or topic changed since the last comparison. Press Compare first, then open this tab.</value></data>
   <data name="Month_January" xml:space="preserve"><value>January</value></data>
   <data name="Month_February" xml:space="preserve"><value>February</value></data>
   <data name="Month_March" xml:space="preserve"><value>March</value></data>
