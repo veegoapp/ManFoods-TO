@@ -47,6 +47,17 @@ public class ActivityLogSummary
     public int AdminActions { get; set; }
 }
 
+/// <summary>The last-24h / last-7d security numbers above the table. Independent of the table's filters.</summary>
+public class ActivitySecurityOverview
+{
+    /// <summary>Failed sign-ins plus attempts with an unknown account, last 24 hours.</summary>
+    public int FailedLogins24h { get; set; }
+    /// <summary>Sign-ins refused because the account was locked out / blocked, last 24 hours.</summary>
+    public int BlockedLogins24h { get; set; }
+    /// <summary>Distinct accounts that signed in successfully in the last 7 days.</summary>
+    public int ActiveUsers7d { get; set; }
+}
+
 public class ActivityLogPage
 {
     public List<ActivityLogItem> Items { get; set; } = new();

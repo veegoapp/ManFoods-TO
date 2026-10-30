@@ -130,6 +130,8 @@ public class DashboardController : Controller
             ExcelExportGuard.Neutralize(wb);   // formula-injection protection for text cells (see ExcelExportGuard)
             using var stream = new MemoryStream();
             wb.SaveAs(stream);
+            // File name only — it is built from the report type and period, never from user-entered text.
+            await _activity.LogAsync(new ActivityEntry { Action = ActivityActions.ReportDownload, Details = fileName });
             return File(stream.ToArray(), XlsxContentType, fileName);
         }
     }

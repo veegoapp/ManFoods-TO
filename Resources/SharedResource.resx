@@ -2300,6 +2300,18 @@
   <data name="ActLog_Flt_settings" xml:space="preserve"><value>Settings Changes</value></data>
   <data name="ActLog_Flt_clear-history" xml:space="preserve"><value>Clear History</value></data>
   <data name="ActLog_Flt_denied" xml:space="preserve"><value>Unauthorized / Blocked Admin Action</value></data>
+  <data name="ActLog_Act_report_download" xml:space="preserve"><value>Report Download</value></data>
+  <data name="ActLog_Act_action_plan_note" xml:space="preserve"><value>Action Plan Note</value></data>
+  <data name="ActLog_Act_action_plan_recommendation" xml:space="preserve"><value>Action Plan Task</value></data>
+  <data name="ActLog_Act_action_plan_assign" xml:space="preserve"><value>Action Plan Assignment</value></data>
+  <data name="ActLog_Act_action_plan_close" xml:space="preserve"><value>Action Plan Closed</value></data>
+  <data name="ActLog_Flt_report-download" xml:space="preserve"><value>Report Download</value></data>
+  <data name="ActLog_Flt_action-plan" xml:space="preserve"><value>Action Plan Changes</value></data>
+  <data name="ActLog_Sec_Title" xml:space="preserve"><value>Security</value></data>
+  <data name="ActLog_Sec_Failed" xml:space="preserve"><value>Failed sign-ins (24h)</value></data>
+  <data name="ActLog_Sec_Blocked" xml:space="preserve"><value>Blocked sign-ins (24h)</value></data>
+  <data name="ActLog_Sec_Active" xml:space="preserve"><value>Active users (7 days)</value></data>
+  <data name="ActLog_Export_Button" xml:space="preserve"><value>Export Excel</value></data>
   <data name="ActLog_Reason_wrong_password" xml:space="preserve"><value>Wrong password</value></data>
   <data name="ActLog_Reason_no_password_set" xml:space="preserve"><value>No password set yet</value></data>
   <data name="ActLog_Reason_temp_password_expired" xml:space="preserve"><value>Temporary password expired</value></data>

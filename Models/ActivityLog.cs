@@ -95,11 +95,17 @@ public static class ActivityActions
     public const string ActivityLogsClear = "activity-logs.clear";
     public const string AccessDenied = "access.denied";
 
+    public const string ReportDownload = "report.download";
+    public const string ActionPlanNote = "action-plan.note";
+    public const string ActionPlanRecommendation = "action-plan.recommendation";
+    public const string ActionPlanAssign = "action-plan.assign";
+    public const string ActionPlanClose = "action-plan.close";
+
     /// <summary>Which "Clear History" type an action belongs to.</summary>
     public static string CategoryOf(string action) => action switch
     {
         LoginSuccess or LoginFailed or LoginUnknown or LoginBlocked or Logout => ActivityCategories.Login,
-        Upload or UploadLogDelete => ActivityCategories.Data,
+        Upload or UploadLogDelete or ReportDownload => ActivityCategories.Data,
         _ => ActivityCategories.Admin,
     };
 }

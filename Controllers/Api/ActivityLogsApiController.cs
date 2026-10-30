@@ -39,6 +39,20 @@ public class ActivityLogsApiController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>Failed/blocked sign-ins in the last 24 hours and active users in the last 7 days (not affected by the table's filters).</summary>
+    [HttpGet("security"), RequireSuperAdmin]
+    public async Task<IActionResult> Security() => Ok(await _logs.GetSecurityOverviewAsync());
+
+    /// <summary>The current filters as an Excel file (newest first, capped at <see cref="ActivityLogService.MaxExportRows"/> rows).</summary>
+    [HttpGet("export"), RequireSuperAdmin]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> Export([FromQuery] string? search, [FromQuery] string? action, [FromQuery] string? status,
+        [FromQuery] DateOnly? from, [FromQuery] DateOnly? to)
+    {
+        var bytes = await _logs.ExportAsync(new ActivityLogQuery { Search = search, Action = action, Status = status, FromDay = from, ToDay = to });
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Activity_Logs_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx");
+    }
+
     /// <summary>What a Clear History request would delete (range as resolved by the server, and the row count). Deletes nothing.</summary>
     [HttpPost("clear/preview"), RequireSuperAdmin]
     public async Task<IActionResult> PreviewClear([FromBody] ClearActivityLogsRequest request)

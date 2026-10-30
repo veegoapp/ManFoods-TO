@@ -17,16 +17,30 @@
 .al-pager { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:14px; }
 .al-note { font-size:12px; color:var(--text-3); margin-top:14px; }
 .al-busy { opacity:.55; pointer-events:none; }
+.al-security { display:flex; flex-wrap:wrap; align-items:center; gap:8px 22px; padding:10px 16px; margin-bottom:16px; border:1px solid var(--card-border); border-radius:10px; background:var(--card-bg); font-size:13px; }
+.al-security[hidden] { display:none; }
+.al-sec-title { font-weight:700; color:var(--text); }
+.al-sec-item { color:var(--text-2); }
+.al-sec-item b { font-size:15px; color:var(--text); margin-inline-start:4px; }
+.al-sec-item.al-warn b { color:var(--danger); }
 </style>
 
 <div class="page-header">
     <div><h1 class="page-title">@L["Page_ActivityLogs"]</h1><p class="page-subtitle">@L["Page_ActivityLogsSub"]</p></div>
-    <div>
+    <div class="d-flex gap-2">
+        <button type="button" id="alExport" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-excel me-1"></i>@L["ActLog_Export_Button"]</button>
         <button type="button" id="alClearOpen" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash3 me-1"></i>@L["ActLog_Clear_Button"]</button>
     </div>
 </div>
 @Html.AntiForgeryToken()
 <div id="alNotice" class="alert-banner alert-success-banner" hidden></div>
+
+<div class="al-security" id="alSecurity" hidden>
+    <span class="al-sec-title"><i class="bi bi-shield-check me-1"></i>@L["ActLog_Sec_Title"]</span>
+    <span class="al-sec-item" id="alSecFailedWrap">@L["ActLog_Sec_Failed"]<b id="alSecFailed">–</b></span>
+    <span class="al-sec-item" id="alSecBlockedWrap">@L["ActLog_Sec_Blocked"]<b id="alSecBlocked">–</b></span>
+    <span class="al-sec-item">@L["ActLog_Sec_Active"]<b id="alSecActive">–</b></span>
+</div>
 
 <div class="kpi-grid mb-4">
     <div class="kpi-card">
@@ -282,6 +296,28 @@
             if (id === reqId) $('alTableWrap').classList.remove('al-busy');
         }
     }
+
+    // Security strip: loaded once on open (server-cached for a minute), not on every filter change.
+    async function loadSecurity() {
+        try {
+            const res = await fetch('/api/activity-logs/security', { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) return;
+            const s = await res.json();
+            $('alSecFailed').textContent = s.failedLogins24h;
+            $('alSecBlocked').textContent = s.blockedLogins24h;
+            $('alSecActive').textContent = s.activeUsers7d;
+            $('alSecFailedWrap').classList.toggle('al-warn', s.failedLogins24h > 0);
+            $('alSecBlockedWrap').classList.toggle('al-warn', s.blockedLogins24h > 0);
+            $('alSecurity').hidden = false;
+        } catch { /* the strip is optional — the table below still works */ }
+    }
+    loadSecurity();
+
+    // Export the rows the current filters select (the server caps the file and checks Super Admin again).
+    $('alExport').addEventListener('click', () => {
+        const p = query(); p.delete('page');
+        window.location.href = '/api/activity-logs/export?' + p.toString();
+    });
 
     const reload = () => { state.page = 1; load(); };
     $('alSearch').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(reload, 350); });

@@ -1,4 +1,6 @@
+using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Localization;
 using MvcApp.Data;
 using MvcApp.Models;
@@ -20,6 +22,9 @@ public class ActivityLogService : IActivityLogService
     /// <summary>The deepest row offset a request may reach; beyond it the page asks to narrow the filters.</summary>
     public const int MaxDepth = 10_000;
     private const int MaxSearchLength = 100;
+    /// <summary>Most rows one Excel export carries (same ceiling as the page's paging depth).</summary>
+    public const int MaxExportRows = MaxDepth;
+    private const string SecurityOverviewCacheKey = "activity-logs:security-overview";
 
     /// <summary>Filter key → the stored action codes it selects.</summary>
     public static readonly IReadOnlyDictionary<string, string[]> ActionFilters = new Dictionary<string, string[]>
@@ -30,6 +35,8 @@ public class ActivityLogService : IActivityLogService
         ["blocked-login"] = new[] { ActivityActions.LoginBlocked },
         ["logout"] = new[] { ActivityActions.Logout },
         ["upload"] = new[] { ActivityActions.Upload, ActivityActions.UploadLogDelete },
+        ["report-download"] = new[] { ActivityActions.ReportDownload },
+        ["action-plan"] = new[] { ActivityActions.ActionPlanNote, ActivityActions.ActionPlanRecommendation, ActivityActions.ActionPlanAssign, ActivityActions.ActionPlanClose },
         ["create-user"] = new[] { ActivityActions.UserCreate, ActivityActions.UserBulkUpload },
         ["edit-user"] = new[] { ActivityActions.UserUpdate },
         ["delete-user"] = new[] { ActivityActions.UserDelete },
@@ -44,11 +51,13 @@ public class ActivityLogService : IActivityLogService
 
     private readonly AppDbContext _db;
     private readonly IStringLocalizer<SharedResource> _L;
+    private readonly IMemoryCache _cache;
 
-    public ActivityLogService(AppDbContext db, IStringLocalizer<SharedResource> localizer)
+    public ActivityLogService(AppDbContext db, IStringLocalizer<SharedResource> localizer, IMemoryCache cache)
     {
         _db = db;
         _L = localizer;
+        _cache = cache;
     }
 
     public async Task<bool> VerifyPasswordAsync(int userId, string password)
@@ -67,6 +76,86 @@ public class ActivityLogService : IActivityLogService
             // Almost always "Invalid object name 'activity_logs'": the migration has not been applied yet.
             return new ActivityLogPage { Unavailable = true, Page = 1, PageSize = PageSize, TotalPages = 1 };
         }
+    }
+
+    public async Task<ActivitySecurityOverview> GetSecurityOverviewAsync()
+    {
+        if (_cache.TryGetValue(SecurityOverviewCacheKey, out ActivitySecurityOverview? cached) && cached != null) return cached;
+
+        var overview = new ActivitySecurityOverview();
+        try
+        {
+            var now = DateTime.UtcNow;
+            var since24h = now.AddHours(-24);
+            var since7d = now.AddDays(-7);
+
+            // Two small queries over the occurred_at index, once a minute at most (not per filter change).
+            var counts = await _db.ActivityLogs.AsNoTracking()
+                .Where(l => l.OccurredAt >= since24h && l.Category == ActivityCategories.Login)
+                .GroupBy(l => l.Action)
+                .Select(g => new { Action = g.Key, Count = g.Count() })
+                .ToListAsync();
+            foreach (var c in counts)
+            {
+                if (c.Action == ActivityActions.LoginFailed || c.Action == ActivityActions.LoginUnknown) overview.FailedLogins24h += c.Count;
+                else if (c.Action == ActivityActions.LoginBlocked) overview.BlockedLogins24h += c.Count;
+            }
+
+            overview.ActiveUsers7d = await _db.ActivityLogs.AsNoTracking()
+                .Where(l => l.OccurredAt >= since7d && l.Action == ActivityActions.LoginSuccess && l.UserEmail != null)
+                .Select(l => l.UserEmail!.ToLower())
+                .Distinct()
+                .CountAsync();
+        }
+        catch (System.Data.Common.DbException)
+        {
+            return overview; // table not migrated yet — the page shows its "unavailable" notice; do not cache zeros
+        }
+
+        _cache.Set(SecurityOverviewCacheKey, overview, TimeSpan.FromMinutes(1));
+        return overview;
+    }
+
+    public async Task<byte[]> ExportAsync(ActivityLogQuery query)
+    {
+        var rows = await Filtered(query, includeStatus: true)
+            .OrderByDescending(l => l.OccurredAt).ThenByDescending(l => l.Id)
+            .Take(MaxExportRows)
+            .ToListAsync();
+
+        var targetIds = rows.Where(r => r.TargetUserId != null).Select(r => r.TargetUserId!.Value).Distinct().ToList();
+        var targets = targetIds.Count == 0
+            ? new Dictionary<int, string>()
+            : await _db.Users.AsNoTracking().Where(u => targetIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, u => u.Email);
+
+        using var wb = new XLWorkbook();
+        var ws = wb.AddWorksheet("Activity Logs");
+        string[] heads =
+        {
+            _L["ActLog_ColDateTime"].Value, _L["ActLog_ColUser"].Value, _L["ActLog_ColAction"].Value, _L["ActLog_ColResult"].Value,
+            _L["ActLog_ColTarget"].Value, _L["Users_IpAddress"].Value, _L["ActLog_ColDescription"].Value,
+        };
+        for (var c = 0; c < heads.Length; c++) ws.Cell(1, c + 1).Value = heads[c];
+        ws.Row(1).Style.Font.Bold = true;
+
+        for (var i = 0; i < rows.Count; i++)
+        {
+            var item = ToItem(rows[i], targets);
+            ws.Cell(i + 2, 1).Value = item.TimeDisplay;
+            ws.Cell(i + 2, 2).Value = item.User;
+            ws.Cell(i + 2, 3).Value = item.ActionLabel;
+            ws.Cell(i + 2, 4).Value = item.ResultLabel;
+            ws.Cell(i + 2, 5).Value = item.Target ?? "";
+            ws.Cell(i + 2, 6).Value = item.Ip ?? "";
+            ws.Cell(i + 2, 7).Value = item.Description;
+        }
+        ws.Columns().AdjustToContents(1, Math.Min(rows.Count + 1, 200));
+        ws.SheetView.FreezeRows(1);
+
+        ExcelExportGuard.Neutralize(wb);   // emails/details are user-controlled text (see ExcelExportGuard)
+        using var ms = new MemoryStream();
+        wb.SaveAs(ms);
+        return ms.ToArray();
     }
 
     private IQueryable<ActivityLog> Filtered(ActivityLogQuery q, bool includeStatus)
@@ -243,6 +332,7 @@ public class ActivityLogService : IActivityLogService
     {
         var scope = Resolve(request, DateTime.UtcNow);
         if (scope == null) return null;
+        _cache.Remove(SecurityOverviewCacheKey);
         var selected = Select(_db.ActivityLogs, scope.Value);
 
         int deleted;
