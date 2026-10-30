@@ -4,7 +4,7 @@ using MvcApp.Models.ViewModels;
 
 namespace MvcApp.Services;
 
-public class ReportService : IReportService
+public partial class ReportService : IReportService
 {
     private const string BrandRed = "#DA291C";
     private const string BandFill = "#FAFAFA";
@@ -1863,6 +1863,8 @@ public class ReportService : IReportService
             case ComparisonTopics.Drivers: await AddComparisonDriversSheetAsync(wb, a, b, role, assignedName); break;
             default: await AddComparisonTurnoverSheetsAsync(wb, a, b, role, assignedName); break;
         }
+        // The sheets that mirror the tabs of the Comparisons page (ReportService.ComparisonTabs.cs).
+        await AddComparisonTabSheetsAsync(wb, topic, a, b, role, assignedName);
         return wb;
     }
 

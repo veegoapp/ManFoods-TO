@@ -1,4 +1,6 @@
 using System.Net;
+using ClosedXML.Excel;
+using MvcApp.Models;
 using MvcApp.Services;
 using MvcApp.Tests.TestHelpers;
 using Xunit;
@@ -62,5 +64,86 @@ public class ComparisonReportTopicTests : IClassFixture<AppFactory>
         var admin = await _app.AdminClientAsync();
         var response = await admin.GetAsync($"/admin/dashboard/export?reportType=comparisons&{query}");
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    // ── the whole report on data: every topic builds the sheets the Comparisons page's tabs mirror ──────
+
+    private static readonly SemaphoreSlim SeedLock = new(1, 1);
+    private static bool _seeded;
+
+    /// <summary>Two stores, January and February of 2025 and 2026: a roster, resignations (one early leaver) and store references.</summary>
+    private async Task EnsureSeededAsync()
+    {
+        await SeedLock.WaitAsync();
+        try
+        {
+            if (_seeded) return;
+            await _app.SeedAsync(db =>
+            {
+                foreach (var year in new[] { 2025, 2026 })
+                foreach (var month in new[] { 1, 2 })
+                {
+                    var first = new DateOnly(year, month, 1);
+                    db.ActiveEmployees.AddRange(
+                        new ActiveEmployee { EmployeeId = "E1", Name = "One", Store = "Store A", JobTitle = "Crew", Gender = "Male", PayrollGroup = "G1", HireDate = first.AddYears(-2), Month = month, Year = year },
+                        new ActiveEmployee { EmployeeId = "E2", Name = "Two", Store = "Store A", JobTitle = "Manager", Gender = "Female", PayrollGroup = "G2", HireDate = first.AddYears(-3), Month = month, Year = year },
+                        new ActiveEmployee { EmployeeId = "E3", Name = "Three", Store = "Store B", JobTitle = "Crew", Gender = "Female", PayrollGroup = "G1", HireDate = first.AddDays(3), Month = month, Year = year },
+                        new ActiveEmployee { EmployeeId = "E4", Name = "Four", Store = "Store B", JobTitle = "Crew", Gender = "Male", PayrollGroup = "G1", HireDate = first.AddMonths(-8), Month = month, Year = year });
+                    db.Resignations.AddRange(
+                        new Resignation { EmployeeId = "R1", Name = "Gone One", Store = "Store A", JobTitle = "Crew", Gender = "Male", PayrollGroup = "G1", HireDate = first.AddYears(-1), ResignationDate = first.AddDays(10), Month = month, Year = year },
+                        new Resignation { EmployeeId = "R2", Name = "Gone Two", Store = "Store B", JobTitle = "Crew", Gender = "Female", PayrollGroup = "G1", HireDate = first.AddDays(-20), ResignationDate = first.AddDays(12), Month = month, Year = year });
+                    foreach (var store in new[] { "Store A", "Store B" })
+                        db.StoreReferences.Add(new StoreReference
+                        {
+                            Month = month, Year = year, StoreName = store, StoreLeader = "Leader " + store, OperationConsultant = "OC 1", OperationManager = "OM 1",
+                            SeniorOperationConsultant = "SOC 1", OperationDirector = "OD 1",
+                        });
+                }
+                return Task.CompletedTask;
+            });
+            _seeded = true;
+        }
+        finally { SeedLock.Release(); }
+    }
+
+    private async Task<List<string>> ExportSheetsAsync(string query)
+    {
+        await EnsureSeededAsync();
+        var admin = await _app.AdminClientAsync();
+        var response = await admin.GetAsync($"/admin/dashboard/export?reportType=comparisons&{query}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var wb = new XLWorkbook(new MemoryStream(await response.Content.ReadAsByteArrayAsync()));
+        Assert.All(wb.Worksheets, ws => Assert.NotNull(ws.LastRowUsed()));   // every sheet has at least its header
+        return wb.Worksheets.Select(w => w.Name).ToList();
+    }
+
+    [Theory]
+    [InlineData("turnover", "Turnover KPIs|Turnover By Store (A vs B)|Monthly Trend|Teams (A vs B)|Store Movers")]
+    [InlineData("breakdown", "By Job Title|By Tenure|By Payroll Group")]
+    [InlineData("ninety", "90-Day KPIs|90-Day By Store (A vs B)|Cohort Months|Early Leavers Breakdown|Teams 90-Day")]
+    [InlineData("workforce", "Workforce KPIs|Workforce By Store (A vs B)|Composition|Headcount Trend|Teams Headcount")]
+    [InlineData("retention", "Retention Milestones|Team Tenure|Stores Retention|Teams Tenure")]
+    [InlineData("scorecard", "Scorecard Summary|Flagged By Supervisor|Supervisors Scorecard|Leaders Scorecard")]
+    [InlineData("exit", "Exit Reasons|Exit Sentiment|Exit Experience|Exit By Job and Return")]
+    [InlineData("drivers", "Engagement Drivers")]
+    public async Task Export_BuildsTheSheetsOfEveryTopic(string topic, string expectedSheets)
+    {
+        var sheets = await ExportSheetsAsync($"topic={topic}&year=2026&months=1,2&yearB=2025&monthsB=1,2");
+        foreach (var expected in expectedSheets.Split('|')) Assert.Contains(expected, sheets);
+    }
+
+    [Theory]
+    [InlineData("turnover")]
+    [InlineData("workforce")]
+    [InlineData("ninety")]
+    [InlineData("retention")]
+    [InlineData("exit")]
+    public async Task Export_WorksWhenTheSidesDifferInLength_OrAStoreIsPicked(string topic)
+    {
+        var uneven = await ExportSheetsAsync($"topic={topic}&year=2026&months=1,2&yearB=2025&monthsB=1");
+        Assert.NotEmpty(uneven);
+        var oneStore = await ExportSheetsAsync($"topic={topic}&year=2026&months=1,2&yearB=2025&monthsB=1,2&store=Store A&storeB=Store A");
+        Assert.NotEmpty(oneStore);
+        Assert.DoesNotContain("Store Movers", oneStore);   // the per-store views need all stores
     }
 }
