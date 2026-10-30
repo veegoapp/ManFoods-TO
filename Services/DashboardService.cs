@@ -224,6 +224,78 @@ public class DashboardService : IDashboardService
         return jobTitles;
     }
 
+    public async Task<List<MonthlyPoint>> GetMonthlySeriesAsync(int? month, int? year, string? store, string role, string? assignedName,
+        int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null)
+    {
+        if (!month.HasValue || !year.HasValue)
+        {
+            var latest = await _db.ActiveEmployees
+                .OrderByDescending(e => e.Year).ThenByDescending(e => e.Month)
+                .Select(e => new { e.Month, e.Year })
+                .FirstOrDefaultAsync();
+            month ??= latest?.Month ?? DateTime.Now.Month;
+            year ??= latest?.Year ?? DateTime.Now.Year;
+        }
+        fromMonth ??= month; fromYear ??= year;
+
+        var cacheKey = FilterResultCache.BuildKey("monthly-series", fromMonth, fromYear, month, year,
+            FilterResultCache.NormalizeList(store), FilterResultCache.NormalizeList(om), FilterResultCache.NormalizeList(oc),
+            FilterResultCache.NormalizeList(soc), FilterResultCache.NormalizeList(od), FilterResultCache.NormalizeMonths(months),
+            FilterResultCache.NormalizeList(jobTitles), role, assignedName);
+        if (_filterCache.TryGet(cacheKey, out List<MonthlyPoint>? cached))
+            return cached!;
+
+        var periods = ResolvePeriods(month, year, fromMonth, fromYear, months);
+        var keys = periods.Select(p => p.Year * 100 + p.Month).ToList();
+        var anchor = periods.OrderByDescending(p => p.Year * 100 + p.Month).First();
+
+        var accessible = await GetAccessibleStoresAsync(role, assignedName, anchor.Month, anchor.Year);
+        var omOcStores = await GetStoresForOmOcAsync(anchor.Month, anchor.Year, om, oc, soc, od);
+        var stores = MultiValueFilter.Split(store);
+        var jobs = MultiValueFilter.Split(jobTitles);
+
+        // Same scope rules as GetKpisAsync: role access always applies, the explicit filters only narrow it further.
+        var empQ = _db.ActiveEmployees.Where(e => keys.Contains(e.Year * 100 + e.Month));
+        if (accessible != null) empQ = empQ.Where(e => accessible.Contains(e.Store));
+        if (stores != null) empQ = empQ.Where(e => stores.Contains(e.Store));
+        else if (omOcStores != null) empQ = empQ.Where(e => omOcStores.Contains(e.Store));
+        if (jobs != null) empQ = empQ.Where(e => jobs.Contains(e.JobTitle));
+
+        var resQ = _db.Resignations.Where(r => keys.Contains(r.Year * 100 + r.Month));
+        if (accessible != null) resQ = resQ.Where(r => accessible.Contains(r.Store));
+        if (stores != null) resQ = resQ.Where(r => stores.Contains(r.Store));
+        else if (omOcStores != null) resQ = resQ.Where(r => omOcStores.Contains(r.Store));
+        if (jobs != null) resQ = resQ.Where(r => jobs.Contains(r.JobTitle));
+
+        var hireQ = NewHiresQuery(keys);
+        if (accessible != null) hireQ = hireQ.Where(e => accessible.Contains(e.Store));
+        if (stores != null) hireQ = hireQ.Where(e => stores.Contains(e.Store));
+        else if (omOcStores != null) hireQ = hireQ.Where(e => omOcStores.Contains(e.Store));
+        if (jobs != null) hireQ = hireQ.Where(e => jobs.Contains(e.JobTitle));
+
+        var headcounts = (await empQ.GroupBy(e => e.Year * 100 + e.Month).Select(g => new { Key = g.Key, Count = g.Count() }).ToListAsync())
+            .ToDictionary(x => x.Key, x => x.Count);
+        var resignations = (await resQ.GroupBy(r => r.Year * 100 + r.Month).Select(g => new { Key = g.Key, Count = g.Count() }).ToListAsync())
+            .ToDictionary(x => x.Key, x => x.Count);
+        var hires = (await hireQ.GroupBy(e => e.Year * 100 + e.Month).Select(g => new { Key = g.Key, Count = g.Count() }).ToListAsync())
+            .ToDictionary(x => x.Key, x => x.Count);
+
+        var series = keys.Distinct().OrderBy(k => k)
+            .Where(k => headcounts.ContainsKey(k))   // a month without a roster upload has nothing to show
+            .Select(k => new MonthlyPoint
+            {
+                Year = k / 100, Month = k % 100,
+                Headcount = headcounts[k],
+                NewHires = hires.GetValueOrDefault(k),
+                Resignations = resignations.GetValueOrDefault(k),
+                TurnoverRate = MetricsCalculationService.RatePercent(resignations.GetValueOrDefault(k), headcounts[k], 2),
+            })
+            .ToList();
+
+        _filterCache.Set(cacheKey, series, CacheDuration, series.Count);
+        return series;
+    }
+
     public async Task<DashboardKpiViewModel> GetKpisAsync(int? month, int? year, string? store, string role, string? assignedName,
         int? fromMonth = null, int? fromYear = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null, string? jobTitles = null)
     {

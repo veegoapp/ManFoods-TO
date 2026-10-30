@@ -112,6 +112,12 @@
 .cmp-compare-btn:disabled { opacity:.6; cursor:not-allowed; }
 .cmp-stale { font-size:12.5px; color:var(--warning); font-weight:600; }
 .cmp-stale[hidden] { display:none; }
+.cmp-tabs { display:flex; flex-wrap:wrap; gap:4px; margin:0 0 18px; border-bottom:1px solid var(--card-border); }
+.cmp-tabs[hidden] { display:none; }
+.cmp-tab { background:none; border:0; border-bottom:3px solid transparent; padding:9px 16px; font-size:13.5px; font-weight:600; color:var(--text-2); cursor:pointer; margin-bottom:-1px; }
+.cmp-tab:hover { color:var(--text); }
+.cmp-tab.active { color:var(--red); border-bottom-color:var(--red); }
+.cmp-tabbody[hidden], #cmpTabPane[hidden] { display:none; }
 .cmp-presets { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:8px; }
 .cmp-presets-label { font-size:11.5px; color:var(--text-3); font-weight:600; }
 .cmp-preset { background:var(--card-bg-2); border:1px solid var(--card-border); color:var(--text-2); border-radius:999px; font-size:12px; font-weight:600; padding:4px 11px; cursor:pointer; }
@@ -380,6 +386,8 @@
 
 <div id="cmpEmptyState" class="empty-state mb-4"><i class="bi bi-bar-chart-steps"></i><p>@L["CMP_EmptyHint"]</p></div>
 
+<div class="cmp-tabs" id="cmpTabs" role="tablist" hidden></div>
+
 <div id="cmpModal" class="cmp-modal" hidden role="alertdialog" aria-modal="true" aria-describedby="cmpModalText">
     <div class="cmp-modal-card">
         <i class="bi bi-exclamation-circle-fill"></i>
@@ -389,6 +397,106 @@
 </div>
 
 <div class="cmp-notice" id="cmpPeriodNotice" hidden><i class="bi bi-exclamation-triangle-fill"></i><span id="cmpPeriodNoticeText"></span></div>
+
+<div id="cmpTabPane" hidden></div>
+<div id="cmpStr" hidden
+     data-s-tab-overview="@L["CMP_Tab_overview"]"
+     data-s-tab-trend="@L["CMP_Tab_trend"]"
+     data-s-tab-teams="@L["CMP_Tab_teams"]"
+     data-s-tab-stores="@L["CMP_Tab_stores"]"
+     data-s-tab-composition="@L["CMP_Tab_composition"]"
+     data-s-tab-cohorts="@L["CMP_Tab_cohorts"]"
+     data-s-tab-breakdown="@L["CMP_Tab_breakdown"]"
+     data-s-tab-tenure="@L["CMP_Tab_tenure"]"
+     data-s-tab-experience="@L["CMP_Tab_experience"]"
+     data-s-tab-more="@L["CMP_Tab_more"]"
+     data-s-tab-supervisors="@L["CMP_Tab_supervisors"]"
+     data-s-tab-leaders="@L["CMP_Tab_leaders"]"
+     data-s-vs="@L["CMP_VsSuffix"]"
+     data-s-basis-snapshot="@L["CMP_BasisSnapshot"]"
+     data-s-no-store-breakdown="@L["CMP_NoStoreBreakdown"]"
+     data-s-loading="@L["Common_Loading"]"
+     data-s-no-data-short="@L["Common_NoDataShort"]"
+     data-s-series-resignations="@L["CMP_Series_resignations"]"
+     data-s-series-hires="@L["CMP_Series_hires"]"
+     data-s-series-headcount="@L["CMP_Series_headcount"]"
+     data-s-series-net="@L["CMP_Series_net"]"
+     data-s-cohort-hires="@L["CMP_Cohort_hires"]"
+     data-s-cohort-leavers="@L["CMP_Cohort_leavers"]"
+     data-s-movers-improved="@L["CMP_Movers_improved"]"
+     data-s-movers-worsened="@L["CMP_Movers_worsened"]"
+     data-s-leaders-improved="@L["CMP_LeadersImproved"]"
+     data-s-leaders-worsened="@L["CMP_LeadersWorsened"]"
+     data-s-stores-retention="@L["CMP_StoresRetention"]"
+     data-s-stores-headcount="@L["CMP_StoresHeadcount"]"
+     data-s-chart-monthly-trend="@L["Chart_MonthlyTrend"]"
+     data-s-chart-headcount-by-job-title="@L["Chart_HeadcountByJobTitle"]"
+     data-s-sub-headcount-by-job-title="@L["Chart_HeadcountByJobTitleSub"]"
+     data-s-chart-headcount-by-tenure="@L["Chart_HeadcountByTenure"]"
+     data-s-sub-headcount-by-tenure="@L["Chart_HeadcountByTenureSub"]"
+     data-s-chart-headcount-by-payroll="@L["Chart_HeadcountByPayroll"]"
+     data-s-sub-headcount-by-payroll="@L["Chart_HeadcountByPayrollSub"]"
+     data-s-chart-headcount-gender="@L["Chart_HeadcountGender"]"
+     data-s-sub-headcount-gender="@L["Chart_HeadcountGenderSub"]"
+     data-s-chart-ninety-by-cohort="@L["Chart_NinetyDayByCohort"]"
+     data-s-sub-ninety-by-cohort="@L["Chart_NinetyDayByCohortSub"]"
+     data-s-ntd-reasons="@L["NTD_ReasonsEarlyLeaving"]"
+     data-s-sub-ntd-reasons="@L["NTD_ReasonsEarlyLeavingSub"]"
+     data-s-ntd-by-job-title="@L["NTD_ByJobTitle"]"
+     data-s-sub-ntd-by-job-title="@L["NTD_ByJobTitleSub"]"
+     data-s-ntd-by-payroll="@L["NTD_ByPayroll"]"
+     data-s-sub-ntd-by-payroll="@L["NTD_ByPayrollSub"]"
+     data-s-chart-gender="@L["Chart_GenderBreakdown"]"
+     data-s-sub-ntd-gender="@L["NTD_GenderSub"]"
+     data-s-chart-survival="@L["Chart_SurvivalCurve"]"
+     data-s-sub-survival="@L["Chart_SurvivalCurveSub"]"
+     data-s-ret-by-gender="@L["Retention_ByGender"]"
+     data-s-sub-ret-by-gender="@L["Retention_ByGenderSub"]"
+     data-s-ret-by-job-title="@L["Retention_ByJobTitle"]"
+     data-s-sub-ret-by-job-title="@L["Retention_ByJobTitleSub"]"
+     data-s-chart-would-return="@L["Chart_WouldTheyReturn"]"
+     data-s-sub-would-return="@L["Chart_WouldTheyReturnSub"]"
+     data-s-chart-experience="@L["Chart_OverallExperience"]"
+     data-s-sub-experience="@L["Chart_OverallExperienceSub"]"
+     data-s-chart-training="@L["Chart_Training"]"
+     data-s-sub-training="@L["Chart_TrainingSub"]"
+     data-s-chart-fair-treatment="@L["Chart_FairTreatment"]"
+     data-s-sub-fair-treatment="@L["Chart_FairTreatmentSub"]"
+     data-s-chart-workload="@L["Chart_WorkloadConditions"]"
+     data-s-sub-workload="@L["Chart_WorkloadConditionsSub"]"
+     data-s-chart-work-pressure="@L["Chart_WorkPressureReason"]"
+     data-s-sub-work-pressure="@L["Chart_WorkPressureReasonSub"]"
+     data-s-chart-ei-by-job-title="@L["Chart_EiByJobTitle"]"
+     data-s-sub-ei-by-job-title="@L["Chart_EiByJobTitleSub"]"
+     data-s-chart-reason-vs-return="@L["Chart_EiReasonVsReturn"]"
+     data-s-common-oc="@L["Common_OperationConsultants"]"
+     data-s-common-om="@L["Common_OperationManagers"]"
+     data-s-common-soc="@L["Common_SeniorOperationConsultants"]"
+     data-s-common-od="@L["Common_OperationDirectors"]"
+     data-s-ranked-by-weighted="@L["TV_RankedByWeighted"]"
+     data-s-ranked-by-avg-rate="@L["NTD_RankedByAvgRate"]"
+     data-s-ranked-by-tenure="@L["Retention_RankedByTenure"]"
+     data-s-col-name="@L["Common_Name"]"
+     data-s-col-stores="@L["Common_Stores"]"
+     data-s-col-headcount="@L["Common_Headcount"]"
+     data-s-col-resignations="@L["Common_Resignations"]"
+     data-s-col-new-hires="@L["Common_NewHires"]"
+     data-s-col-turnover="@L["Common_TurnoverPct"]"
+     data-s-col-hires="@L["NTD_Hires"]"
+     data-s-col-early="@L["NTD_EarlyLeavers"]"
+     data-s-col-rate90="@L["NTD_Rate"]"
+     data-s-col-avg-tenure="@L["Common_AvgTenure"]"
+     data-s-col-store="@L["Common_StoreName"]"
+     data-s-col-leader="@L["SC_StoreLeader"]"
+     data-s-col-turnover-rate="@L["SC_TurnoverRate"]"
+     data-s-col-early-leave="@L["SC_EarlyLeave"]"
+     data-s-col180="@L["SC_180Retention"]"
+     data-s-col-sentiment="@L["SC_ExitSentiment"]"
+     data-s-col-change="@L["CMP_ChangeAB"]"
+     data-s-col-retention="@L["Nav_Retention"]"
+     data-s-sc-by-oc="@L["SC_RollupByOc"]"
+     data-s-sc-by-om="@L["SC_RollupByOm"]"
+     data-s-chart-exit-title-more="@L["Chart_EiReasonVsReturn"]"></div>
 
 <div class="d-flex align-items-center gap-2 mb-3" data-cmp-groups="turnover ninety">
     <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 25),oklch(0.6 0.16 25));border-radius:2px"></div>
@@ -437,6 +545,7 @@
      data-f-store="@L["Common_StoreName"]"
      data-f-job="@L["Common_JobTitle"]"
      data-no-access="@L["CMP_NoAccess"]"
+     data-stale-tab="@L["CMP_StaleTab"]"
      data-preset-no-data="@L["CMP_PresetNoData"]"
      data-kpi-sc-turnover="@L["CMP_KpiScTurnover"]"
      data-kpi-sc-turnover-desc="@L["CMP_KpiScTurnoverDesc"]"
@@ -1298,20 +1407,25 @@ function cmpRenderDrivers(dataA, dataB) {
 
 /* Grouped A/B bars used by the Turnover Breakdown and Scorecard topics. */
 const cmpExtraCharts = {};
-function cmpDrawBars(id, labels, seriesA, seriesB, { pct = false, tooltip } = {}) {
-    const fmt = v => pct ? v.toFixed(1) + '%' : (Number.isInteger(v) ? v : v.toFixed(1));
+function cmpDrawBars(id, labels, seriesA, seriesB, { pct = false, tooltip, line = false, horizontal = false } = {}) {
+    const fmt = v => v == null ? '—' : pct ? v.toFixed(1) + '%' : (Number.isInteger(v) ? v : v.toFixed(1));
+    const colorA = ChartColors.SERIES.SECONDARY, colorB = ChartColors.SERIES.PRIMARY;
+    const base = (label, data, color) => line
+        ? { label, data, borderColor: color, backgroundColor: color, tension: .25, spanGaps: true, pointRadius: 3 }
+        : { label, data, backgroundColor: color, borderRadius: 4 };
+    const axis = horizontal ? 'x' : 'y';
     cmpExtraCharts[id] = mkChart(cmpExtraCharts[id], id, {
-        type: 'bar',
-        data: { labels, datasets: [
-            { label: cmpLabel('A'), data: seriesA, backgroundColor: ChartColors.SERIES.SECONDARY, borderRadius: 4 },
-            { label: cmpLabel('B'), data: seriesB, backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
-        ] },
+        type: line ? 'line' : 'bar',
+        data: { labels, datasets: [base(cmpLabel('A'), seriesA, colorA), base(cmpLabel('B'), seriesB, colorB)] },
         options: {
-            interaction: { mode: 'index', intersect: true },
+            indexAxis: horizontal ? 'y' : 'x',
+            interaction: { mode: 'index', intersect: !line },
             plugins: { legend: { position: 'bottom' },
-                tooltip: { callbacks: { label: c => tooltip ? tooltip(c) : ` ${c.dataset.label}: ${fmt(c.parsed.y)}` } },
-                datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v > 0 ? fmt(v) : '' } },
-            scales: pct ? { y: { min: 0, ticks: { callback: v => v + '%' } } } : {}
+                tooltip: { callbacks: { label: c => tooltip ? tooltip(c) : ` ${c.dataset.label}: ${fmt(c.parsed[axis])}` } },
+                datalabels: line
+                    ? { display: false }
+                    : { anchor: 'center', align: 'center', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v > 0 ? fmt(v) : '' } },
+            scales: pct ? { [axis]: { min: 0, ticks: { callback: v => v + '%' } } } : {}
         }
     });
 }
@@ -1427,7 +1541,7 @@ function cmpRenderTableRows() {
 }
 
 /* Compare button, popup and "results are out of date" handling ------------- */
-let cmpBusy = false, cmpHasResults = false;
+let cmpBusy = false, cmpHasResults = false, cmpStaleFlag = false;
 /* Filters a topic cannot honour (its API has no such parameter) — better to say so than to compare unfiltered data. */
 const CMP_UNSUPPORTED = { ninety: ['job'], retention: ['job'], scorecard: ['store', 'job'] };
 function cmpUnsupportedSet(group) {
@@ -1445,7 +1559,8 @@ function cmpShowGroup(group) {
         el.classList.toggle('cmp-show', !!group && el.dataset.cmpGroups.split(' ').includes(group)));
 }
 function cmpResetResults() {
-    cmpHasResults = false;
+    cmpHasResults = false; cmpStaleFlag = false;
+    cmpTabsReset();
     document.querySelectorAll('input[name="cmpGroup"]').forEach(r => { r.checked = false; });
     cmpShowGroup('');
     document.getElementById('cmpPeriodNotice').hidden = true;
@@ -1454,7 +1569,9 @@ function cmpResetResults() {
     document.getElementById('cmpEmptyState').style.display = '';
 }
 function cmpMarkStale() {
-    if (cmpHasResults) document.getElementById('cmpStale').hidden = false;
+    if (!cmpHasResults) return;
+    cmpStaleFlag = true;   // tabs that were not opened yet would load with the new filters — they ask for a new Compare instead
+    document.getElementById('cmpStale').hidden = false;
 }
 function cmpPopup(text) {
     document.getElementById('cmpModalText').textContent = text;
@@ -1467,12 +1584,12 @@ document.getElementById('cmpModal').addEventListener('click', e => { if (e.targe
 document.addEventListener('keydown', e => { if (e.key === 'Escape') cmpClosePopup(); });
 document.querySelectorAll('input[name="cmpGroup"]').forEach(r => r.addEventListener('change', () => { cmpUpdateUnsupportedHint(); cmpMarkStale(); }));
 
-function cmpSetBusy(on) {
+function cmpSetBusy(on, busyLabel) {
     cmpBusy = on;
     document.getElementById('cmpCompareBtn').disabled = on;
     document.getElementById('cmpCompareSpin').hidden = !on;
     document.getElementById('cmpCompareIcon').hidden = on;
-    document.getElementById('cmpCompareLabel').textContent = on ? cmpL.comparing : cmpL.compareBtn;
+    document.getElementById('cmpCompareLabel').textContent = on ? (busyLabel || cmpL.comparing) : cmpL.compareBtn;
 }
 
 async function cmpRefreshAll(group) {
@@ -1484,8 +1601,9 @@ async function cmpRefreshAll(group) {
     if (['turnover', 'ninety', 'workforce', 'scorecard'].includes(group)) cmpRenderKpis(dataA, dataB, group);
     if (['turnover', 'ninety'].includes(group)) { cmpRenderInsight(dataA, dataB, group); cmpRenderTable(dataA, dataB, group); }
     if (group === 'drivers') cmpRenderDrivers(dataA, dataB); else cmpRenderCharts(dataA, dataB, group);
-    cmpHasResults = true;
+    cmpHasResults = true; cmpStaleFlag = false;
     document.getElementById('cmpStale').hidden = true;
+    cmpTabsStart(group, dataA, dataB);   // the topic's own extra tabs (loaded when opened)
 }
 
 document.getElementById('cmpCompareBtn').addEventListener('click', async () => {
@@ -1500,6 +1618,402 @@ document.getElementById('cmpCompareBtn').addEventListener('click', async () => {
     catch (e) { cmpPopup(e && e.message === '403' ? cmpL.noAccess : cmpL.loadFailed); }
     finally { cmpSetBusy(false); }
 });
+
+/* ══ Tabs ═══════════════════════════════════════════════════════════════════
+   Each topic opens on its Overview (what the page always showed). Its other tabs are loaded only when opened,
+   from the same filters the comparison was run with — so a tab never adds requests until somebody asks for it. */
+const cmpStr = document.getElementById('cmpStr').dataset;
+const S = k => cmpStr['s' + k[0].toUpperCase() + k.slice(1)] ?? k;
+let cmpRun = null;   // { token, group, data: { A, B }, loaded: {}, active }
+
+const cmpFmtCount = v => v == null ? '—' : (cmpNorm.uneven ? Number(v).toFixed(1) : String(Math.round(v)));
+const cmpFmtNum = (v, d = 1) => v == null ? '—' : Number(v).toFixed(d);
+const cmpFmtPct = v => v == null ? '—' : Number(v).toFixed(1) + '%';
+const cmpBoth = (path, extra = '') => Promise.all(['A', 'B'].map(side => cmpGet(`${path}?${cmpBuildQuery(side)}${extra}`)));
+
+/* tab id -> loader. Overview is the page's own content and has no loader. */
+const CMP_TABS = {
+    turnover:  [{ id: 'overview' }, { id: 'trend', load: cmpTabTurnoverTrend }, { id: 'teams', load: cmpTabTeams('turnover') }, { id: 'stores', load: cmpTabTurnoverStores }],
+    workforce: [{ id: 'overview' }, { id: 'composition', load: cmpTabWorkforceComposition }, { id: 'trend', load: cmpTabWorkforceTrend }, { id: 'teams', load: cmpTabTeams('workforce') }, { id: 'stores', load: cmpTabWorkforceStores }],
+    ninety:    [{ id: 'overview' }, { id: 'cohorts', load: cmpTabNinetyCohorts }, { id: 'breakdown', load: cmpTabNinetyBreakdown }, { id: 'teams', load: cmpTabNinetyTeams }],
+    retention: [{ id: 'overview' }, { id: 'tenure', load: cmpTabRetentionTenure }, { id: 'stores', load: cmpTabRetentionStores }, { id: 'teams', load: cmpTabRetentionTeams }],
+    exit:      [{ id: 'overview' }, { id: 'experience', load: cmpTabExitExperience }, { id: 'more', load: cmpTabExitMore }],
+    scorecard: [{ id: 'overview' }, { id: 'supervisors', load: cmpTabScorecardSupervisors }, { id: 'leaders', load: cmpTabScorecardLeaders }],
+};
+
+function cmpTabsReset() {
+    cmpDisposePane();
+    cmpRun = null;
+    const bar = document.getElementById('cmpTabs');
+    bar.replaceChildren(); bar.hidden = true;
+}
+function cmpDisposePane() {
+    Object.keys(cmpExtraCharts).filter(k => k.startsWith('cmpx-')).forEach(k => { try { cmpExtraCharts[k]?.destroy(); } catch { } delete cmpExtraCharts[k]; });
+    const pane = document.getElementById('cmpTabPane');
+    pane.replaceChildren(); pane.hidden = true;
+}
+function cmpTabsStart(group, dataA, dataB) {
+    cmpDisposePane();
+    cmpRun = { token: (cmpRun?.token || 0) + 1, group, data: { A: dataA, B: dataB }, loaded: { overview: true }, active: 'overview' };
+    const tabs = CMP_TABS[group] || [];
+    const bar = document.getElementById('cmpTabs');
+    bar.replaceChildren();
+    tabs.forEach(t => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'cmp-tab' + (t.id === 'overview' ? ' active' : ''); b.dataset.tab = t.id; b.setAttribute('role', 'tab');
+        b.textContent = S('tab' + t.id[0].toUpperCase() + t.id.slice(1));
+        b.addEventListener('click', () => cmpOpenTab(t.id));
+        bar.appendChild(b);
+    });
+    bar.hidden = tabs.length <= 1;
+}
+function cmpActivateTab(id) {
+    cmpRun.active = id;
+    document.querySelectorAll('#cmpTabs .cmp-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+    const pane = document.getElementById('cmpTabPane');
+    if (id === 'overview') { cmpShowGroup(cmpRun.group); pane.hidden = true; return; }
+    cmpShowGroup('');
+    pane.hidden = false;
+    pane.querySelectorAll('.cmp-tabbody').forEach(el => { el.hidden = el.dataset.tab !== id; });
+}
+async function cmpOpenTab(id) {
+    if (!cmpRun || cmpBusy || id === cmpRun.active) return;
+    const tab = (CMP_TABS[cmpRun.group] || []).find(t => t.id === id);
+    if (!tab) return;
+    if (cmpRun.loaded[id]) { cmpActivateTab(id); return; }
+    if (cmpStaleFlag) { cmpPopup(cmpL.staleTab); return; }
+
+    const previous = cmpRun.active, token = cmpRun.token;
+    const body = document.createElement('div');
+    body.className = 'cmp-tabbody'; body.dataset.tab = id;
+    body.innerHTML = `<div class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>${sapEscape(S('loading'))}</div>`;
+    document.getElementById('cmpTabPane').appendChild(body);
+    cmpSetBusy(true, S('loading'));
+    cmpActivateTab(id);   // visible before drawing: Chart.js sizes a canvas from its container
+    try {
+        await tab.load(body, cmpRun);
+        if (token === cmpRun?.token) cmpRun.loaded[id] = true;
+    } catch (e) {
+        body.remove();
+        if (token === cmpRun?.token) cmpActivateTab(previous);
+        cmpPopup(e && e.message === '403' ? cmpL.noAccess : cmpL.loadFailed);
+    } finally {
+        cmpSetBusy(false);
+    }
+}
+
+/* ── building blocks ──────────────────────────────────────────────────────── */
+const cmpUid = (c, base) => `cmpx-${c.dataset.tab}-${base}`;
+function cmpGrid(c) { const g = document.createElement('div'); g.className = 'charts-grid mb-4'; c.appendChild(g); return g; }
+function cmpNote(c, text) { const p = document.createElement('p'); p.className = 'text-muted'; p.textContent = text; c.appendChild(p); }
+function cmpChartCard(grid, id, title, sub, basis) {
+    const d = document.createElement('div');
+    d.className = 'chart-card';
+    d.innerHTML = `<div class="chart-header"><h6>${sapEscape(title)}</h6>${sub ? `<p>${sapEscape(sub)}</p>` : ''}</div>`
+        + `<div class="chart-body"><canvas id="${id}"></canvas></div>`
+        + (basis ? `<p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>${sapEscape(basis)}</span></p>` : '');
+    grid.appendChild(d);
+}
+function cmpTableCard(c, title, sub, headers, rows) {
+    const d = document.createElement('div');
+    d.className = 'chart-card mb-4 p-0'; d.style.overflow = 'hidden';
+    const head = headers.map(h => `<th class="px-3 py-2 text-center">${sapEscape(h)}</th>`).join('');
+    const body = rows.length
+        ? rows.map(r => `<tr>${r.map((cell, i) => `<td class="px-3 py-2 ${i === 0 ? 'fw-semibold' : 'text-center'}">${cell}</td>`).join('')}</tr>`).join('')
+        : `<tr><td colspan="${headers.length}" class="text-center py-4 text-muted">${sapEscape(S('noDataShort'))}</td></tr>`;
+    d.innerHTML = `<div class="chart-header px-3 pt-3"><h6>${sapEscape(title)}</h6>${sub ? `<p>${sapEscape(sub)}</p>` : ''}</div>`
+        + `<div class="table-responsive" style="max-height:420px;overflow-y:auto"><table class="table table-hover mb-0" style="font-size:13px">`
+        + `<thead style="background:var(--bg-2);position:sticky;top:0;z-index:1"><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+    c.appendChild(d);
+}
+/* Δ = A − B, coloured by whether the change is good (lowerIsBetter: true / false) or just a change (undefined). */
+function cmpDeltaHtml(a, b, { lowerIsBetter, dec = 1 } = {}) {
+    if (a == null || b == null) return '<span class="text-muted">—</span>';
+    const d = a - b;
+    const flat = Math.abs(d) < Math.pow(10, -dec) / 2;
+    const good = lowerIsBetter === undefined ? null : (lowerIsBetter ? d <= 0 : d >= 0);
+    const color = flat || good === null ? 'var(--text-3)' : good ? 'var(--success)' : 'var(--danger)';
+    return `<span style="color:${color};font-weight:700;direction:ltr;unicode-bidi:isolate">${d > 0 ? '+' : ''}${d.toFixed(dec)}</span>`;
+}
+const cmpEsc = v => sapEscape(v == null ? '' : String(v));
+
+/* A and B lists of {label,value} side by side: modes — 'count' (monthly average when the sides differ in length),
+   'share' (percent of each side's own total) or 'value' (as is). */
+function cmpPair(rowsA, rowsB, mode, { topN = 8, keepOrder = false } = {}) {
+    const lab = r => r.label || '—';
+    const fold = (rows, side) => {
+        const total = (rows || []).reduce((sum, r) => sum + (r.value || 0), 0);
+        const m = new Map();
+        (rows || []).forEach(r => {
+            const v = mode === 'share' ? (total > 0 ? r.value * 100 / total : 0) : mode === 'count' ? cmpPerMonth(side, r.value) : r.value;
+            m.set(lab(r), (m.get(lab(r)) || 0) + v);
+        });
+        return m;
+    };
+    const ma = fold(rowsA, 'A'), mb = fold(rowsB, 'B');
+    let labels = [...new Set([...(rowsA || []).map(lab), ...(rowsB || []).map(lab)])];
+    if (!keepOrder) labels.sort((x, y) => ((ma.get(y) || 0) + (mb.get(y) || 0)) - ((ma.get(x) || 0) + (mb.get(x) || 0)));
+    if (topN) labels = labels.slice(0, topN);
+    const r1 = v => Math.round((v || 0) * 10) / 10;
+    return { labels, a: labels.map(l => r1(ma.get(l))), b: labels.map(l => r1(mb.get(l))) };
+}
+/* One bar chart per [endpoint, title, sub] — both sides of the same endpoint. */
+async function cmpTabBarCharts(c, defs, mode, basis) {
+    const results = await Promise.all(defs.map(d => cmpBoth(d.path)));
+    c.replaceChildren();
+    const grid = cmpGrid(c);
+    defs.forEach((d, i) => {
+        const [ra, rb] = results[i];
+        const p = cmpPair(ra, rb, d.mode || mode, { topN: d.topN ?? 8, keepOrder: !!d.keepOrder });
+        const id = cmpUid(c, d.id);
+        cmpChartCard(grid, id, d.title + S('vs'), d.sub, basis);
+        cmpDrawBars(id, p.labels, p.a, p.b, { pct: (d.mode || mode) === 'share' || !!d.pct });
+    });
+}
+/* Month-by-month lines/bars from the series both sides share (x axis = month number). */
+function cmpSeriesCards(c, sa, sb, defs) {
+    const months = [...new Set([...sa.map(p => p.month), ...sb.map(p => p.month)])].sort((x, y) => x - y);
+    const at = (series, m, pick) => { const p = series.find(x => x.month === m); return p ? pick(p) : null; };
+    const grid = cmpGrid(c);
+    defs.forEach(d => {
+        const id = cmpUid(c, d.id);
+        cmpChartCard(grid, id, d.title + S('vs'), d.sub);
+        cmpDrawBars(id, months.map(cmpMonthShortName), months.map(m => at(sa, m, d.pick)), months.map(m => at(sb, m, d.pick)), { pct: !!d.pct, line: !!d.line });
+    });
+}
+
+/* ── Turnover ─────────────────────────────────────────────────────────────── */
+async function cmpTabTurnoverTrend(c) {
+    const [sa, sb] = await cmpBoth('/api/dashboard/monthly-series');
+    c.replaceChildren();
+    cmpSeriesCards(c, sa, sb, [
+        { id: 'rate', title: S('chartMonthlyTrend'), pick: p => p.turnoverRate, pct: true, line: true },
+        { id: 'res', title: S('seriesResignations'), pick: p => p.resignations },
+        { id: 'hires', title: S('seriesHires'), pick: p => p.newHires },
+    ]);
+}
+/* OC / OM / SOC / OD tables (turnover: resignations + rate; workforce: headcount + rate). */
+function cmpTabTeams(kind) {
+    return async c => {
+        const [oa, ob] = await cmpBoth('/api/dashboard/oc-om-analysis');
+        c.replaceChildren();
+        [['ocRows', S('commonOc')], ['omRows', S('commonOm')], ['socRows', S('commonSoc')], ['odRows', S('commonOd')]].forEach(([key, title]) => {
+            const ma = new Map((oa[key] || []).map(r => [r.name, r])), mb = new Map((ob[key] || []).map(r => [r.name, r]));
+            const rate = n => (ma.get(n)?.avgTurnoverRate || 0) + (mb.get(n)?.avgTurnoverRate || 0);
+            const names = [...new Set([...ma.keys(), ...mb.keys()])].sort((x, y) => rate(y) - rate(x));
+            const cnt = (m, n, f, side) => m.get(n) ? cmpPerMonth(side, m.get(n)[f]) : null;
+            const rows = names.map(n => {
+                const ra = ma.get(n)?.avgTurnoverRate ?? null, rb = mb.get(n)?.avgTurnoverRate ?? null;
+                const stores = ma.get(n)?.storeCount ?? mb.get(n)?.storeCount;
+                if (kind === 'workforce') {
+                    const ha = cnt(ma, n, 'totalHeadcount', 'A'), hb = cnt(mb, n, 'totalHeadcount', 'B');
+                    return [cmpEsc(n), stores, cmpFmtCount(ha), cmpFmtCount(hb), cmpDeltaHtml(ha, hb, { dec: cmpNorm.uneven ? 1 : 0 }), cmpFmtPct(ra), cmpFmtPct(rb)];
+                }
+                const xa = cnt(ma, n, 'totalResignations', 'A'), xb = cnt(mb, n, 'totalResignations', 'B');
+                return [cmpEsc(n), stores, cmpFmtCount(xa), cmpFmtCount(xb), cmpFmtPct(ra), cmpFmtPct(rb), cmpDeltaHtml(ra, rb, { lowerIsBetter: true })];
+            });
+            const headers = kind === 'workforce'
+                ? [S('colName'), S('colStores'), S('colHeadcount') + ' A', S('colHeadcount') + ' B', S('colChange'), S('colTurnover') + ' A', S('colTurnover') + ' B']
+                : [S('colName'), S('colStores'), S('colResignations') + ' A', S('colResignations') + ' B', S('colTurnover') + ' A', S('colTurnover') + ' B', S('colChange')];
+            cmpTableCard(c, title + S('vs'), S('rankedByWeighted'), headers, rows);
+        });
+    };
+}
+/* Stores that moved the most, from the store data the Overview already loaded (no request). */
+async function cmpTabTurnoverStores(c, run) {
+    c.replaceChildren();
+    const A = run.data.A.byStore || [], B = run.data.B.byStore || [];
+    if (!A.length || !B.length) { cmpNote(c, S('noStoreBreakdown')); return; }
+    const mb = new Map(B.map(r => [r.storeName, r]));
+    const rows = A.filter(r => mb.has(r.storeName)).map(r => ({ name: r.storeName, a: r.turnoverRate, b: mb.get(r.storeName).turnoverRate }))
+        .map(r => ({ ...r, d: r.a - r.b }));
+    const render = (title, list) => cmpTableCard(c, title, '', [S('colStore'), S('colTurnover') + ' A', S('colTurnover') + ' B', S('colChange')],
+        list.map(r => [cmpEsc(r.name), cmpFmtPct(r.a), cmpFmtPct(r.b), cmpDeltaHtml(r.a, r.b, { lowerIsBetter: true })]));
+    render(S('moversImproved'), rows.filter(r => r.d < 0).sort((x, y) => x.d - y.d).slice(0, 10));
+    render(S('moversWorsened'), rows.filter(r => r.d > 0).sort((x, y) => y.d - x.d).slice(0, 10));
+}
+
+/* ── Workforce ────────────────────────────────────────────────────────────── */
+async function cmpTabWorkforceComposition(c) {
+    await cmpTabBarCharts(c, [
+        { id: 'job', path: '/api/dashboard/headcount-by-job-title', title: S('chartHeadcountByJobTitle'), sub: S('subHeadcountByJobTitle') },
+        { id: 'tenure', path: '/api/dashboard/headcount-by-tenure', title: S('chartHeadcountByTenure'), sub: S('subHeadcountByTenure'), keepOrder: true, topN: 0 },
+        { id: 'payroll', path: '/api/dashboard/headcount-by-payroll-group', title: S('chartHeadcountByPayroll'), sub: S('subHeadcountByPayroll') },
+        { id: 'gender', path: '/api/dashboard/gender-breakdown', title: S('chartHeadcountGender'), sub: S('subHeadcountGender'), topN: 0 },
+    ], 'count');
+}
+async function cmpTabWorkforceTrend(c) {
+    const [sa, sb] = await cmpBoth('/api/dashboard/monthly-series');
+    c.replaceChildren();
+    cmpSeriesCards(c, sa, sb, [
+        { id: 'hc', title: S('seriesHeadcount'), pick: p => p.headcount, line: true },
+        { id: 'net', title: S('seriesNet'), pick: p => p.newHires - p.resignations },
+    ]);
+}
+async function cmpTabWorkforceStores(c, run) {
+    c.replaceChildren();
+    const A = run.data.A.byStore || [], B = run.data.B.byStore || [];
+    if (!A.length || !B.length) { cmpNote(c, S('noStoreBreakdown')); return; }
+    const mb = new Map(B.map(r => [r.storeName, r]));
+    const hc = r => cmpNorm.uneven ? Math.round(r.avgHeadcount * 10) / 10 : r.headcount;
+    const rows = A.filter(r => mb.has(r.storeName)).sort((x, y) => hc(y) - hc(x)).map(r => {
+        const b = mb.get(r.storeName);
+        const ha = hc(r), hb = hc(b), na = cmpPerMonth('A', r.newHires), nb = cmpPerMonth('B', b.newHires), xa = cmpPerMonth('A', r.resignations), xb = cmpPerMonth('B', b.resignations);
+        return [cmpEsc(r.storeName), cmpFmtCount(ha), cmpFmtCount(hb), cmpDeltaHtml(ha, hb, { dec: cmpNorm.uneven ? 1 : 0 }),
+            cmpFmtCount(na), cmpFmtCount(nb), cmpFmtCount(xa), cmpFmtCount(xb)];
+    });
+    cmpTableCard(c, S('storesHeadcount') + S('vs'), '', [S('colStore'), S('colHeadcount') + ' A', S('colHeadcount') + ' B', S('colChange'),
+        S('colNewHires') + ' A', S('colNewHires') + ' B', S('colResignations') + ' A', S('colResignations') + ' B'], rows);
+}
+
+/* ── 90-Day ───────────────────────────────────────────────────────────────── */
+async function cmpTabNinetyCohorts(c) {
+    const [ta, tb] = await cmpBoth('/api/ninety-day-turnover/trend');
+    c.replaceChildren();
+    const mine = (items, side) => (items || []).filter(i => i.year === panels[side].year && panels[side].months.includes(i.month));
+    cmpSeriesCards(c, mine(ta, 'A'), mine(tb, 'B'), [
+        { id: 'rate', title: S('chartNinetyByCohort'), sub: S('subNinetyByCohort'), pick: p => p.rate, pct: true, line: true },
+        { id: 'hires', title: S('cohortHires'), pick: p => p.totalHires },
+        { id: 'early', title: S('cohortLeavers'), pick: p => p.earlyLeavers },
+    ]);
+}
+async function cmpTabNinetyBreakdown(c) {
+    const N = '/api/ninety-day-turnover/';
+    await cmpTabBarCharts(c, [
+        { id: 'reasons', path: N + 'reasons', title: S('ntdReasons'), sub: S('subNtdReasons'), mode: 'share' },
+        { id: 'job', path: N + 'job-titles', title: S('ntdByJobTitle'), sub: S('subNtdByJobTitle') },
+        { id: 'payroll', path: N + 'payroll-groups', title: S('ntdByPayroll'), sub: S('subNtdByPayroll') },
+        { id: 'gender', path: N + 'gender-breakdown', title: S('chartGender'), sub: S('subNtdGender'), topN: 0 },
+    ], 'count');
+}
+async function cmpTabNinetyTeams(c) {
+    const [oa, ob] = await cmpBoth('/api/ninety-day-turnover/oc-om-analysis');
+    c.replaceChildren();
+    [['ocRows', S('commonOc')], ['omRows', S('commonOm')], ['socRows', S('commonSoc')], ['odRows', S('commonOd')]].forEach(([key, title]) => {
+        const ma = new Map((oa[key] || []).map(r => [r.name, r])), mb = new Map((ob[key] || []).map(r => [r.name, r]));
+        const rate = n => (ma.get(n)?.avgRate || 0) + (mb.get(n)?.avgRate || 0);
+        const names = [...new Set([...ma.keys(), ...mb.keys()])].sort((x, y) => rate(y) - rate(x));
+        const rows = names.map(n => {
+            const a = ma.get(n), b = mb.get(n);
+            return [cmpEsc(n), a?.storeCount ?? b?.storeCount, cmpFmtCount(a ? cmpPerMonth('A', a.totalHires) : null), cmpFmtCount(b ? cmpPerMonth('B', b.totalHires) : null),
+                cmpFmtCount(a ? cmpPerMonth('A', a.earlyLeavers) : null), cmpFmtCount(b ? cmpPerMonth('B', b.earlyLeavers) : null),
+                cmpFmtPct(a?.avgRate), cmpFmtPct(b?.avgRate), cmpDeltaHtml(a?.avgRate ?? null, b?.avgRate ?? null, { lowerIsBetter: true })];
+        });
+        cmpTableCard(c, title + S('vs'), S('rankedByAvgRate'), [S('colName'), S('colStores'), S('colHires') + ' A', S('colHires') + ' B',
+            S('colEarly') + ' A', S('colEarly') + ' B', S('colRate90') + ' A', S('colRate90') + ' B', S('colChange')], rows);
+    });
+}
+
+/* ── Retention (snapshots of the team at each side's last month) ─────────── */
+async function cmpTabRetentionTenure(c) {
+    const R = '/api/retention/';
+    const [curve, gender, jobs] = await Promise.all([cmpBoth(R + 'active-tenure-curve'), cmpBoth(R + 'by-gender'), cmpBoth(R + 'by-job-title')]);
+    c.replaceChildren();
+    const grid = cmpGrid(c);
+    const draw = (id, title, sub, ra, rb, opts) => {
+        const p = cmpPair(ra, rb, 'value', opts);
+        const uid = cmpUid(c, id);
+        cmpChartCard(grid, uid, title + S('vs'), sub, S('basisSnapshot'));
+        cmpDrawBars(uid, p.labels, p.a, p.b, { pct: true });
+    };
+    const asItems = pts => (pts || []).map(p => ({ label: p.label, value: p.retentionRate }));
+    draw('curve', S('chartSurvival'), S('subSurvival'), asItems(curve[0]), asItems(curve[1]), { topN: 0, keepOrder: true });
+    draw('gender', S('retByGender'), S('subRetByGender'), gender[0], gender[1], { topN: 0 });
+    draw('job', S('retByJobTitle'), S('subRetByJobTitle'), jobs[0], jobs[1], { topN: 10 });
+}
+async function cmpTabRetentionStores(c) {
+    const R = '/api/retention/';
+    const [rank, tenure] = await Promise.all([cmpBoth(R + 'store-retention-ranking'), cmpBoth(R + 'average-tenure-by-store')]);
+    c.replaceChildren();
+    const map = rows => new Map((rows || []).map(r => [r.label, r.value]));
+    const ra = map(rank[0]), rb = map(rank[1]), ta = map(tenure[0]), tb = map(tenure[1]);
+    const stores = [...ra.keys()].filter(s => rb.has(s));
+    if (!stores.length) { cmpNote(c, S('noStoreBreakdown')); return; }
+    const rows = stores.sort((x, y) => Math.abs(rb.get(y) - ra.get(y)) - Math.abs(rb.get(x) - ra.get(x))).slice(0, 25)
+        .map(s => [cmpEsc(s), cmpFmtPct(ra.get(s)), cmpFmtPct(rb.get(s)), cmpDeltaHtml(ra.get(s), rb.get(s), { lowerIsBetter: false }),
+            cmpFmtNum(ta.get(s)), cmpFmtNum(tb.get(s)), cmpDeltaHtml(ta.get(s) ?? null, tb.get(s) ?? null, { lowerIsBetter: false })]);
+    cmpTableCard(c, S('storesRetention') + S('vs'), S('basisSnapshot'),
+        [S('colStore'), S('colRetention') + ' A', S('colRetention') + ' B', S('colChange'), S('colAvgTenure') + ' A', S('colAvgTenure') + ' B', S('colChange')], rows);
+}
+async function cmpTabRetentionTeams(c) {
+    const R = '/api/retention/average-tenure-by-manager';
+    const dims = [['oc', S('commonOc')], ['om', S('commonOm')], ['soc', S('commonSoc')], ['od', S('commonOd')]];
+    const results = await Promise.all(dims.map(([d]) => cmpBoth(R, `&dimension=${d}`)));
+    c.replaceChildren();
+    dims.forEach(([, title], i) => {
+        const ma = new Map((results[i][0] || []).map(r => [r.name, r])), mb = new Map((results[i][1] || []).map(r => [r.name, r]));
+        const names = [...new Set([...ma.keys(), ...mb.keys()])].sort((x, y) => ((mb.get(y)?.avgTenureMonths || 0) + (ma.get(y)?.avgTenureMonths || 0)) - ((mb.get(x)?.avgTenureMonths || 0) + (ma.get(x)?.avgTenureMonths || 0)));
+        const rows = names.map(n => {
+            const a = ma.get(n), b = mb.get(n);
+            return [cmpEsc(n), a?.stores ?? b?.stores, a?.headcount ?? '—', b?.headcount ?? '—', cmpFmtNum(a?.avgTenureMonths), cmpFmtNum(b?.avgTenureMonths),
+                cmpDeltaHtml(a?.avgTenureMonths ?? null, b?.avgTenureMonths ?? null, { lowerIsBetter: false })];
+        });
+        cmpTableCard(c, title + S('vs'), S('rankedByTenure'), [S('colName'), S('colStores'), S('colHeadcount') + ' A', S('colHeadcount') + ' B',
+            S('colAvgTenure') + ' A', S('colAvgTenure') + ' B', S('colChange')], rows);
+    });
+}
+
+/* ── Exit Interviews (every answer as a share of that side's own answers) ── */
+async function cmpTabExitExperience(c) {
+    const E = '/api/exit-interviews/';
+    await cmpTabBarCharts(c, [
+        { id: 'return', path: E + 'would-return', title: S('chartWouldReturn'), sub: S('subWouldReturn') },
+        { id: 'exp', path: E + 'overall-experience', title: S('chartExperience'), sub: S('subExperience') },
+        { id: 'training', path: E + 'training', title: S('chartTraining'), sub: S('subTraining') },
+        { id: 'fair', path: E + 'fair-treatment', title: S('chartFairTreatment'), sub: S('subFairTreatment') },
+        { id: 'workload', path: E + 'workload', title: S('chartWorkload'), sub: S('subWorkload') },
+        { id: 'pressure', path: E + 'work-pressure-reason', title: S('chartWorkPressure'), sub: S('subWorkPressure') },
+    ], 'share');
+}
+async function cmpTabExitMore(c) {
+    const E = '/api/exit-interviews/';
+    const [jobs, rr] = await Promise.all([cmpBoth(E + 'by-job-title'), cmpBoth(E + 'reason-vs-would-return')]);
+    c.replaceChildren();
+    const grid = cmpGrid(c);
+    const pj = cmpPair(jobs[0], jobs[1], 'share', { topN: 8 });
+    const jid = cmpUid(c, 'job');
+    cmpChartCard(grid, jid, S('chartEiByJobTitle') + S('vs'), S('subEiByJobTitle'));
+    cmpDrawBars(jid, pj.labels, pj.a, pj.b, { pct: true });
+    const items = list => (list || []).map(r => ({ label: r.reason, value: r.wouldReturnPercent }));
+    const pr = cmpPair(items(rr[0]), items(rr[1]), 'value', { topN: 8 });
+    const rid = cmpUid(c, 'reasonreturn');
+    cmpChartCard(grid, rid, S('chartReasonVsReturn') + S('vs'));
+    cmpDrawBars(rid, pr.labels, pr.a, pr.b, { pct: true });
+}
+
+/* ── Scorecard ────────────────────────────────────────────────────────────── */
+const cmpScoreBoth = dim => Promise.all(['A', 'B'].map(side => {
+    const p = panels[side], q = new URLSearchParams({ dimension: dim, year: p.year, months: p.months.join(',') });
+    ['om', 'oc', 'soc', 'od'].forEach(f => { if (p[f]) q.set(f, p[f]); });
+    return cmpGet(`/api/scorecard?${q}`);
+}));
+/* The four scorecard measures as A / B / change columns. */
+function cmpScoreCells(a, b) {
+    const m = (f, lower) => [cmpFmtPct(a?.[f]), cmpFmtPct(b?.[f]), cmpDeltaHtml(a?.[f] ?? null, b?.[f] ?? null, { lowerIsBetter: lower })];
+    return [...m('turnoverRate', true), ...m('earlyLeaver90Rate', true), ...m('retention180Rate', false), ...m('exitSentimentPercent', false)];
+}
+function cmpScoreHeaders(first) {
+    const group = (label) => [label + ' A', label + ' B', S('colChange')];
+    return [first, ...group(S('colTurnoverRate')), ...group(S('colEarlyLeave')), ...group(S('col180')), ...group(S('colSentiment'))];
+}
+async function cmpTabScorecardSupervisors(c) {
+    const [oc, om] = await Promise.all([cmpScoreBoth('oc'), cmpScoreBoth('om')]);
+    c.replaceChildren();
+    [[oc, S('scByOc')], [om, S('scByOm')]].forEach(([[ra, rb], title]) => {
+        const ma = new Map((ra || []).map(r => [r.name, r])), mb = new Map((rb || []).map(r => [r.name, r]));
+        const names = [...new Set([...ma.keys(), ...mb.keys()])].sort((x, y) => ((mb.get(y)?.turnoverRate || 0) + (ma.get(y)?.turnoverRate || 0)) - ((mb.get(x)?.turnoverRate || 0) + (ma.get(x)?.turnoverRate || 0)));
+        cmpTableCard(c, title + S('vs'), '', cmpScoreHeaders(S('colName')), names.map(n => [cmpEsc(n), ...cmpScoreCells(ma.get(n), mb.get(n))]));
+    });
+}
+async function cmpTabScorecardLeaders(c) {
+    const [ra, rb] = (await cmpScoreBoth('leader'));
+    c.replaceChildren();
+    const mb = new Map((rb || []).map(r => [r.name, r]));
+    const rows = (ra || []).filter(r => mb.has(r.name)).map(r => ({ a: r, b: mb.get(r.name), d: r.turnoverRate - mb.get(r.name).turnoverRate }));
+    const render = (title, list) => cmpTableCard(c, title, '', cmpScoreHeaders(S('colLeader')), list.map(r => [cmpEsc(r.a.name), ...cmpScoreCells(r.a, r.b)]));
+    render(S('leadersImproved'), rows.filter(r => r.d < 0).sort((x, y) => x.d - y.d).slice(0, 10));
+    render(S('leadersWorsened'), rows.filter(r => r.d > 0).sort((x, y) => y.d - x.d).slice(0, 10));
+}
 
 /* Store Breakdown table — sort headers ------------------------------------ */
 document.querySelectorAll('#cmpTableCard .cmp-sort').forEach(th => {

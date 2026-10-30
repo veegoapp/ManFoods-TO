@@ -16,6 +16,9 @@ public class NinetyDayKpiViewModel
 public class RateTrendItem
 {
     public string Label { get; set; } = "";
+    /// <summary>The cohort (hire) month as numbers, so callers need not parse <see cref="Label"/>.</summary>
+    public int Month { get; set; }
+    public int Year { get; set; }
     public double Rate { get; set; }
     public int TotalHires { get; set; }
     public int EarlyLeavers { get; set; }

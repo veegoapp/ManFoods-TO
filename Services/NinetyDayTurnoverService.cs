@@ -243,6 +243,7 @@ public class NinetyDayTurnoverService : INinetyDayTurnoverService
             result.Add(new RateTrendItem
             {
                 Label = new DateOnly(y, m, 1).ToString("MMM yy"),
+                Month = m, Year = y,
                 Rate = kpi.Rate,
                 TotalHires = kpi.TotalHires,
                 EarlyLeavers = kpi.EarlyLeavers,
