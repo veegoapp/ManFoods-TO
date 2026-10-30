@@ -46,6 +46,7 @@ public class UploadService : IUploadService
     {
         WorkforcePlanningService.InvalidateCache(); // planning compares projected vs active employees
         StoreAccessService.InvalidateCache(); // store ownership comes from the Store Reference file
+        _cache.Remove(DashboardService.AvailablePeriodsCacheKey);
         _cache.Remove(ScorecardService.HistoricalRecordsCacheKey);
         _cache.Remove(NinetyDayTurnoverService.ActiveHiresCacheKey);
         _cache.Remove(NinetyDayTurnoverService.ResignationTenuresCacheKey);

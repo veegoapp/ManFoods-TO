@@ -39,6 +39,34 @@ public class ActivityLogsApiController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>Everything one account did in the last 90 days (drill-down panel).</summary>
+    [HttpGet("user"), RequireSuperAdmin]
+    public async Task<IActionResult> UserActivity([FromQuery] string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email) || email.Length > 256) return BadRequest(new { error = _L["ActLog_LoadFailed"].Value });
+        return Ok(await _logs.GetUserProfileAsync(email));
+    }
+
+    /// <summary>Failed/blocked sign-ins in the last 24 hours and active users in the last 7 days (not affected by the table's filters).</summary>
+    [HttpGet("security"), RequireSuperAdmin]
+    public async Task<IActionResult> Security() => Ok(await _logs.GetSecurityOverviewAsync());
+
+    /// <summary>The current filters as an Excel file (newest first, capped at <see cref="ActivityLogService.MaxExportRows"/> rows).</summary>
+    [HttpGet("export"), RequireSuperAdmin]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> Export([FromQuery] string? search, [FromQuery] string? action, [FromQuery] string? status,
+        [FromQuery] DateOnly? from, [FromQuery] DateOnly? to)
+    {
+        var bytes = await _logs.ExportAsync(new ActivityLogQuery { Search = search, Action = action, Status = status, FromDay = from, ToDay = to });
+        // The log holds emails and IP addresses — who took a copy is itself worth recording (the filters, never the search text).
+        await _writer.LogAsync(new ActivityEntry
+        {
+            Action = ActivityActions.ActivityLogsExport,
+            Details = $"action={action ?? "all"}; status={status ?? "all"}; from={from:yyyy-MM-dd}; to={to:yyyy-MM-dd}; search={(string.IsNullOrWhiteSpace(search) ? "no" : "yes")}",
+        });
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Activity_Logs_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx");
+    }
+
     /// <summary>What a Clear History request would delete (range as resolved by the server, and the row count). Deletes nothing.</summary>
     [HttpPost("clear/preview"), RequireSuperAdmin]
     public async Task<IActionResult> PreviewClear([FromBody] ClearActivityLogsRequest request)

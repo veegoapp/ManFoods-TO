@@ -89,6 +89,38 @@
 
 
 .cmp-table-hint { font-size:12px; color:var(--text-3); }
+.cmp-notice { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; margin-bottom:16px; border-radius:var(--radius-sm); border:1px solid var(--warning); background:var(--warning-bg); color:var(--text); font-size:13px; line-height:1.5; }
+.cmp-notice[hidden] { display:none; }
+.cmp-notice i { color:var(--warning); margin-top:2px; flex:0 0 auto; }
+.cmp-driver-low { opacity:.55; }
+
+/* Nothing shows until the user picks one thing to compare and presses Compare. */
+[data-cmp-groups]:not(.cmp-show) { display:none !important; }
+#cmpTableCard.cmp-g-turnover .cmp-col-n, #cmpTableCard.cmp-g-ninety .cmp-col-t { display:none; }
+
+.cmp-chooser { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-sm); padding:16px 18px; box-shadow:var(--shadow-sm); }
+.cmp-chooser-title { font-weight:700; font-size:15px; color:var(--text); }
+.cmp-chooser-sub { font-size:12.5px; color:var(--text-3); margin:2px 0 12px; }
+.cmp-chooser-options { display:flex; flex-wrap:wrap; gap:8px; }
+.cmp-opt { margin:0; cursor:pointer; }
+.cmp-opt input { position:absolute; opacity:0; pointer-events:none; }
+.cmp-opt span { display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border:1px solid var(--card-border); border-radius:999px; font-size:13px; font-weight:600; color:var(--text-2); background:var(--card-bg-2); transition:all .15s; }
+.cmp-opt:hover span { border-color:var(--card-border-h); }
+.cmp-opt input:focus-visible + span { box-shadow:0 0 0 3px var(--red-light); }
+.cmp-opt input:checked + span { background:var(--red-light); border-color:var(--red); color:var(--red); }
+.cmp-compare-btn { display:inline-flex; align-items:center; gap:6px; background:var(--red); color:#fff; border:0; border-radius:var(--radius-sm); font-size:13.5px; font-weight:700; height:40px; padding:0 22px; cursor:pointer; }
+.cmp-compare-btn:disabled { opacity:.6; cursor:not-allowed; }
+.cmp-stale { font-size:12.5px; color:var(--warning); font-weight:600; }
+.cmp-stale[hidden] { display:none; }
+.cmp-presets { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:8px; }
+.cmp-presets-label { font-size:11.5px; color:var(--text-3); font-weight:600; }
+.cmp-preset { background:var(--card-bg-2); border:1px solid var(--card-border); color:var(--text-2); border-radius:999px; font-size:12px; font-weight:600; padding:4px 11px; cursor:pointer; }
+.cmp-preset:hover { border-color:var(--card-border-h); color:var(--red); }
+.cmp-modal { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:2000; padding:16px; }
+.cmp-modal[hidden] { display:none; }
+.cmp-modal-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; padding:22px; width:100%; max-width:420px; box-shadow:0 12px 40px rgba(0,0,0,.3); text-align:center; }
+.cmp-modal-card i { font-size:28px; color:var(--warning); }
+.cmp-modal-card p { margin:10px 0 16px; font-size:14px; color:var(--text); line-height:1.6; }
 .cmp-chart-basis {
     display:flex; align-items:flex-start; gap:7px; margin:10px 0 0;
     padding:9px 11px; border:1px solid var(--card-border); border-radius:7px;
@@ -209,6 +241,15 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-4">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_JobTitle"]</span>
+                        <div class="cmp-combobox" id="cmpJobComboA">
+                            <input type="text" class="cmp-combobox-input" id="cmpJobInputA" placeholder="@L["Common_JobTitle"]" autocomplete="off">
+                            <div class="cmp-combobox-panel" id="cmpJobPanelA"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -287,6 +328,23 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-4">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_JobTitle"]</span>
+                        <div class="cmp-combobox" id="cmpJobComboB">
+                            <input type="text" class="cmp-combobox-input" id="cmpJobInputB" placeholder="@L["Common_JobTitle"]" autocomplete="off">
+                            <div class="cmp-combobox-panel" id="cmpJobPanelB"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="cmp-presets">
+                        <span class="cmp-presets-label">@L["CMP_PresetLabel"]</span>
+                        <button type="button" class="cmp-preset" data-preset="month">@L["CMP_Preset_month"]</button>
+                        <button type="button" class="cmp-preset" data-preset="quarter">@L["CMP_Preset_quarter"]</button>
+                        <button type="button" class="cmp-preset" data-preset="lastYear">@L["CMP_Preset_lastYear"]</button>
+                    </div>
+                </div>
                 <div class="col-12">
                     <button type="button" class="cmp-copy-btn" id="cmpCopyToLastYear">
                         <i class="bi bi-arrow-repeat me-1"></i>@L["Comparisons_CopyToLastYear"]
@@ -297,18 +355,53 @@
     </div>
 </div>
 
-<div class="d-flex align-items-center gap-2 mb-3">
+<div class="cmp-chooser mb-4">
+    <div class="cmp-chooser-title">@L["CMP_ChooseTitle"]</div>
+    <div class="cmp-chooser-sub">@L["CMP_ChooseSub"]</div>
+    <div class="cmp-chooser-options" role="radiogroup" aria-label="@L["CMP_ChooseTitle"]">
+        <label class="cmp-opt"><input type="radio" name="cmpGroup" value="turnover"><span><i class="bi bi-graph-down-arrow"></i>@L["CMP_Grp_turnover"]</span></label>
+        <label class="cmp-opt"><input type="radio" name="cmpGroup" value="breakdown"><span><i class="bi bi-diagram-3"></i>@L["CMP_Grp_breakdown"]</span></label>
+        <label class="cmp-opt"><input type="radio" name="cmpGroup" value="ninety"><span><i class="bi bi-person-x"></i>@L["CMP_Grp_ninety"]</span></label>
+        <label class="cmp-opt"><input type="radio" name="cmpGroup" value="workforce"><span><i class="bi bi-people"></i>@L["CMP_Grp_workforce"]</span></label>
+        <label class="cmp-opt"><input type="radio" name="cmpGroup" value="retention"><span><i class="bi bi-hourglass-split"></i>@L["CMP_Grp_retention"]</span></label>
+        <label class="cmp-opt"><input type="radio" name="cmpGroup" value="scorecard"><span><i class="bi bi-award"></i>@L["CMP_Grp_scorecard"]</span></label>
+        <label class="cmp-opt"><input type="radio" name="cmpGroup" value="exit"><span><i class="bi bi-chat-square-text"></i>@L["CMP_Grp_exit"]</span></label>
+        <label class="cmp-opt"><input type="radio" name="cmpGroup" value="drivers"><span><i class="bi bi-chat-heart"></i>@L["CMP_Grp_drivers"]</span></label>
+    </div>
+    <div class="cmp-stale mt-2" id="cmpUnsupported" hidden><i class="bi bi-info-circle me-1"></i><span id="cmpUnsupportedText"></span></div>
+    <div class="d-flex align-items-center gap-3 flex-wrap mt-3">
+        <button type="button" id="cmpCompareBtn" class="cmp-compare-btn">
+            <span class="spinner-border spinner-border-sm" id="cmpCompareSpin" hidden></span>
+            <i class="bi bi-bar-chart-line" id="cmpCompareIcon"></i><span id="cmpCompareLabel">@L["CMP_CompareBtn"]</span>
+        </button>
+        <span class="cmp-stale" id="cmpStale" hidden><i class="bi bi-exclamation-circle me-1"></i>@L["CMP_StaleNote"]</span>
+    </div>
+</div>
+
+<div id="cmpEmptyState" class="empty-state mb-4"><i class="bi bi-bar-chart-steps"></i><p>@L["CMP_EmptyHint"]</p></div>
+
+<div id="cmpModal" class="cmp-modal" hidden role="alertdialog" aria-modal="true" aria-describedby="cmpModalText">
+    <div class="cmp-modal-card">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        <p id="cmpModalText"></p>
+        <button type="button" id="cmpModalOk" class="cmp-compare-btn">@L["CMP_Ok"]</button>
+    </div>
+</div>
+
+<div class="cmp-notice" id="cmpPeriodNotice" hidden><i class="bi bi-exclamation-triangle-fill"></i><span id="cmpPeriodNoticeText"></span></div>
+
+<div class="d-flex align-items-center gap-2 mb-3" data-cmp-groups="turnover ninety">
     <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 25),oklch(0.6 0.16 25));border-radius:2px"></div>
     <h5 class="mb-0 fw-bold">@L["Common_SmartInsights"]</h5>
     <span class="badge ms-1" style="background:oklch(0.6 0.16 25);color:#1C1C27;font-size:10px;padding:4px 8px">@L["Common_AutoGenerated"]</span>
 </div>
-<div id="cmpInsightContainer" class="row g-3 mb-4">
+<div id="cmpInsightContainer" class="row g-3 mb-4" data-cmp-groups="turnover ninety">
     <div class="col-12 text-center py-3 text-muted">
         <div class="spinner-border spinner-border-sm me-2" style="color:oklch(0.5 0.18 25)"></div>@L["Common_Loading"]
     </div>
 </div>
 
-<div class="cmp-kpi-grid mb-4" id="cmpKpiGrid"
+<div class="cmp-kpi-grid mb-4" id="cmpKpiGrid" data-cmp-groups="turnover ninety workforce scorecard"
      data-kpi-headcount="@L["Common_Headcount"]"
      data-kpi-headcount-desc="@L["CMP_KpiHeadcountDesc"]"
      data-kpi-new-hires="@L["Common_NewHires"]"
@@ -338,17 +431,38 @@
      data-mover-desc-worsened="@L["CMP_MoverDescWorsened"]"
       data-exit-positive="@L["CMP_ExitPositive"]"
       data-exit-responses="@L["CMP_ExitResponses"]"
+     data-period-notice="@L["CMP_PeriodNotice"]"
+     data-unsupported="@L["CMP_Unsupported"]"
+     data-unsupported-popup="@L["CMP_UnsupportedPopup"]"
+     data-f-store="@L["Common_StoreName"]"
+     data-f-job="@L["Common_JobTitle"]"
+     data-no-access="@L["CMP_NoAccess"]"
+     data-preset-no-data="@L["CMP_PresetNoData"]"
+     data-kpi-sc-turnover="@L["CMP_KpiScTurnover"]"
+     data-kpi-sc-turnover-desc="@L["CMP_KpiScTurnoverDesc"]"
+     data-kpi-sc-flagged="@L["CMP_KpiScFlagged"]"
+     data-kpi-sc-flagged-desc="@L["CMP_KpiScFlaggedDesc"]"
+     data-need-group="@L["CMP_NeedGroup"]"
+     data-need-months="@L["CMP_NeedMonths"]"
+     data-load-failed="@L["CMP_LoadFailed"]"
+     data-compare-btn="@L["CMP_CompareBtn"]"
+     data-comparing="@L["CMP_Comparing"]"
+     data-per-month="@L["CMP_PerMonth"]"
+     data-avg-monthly="@L["CMP_AvgMonthly"]"
+     data-driver-col="@L["CMP_DriverCol"]"
+     data-low-sample="@L["CMP_LowSample"]"
+     data-responses-short="@L["CMP_ResponsesShort"]"
      data-no-data-short="@L["Common_NoDataShort"]"></div>
 
-<div class="charts-grid mb-4">
-    <div class="chart-card">
+<div class="charts-grid mb-4" data-cmp-groups="turnover ninety">
+    <div class="chart-card" data-cmp-groups="turnover">
         <div class="chart-header"><h6>@L["Chart_TurnoverByStoreCompare"]</h6><p>@L["CMP_TurnoverByStoreSub"]</p></div>
         <div class="chart-body">
             <canvas id="cmpTurnoverChart"></canvas>
         </div>
         <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisTurnover"]</span></p>
     </div>
-    <div class="chart-card">
+    <div class="chart-card" data-cmp-groups="ninety">
         <div class="chart-header"><h6>@L["Chart_NinetyDayByStoreCompare"]</h6><p>@L["CMP_NinetyByStoreSub"]</p></div>
         <div class="chart-body">
             <canvas id="cmpNinetyChart"></canvas>
@@ -357,11 +471,11 @@
     </div>
 </div>
 
-<div class="d-flex align-items-center gap-2 mb-3">
+<div class="d-flex align-items-center gap-2 mb-3" data-cmp-groups="workforce">
     <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.52 0.16 210),oklch(0.68 0.13 190));border-radius:2px"></div>
     <h5 class="mb-0 fw-bold">@L["Comparisons_WorkforceSection"]</h5>
 </div>
-<div class="charts-grid mb-4">
+<div class="charts-grid mb-4" data-cmp-groups="workforce">
     <div class="chart-card">
         <div class="chart-header"><h6>@L["Chart_WorkforceByStoreCompare"]</h6><p>@L["CMP_WorkforceByStoreSub"]</p></div>
         <div class="chart-body">
@@ -378,11 +492,60 @@
     </div>
 </div>
 
-<div class="d-flex align-items-center gap-2 mb-3">
+<div class="d-flex align-items-center gap-2 mb-3" data-cmp-groups="breakdown">
+    <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.5 0.17 60),oklch(0.68 0.14 75));border-radius:2px"></div>
+    <h5 class="mb-0 fw-bold">@L["Comparisons_BreakdownSection"]</h5>
+</div>
+<div class="charts-grid mb-4" data-cmp-groups="breakdown">
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["Chart_BkJobCompare"]</h6><p>@L["CMP_BkJobSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpBkJobChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisBreakdown"]</span></p>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["Chart_BkTenureCompare"]</h6><p>@L["CMP_BkTenureSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpBkTenureChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisBreakdown"]</span></p>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["Chart_BkPayrollCompare"]</h6><p>@L["CMP_BkPayrollSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpBkPayrollChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisBreakdown"]</span></p>
+    </div>
+</div>
+
+<div class="d-flex align-items-center gap-2 mb-3" data-cmp-groups="scorecard">
+    <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.5 0.15 255),oklch(0.68 0.12 240));border-radius:2px"></div>
+    <h5 class="mb-0 fw-bold">@L["Comparisons_ScorecardSection"]</h5>
+</div>
+<div class="charts-grid mb-4" data-cmp-groups="scorecard">
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["SC_RollupByOc"]</h6><p>@L["CMP_ScSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpScOcChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisScorecard"]</span></p>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["SC_RollupByOm"]</h6><p>@L["CMP_ScSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpScOmChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisScorecard"]</span></p>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["SC_RollupBySoc"]</h6><p>@L["CMP_ScSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpScSocChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisScorecard"]</span></p>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["SC_RollupByOd"]</h6><p>@L["CMP_ScSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpScOdChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisScorecard"]</span></p>
+    </div>
+</div>
+
+<div class="d-flex align-items-center gap-2 mb-3" data-cmp-groups="retention">
     <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.55 0.17 145),oklch(0.7 0.14 155));border-radius:2px"></div>
     <h5 class="mb-0 fw-bold">@L["Comparisons_RetentionSection"]</h5>
 </div>
-<div class="chart-card mb-4">
+<div class="chart-card mb-4" data-cmp-groups="retention">
     <div class="chart-header"><h6>@L["Chart_RetentionMilestonesCompare"]</h6><p>@L["CMP_RetentionMilestonesSub"]</p></div>
     <div class="chart-body">
         <canvas id="cmpRetentionChart"></canvas>
@@ -390,11 +553,11 @@
     <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisRetention"]</span></p>
 </div>
 
-<div class="d-flex align-items-center gap-2 mb-3">
+<div class="d-flex align-items-center gap-2 mb-3" data-cmp-groups="exit drivers">
     <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.55 0.14 300),oklch(0.7 0.12 320));border-radius:2px"></div>
     <h5 class="mb-0 fw-bold">@L["Comparisons_ExitSection"]</h5>
 </div>
-<div class="charts-grid mb-4">
+<div class="charts-grid mb-4" data-cmp-groups="exit">
     <div class="chart-card">
         <div class="chart-header"><h6>@L["Chart_ExitReasonsCompare"]</h6><p>@L["CMP_ExitReasonsSub"]</p></div>
         <div class="chart-body">
@@ -412,23 +575,44 @@
     </div>
 </div>
 
-<div class="d-flex align-items-center gap-2 mb-3">
+<div class="chart-card mb-4" id="cmpExitDriversCard" data-cmp-groups="drivers">
+    <div class="chart-header"><h6>@L["Chart_ExitDriversCompare"]</h6><p>@L["CMP_ExitDriversSub"]</p></div>
+    <div class="chart-body" style="height:440px">
+        <canvas id="cmpExitDriversChart"></canvas>
+    </div>
+    <div class="table-responsive mt-3">
+        <table class="table table-sm mb-0" style="font-size:13px">
+            <thead style="background:var(--bg-2)">
+                <tr>
+                    <th class="px-3 py-2">@L["CMP_DriverCol"]</th>
+                    <th class="px-3 py-2 text-center">A %</th>
+                    <th class="px-3 py-2 text-center">B %</th>
+                    <th class="px-3 py-2 text-center">@L["CMP_ChangeAB"]</th>
+                </tr>
+            </thead>
+            <tbody id="cmpDriversBody"></tbody>
+        </table>
+    </div>
+    <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisExitDrivers"]</span></p>
+</div>
+
+<div class="d-flex align-items-center gap-2 mb-3" data-cmp-groups="turnover ninety">
     <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 25),oklch(0.6 0.16 25));border-radius:2px"></div>
     <h5 class="mb-0 fw-bold">@L["Comparisons_StoreBreakdown"]</h5>
     <span class="cmp-table-hint">@L["Comparisons_StoreBreakdownHint"]</span>
 </div>
-<div class="chart-card mb-4 p-0" style="overflow:hidden" id="cmpTableCard">
+<div class="chart-card mb-4 p-0" style="overflow:hidden" id="cmpTableCard" data-cmp-groups="turnover ninety">
     <div class="table-responsive" style="max-height:420px;overflow-y:auto">
         <table class="table table-hover mb-0" style="font-size:13px">
             <thead style="background:var(--bg-2);position:sticky;top:0;z-index:1">
                 <tr>
                     <th class="cmp-sort px-3 py-2" data-col="store" style="cursor:pointer">@L["Common_StoreName"] <i class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
-                    <th class="cmp-sort px-3 py-2 text-center" data-col="ta" style="cursor:pointer">@L["CMP_TurnoverA"] <i class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
-                    <th class="cmp-sort px-3 py-2 text-center" data-col="tb" style="cursor:pointer">@L["CMP_TurnoverB"] <i class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
-                    <th class="cmp-sort px-3 py-2 text-center" data-col="dt" style="cursor:pointer" title="@L["CMP_TurnoverDiffTitle"]">@L["CMP_ChangeAB"] <i class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
-                    <th class="cmp-sort px-3 py-2 text-center" data-col="na" style="cursor:pointer">@L["CMP_NinetyA"] <i class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
-                    <th class="cmp-sort px-3 py-2 text-center" data-col="nb" style="cursor:pointer">@L["CMP_NinetyB"] <i class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
-                    <th class="cmp-sort px-3 py-2 text-center" data-col="dn" style="cursor:pointer" title="@L["CMP_NinetyDiffTitle"]">@L["CMP_ChangeAB"] <i class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
+                    <th class="cmp-sort cmp-col-t px-3 py-2 text-center" data-col="ta" style="cursor:pointer">@L["CMP_TurnoverA"] <i class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
+                    <th class="cmp-sort cmp-col-t px-3 py-2 text-center" data-col="tb" style="cursor:pointer">@L["CMP_TurnoverB"] <i class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
+                    <th class="cmp-sort cmp-col-t px-3 py-2 text-center" data-col="dt" style="cursor:pointer" title="@L["CMP_TurnoverDiffTitle"]">@L["CMP_ChangeAB"] <i class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
+                    <th class="cmp-sort cmp-col-n px-3 py-2 text-center" data-col="na" style="cursor:pointer">@L["CMP_NinetyA"] <i class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
+                    <th class="cmp-sort cmp-col-n px-3 py-2 text-center" data-col="nb" style="cursor:pointer">@L["CMP_NinetyB"] <i class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
+                    <th class="cmp-sort cmp-col-n px-3 py-2 text-center" data-col="dn" style="cursor:pointer" title="@L["CMP_NinetyDiffTitle"]">@L["CMP_ChangeAB"] <i class="bi bi-arrow-down-up text-muted" style="font-size:10px"></i></th>
                 </tr>
             </thead>
             <tbody id="cmpTableBody">
@@ -449,8 +633,8 @@
 
 const cmpL = document.getElementById('cmpKpiGrid').dataset;
 const panels = {
-    A: { year: null, months: [], store: '', om: '', oc: '', soc: '', od: '', yearMonthsMap: {} },
-    B: { year: null, months: [], store: '', om: '', oc: '', soc: '', od: '', yearMonthsMap: {} }
+    A: { year: null, months: [], store: '', om: '', oc: '', soc: '', od: '', job: '', yearMonthsMap: {} },
+    B: { year: null, months: [], store: '', om: '', oc: '', soc: '', od: '', job: '', yearMonthsMap: {} }
 };
 
 function cmpMonthShortName(m) { return new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' }); }
@@ -467,6 +651,7 @@ function cmpBuildQuery(side) {
     if (p.oc)    q.set('oc', p.oc);
     if (p.soc)   q.set('soc', p.soc);
     if (p.od)    q.set('od', p.od);
+    if (p.job)   q.set('jobs', p.job);
     return q.toString();
 }
 
@@ -516,11 +701,12 @@ function cmpCreateCombobox({ inputId, panelId, onSelect }) {
 
 const combos = {};
 ['A', 'B'].forEach(side => {
-    combos[`store${side}`] = cmpCreateCombobox({ inputId: `cmpStoreInput${side}`, panelId: `cmpStorePanel${side}`, onSelect: v => { panels[side].store = v; cmpRefreshAll(); } });
-    combos[`om${side}`]    = cmpCreateCombobox({ inputId: `cmpOmInput${side}`,    panelId: `cmpOmPanel${side}`,    onSelect: v => { panels[side].om    = v; cmpRefreshAll(); } });
-    combos[`oc${side}`]    = cmpCreateCombobox({ inputId: `cmpOcInput${side}`,    panelId: `cmpOcPanel${side}`,    onSelect: v => { panels[side].oc    = v; cmpRefreshAll(); } });
-    combos[`soc${side}`]   = cmpCreateCombobox({ inputId: `cmpSocInput${side}`,   panelId: `cmpSocPanel${side}`,   onSelect: v => { panels[side].soc   = v; cmpRefreshAll(); } });
-    combos[`od${side}`]    = cmpCreateCombobox({ inputId: `cmpOdInput${side}`,    panelId: `cmpOdPanel${side}`,    onSelect: v => { panels[side].od    = v; cmpRefreshAll(); } });
+    combos[`store${side}`] = cmpCreateCombobox({ inputId: `cmpStoreInput${side}`, panelId: `cmpStorePanel${side}`, onSelect: v => { panels[side].store = v; cmpMarkStale(); } });
+    combos[`om${side}`]    = cmpCreateCombobox({ inputId: `cmpOmInput${side}`,    panelId: `cmpOmPanel${side}`,    onSelect: v => { panels[side].om    = v; cmpMarkStale(); } });
+    combos[`oc${side}`]    = cmpCreateCombobox({ inputId: `cmpOcInput${side}`,    panelId: `cmpOcPanel${side}`,    onSelect: v => { panels[side].oc    = v; cmpMarkStale(); } });
+    combos[`soc${side}`]   = cmpCreateCombobox({ inputId: `cmpSocInput${side}`,   panelId: `cmpSocPanel${side}`,   onSelect: v => { panels[side].soc   = v; cmpMarkStale(); } });
+    combos[`od${side}`]    = cmpCreateCombobox({ inputId: `cmpOdInput${side}`,    panelId: `cmpOdPanel${side}`,    onSelect: v => { panels[side].od    = v; cmpMarkStale(); } });
+    combos[`job${side}`]   = cmpCreateCombobox({ inputId: `cmpJobInput${side}`,   panelId: `cmpJobPanel${side}`,   onSelect: v => { panels[side].job   = v; cmpMarkStale(); } });
 });
 
 /* Months multi-select ---------------------------------------------------- */
@@ -562,7 +748,7 @@ function cmpOnMonthsChanged(side) {
     cmpMonthsDebounce = setTimeout(async () => {
         if (!panels[side].months.length) return;
         await cmpLoadDependentLists(side);
-        await cmpRefreshAll();
+        cmpMarkStale();
     }, 250);
 }
 
@@ -598,7 +784,7 @@ document.addEventListener('click', (e) => {
         combos[`store${side}`].setValue(''); combos[`om${side}`].setValue(''); combos[`oc${side}`].setValue(''); combos[`soc${side}`].setValue(''); combos[`od${side}`].setValue('');
         cmpBuildMonthsOptions(side); cmpRenderMonthsChips(side);
         await cmpLoadDependentLists(side);
-        await cmpRefreshAll();
+        cmpMarkStale();
     });
 });
 
@@ -611,12 +797,43 @@ document.getElementById('cmpCopyToLastYear').addEventListener('click', async () 
     document.getElementById('cmpYearB').value = targetYear;
     const availableB = b.yearMonthsMap[targetYear] || [];
     b.months = a.months.filter(m => availableB.includes(m));
-    b.store = a.store; b.om = a.om; b.oc = a.oc; b.soc = a.soc; b.od = a.od;
-    combos.storeB.setValue(a.store); combos.omB.setValue(a.om); combos.ocB.setValue(a.oc); combos.socB.setValue(a.soc); combos.odB.setValue(a.od);
+    b.store = a.store; b.om = a.om; b.oc = a.oc; b.soc = a.soc; b.od = a.od; b.job = a.job;
+    combos.storeB.setValue(a.store); combos.omB.setValue(a.om); combos.ocB.setValue(a.oc); combos.socB.setValue(a.soc); combos.odB.setValue(a.od); combos.jobB.setValue(a.job);
     cmpBuildMonthsOptions('B'); cmpRenderMonthsChips('B');
     await cmpLoadDependentLists('B');
-    await cmpRefreshAll();
+    cmpMarkStale();
 });
+
+/* Job titles — one request for both sides (not period-dependent), kept for Reset Filters. */
+let cmpJobTitles = null;
+async function cmpLoadJobTitles() {
+    if (!cmpJobTitles) cmpJobTitles = await fetchJson('/api/dashboard/job-titles');
+    combos.jobA.setOptions(cmpJobTitles); combos.jobB.setOptions(cmpJobTitles);
+}
+
+/* Quick picks for side B, relative to A: the month / quarter before A's first month, or A's months a year earlier. */
+async function cmpApplyPreset(kind) {
+    const a = panels.A, b = panels.B;
+    if (!a.months.length) { cmpPopup(cmpL.needMonths); return; }
+    const aMonths = a.months.slice().sort((x, y) => x - y);
+    let year, months;
+    if (kind === 'lastYear') { year = a.year - 1; months = aMonths; }
+    else {
+        const list = []; let y = a.year, m = aMonths[0];
+        for (let i = 0; i < (kind === 'quarter' ? 3 : 1); i++) { m--; if (m === 0) { m = 12; y--; } list.push({ y, m }); }
+        year = list[0].y;                                   // a quarter that crosses a year end keeps the latest year's months
+        months = list.filter(x => x.y === year).map(x => x.m);
+    }
+    const available = a.yearMonthsMap[year] || [];
+    months = months.filter(m => available.includes(m)).sort((x, y) => x - y);
+    if (!months.length) { cmpPopup(cmpL.presetNoData); return; }
+    b.year = year; b.months = months;
+    document.getElementById('cmpYearB').value = year;
+    cmpBuildMonthsOptions('B'); cmpRenderMonthsChips('B');
+    await cmpLoadDependentLists('B');
+    cmpMarkStale();
+}
+document.querySelectorAll('.cmp-preset').forEach(btn => btn.addEventListener('click', () => cmpApplyPreset(btn.dataset.preset)));
 
 /* Store / OM / OC option lists (scoped to each panel's latest month) ---- */
 async function cmpLoadDependentLists(side) {
@@ -655,7 +872,8 @@ async function cmpInit() {
         // picked before hitting Reset stayed selected (and kept the Store
         // Breakdown table hidden, since that table only shows when neither
         // panel has a store).
-        panels[side].store = ''; panels[side].om = ''; panels[side].oc = ''; panels[side].soc = ''; panels[side].od = '';
+        panels[side].store = ''; panels[side].om = ''; panels[side].oc = ''; panels[side].soc = ''; panels[side].od = ''; panels[side].job = '';
+        combos[`job${side}`].setValue('');
         combos[`store${side}`].setValue(''); combos[`om${side}`].setValue(''); combos[`oc${side}`].setValue(''); combos[`soc${side}`].setValue(''); combos[`od${side}`].setValue('');
     }
 
@@ -678,41 +896,94 @@ async function cmpInit() {
     cmpBuildMonthsOptions('A'); cmpRenderMonthsChips('A');
     cmpBuildMonthsOptions('B'); cmpRenderMonthsChips('B');
 
-    await Promise.all([cmpLoadDependentLists('A'), cmpLoadDependentLists('B')]);
-    await cmpRefreshAll();
+    await Promise.all([cmpLoadDependentLists('A'), cmpLoadDependentLists('B'), cmpLoadJobTitles()]);
+    cmpResetResults();   // nothing is loaded until the user picks what to compare and presses Compare
 }
 
 /* Data fetching + rendering ----------------------------------------------- */
-async function cmpFetchSide(side) {
+// Unlike fetchJson (which returns [] on an error), a failed request here rejects so the page can tell the user.
+async function cmpGet(url) {
+    const r = await fetch(url);
+    if (r.status === 403) throw new Error('403');
+    if (!r.ok) throw new Error(String(r.status));
+    return r.json();
+}
+
+/* Only the requests the chosen group needs — the rest of the page's data is never loaded. */
+async function cmpFetchSide(side, group) {
     const q = cmpBuildQuery(side);
     const p = panels[side];
-    const retentionQ = new URLSearchParams();
-    const minMonth = Math.min(...p.months), maxMonth = Math.max(...p.months);
-    retentionQ.set('fromMonth', minMonth); retentionQ.set('fromYear', p.year);
-    retentionQ.set('toMonth', maxMonth); retentionQ.set('toYear', p.year);
-    retentionQ.set('months', p.months.join(','));
-    if (p.store) retentionQ.set('store', p.store);
-    if (p.om) retentionQ.set('om', p.om);
-    if (p.oc) retentionQ.set('oc', p.oc);
-    if (p.soc) retentionQ.set('soc', p.soc);
-    if (p.od) retentionQ.set('od', p.od);
-    const exitQ = new URLSearchParams(q);
-    const [kpi, ninety, retention, exitReasons, exitSentiment] = await Promise.all([
-        fetchJson(`/api/dashboard/kpis?${q}`),
-        fetchJson(`/api/ninety-day-turnover/kpi?${q}`),
-        fetchJson(`/api/retention/milestones?${retentionQ}`),
-        fetchJson(`/api/exit-interviews/reasons?${exitQ}`),
-        fetchJson(`/api/exit-interviews/sentiment-summary?${exitQ}`)
-    ]);
-    let byStore = [], ninetyByStore = [];
-    if (!panels[side].store) {
-        [byStore, ninetyByStore] = await Promise.all([
-            fetchJson(`/api/dashboard/store-comparison?${q}`),
-            fetchJson(`/api/ninety-day-turnover/store-comparison?${q}`)
-        ]);
+    const data = { kpi: null, ninety: null, byStore: [], ninetyByStore: [], retention: [], exitReasons: [], exitSentiment: null, exitDrivers: [], bkJob: [], bkTenure: [], bkPayroll: [], scorecard: null };
+    const jobs = [];
+    const load = (key, url) => jobs.push(cmpGet(url).then(v => { data[key] = v; }));
+    const companyWide = !p.store;   // the per-store breakdown only exists when no single store is picked
+
+    switch (group) {
+        case 'turnover':
+        case 'workforce':
+            load('kpi', `/api/dashboard/kpis?${q}`);
+            if (companyWide) load('byStore', `/api/dashboard/store-comparison?${q}`);
+            break;
+        case 'ninety':
+            load('ninety', `/api/ninety-day-turnover/kpi?${q}`);
+            if (companyWide) load('ninetyByStore', `/api/ninety-day-turnover/store-comparison?${q}`);
+            break;
+        case 'retention': {
+            const retentionQ = new URLSearchParams();
+            const minMonth = Math.min(...p.months), maxMonth = Math.max(...p.months);
+            retentionQ.set('fromMonth', minMonth); retentionQ.set('fromYear', p.year);
+            retentionQ.set('toMonth', maxMonth); retentionQ.set('toYear', p.year);
+            retentionQ.set('months', p.months.join(','));
+            if (p.store) retentionQ.set('store', p.store);
+            if (p.om) retentionQ.set('om', p.om);
+            if (p.oc) retentionQ.set('oc', p.oc);
+            if (p.soc) retentionQ.set('soc', p.soc);
+            if (p.od) retentionQ.set('od', p.od);
+            load('retention', `/api/retention/milestones?${retentionQ}`);
+            break;
+        }
+        case 'exit':
+            load('exitReasons', `/api/exit-interviews/reasons?${q}`);
+            load('exitSentiment', `/api/exit-interviews/sentiment-summary?${q}`);
+            break;
+        case 'drivers':
+            load('exitDrivers', `/api/exit-interviews/engagement-drivers?${q}`);
+            break;
+        case 'breakdown':
+            load('bkJob', `/api/dashboard/turnover-by-job-title?${q}`);
+            load('bkTenure', `/api/dashboard/turnover-by-tenure?${q}`);
+            load('bkPayroll', `/api/dashboard/turnover-by-payroll-group?${q}`);
+            break;
+        case 'scorecard': {
+            // The scorecard only knows year, months and the OM/OC/SOC/OD line — no store or job filter.
+            const sq = new URLSearchParams();
+            sq.set('year', p.year); sq.set('months', p.months.join(','));
+            ['om', 'oc', 'soc', 'od'].forEach(f => { if (p[f]) sq.set(f, p[f]); });
+            load('scorecard', `/api/scorecard/rollup?${sq}`);
+            break;
+        }
     }
-    return { kpi, ninety, byStore, ninetyByStore, retention, exitReasons, exitSentiment };
+    await Promise.all(jobs);
+    return data;
 }
+
+/* Period-length normalization ---------------------------------------------
+   Counts (headcount, hires, resignations) are summed over the selected months, so a 12-month side
+   always looks "bigger" than a 1-month side. When the two sides cover a different number of
+   months those counts are shown as monthly averages. Turnover % and 90-day % keep the portal's
+   usual definition (period totals, with the colour rules built on it) — the notice says so. */
+let cmpNorm = { A: 1, B: 1, uneven: false };
+function cmpUpdateNorm(group) {
+    cmpNorm = { A: Math.max(1, panels.A.months.length), B: Math.max(1, panels.B.months.length), uneven: false };
+    cmpNorm.uneven = cmpNorm.A !== cmpNorm.B;
+    const note = document.getElementById('cmpPeriodNotice');
+    const showNote = cmpNorm.uneven && ['turnover', 'workforce', 'ninety', 'breakdown'].includes(group);
+    note.hidden = !showNote;
+    if (showNote)
+        document.getElementById('cmpPeriodNoticeText').textContent = cmpL.periodNotice.replace('{0}', cmpNorm.A).replace('{1}', cmpNorm.B);
+}
+const cmpPerMonth = (side, v) => cmpNorm.uneven ? Math.round(v / cmpNorm[side] * 10) / 10 : v;
+const cmpCount = v => cmpNorm.uneven ? Number(v).toFixed(1) : v;
 
 function cmpDeltaBadge(a, b, lowerIsBetter) {
     const delta = a - b;
@@ -724,15 +995,21 @@ function cmpDeltaBadge(a, b, lowerIsBetter) {
     return `<span class="cmp-kpi-delta ${cls}"><i class="bi ${icon}"></i>${sign}${delta.toFixed(1)} ${cmpL.deltaSuffix}</span>`;
 }
 
-function cmpRenderKpis(dataA, dataB) {
-    const metrics = [
-        { label: cmpL.kpiHeadcount,     desc: cmpL.kpiHeadcountDesc,     a: dataA.kpi.totalHeadcount,      b: dataB.kpi.totalHeadcount,      fmt: v => v,                  lowerIsBetter: null },
-        { label: cmpL.kpiNewHires,      desc: cmpL.kpiNewHiresDesc,      a: dataA.kpi.newHires,            b: dataB.kpi.newHires,            fmt: v => v,                  lowerIsBetter: false },
-        { label: cmpL.kpiResignations,  desc: cmpL.kpiResignationsDesc,  a: dataA.kpi.totalResignations,   b: dataB.kpi.totalResignations,   fmt: v => v,                  lowerIsBetter: true },
-        { label: cmpL.kpiTurnover,      desc: cmpL.kpiTurnoverDesc,      a: dataA.kpi.turnoverRate,        b: dataB.kpi.turnoverRate,        fmt: v => v.toFixed(1) + '%', lowerIsBetter: true },
-        { label: cmpL.kpiEarlyLeavers,  desc: cmpL.kpiEarlyLeaversDesc,  a: dataA.ninety.earlyLeavers,     b: dataB.ninety.earlyLeavers,     fmt: v => v,                  lowerIsBetter: true },
-        { label: cmpL.kpiNinetyRate,    desc: cmpL.kpiNinetyRateDesc,    a: dataA.ninety.rate,             b: dataB.ninety.rate,             fmt: v => v.toFixed(1) + '%', lowerIsBetter: true }
+function cmpRenderKpis(dataA, dataB, group) {
+    const pm = cmpPerMonth;
+    const tag = (label, suffix) => cmpNorm.uneven ? `${label} (${suffix})` : label;
+    const all = [
+        { groups: ['turnover', 'workforce'], label: tag(cmpL.kpiHeadcount, cmpL.avgMonthly),  desc: cmpL.kpiHeadcountDesc,    a: () => pm('A', dataA.kpi.totalHeadcount),    b: () => pm('B', dataB.kpi.totalHeadcount),    fmt: cmpCount,                lowerIsBetter: null },
+        { groups: ['turnover', 'workforce'], label: tag(cmpL.kpiNewHires, cmpL.perMonth),     desc: cmpL.kpiNewHiresDesc,     a: () => pm('A', dataA.kpi.newHires),          b: () => pm('B', dataB.kpi.newHires),          fmt: cmpCount,                lowerIsBetter: false },
+        { groups: ['turnover', 'workforce'], label: tag(cmpL.kpiResignations, cmpL.perMonth), desc: cmpL.kpiResignationsDesc, a: () => pm('A', dataA.kpi.totalResignations), b: () => pm('B', dataB.kpi.totalResignations), fmt: cmpCount,                lowerIsBetter: true },
+        { groups: ['turnover'],              label: cmpL.kpiTurnover,                         desc: cmpL.kpiTurnoverDesc,     a: () => dataA.kpi.turnoverRate,               b: () => dataB.kpi.turnoverRate,               fmt: v => v.toFixed(1) + '%', lowerIsBetter: true },
+        { groups: ['ninety'],                label: tag(cmpL.kpiEarlyLeavers, cmpL.perMonth), desc: cmpL.kpiEarlyLeaversDesc, a: () => pm('A', dataA.ninety.earlyLeavers),   b: () => pm('B', dataB.ninety.earlyLeavers),   fmt: cmpCount,                lowerIsBetter: true },
+        { groups: ['ninety'],                label: cmpL.kpiNinetyRate,                       desc: cmpL.kpiNinetyRateDesc,   a: () => dataA.ninety.rate,                    b: () => dataB.ninety.rate,                    fmt: v => v.toFixed(1) + '%', lowerIsBetter: true },
+        { groups: ['scorecard'],             label: cmpL.kpiScTurnover,                       desc: cmpL.kpiScTurnoverDesc,   a: () => dataA.scorecard.averageTurnoverRate,  b: () => dataB.scorecard.averageTurnoverRate,  fmt: v => v.toFixed(1) + '%', lowerIsBetter: true },
+        { groups: ['scorecard'],             label: cmpL.kpiScFlagged,                        desc: cmpL.kpiScFlaggedDesc,    a: () => cmpFlaggedOverall(dataA.scorecard),   b: () => cmpFlaggedOverall(dataB.scorecard),   fmt: v => v.toFixed(1) + '%', lowerIsBetter: true }
     ];
+    // Values are read only for the cards of the chosen group (the other groups' data was never loaded).
+    const metrics = all.filter(m => m.groups.includes(group)).map(m => ({ ...m, a: m.a(), b: m.b() }));
 
     document.getElementById('cmpKpiGrid').innerHTML = metrics.map(m => `
         <div class="cmp-kpi-card">
@@ -803,33 +1080,34 @@ function cmpMoverInsightCard(dataA, dataB) {
     return cmpInsightCardHtml(icon, color, title, desc);
 }
 
-function cmpRenderInsight(dataA, dataB) {
-    document.getElementById('cmpInsightContainer').innerHTML =
-        cmpInsightCard(cmpL.metricTurnoverRate, dataA.kpi.turnoverRate, dataB.kpi.turnoverRate) +
-        cmpInsightCard(cmpL.metricNinetyRate, dataA.ninety.rate, dataB.ninety.rate) +
-        cmpMoverInsightCard(dataA, dataB);
+function cmpRenderInsight(dataA, dataB, group) {
+    document.getElementById('cmpInsightContainer').innerHTML = group === 'turnover'
+        ? cmpInsightCard(cmpL.metricTurnoverRate, dataA.kpi.turnoverRate, dataB.kpi.turnoverRate) + cmpMoverInsightCard(dataA, dataB)
+        : cmpInsightCard(cmpL.metricNinetyRate, dataA.ninety.rate, dataB.ninety.rate);
 }
 
 let cmpTurnoverChart, cmpNinetyChart;
 let cmpWorkforceChart, cmpResignationsChart, cmpRetentionChart, cmpExitReasonsChart, cmpExitSentimentChart;
-function cmpBuildSeries(dataA, dataB, storeKey, overallA, overallB, metricKey = 'turnoverRate') {
+function cmpBuildSeries(dataA, dataB, storeKey, overallA, overallB, metricKey = 'turnoverRate', perMonth = false) {
     const allA = !panels.A.store, allB = !panels.B.store;
     if (allA && allB) {
         const mapA = {}, mapB = {};
-        const valueOf = r => metricKey === 'turnoverRate'
+        const base = r => metricKey === 'turnoverRate'
             ? (r.value ?? r.turnoverRate)
             : (r[metricKey] ?? 0);
-        (dataA[storeKey] || []).forEach(r => mapA[r.label ?? r.storeName] = valueOf(r));
-        (dataB[storeKey] || []).forEach(r => mapB[r.label ?? r.storeName] = valueOf(r));
+        const valueOf = (r, side) => perMonth ? cmpPerMonth(side, base(r)) : base(r);
+        (dataA[storeKey] || []).forEach(r => mapA[r.label ?? r.storeName] = valueOf(r, 'A'));
+        (dataB[storeKey] || []).forEach(r => mapB[r.label ?? r.storeName] = valueOf(r, 'B'));
         const stores = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)]))
             .sort((s1, s2) => ((mapA[s2] || 0) + (mapB[s2] || 0)) - ((mapA[s1] || 0) + (mapB[s1] || 0)))
             .slice(0, 8);
-        return { labels: stores, seriesA: stores.map(s => mapA[s] || 0), seriesB: stores.map(s => mapB[s] || 0) };
+        const r1 = v => Math.round((v || 0) * 10) / 10;
+        return { labels: stores, seriesA: stores.map(s => r1(mapA[s])), seriesB: stores.map(s => r1(mapB[s])) };
     }
     return { labels: [cmpL.overall], seriesA: [overallA], seriesB: [overallB] };
 }
 
-function cmpRenderCharts(dataA, dataB) {
+function cmpRenderTurnoverChart(dataA, dataB) {
     const t = cmpBuildSeries(dataA, dataB, 'byStore', dataA.kpi.turnoverRate, dataB.kpi.turnoverRate);
     cmpTurnoverChart = mkChart(cmpTurnoverChart, 'cmpTurnoverChart', {
         type: 'bar',
@@ -845,6 +1123,9 @@ function cmpRenderCharts(dataA, dataB) {
         }
     });
 
+}
+
+function cmpRenderNinetyChart(dataA, dataB) {
     const n = cmpBuildSeries(dataA, dataB, 'ninetyByStore', dataA.ninety.rate, dataB.ninety.rate, 'rate');
     cmpNinetyChart = mkChart(cmpNinetyChart, 'cmpNinetyChart', {
         type: 'bar',
@@ -860,7 +1141,12 @@ function cmpRenderCharts(dataA, dataB) {
         }
     });
 
-    const workforce = cmpBuildSeries(dataA, dataB, 'byStore', dataA.kpi.totalHeadcount, dataB.kpi.totalHeadcount, 'headcount');
+}
+
+function cmpRenderWorkforceCharts(dataA, dataB) {
+    // Summed headcount normally; the per-store monthly average when the two sides cover a different number of months.
+    const workforce = cmpBuildSeries(dataA, dataB, 'byStore', cmpPerMonth('A', dataA.kpi.totalHeadcount), cmpPerMonth('B', dataB.kpi.totalHeadcount),
+        cmpNorm.uneven ? 'avgHeadcount' : 'headcount');
     cmpWorkforceChart = mkChart(cmpWorkforceChart, 'cmpWorkforceChart', {
         type: 'bar',
         data: { labels: workforce.labels, datasets: [
@@ -874,7 +1160,7 @@ function cmpRenderCharts(dataA, dataB) {
         }
     });
 
-    const resignations = cmpBuildSeries(dataA, dataB, 'byStore', dataA.kpi.totalResignations, dataB.kpi.totalResignations, 'resignations');
+    const resignations = cmpBuildSeries(dataA, dataB, 'byStore', cmpPerMonth('A', dataA.kpi.totalResignations), cmpPerMonth('B', dataB.kpi.totalResignations), 'resignations', true);
     cmpResignationsChart = mkChart(cmpResignationsChart, 'cmpResignationsChart', {
         type: 'bar',
         data: { labels: resignations.labels, datasets: [
@@ -888,6 +1174,9 @@ function cmpRenderCharts(dataA, dataB) {
         }
     });
 
+}
+
+function cmpRenderRetentionChart(dataA, dataB) {
     const retentionLabels = Array.from(new Set([
         ...(dataA.retention || []).map(x => x.label),
         ...(dataB.retention || []).map(x => x.label)
@@ -910,21 +1199,28 @@ function cmpRenderCharts(dataA, dataB) {
         }
     });
 
-    const reasonMaps = [dataA.exitReasons || [], dataB.exitReasons || []].map(rows =>
-        Object.fromEntries(rows.map(x => [x.label, x.value])));
+}
+
+function cmpRenderExitCharts(dataA, dataB) {
+    // Share of each side's own responses (a count would just reflect how many interviews each period had).
+    const reasonRows = [dataA.exitReasons || [], dataB.exitReasons || []];
+    const reasonTotals = reasonRows.map(rows => rows.reduce((s, x) => s + (x.value || 0), 0));
+    const reasonMaps = reasonRows.map(rows => Object.fromEntries(rows.map(x => [x.label, x.value])));
+    const share = (i, label) => reasonTotals[i] > 0 ? Math.round((reasonMaps[i][label] || 0) / reasonTotals[i] * 1000) / 10 : 0;
     const reasons = Array.from(new Set([
         ...Object.keys(reasonMaps[0]), ...Object.keys(reasonMaps[1])
-    ])).sort((a, b) => (reasonMaps[0][b] || 0) + (reasonMaps[1][b] || 0) - (reasonMaps[0][a] || 0) - (reasonMaps[1][a] || 0)).slice(0, 8);
+    ])).sort((a, b) => (share(0, b) + share(1, b)) - (share(0, a) + share(1, a))).slice(0, 8);
     cmpExitReasonsChart = mkChart(cmpExitReasonsChart, 'cmpExitReasonsChart', {
         type: 'bar',
         data: { labels: reasons, datasets: [
-            { label: cmpLabel('A'), data: reasons.map(x => reasonMaps[0][x] || 0), backgroundColor: ChartColors.SERIES.SECONDARY, borderRadius: 4 },
-            { label: cmpLabel('B'), data: reasons.map(x => reasonMaps[1][x] || 0), backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
+            { label: cmpLabel('A'), data: reasons.map(x => share(0, x)), backgroundColor: ChartColors.SERIES.SECONDARY, borderRadius: 4 },
+            { label: cmpLabel('B'), data: reasons.map(x => share(1, x)), backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
         ] },
         options: {
             indexAxis: 'y',
             interaction: { mode: 'index', intersect: true },
-            plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.formattedValue}` } } }
+            plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.formattedValue}% (${reasonMaps[c.datasetIndex][reasons[c.dataIndex]] || 0})` } } },
+            scales: { x: { ticks: { callback: v => v + '%' } } }
         }
     });
 
@@ -948,6 +1244,125 @@ function cmpRenderCharts(dataA, dataB) {
         `<span>${sapEscape(cmpLabel('B'))}: ${dataB.exitSentiment?.totalResponses || 0} ${sapEscape(cmpL.exitResponses)}</span>`;
 }
 
+/* Exit Interview drivers — positive-answer % per question, A vs B, ordered by change (A − B), weakest first. */
+let cmpExitDriversChart;
+const CMP_DRIVER_MIN_RESPONSES = 10;
+function cmpRenderDrivers(dataA, dataB) {
+    const mapOf = rows => Object.fromEntries((rows || []).map(d => [d.label, d]));
+    const mA = mapOf(dataA.exitDrivers), mB = mapOf(dataB.exitDrivers);
+    const rows = Array.from(new Set([...Object.keys(mA), ...Object.keys(mB)]))
+        .map(label => {
+            const a = mA[label] || { positivePercent: 0, totalResponses: 0 }, b = mB[label] || { positivePercent: 0, totalResponses: 0 };
+            return { label, a: a.positivePercent, b: b.positivePercent, na: a.totalResponses, nb: b.totalResponses,
+                     low: a.totalResponses < CMP_DRIVER_MIN_RESPONSES || b.totalResponses < CMP_DRIVER_MIN_RESPONSES };
+        })
+        .filter(r => r.na > 0 || r.nb > 0)
+        .sort((x, y) => (x.a - x.b) - (y.a - y.b));
+
+    const tbody = document.getElementById('cmpDriversBody');
+    if (!rows.length) {
+        cmpExitDriversChart = mkChart(cmpExitDriversChart, 'cmpExitDriversChart', { type: 'bar', data: { labels: [], datasets: [] } });
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-3 text-muted">${cmpL.noDataShort}</td></tr>`;
+        return;
+    }
+
+    cmpExitDriversChart = mkChart(cmpExitDriversChart, 'cmpExitDriversChart', {
+        type: 'bar',
+        data: { labels: rows.map(r => r.label), datasets: [
+            { label: cmpLabel('A'), data: rows.map(r => r.a), backgroundColor: ChartColors.SERIES.SECONDARY, borderRadius: 4 },
+            { label: cmpLabel('B'), data: rows.map(r => r.b), backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
+        ] },
+        options: {
+            indexAxis: 'y',
+            interaction: { mode: 'index', intersect: true },
+            plugins: { legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: c => { const r = rows[c.dataIndex]; return ` ${c.dataset.label}: ${c.formattedValue}% (${c.datasetIndex === 0 ? r.na : r.nb} ${cmpL.responsesShort})`; } } },
+                datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v > 0 ? v.toFixed(0) + '%' : '' } },
+            scales: { x: { min: 0, max: 100, ticks: { callback: v => v + '%' } } }
+        }
+    });
+
+    const ltr = v => `<span style="direction:ltr;unicode-bidi:isolate">${v > 0 ? '+' : ''}${v.toFixed(1)}</span>`;
+    tbody.innerHTML = rows.map(r => {
+        const d = r.a - r.b;
+        const color = Math.abs(d) < 0.05 ? 'var(--text-3)' : d > 0 ? 'var(--success)' : 'var(--danger)';
+        const title = r.low ? ` title="${sapEscape(cmpL.lowSample)}"` : '';
+        return `<tr class="${r.low ? 'cmp-driver-low' : ''}"${title}>
+            <td class="px-3 py-2 fw-semibold">${sapEscape(r.label)}</td>
+            <td class="px-3 py-2 text-center">${r.a.toFixed(1)}% <span class="text-muted">(${r.na})</span></td>
+            <td class="px-3 py-2 text-center">${r.b.toFixed(1)}% <span class="text-muted">(${r.nb})</span></td>
+            <td class="px-3 py-2 text-center fw-bold" style="color:${color}">${ltr(d)}</td>
+        </tr>`;
+    }).join('');
+}
+
+/* Grouped A/B bars used by the Turnover Breakdown and Scorecard topics. */
+const cmpExtraCharts = {};
+function cmpDrawBars(id, labels, seriesA, seriesB, { pct = false, tooltip } = {}) {
+    const fmt = v => pct ? v.toFixed(1) + '%' : (Number.isInteger(v) ? v : v.toFixed(1));
+    cmpExtraCharts[id] = mkChart(cmpExtraCharts[id], id, {
+        type: 'bar',
+        data: { labels, datasets: [
+            { label: cmpLabel('A'), data: seriesA, backgroundColor: ChartColors.SERIES.SECONDARY, borderRadius: 4 },
+            { label: cmpLabel('B'), data: seriesB, backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
+        ] },
+        options: {
+            interaction: { mode: 'index', intersect: true },
+            plugins: { legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: c => tooltip ? tooltip(c) : ` ${c.dataset.label}: ${fmt(c.parsed.y)}` } },
+                datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v > 0 ? fmt(v) : '' } },
+            scales: pct ? { y: { min: 0, ticks: { callback: v => v + '%' } } } : {}
+        }
+    });
+}
+
+/* Turnover Breakdown: resignations by job / tenure / payroll group (counts; monthly averages when the sides differ in length). */
+function cmpRenderBreakdown(dataA, dataB) {
+    const draw = (id, rowsA, rowsB, keepOrder) => {
+        const mapA = {}, mapB = {};
+        (rowsA || []).forEach(r => mapA[r.label] = cmpPerMonth('A', r.value));
+        (rowsB || []).forEach(r => mapB[r.label] = cmpPerMonth('B', r.value));
+        let labels = Array.from(new Set([...(rowsA || []).map(r => r.label), ...(rowsB || []).map(r => r.label)]));
+        if (!keepOrder) labels = labels.sort((x, y) => ((mapA[y] || 0) + (mapB[y] || 0)) - ((mapA[x] || 0) + (mapB[x] || 0))).slice(0, 8);
+        cmpDrawBars(id, labels, labels.map(l => mapA[l] || 0), labels.map(l => mapB[l] || 0));
+    };
+    draw('cmpBkJobChart', dataA.bkJob, dataB.bkJob, false);
+    draw('cmpBkTenureChart', dataA.bkTenure, dataB.bkTenure, true);   // tenure buckets keep their natural order
+    draw('cmpBkPayrollChart', dataA.bkPayroll, dataB.bkPayroll, false);
+}
+
+/* Scorecard: share of each supervisor's store leaders that are flagged (above-average turnover). */
+function cmpFlaggedOverall(sc) {
+    // Each level lists every leader once, so the level with the most leaders gives the company-wide share.
+    const levels = [sc.byOperationConsultant, sc.byOperationManager, sc.bySeniorOperationConsultant, sc.byOperationDirector].map(l => l || []);
+    const best = levels.reduce((m, l) => (l.reduce((s, r) => s + r.totalLeaders, 0) > m.reduce((s, r) => s + r.totalLeaders, 0) ? l : m), []);
+    const total = best.reduce((s, r) => s + r.totalLeaders, 0), flagged = best.reduce((s, r) => s + r.flaggedLeaders, 0);
+    return total > 0 ? flagged * 100 / total : 0;
+}
+function cmpRenderScorecard(dataA, dataB) {
+    const draw = (id, rowsA, rowsB) => {
+        const mapA = Object.fromEntries((rowsA || []).map(r => [r.name, r])), mapB = Object.fromEntries((rowsB || []).map(r => [r.name, r]));
+        const pctOf = (m, n) => m[n] ? Math.round(m[n].flaggedPercent * 10) / 10 : 0;
+        const labels = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)]))
+            .sort((x, y) => (pctOf(mapA, y) + pctOf(mapB, y)) - (pctOf(mapA, x) + pctOf(mapB, x))).slice(0, 8);
+        cmpDrawBars(id, labels, labels.map(n => pctOf(mapA, n)), labels.map(n => pctOf(mapB, n)), {
+            pct: true,
+            tooltip: c => { const r = (c.datasetIndex === 0 ? mapA : mapB)[labels[c.dataIndex]]; return ` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` + (r ? ` (${r.flaggedLeaders}/${r.totalLeaders})` : ''); }
+        });
+    };
+    draw('cmpScOcChart', dataA.scorecard.byOperationConsultant, dataB.scorecard.byOperationConsultant);
+    draw('cmpScOmChart', dataA.scorecard.byOperationManager, dataB.scorecard.byOperationManager);
+    draw('cmpScSocChart', dataA.scorecard.bySeniorOperationConsultant, dataB.scorecard.bySeniorOperationConsultant);
+    draw('cmpScOdChart', dataA.scorecard.byOperationDirector, dataB.scorecard.byOperationDirector);
+}
+
+function cmpRenderCharts(dataA, dataB, group) {
+    ({
+        turnover: cmpRenderTurnoverChart, ninety: cmpRenderNinetyChart, workforce: cmpRenderWorkforceCharts,
+        retention: cmpRenderRetentionChart, exit: cmpRenderExitCharts, breakdown: cmpRenderBreakdown, scorecard: cmpRenderScorecard,
+    })[group]?.(dataA, dataB);
+}
+
 let cmpTableRows = [];
 let cmpTableSortCol = 'store', cmpTableSortAsc = true;
 let cmpTurnoverColorRules = null, cmpNinetyColorRules = null;
@@ -959,7 +1374,7 @@ function cmpComputeTableRows(dataA, dataB) {
     dataA.ninetyByStore.forEach(r => ninetyA[r.label ?? r.storeName] = r.rate ?? r.value);
     dataB.ninetyByStore.forEach(r => ninetyB[r.label ?? r.storeName] = r.rate ?? r.value);
 
-    const stores = Array.from(new Set([...Object.keys(turnoverA), ...Object.keys(turnoverB)]));
+    const stores = Array.from(new Set([...Object.keys(turnoverA), ...Object.keys(turnoverB), ...Object.keys(ninetyA), ...Object.keys(ninetyB)]));
     return stores.map(s => {
         const ta = turnoverA[s], tb = turnoverB[s], na = ninetyA[s], nb = ninetyB[s];
         return {
@@ -970,8 +1385,10 @@ function cmpComputeTableRows(dataA, dataB) {
     });
 }
 
-function cmpRenderTable(dataA, dataB) {
+function cmpRenderTable(dataA, dataB, group) {
     const card = document.getElementById('cmpTableCard');
+    card.classList.toggle('cmp-g-turnover', group === 'turnover');
+    card.classList.toggle('cmp-g-ninety', group === 'ninety');
     if (panels.A.store || panels.B.store) { card.style.display = 'none'; return; }
     card.style.display = '';
 
@@ -1000,23 +1417,89 @@ function cmpRenderTableRows() {
     document.getElementById('cmpTableBody').innerHTML = rows.map(r => `
         <tr>
             <td class="px-3 py-2 fw-semibold">${sapEscape(r.store)}</td>
-            <td class="px-3 py-2 text-center">${rateBadge(cmpTurnoverColorRules, r.ta)}</td>
-            <td class="px-3 py-2 text-center">${rateBadge(cmpTurnoverColorRules, r.tb)}</td>
-            <td class="px-3 py-2 text-center">${ltrDelta(r.dt)}</td>
-            <td class="px-3 py-2 text-center">${rateBadge(cmpNinetyColorRules, r.na)}</td>
-            <td class="px-3 py-2 text-center">${rateBadge(cmpNinetyColorRules, r.nb)}</td>
-            <td class="px-3 py-2 text-center">${ltrDelta(r.dn)}</td>
+            <td class="cmp-col-t px-3 py-2 text-center">${rateBadge(cmpTurnoverColorRules, r.ta)}</td>
+            <td class="cmp-col-t px-3 py-2 text-center">${rateBadge(cmpTurnoverColorRules, r.tb)}</td>
+            <td class="cmp-col-t px-3 py-2 text-center">${ltrDelta(r.dt)}</td>
+            <td class="cmp-col-n px-3 py-2 text-center">${rateBadge(cmpNinetyColorRules, r.na)}</td>
+            <td class="cmp-col-n px-3 py-2 text-center">${rateBadge(cmpNinetyColorRules, r.nb)}</td>
+            <td class="cmp-col-n px-3 py-2 text-center">${ltrDelta(r.dn)}</td>
         </tr>`).join('');
 }
 
-async function cmpRefreshAll() {
-    if (!panels.A.months.length || !panels.B.months.length) return;
-    const [dataA, dataB] = await Promise.all([cmpFetchSide('A'), cmpFetchSide('B')]);
-    cmpRenderKpis(dataA, dataB);
-    cmpRenderInsight(dataA, dataB);
-    cmpRenderCharts(dataA, dataB);
-    cmpRenderTable(dataA, dataB);
+/* Compare button, popup and "results are out of date" handling ------------- */
+let cmpBusy = false, cmpHasResults = false;
+/* Filters a topic cannot honour (its API has no such parameter) — better to say so than to compare unfiltered data. */
+const CMP_UNSUPPORTED = { ninety: ['job'], retention: ['job'], scorecard: ['store', 'job'] };
+function cmpUnsupportedSet(group) {
+    return (CMP_UNSUPPORTED[group] || []).filter(f => panels.A[f] || panels.B[f]).map(f => f === 'job' ? cmpL.fJob : cmpL.fStore);
 }
+function cmpUpdateUnsupportedHint() {
+    const names = (CMP_UNSUPPORTED[cmpSelectedGroup()] || []).map(f => f === 'job' ? cmpL.fJob : cmpL.fStore);
+    document.getElementById('cmpUnsupported').hidden = names.length === 0;
+    document.getElementById('cmpUnsupportedText').textContent = names.length ? cmpL.unsupported.replace('{0}', names.join(', ')) : '';
+}
+const cmpSelectedGroup = () => document.querySelector('input[name="cmpGroup"]:checked')?.value || '';
+
+function cmpShowGroup(group) {
+    document.querySelectorAll('[data-cmp-groups]').forEach(el =>
+        el.classList.toggle('cmp-show', !!group && el.dataset.cmpGroups.split(' ').includes(group)));
+}
+function cmpResetResults() {
+    cmpHasResults = false;
+    document.querySelectorAll('input[name="cmpGroup"]').forEach(r => { r.checked = false; });
+    cmpShowGroup('');
+    document.getElementById('cmpPeriodNotice').hidden = true;
+    document.getElementById('cmpStale').hidden = true;
+    cmpUpdateUnsupportedHint();
+    document.getElementById('cmpEmptyState').style.display = '';
+}
+function cmpMarkStale() {
+    if (cmpHasResults) document.getElementById('cmpStale').hidden = false;
+}
+function cmpPopup(text) {
+    document.getElementById('cmpModalText').textContent = text;
+    document.getElementById('cmpModal').hidden = false;
+    document.getElementById('cmpModalOk').focus();
+}
+const cmpClosePopup = () => { document.getElementById('cmpModal').hidden = true; };
+document.getElementById('cmpModalOk').addEventListener('click', cmpClosePopup);
+document.getElementById('cmpModal').addEventListener('click', e => { if (e.target.id === 'cmpModal') cmpClosePopup(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cmpClosePopup(); });
+document.querySelectorAll('input[name="cmpGroup"]').forEach(r => r.addEventListener('change', () => { cmpUpdateUnsupportedHint(); cmpMarkStale(); }));
+
+function cmpSetBusy(on) {
+    cmpBusy = on;
+    document.getElementById('cmpCompareBtn').disabled = on;
+    document.getElementById('cmpCompareSpin').hidden = !on;
+    document.getElementById('cmpCompareIcon').hidden = on;
+    document.getElementById('cmpCompareLabel').textContent = on ? cmpL.comparing : cmpL.compareBtn;
+}
+
+async function cmpRefreshAll(group) {
+    const [dataA, dataB] = await Promise.all([cmpFetchSide('A', group), cmpFetchSide('B', group)]);
+    cmpUpdateNorm(group);
+    // Show the group's sections first: Chart.js sizes a canvas from its container, which must be visible.
+    cmpShowGroup(group);
+    document.getElementById('cmpEmptyState').style.display = 'none';
+    if (['turnover', 'ninety', 'workforce', 'scorecard'].includes(group)) cmpRenderKpis(dataA, dataB, group);
+    if (['turnover', 'ninety'].includes(group)) { cmpRenderInsight(dataA, dataB, group); cmpRenderTable(dataA, dataB, group); }
+    if (group === 'drivers') cmpRenderDrivers(dataA, dataB); else cmpRenderCharts(dataA, dataB, group);
+    cmpHasResults = true;
+    document.getElementById('cmpStale').hidden = true;
+}
+
+document.getElementById('cmpCompareBtn').addEventListener('click', async () => {
+    if (cmpBusy) return;   // one request set at a time — the button is also disabled while it runs
+    const group = cmpSelectedGroup();
+    if (!group) { cmpPopup(cmpL.needGroup); return; }
+    if (!panels.A.months.length || !panels.B.months.length) { cmpPopup(cmpL.needMonths); return; }
+    const blocked = cmpUnsupportedSet(group);
+    if (blocked.length) { cmpPopup(cmpL.unsupportedPopup.replace('{0}', blocked.join(', '))); return; }
+    cmpSetBusy(true);
+    try { await cmpRefreshAll(group); }
+    catch (e) { cmpPopup(e && e.message === '403' ? cmpL.noAccess : cmpL.loadFailed); }
+    finally { cmpSetBusy(false); }
+});
 
 /* Store Breakdown table — sort headers ------------------------------------ */
 document.querySelectorAll('#cmpTableCard .cmp-sort').forEach(th => {

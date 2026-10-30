@@ -111,6 +111,7 @@ public class DashboardController : Controller
                 ? (await trainers.GetAsync(null, null, null, role, assignedName)).Periods
                 : await _dashboard.GetAvailablePeriodsAsync();
         if (usesProjection) ViewBag.Jobs = await _planning.GetProjectionJobsAsync();
+        else if (reportType == "comparisons") ViewBag.Jobs = await _dashboard.GetJobTitlesAsync(null, null, role, assignedName);
         var stores = await _stores.GetStoresAsync(null, null, role, assignedName);
         ViewBag.Stores = stores.Select(s => s.StoreName).Distinct().OrderBy(s => s).ToList();
         ViewBag.OperationManagers = await _dashboard.GetOperationManagersAsync(null, null, role, assignedName);
@@ -130,6 +131,8 @@ public class DashboardController : Controller
             ExcelExportGuard.Neutralize(wb);   // formula-injection protection for text cells (see ExcelExportGuard)
             using var stream = new MemoryStream();
             wb.SaveAs(stream);
+            // File name only — it is built from the report type and period, never from user-entered text.
+            await _activity.LogAsync(new ActivityEntry { Action = ActivityActions.ReportDownload, Details = fileName });
             return File(stream.ToArray(), XlsxContentType, fileName);
         }
     }
@@ -139,7 +142,7 @@ public class DashboardController : Controller
     [AccessArea(AccessAreas.Reports)]
     public async Task<IActionResult> Export(int month, int year, string reportType = "stores-overview",
         string? store = null, string? om = null, string? oc = null, string? soc = null, string? od = null, string? months = null,
-        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null, string? jobs = null, string? status = null)
+        int? yearB = null, string? monthsB = null, string? storeB = null, string? omB = null, string? ocB = null, string? socB = null, string? odB = null, string? jobs = null, string? status = null, string? topic = null, string? jobsB = null)
     {
         var role = HttpContext.Session.GetRole();
         var assignedName = HttpContext.Session.GetEmail();
@@ -156,15 +159,21 @@ public class DashboardController : Controller
         odB = string.IsNullOrWhiteSpace(odB) ? null : odB;
         monthsB = string.IsNullOrWhiteSpace(monthsB) ? null : monthsB;
         jobs = string.IsNullOrWhiteSpace(jobs) ? null : jobs;
+        jobsB = string.IsNullOrWhiteSpace(jobsB) ? null : jobsB;
 
         switch (reportType)
         {
             case "comparisons":
+                var comparisonTopic = ComparisonTopics.Normalize(topic);
+                // A store / job filter the topic's data cannot honour is refused, never silently dropped.
+                if (ComparisonTopics.UnsupportedFilterMessage(comparisonTopic, store != null || storeB != null, jobs != null || jobsB != null) is { } refusal)
+                    return BadRequest(refusal);
                 return await DownloadWorkbookAsync(
                     await _reports.BuildComparisonReportAsync(role, assignedName,
                         year > 0 ? year : null, months, store, om, oc, soc, od,
-                        yearB, monthsB, storeB, omB, ocB, socB, odB),
-                    "Comparison_Report.xlsx");
+                        yearB, monthsB, storeB, omB, ocB, socB, odB,
+                        comparisonTopic, jobs, jobsB),
+                    $"Comparison_{comparisonTopic}.xlsx");
             case "stores":
                 return await DownloadWorkbookAsync(
                     await _reports.BuildStoreComparisonReportAsync(month, year, role, assignedName, om, oc, soc, od),

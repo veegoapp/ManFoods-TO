@@ -127,7 +127,7 @@
   <data name="UL_StoreReferenceSub" xml:space="preserve"><value>Store Leader / OC / OM assignment per store</value></data>
   <data name="UL_ExitInterviews" xml:space="preserve"><value>Exit Interviews</value></data>
   <data name="UL_ExitInterviewsSub" xml:space="preserve"><value>Export responses from Microsoft Forms and upload as-is — no reformatting needed</value></data>
-  <data name="UL_ExitInterviewsNote" xml:space="preserve"><value>Not tied to a specific month — re-uploading the full export is always safe, existing responses are matched and updated, never duplicated.</value></data>
+  <data name="UL_ExitInterviewsNote" xml:space="preserve"><value>Not tied to a specific month — each upload adds to the responses already stored. A response is skipped as a duplicate when the same employee already has one with the same completion time. Use Update File on an upload to replace that upload's responses.</value></data>
   <data name="UL_TemplateActiveEmployees" xml:space="preserve"><value>Active Employees Template</value></data>
   <data name="UL_TemplateResignations" xml:space="preserve"><value>Resignations Template</value></data>
   <data name="UL_TemplateStoreRef" xml:space="preserve"><value>Store Reference Template</value></data>
@@ -1191,19 +1191,69 @@
   <data name="CMP_RetentionMilestonesSub" xml:space="preserve"><value>Retention at 6 months, 1 year and later milestones for eligible hire cohorts</value></data>
   <data name="CMP_BasisTurnover" xml:space="preserve"><value>Basis: resignations divided by average active headcount across the selected months. When no store is selected, the chart shows the top 8 stores by combined A+B rate.</value></data>
   <data name="CMP_BasisNinety" xml:space="preserve"><value>Basis: employees hired in the selected cohorts who resigned within 90 days, divided by total hires in those cohorts. The chart uses the same months and filters as the comparison.</value></data>
-  <data name="CMP_BasisWorkforce" xml:space="preserve"><value>Basis: active employee roster snapshots. Headcount is summed across the selected months; the chart shows the top 8 stores by combined A+B headcount.</value></data>
-  <data name="CMP_BasisResignations" xml:space="preserve"><value>Basis: resignation records assigned to the selected months and filters. The chart shows counts, not a percentage; the top 8 stores are ranked by combined A+B count.</value></data>
+  <data name="CMP_BasisWorkforce" xml:space="preserve"><value>Basis: active employee roster snapshots. Headcount is summed across the selected months; when the two sides cover a different number of months it is shown as the monthly average instead. The chart shows the top 8 stores by combined A+B headcount.</value></data>
+  <data name="CMP_BasisResignations" xml:space="preserve"><value>Basis: resignation records assigned to the selected months and filters. The chart shows counts (monthly averages when the two sides cover a different number of months), not a percentage; the top 8 stores are ranked by combined A+B value.</value></data>
   <data name="CMP_BasisRetention" xml:space="preserve"><value>Basis: hire cohorts from each selected period. Each milestone is retained employees divided by eligible cohort members; immature cohorts are excluded until the outcome is knowable.</value></data>
-  <data name="CMP_BasisExitReasons" xml:space="preserve"><value>Basis: exit-interview responses matching the selected periods and organizational filters, grouped by reason. The 8 most frequent combined A+B reasons are displayed.</value></data>
+  <data name="CMP_BasisExitReasons" xml:space="preserve"><value>Basis: exit-interview responses matching the selected periods and organizational filters, grouped by reason and shown as a percentage of each side's own responses, so periods with a different number of interviews stay comparable. The 8 most frequent combined A+B reasons are displayed.</value></data>
   <data name="CMP_BasisExitSentiment" xml:space="preserve"><value>Basis: positive answers across the Would Return and Overall Experience questions divided by all non-empty answers. The response count below the chart counts forms.</value></data>
   <data name="Comparisons_ExitSection" xml:space="preserve"><value>Exit Interviews</value></data>
   <data name="Chart_ExitReasonsCompare" xml:space="preserve"><value>Reasons for Leaving — A vs B</value></data>
-  <data name="CMP_ExitReasonsSub" xml:space="preserve"><value>Most common reasons recorded in exit interviews for each period</value></data>
+  <data name="CMP_ExitReasonsSub" xml:space="preserve"><value>Share of each period's exit interviews by reason (counts in the tooltip)</value></data>
   <data name="Chart_ExitSentimentCompare" xml:space="preserve"><value>Exit Interview Sentiment — A vs B</value></data>
   <data name="CMP_ExitSentimentSub" xml:space="preserve"><value>Positive sentiment and the number of submitted exit interviews</value></data>
   <data name="CMP_ExitPositive" xml:space="preserve"><value>Positive sentiment %</value></data>
   <data name="CMP_ExitResponses" xml:space="preserve"><value>Interview responses</value></data>
   <data name="CMP_DeltaSuffix" xml:space="preserve"><value>(A−B)</value></data>
+  <data name="CMP_PeriodNotice" xml:space="preserve"><value>Side A covers {0} month(s) and side B covers {1}. Counts (headcount, hires, resignations, early leavers) are shown as monthly averages so they can be compared. Turnover % and 90-day % are period totals, so a longer period naturally shows a higher rate than a shorter one.</value></data>
+  <data name="CMP_PerMonth" xml:space="preserve"><value>per month</value></data>
+  <data name="CMP_AvgMonthly" xml:space="preserve"><value>monthly avg</value></data>
+  <data name="CMP_DriverCol" xml:space="preserve"><value>Driver</value></data>
+  <data name="CMP_LowSample" xml:space="preserve"><value>Fewer than 10 answers on one side — read with caution</value></data>
+  <data name="CMP_ResponsesShort" xml:space="preserve"><value>responses</value></data>
+  <data name="Chart_ExitDriversCompare" xml:space="preserve"><value>Engagement Drivers — A vs B</value></data>
+  <data name="CMP_ExitDriversSub" xml:space="preserve"><value>Positive answers per exit-interview question, ordered by change (A − B), weakest first</value></data>
+  <data name="CMP_BasisExitDrivers" xml:space="preserve"><value>Basis: positive answers divided by all non-empty answers to each exit-interview question, for the selected periods and filters (answer counts in brackets). Rows with fewer than 10 answers on either side are dimmed.</value></data>
+  <data name="CMP_ChooseTitle" xml:space="preserve"><value>What do you want to compare?</value></data>
+  <data name="CMP_ChooseSub" xml:space="preserve"><value>Set the filters above (optional), pick one topic, then press Compare. Nothing is loaded until you do.</value></data>
+  <data name="CMP_Grp_turnover" xml:space="preserve"><value>Turnover</value></data>
+  <data name="CMP_Grp_ninety" xml:space="preserve"><value>90-Day Turnover</value></data>
+  <data name="CMP_Grp_workforce" xml:space="preserve"><value>Workforce</value></data>
+  <data name="CMP_Grp_retention" xml:space="preserve"><value>Retention</value></data>
+  <data name="CMP_Grp_exit" xml:space="preserve"><value>Exit Interviews</value></data>
+  <data name="CMP_Grp_drivers" xml:space="preserve"><value>Engagement Drivers</value></data>
+  <data name="CMP_CompareBtn" xml:space="preserve"><value>Compare</value></data>
+  <data name="CMP_Comparing" xml:space="preserve"><value>Comparing…</value></data>
+  <data name="CMP_StaleNote" xml:space="preserve"><value>Filters or topic changed — press Compare to update the results.</value></data>
+  <data name="CMP_EmptyHint" xml:space="preserve"><value>Choose what to compare, then press Compare to see the results.</value></data>
+  <data name="CMP_NeedGroup" xml:space="preserve"><value>Please choose what you want to compare first (Turnover, Workforce, Retention…), then press Compare.</value></data>
+  <data name="CMP_NeedMonths" xml:space="preserve"><value>Select at least one month for both A and B before comparing.</value></data>
+  <data name="CMP_LoadFailed" xml:space="preserve"><value>The comparison could not be loaded. Please check your connection and try again.</value></data>
+  <data name="CMP_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="CMP_Grp_breakdown" xml:space="preserve"><value>Turnover Breakdown</value></data>
+  <data name="CMP_Grp_scorecard" xml:space="preserve"><value>Scorecard</value></data>
+  <data name="CMP_PresetLabel" xml:space="preserve"><value>Quick pick for B:</value></data>
+  <data name="CMP_Preset_month" xml:space="preserve"><value>Month before A</value></data>
+  <data name="CMP_Preset_quarter" xml:space="preserve"><value>Quarter before A</value></data>
+  <data name="CMP_Preset_lastYear" xml:space="preserve"><value>Same months last year</value></data>
+  <data name="CMP_PresetNoData" xml:space="preserve"><value>There is no uploaded data for that period.</value></data>
+  <data name="CMP_Unsupported" xml:space="preserve"><value>Not available for this topic: {0}</value></data>
+  <data name="CMP_UnsupportedPopup" xml:space="preserve"><value>This topic cannot use the {0} filter. Clear it on A and B, or choose another topic, then press Compare.</value></data>
+  <data name="CMP_NoAccess" xml:space="preserve"><value>You do not have access to the data of this topic.</value></data>
+  <data name="CMP_KpiScTurnover" xml:space="preserve"><value>Average Leader Turnover</value></data>
+  <data name="CMP_KpiScTurnoverDesc" xml:space="preserve"><value>Average turnover rate of the store leaders</value></data>
+  <data name="CMP_KpiScFlagged" xml:space="preserve"><value>Flagged Leaders</value></data>
+  <data name="CMP_KpiScFlaggedDesc" xml:space="preserve"><value>Share of store leaders with above-average turnover</value></data>
+  <data name="Comparisons_BreakdownSection" xml:space="preserve"><value>Turnover Breakdown</value></data>
+  <data name="Chart_BkJobCompare" xml:space="preserve"><value>Resignations by Job Title — A vs B</value></data>
+  <data name="CMP_BkJobSub" xml:space="preserve"><value>Where the resignations came from, by job</value></data>
+  <data name="Chart_BkTenureCompare" xml:space="preserve"><value>Resignations by Tenure — A vs B</value></data>
+  <data name="CMP_BkTenureSub" xml:space="preserve"><value>How long leavers had worked before resigning</value></data>
+  <data name="Chart_BkPayrollCompare" xml:space="preserve"><value>Resignations by Payroll Group — A vs B</value></data>
+  <data name="CMP_BkPayrollSub" xml:space="preserve"><value>Resignations by payroll group</value></data>
+  <data name="CMP_BasisBreakdown" xml:space="preserve"><value>Basis: resignation records in the selected months and filters, grouped by the field shown. Counts are monthly averages when the two sides cover a different number of months. Jobs and payroll groups show the top 8 by combined A+B.</value></data>
+  <data name="Comparisons_ScorecardSection" xml:space="preserve"><value>Scorecard — Flagged Leaders</value></data>
+  <data name="CMP_ScSub" xml:space="preserve"><value>Share of each supervisor's store leaders with above-average turnover (flagged / leaders in the tooltip)</value></data>
+  <data name="CMP_BasisScorecard" xml:space="preserve"><value>Basis: the Scorecard rollup for the selected year and months. A leader is flagged when their turnover rate is above the average. The Store and Job Title filters do not apply here. The top 8 names by combined A+B are shown.</value></data>
   <data name="CMP_Overall" xml:space="preserve"><value>Overall</value></data>
   <data name="CMP_TitleNoChange" xml:space="preserve"><value>{0}: No Change</value></data>
   <data name="CMP_TitleImproved" xml:space="preserve"><value>{0} Improved</value></data>
@@ -1235,7 +1285,7 @@
   <data name="Rep_Section_Turnover" xml:space="preserve"><value>Turnover</value></data>
   <data name="Rep_Section_Comparison" xml:space="preserve"><value>Comparison</value></data>
   <data name="Rep_Title_Comparisons" xml:space="preserve"><value>Comparison</value></data>
-  <data name="Rep_Desc_Comparisons" xml:space="preserve"><value>Side-by-side Period A vs Period B — Headcount, New Hires, Resignations, Turnover Rate, and 90-Day Early Leave Rate, company-wide and per store.</value></data>
+  <data name="Rep_Desc_Comparisons" xml:space="preserve"><value>Period A vs Period B for the one topic you choose — Turnover, Turnover Breakdown, 90-Day, Workforce, Retention, Scorecard, Exit Interviews or Engagement Drivers — with the same filters as the Comparisons page. Each topic is its own set of sheets.</value></data>
   <data name="Rep_Section_PerformanceRisk" xml:space="preserve"><value>Performance &amp; Risk</value></data>
   <data name="Rep_Section_ExitInterviews" xml:space="preserve"><value>Exit Interviews</value></data>
   <data name="Rep_Title_ActionCenter" xml:space="preserve"><value>Action Center</value></data>
@@ -1269,6 +1319,8 @@
   <data name="Rep_Filters" xml:space="preserve"><value>Filters</value></data>
   <data name="Rep_FiltersHint" xml:space="preserve"><value>— leave a filter empty for "all"</value></data>
   <data name="CMP_ReportFiltersHint" xml:space="preserve"><value>— pick what each side (A and B) is comparing; leave a field empty for "all"</value></data>
+  <data name="CMP_ReportChoose" xml:space="preserve"><value>Choose a topic…</value></data>
+  <data name="CMP_ReportNeedTopic" xml:space="preserve"><value>Please choose what you want to compare first (Turnover, Workforce, Retention…), then download the report.</value></data>
   <data name="Month_January" xml:space="preserve"><value>January</value></data>
   <data name="Month_February" xml:space="preserve"><value>February</value></data>
   <data name="Month_March" xml:space="preserve"><value>March</value></data>
@@ -2283,6 +2335,7 @@
   <data name="ActLog_Act_settings_access_policy" xml:space="preserve"><value>Access Policy Changed</value></data>
   <data name="ActLog_Act_settings_page_visibility" xml:space="preserve"><value>Page Visibility Changed</value></data>
   <data name="ActLog_Act_activity_logs_clear" xml:space="preserve"><value>Clear History</value></data>
+  <data name="ActLog_Act_activity_logs_export" xml:space="preserve"><value>Export Activity Logs</value></data>
   <data name="ActLog_Act_access_denied" xml:space="preserve"><value>Unauthorized / Blocked Admin Action</value></data>
   <data name="ActLog_Flt_login" xml:space="preserve"><value>Login</value></data>
   <data name="ActLog_Flt_failed-login" xml:space="preserve"><value>Failed Login</value></data>
@@ -2299,7 +2352,39 @@
   <data name="ActLog_Flt_recovery-key" xml:space="preserve"><value>Recovery Key</value></data>
   <data name="ActLog_Flt_settings" xml:space="preserve"><value>Settings Changes</value></data>
   <data name="ActLog_Flt_clear-history" xml:space="preserve"><value>Clear History</value></data>
+  <data name="ActLog_Flt_export-logs" xml:space="preserve"><value>Export Activity Logs</value></data>
   <data name="ActLog_Flt_denied" xml:space="preserve"><value>Unauthorized / Blocked Admin Action</value></data>
+  <data name="ActLog_Act_report_download" xml:space="preserve"><value>Report Download</value></data>
+  <data name="ActLog_Act_action_plan_note" xml:space="preserve"><value>Action Plan Note</value></data>
+  <data name="ActLog_Act_action_plan_recommendation" xml:space="preserve"><value>Action Plan Task</value></data>
+  <data name="ActLog_Act_action_plan_assign" xml:space="preserve"><value>Action Plan Assignment</value></data>
+  <data name="ActLog_Act_action_plan_close" xml:space="preserve"><value>Action Plan Closed</value></data>
+  <data name="ActLog_Flt_report-download" xml:space="preserve"><value>Report Download</value></data>
+  <data name="ActLog_Flt_action-plan" xml:space="preserve"><value>Action Plan Changes</value></data>
+  <data name="ActLog_Sec_Title" xml:space="preserve"><value>Security</value></data>
+  <data name="ActLog_Sec_Failed" xml:space="preserve"><value>Failed sign-ins (24h)</value></data>
+  <data name="ActLog_Sec_Blocked" xml:space="preserve"><value>Blocked sign-ins (24h)</value></data>
+  <data name="ActLog_Sec_Active" xml:space="preserve"><value>Active users (7 days)</value></data>
+  <data name="ActLog_Export_Button" xml:space="preserve"><value>Export Excel</value></data>
+  <data name="ActLog_Alert_Title" xml:space="preserve"><value>Suspicious activity (last 24 hours)</value></data>
+  <data name="ActLog_Alert_View" xml:space="preserve"><value>View</value></data>
+  <data name="ActLog_Alert_BruteForce" xml:space="preserve"><value>{0} failed sign-in attempts from IP {1}</value></data>
+  <data name="ActLog_Alert_TargetedAccount" xml:space="preserve"><value>{0} failed sign-in attempts on account {1}</value></data>
+  <data name="ActLog_Alert_NewAdminIp" xml:space="preserve"><value>Admin account {0} signed in from a new IP address ({1})</value></data>
+  <data name="ActLog_Alert_RepeatedDenied" xml:space="preserve"><value>{0} blocked admin actions by {1}</value></data>
+  <data name="ActLog_User_Title" xml:space="preserve"><value>User activity</value></data>
+  <data name="ActLog_User_Window" xml:space="preserve"><value>Last 90 days</value></data>
+  <data name="ActLog_User_NoData" xml:space="preserve"><value>No activity recorded for this account in the last 90 days.</value></data>
+  <data name="ActLog_User_LastLogin" xml:space="preserve"><value>Last sign-in</value></data>
+  <data name="ActLog_User_Logins" xml:space="preserve"><value>Sign-ins</value></data>
+  <data name="ActLog_User_Failed" xml:space="preserve"><value>Failed attempts</value></data>
+  <data name="ActLog_User_Uploads" xml:space="preserve"><value>Uploads</value></data>
+  <data name="ActLog_User_Downloads" xml:space="preserve"><value>Report downloads</value></data>
+  <data name="ActLog_User_Changes" xml:space="preserve"><value>Action plan changes</value></data>
+  <data name="ActLog_User_Ips" xml:space="preserve"><value>IP addresses</value></data>
+  <data name="ActLog_User_Devices" xml:space="preserve"><value>Devices</value></data>
+  <data name="ActLog_User_Recent" xml:space="preserve"><value>Latest activity</value></data>
+  <data name="ActLog_User_Close" xml:space="preserve"><value>Close</value></data>
   <data name="ActLog_Reason_wrong_password" xml:space="preserve"><value>Wrong password</value></data>
   <data name="ActLog_Reason_no_password_set" xml:space="preserve"><value>No password set yet</value></data>
   <data name="ActLog_Reason_temp_password_expired" xml:space="preserve"><value>Temporary password expired</value></data>

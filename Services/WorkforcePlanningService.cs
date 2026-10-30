@@ -631,7 +631,12 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         dto.HasData = true;
 
         var now = DateTime.Now;
-        var y = year.HasValue && years.Contains(year.Value) ? year.Value : (years.Contains(now.Year) ? now.Year : years[0]);
+        // Same default as the planning page: the year of the latest uploaded roster, not the calendar year.
+        var rosterKeys = await GetRosterPeriodKeysAsync();
+        var latestRosterYear = rosterKeys.Count > 0 ? rosterKeys[0] / 100 : 0;
+        var y = year.HasValue && years.Contains(year.Value) ? year.Value
+              : years.Contains(latestRosterYear) ? latestRosterYear
+              : (years.Contains(now.Year) ? now.Year : years[0]);
         dto.Year = y;
         var data = await GetYearDataAsync(y);
 
@@ -656,8 +661,7 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         dto.OperationConsultants = Options(l => l.Oc); dto.OperationManagers = Options(l => l.Om);
         dto.SeniorOperationConsultants = Options(l => l.Soc); dto.OperationDirectors = Options(l => l.Od);
 
-        // Where the forecast starts: the latest uploaded roster.
-        var rosterKeys = await GetRosterPeriodKeysAsync();
+        // Where the forecast starts: the latest uploaded roster (rosterKeys is read once, above, for the default year).
         var baseline = rosterKeys.Count > 0 ? rosterKeys[0] : 0;
         dto.HasRoster = baseline > 0;
         dto.BaselineYear = baseline / 100; dto.BaselineMonth = baseline % 100;

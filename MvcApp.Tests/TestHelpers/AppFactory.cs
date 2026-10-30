@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MvcApp.Data;
 using MvcApp.Models;
+using MvcApp.Services;
 using Xunit;
 
 namespace MvcApp.Tests.TestHelpers;
@@ -45,6 +47,8 @@ public sealed class AppFactory : WebApplicationFactory<AppDbContext>
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await seed(db);
         await db.SaveChangesAsync();
+        // A direct write bypasses the upload service, which is what clears the app's cached list of uploaded periods.
+        scope.ServiceProvider.GetRequiredService<IMemoryCache>().Remove(DashboardService.AvailablePeriodsCacheKey);
     }
 
     public async Task<T> QueryAsync<T>(Func<AppDbContext, Task<T>> query)

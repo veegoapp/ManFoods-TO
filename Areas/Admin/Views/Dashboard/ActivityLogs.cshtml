@@ -17,16 +17,55 @@
 .al-pager { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:14px; }
 .al-note { font-size:12px; color:var(--text-3); margin-top:14px; }
 .al-busy { opacity:.55; pointer-events:none; }
+.al-security { display:flex; flex-wrap:wrap; align-items:center; gap:8px 22px; padding:10px 16px; margin-bottom:16px; border:1px solid var(--card-border); border-radius:10px; background:var(--card-bg); font-size:13px; }
+.al-security[hidden] { display:none; }
+.al-sec-title { font-weight:700; color:var(--text); }
+.al-sec-item { color:var(--text-2); }
+.al-sec-item b { font-size:15px; color:var(--text); margin-inline-start:4px; }
+.al-sec-item.al-warn b { color:var(--danger); }
+.al-user-link { color:var(--info); cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
+.al-wide { max-width:720px; max-height:88vh; overflow:auto; }
+.al-ustats { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; margin:10px 0 14px; }
+.al-ustat { border:1px solid var(--card-border); border-radius:8px; padding:8px 10px; }
+.al-ustat b { display:block; font-size:18px; color:var(--text); }
+.al-ustat span { font-size:11px; color:var(--text-3); }
+.al-usec { font-size:12px; font-weight:700; color:var(--text-3); margin:12px 0 4px; text-transform:uppercase; letter-spacing:.03em; }
+.al-ulist { margin:0; padding:0; list-style:none; font-size:13px; }
+.al-ulist li { display:flex; justify-content:space-between; gap:12px; padding:3px 0; border-top:1px solid var(--card-border); }
+.al-ulist li:first-child { border-top:0; }
+.al-ulist .al-umeta { color:var(--text-3); font-size:12px; white-space:nowrap; }
+.al-alerts { margin-bottom:16px; border:1px solid var(--danger); border-radius:10px; background:var(--danger-bg); padding:10px 16px; }
+.al-alerts[hidden] { display:none; }
+.al-alerts-title { font-weight:700; font-size:13px; color:var(--danger); margin-bottom:6px; }
+.al-alert { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:13px; border-top:1px solid var(--card-border); }
+.al-alert:first-of-type { border-top:0; }
+.al-alert-dot { width:8px; height:8px; border-radius:50%; flex:0 0 auto; background:var(--warning); }
+.al-alert.al-high .al-alert-dot { background:var(--danger); }
+.al-alert-msg { flex:1; color:var(--text); word-break:break-word; }
+.al-alert-time { color:var(--text-3); font-size:12px; white-space:nowrap; }
 </style>
 
 <div class="page-header">
     <div><h1 class="page-title">@L["Page_ActivityLogs"]</h1><p class="page-subtitle">@L["Page_ActivityLogsSub"]</p></div>
-    <div>
+    <div class="d-flex gap-2">
+        <button type="button" id="alExport" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-excel me-1"></i>@L["ActLog_Export_Button"]</button>
         <button type="button" id="alClearOpen" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash3 me-1"></i>@L["ActLog_Clear_Button"]</button>
     </div>
 </div>
 @Html.AntiForgeryToken()
 <div id="alNotice" class="alert-banner alert-success-banner" hidden></div>
+
+<div class="al-security" id="alSecurity" hidden>
+    <span class="al-sec-title"><i class="bi bi-shield-check me-1"></i>@L["ActLog_Sec_Title"]</span>
+    <span class="al-sec-item" id="alSecFailedWrap">@L["ActLog_Sec_Failed"]<b id="alSecFailed">–</b></span>
+    <span class="al-sec-item" id="alSecBlockedWrap">@L["ActLog_Sec_Blocked"]<b id="alSecBlocked">–</b></span>
+    <span class="al-sec-item">@L["ActLog_Sec_Active"]<b id="alSecActive">–</b></span>
+</div>
+
+<div class="al-alerts" id="alAlerts" hidden>
+    <div class="al-alerts-title"><i class="bi bi-exclamation-triangle-fill me-1"></i>@L["ActLog_Alert_Title"]</div>
+    <div id="alAlertList"></div>
+</div>
 
 <div class="kpi-grid mb-4">
     <div class="kpi-card">
@@ -121,6 +160,17 @@
     </div>
     <p class="al-note" id="alCapped" hidden>@L["ActLog_Capped"]</p>
     <p class="al-note"><i class="bi bi-info-circle me-1"></i>@L["ActLog_Note"]</p>
+</div>
+
+<div id="alUserModal" class="al-modal" hidden role="dialog" aria-modal="true" aria-labelledby="alUserTitle">
+    <div class="al-modal-card al-wide">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+            <h5 id="alUserTitle" class="mb-0"><i class="bi bi-person-lines-fill me-2"></i><span id="alUserEmail"></span></h5>
+            <button type="button" id="alUserClose" class="btn btn-outline-secondary btn-sm">@L["ActLog_User_Close"]</button>
+        </div>
+        <div class="text-muted-custom small">@L["ActLog_User_Window"]</div>
+        <div id="alUserBody"></div>
+    </div>
 </div>
 
 <div id="alModal" class="al-modal" hidden role="dialog" aria-modal="true" aria-labelledby="alModalTitle">
@@ -240,7 +290,13 @@
         data.items.forEach(item => {
             const tr = el('tr', null, 'al-row'); tr.tabIndex = 0; tr.setAttribute('aria-expanded', 'false');
             // Cairo time, formatted by the server — the viewer's device clock/zone is never used.
-            tr.append(el('td', item.timeDisplay), el('td', item.user), el('td', item.actionLabel));
+            const userCell = el('td');
+            if (item.user && item.user !== '—') {
+                const link = el('span', item.user, 'al-user-link');
+                link.addEventListener('click', e => { e.stopPropagation(); openUser(item.user); });
+                userCell.append(link);
+            } else { userCell.textContent = item.user; }
+            tr.append(el('td', item.timeDisplay), userCell, el('td', item.actionLabel));
             const res = el('td'); res.append(badge(item.success, item.resultLabel)); tr.append(res);
             tr.append(el('td', item.target || '—', 'text-muted-custom'), el('td', item.ip || '—', 'text-muted-custom'));
             const desc = el('td', item.description, 'text-muted-custom small al-desc'); desc.title = item.description; tr.append(desc);
@@ -282,6 +338,92 @@
             if (id === reqId) $('alTableWrap').classList.remove('al-busy');
         }
     }
+
+    // ── User drill-down (everything one account did in the last 90 days; text only, never HTML) ──
+    const U = {
+        none: @Json.Serialize(L["ActLog_User_NoData"].Value), lastLogin: @Json.Serialize(L["ActLog_User_LastLogin"].Value),
+        logins: @Json.Serialize(L["ActLog_User_Logins"].Value), failed: @Json.Serialize(L["ActLog_User_Failed"].Value),
+        uploads: @Json.Serialize(L["ActLog_User_Uploads"].Value), downloads: @Json.Serialize(L["ActLog_User_Downloads"].Value),
+        changes: @Json.Serialize(L["ActLog_User_Changes"].Value), ips: @Json.Serialize(L["ActLog_User_Ips"].Value),
+        devices: @Json.Serialize(L["ActLog_User_Devices"].Value), recent: @Json.Serialize(L["ActLog_User_Recent"].Value),
+    };
+    const userModal = $('alUserModal');
+    const closeUser = () => { userModal.hidden = true; };
+    $('alUserClose').addEventListener('click', closeUser);
+    userModal.addEventListener('click', e => { if (e.target === userModal) closeUser(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !userModal.hidden) closeUser(); });
+
+    function uList(rows) {
+        const ul = el('ul', null, 'al-ulist');
+        rows.forEach(([main, meta]) => { const li = el('li'); li.append(el('span', main), el('span', meta, 'al-umeta')); ul.append(li); });
+        return ul;
+    }
+    async function openUser(email) {
+        $('alUserEmail').textContent = email;
+        const body = $('alUserBody'); body.replaceChildren(el('p', '…', 'text-muted-custom'));
+        userModal.hidden = false;
+        try {
+            const res = await fetch('/api/activity-logs/user?email=' + encodeURIComponent(email), { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) throw new Error(res.status);
+            const u = await res.json();
+            body.replaceChildren();
+            if (!u.found) { body.append(el('p', U.none, 'text-muted-custom mt-3')); return; }
+            const stats = el('div', null, 'al-ustats');
+            [[U.lastLogin, u.lastLogin || '—'], [U.logins, u.logins], [U.failed, u.failedAttempts],
+             [U.uploads, u.uploads], [U.downloads, u.reportDownloads], [U.changes, u.actionPlanChanges]]
+                .forEach(([label, value]) => { const s = el('div', null, 'al-ustat'); s.append(el('b', String(value)), el('span', label)); stats.append(s); });
+            body.append(stats);
+            if (u.ips.length) { body.append(el('div', U.ips, 'al-usec'), uList(u.ips.map(i => [i.ip + '  ×' + i.count, i.lastSeen]))); }
+            if (u.devices.length) { body.append(el('div', U.devices, 'al-usec'), uList(u.devices.map(d => [d.device + '  ×' + d.count, d.lastSeen]))); }
+            body.append(el('div', U.recent, 'al-usec'), uList(u.recent.map(r => [r.actionLabel + (r.success ? '' : ' ✕') + (r.description && r.description !== r.actionLabel ? ' — ' + r.description : ''), r.timeDisplay])));
+        } catch { body.replaceChildren(el('p', LOADING_ERR, 'text-danger mt-3')); }
+    }
+
+    // Each alert's "View" sets the table filters to the rows behind it (messages come from the server, inserted as text).
+    const cairoDay = d => new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(d);
+    function renderAlerts(alerts) {
+        const list = $('alAlertList'); list.replaceChildren();
+        $('alAlerts').hidden = alerts.length === 0;
+        alerts.forEach(a => {
+            const row = el('div', null, 'al-alert ' + (a.severity === 'high' ? 'al-high' : ''));
+            const view = el('button', @Json.Serialize(L["ActLog_Alert_View"].Value), 'btn btn-outline-secondary btn-sm');
+            view.type = 'button';
+            view.addEventListener('click', () => {
+                $('alSearch').value = a.search || '';
+                $('alAction').value = a.action || '';
+                $('alStatus').value = a.status || '';
+                $('alFrom').value = cairoDay(new Date(Date.now() - 24 * 3600 * 1000));
+                $('alTo').value = '';
+                reload();
+                $('alFilters').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+            row.append(el('span', null, 'al-alert-dot'), el('span', a.message, 'al-alert-msg'), el('span', a.lastSeen, 'al-alert-time'), view);
+            list.append(row);
+        });
+    }
+
+    // Security strip: loaded once on open (server-cached for a minute), not on every filter change.
+    async function loadSecurity() {
+        try {
+            const res = await fetch('/api/activity-logs/security', { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) return;
+            const s = await res.json();
+            $('alSecFailed').textContent = s.failedLogins24h;
+            $('alSecBlocked').textContent = s.blockedLogins24h;
+            $('alSecActive').textContent = s.activeUsers7d;
+            $('alSecFailedWrap').classList.toggle('al-warn', s.failedLogins24h > 0);
+            $('alSecBlockedWrap').classList.toggle('al-warn', s.blockedLogins24h > 0);
+            $('alSecurity').hidden = false;
+            renderAlerts(s.alerts || []);
+        } catch { /* the strip is optional — the table below still works */ }
+    }
+    loadSecurity();
+
+    // Export the rows the current filters select (the server caps the file and checks Super Admin again).
+    $('alExport').addEventListener('click', () => {
+        const p = query(); p.delete('page');
+        window.location.href = '/api/activity-logs/export?' + p.toString();
+    });
 
     const reload = () => { state.page = 1; load(); };
     $('alSearch').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(reload, 350); });

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MvcApp.Extensions;
 using MvcApp.Filters;
+using MvcApp.Models;
 using MvcApp.Services;
 using Microsoft.Extensions.Localization;
 using MvcApp.Resources;
@@ -20,14 +21,20 @@ public class StoreActionPlanApiController : ControllerBase
     private readonly IStoreHealthService _health;
     private readonly IDashboardService _dashboard;
     private readonly IStringLocalizer<SharedResource> _L;
+    private readonly IActivityLogWriter _activity;
 
-    public StoreActionPlanApiController(IStoreActionPlanService actionPlans, IStoreHealthService health, IDashboardService dashboard, IStringLocalizer<SharedResource> localizer)
+    public StoreActionPlanApiController(IStoreActionPlanService actionPlans, IStoreHealthService health, IDashboardService dashboard, IStringLocalizer<SharedResource> localizer, IActivityLogWriter activity)
     {
         _actionPlans = actionPlans;
         _health = health;
         _dashboard = dashboard;
         _L = localizer;
+        _activity = activity;
     }
+
+    // Who changed an action plan, and on which store — never the note/reason text itself.
+    private Task LogPlanAsync(string action, string details) =>
+        _activity.LogAsync(new ActivityEntry { Action = action, Details = details });
 
     // The actual owner of a store's Action Plan (Head_Manager or
     // Operation_Consultant by default, or whichever role an Admin delegated
@@ -51,6 +58,7 @@ public class StoreActionPlanApiController : ControllerBase
         var (success, message, note) = await _actionPlans.AddNoteAsync(store, role, email, userId.Value, authorName, request.NoteText);
         if (!success) return BadRequest(message);
 
+        await LogPlanAsync(ActivityActions.ActionPlanNote, $"store: {store}");
         return Ok(note);
     }
 
@@ -211,6 +219,7 @@ public class StoreActionPlanApiController : ControllerBase
         var success = await _actionPlans.ToggleRecommendationAsync(id, request?.IsCompleted ?? false, role, email, actorName);
         if (!success) return BadRequest(_L["Api_RecommendationNotPermitted"].Value);
 
+        await LogPlanAsync(ActivityActions.ActionPlanRecommendation, $"recommendation #{id}; {((request?.IsCompleted ?? false) ? "completed" : "reopened")}");
         return Ok();
     }
 
@@ -223,6 +232,7 @@ public class StoreActionPlanApiController : ControllerBase
         var success = await _actionPlans.SetAssignmentAsync(store, request?.AssignedToName, request?.TargetResolutionDate, role);
         if (!success) return BadRequest(_L["Api_NoActivePlan"].Value);
 
+        await LogPlanAsync(ActivityActions.ActionPlanAssign, $"store: {store}");
         return Ok();
     }
 
@@ -237,6 +247,7 @@ public class StoreActionPlanApiController : ControllerBase
         var (success, message) = await _actionPlans.ManualCloseAsync(store, request?.Reason ?? "", role, closedByName);
         if (!success) return BadRequest(message);
 
+        await LogPlanAsync(ActivityActions.ActionPlanClose, $"store: {store}");
         return Ok();
     }
 

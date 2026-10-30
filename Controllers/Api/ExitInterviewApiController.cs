@@ -108,10 +108,11 @@ public class ExitInterviewApiController : ControllerBase
 
     [HttpGet("engagement-drivers")]
     public async Task<IActionResult> EngagementDrivers([FromQuery] string? store, [FromQuery] string? storeLeader, [FromQuery] string? oc, [FromQuery] string? om,
+        [FromQuery] string? soc, [FromQuery] string? od,
         [FromQuery] int? year, [FromQuery] string? months)
     {
         var (role, assignedName) = Identity();
-        return Ok(await _exitInterviews.GetEngagementDriversAsync(BuildFilter(store, storeLeader, oc, om, year, months), role, assignedName));
+        return Ok(await _exitInterviews.GetEngagementDriversAsync(BuildFilter(store, storeLeader, oc, om, year, months, soc, od), role, assignedName));
     }
 
     [HttpGet("by-job-title")]

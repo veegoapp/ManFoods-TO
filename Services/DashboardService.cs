@@ -20,6 +20,10 @@ public class DashboardService : IDashboardService
     private readonly FilterResultCache _filterCache;
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
+    // Distinct (Month, Year) of ActiveEmployees — read by every page's period
+    // filter; cleared by UploadService when the roster changes.
+    public const string AvailablePeriodsCacheKey = "dashboard:available-periods";
+
     public DashboardService(AppDbContext db, IMemoryCache cache, IStoreAccessService storeAccess, IStringLocalizer<SharedResource> localizer, FilterResultCache? filterCache = null)
     {
         _db = db;
@@ -192,6 +196,12 @@ public class DashboardService : IDashboardService
 
     public async Task<List<string>> GetJobTitlesAsync(int? month, int? year, string role, string? assignedName)
     {
+        // The all-periods lookup (Comparisons page and report) would otherwise read every roster row on each page open:
+        // distinct in SQL and cached like the other filter results (keyed on who is asking, so store scope is respected).
+        var allPeriods = !month.HasValue && !year.HasValue;
+        var cacheKey = FilterResultCache.BuildKey("job-titles-all", role, assignedName);
+        if (allPeriods && _filterCache.TryGet(cacheKey, out List<string>? cachedJobs)) return cachedJobs!;
+
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
         var active = _db.ActiveEmployees.AsQueryable();
         var resignations = _db.Resignations.AsQueryable();
@@ -207,9 +217,11 @@ public class DashboardService : IDashboardService
             active = active.Where(e => accessible.Contains(e.Store));
             resignations = resignations.Where(e => accessible.Contains(e.Store));
         }
-        var activeJobs = await active.Where(e => e.JobTitle != "").Select(e => e.JobTitle).ToListAsync();
-        var resignedJobs = await resignations.Where(e => e.JobTitle != "").Select(e => e.JobTitle).ToListAsync();
-        return activeJobs.Concat(resignedJobs).Distinct().OrderBy(s => s).ToList();
+        var activeJobs = await active.Where(e => e.JobTitle != "").Select(e => e.JobTitle).Distinct().ToListAsync();
+        var resignedJobs = await resignations.Where(e => e.JobTitle != "").Select(e => e.JobTitle).Distinct().ToListAsync();
+        var jobTitles = activeJobs.Concat(resignedJobs).Distinct().OrderBy(s => s).ToList();
+        if (allPeriods) _filterCache.Set(cacheKey, jobTitles, CacheDuration, jobTitles.Count);
+        return jobTitles;
     }
 
     public async Task<DashboardKpiViewModel> GetKpisAsync(int? month, int? year, string? store, string role, string? assignedName,
@@ -470,12 +482,17 @@ public class DashboardService : IDashboardService
 
     public async Task<List<PeriodItem>> GetAvailablePeriodsAsync()
     {
-        return await _db.ActiveEmployees
+        if (_cache.TryGetValue(AvailablePeriodsCacheKey, out List<PeriodItem>? cached) && cached != null)
+            return cached;
+
+        var periods = await _db.ActiveEmployees
             .Select(e => new { e.Month, e.Year })
             .Distinct()
             .OrderByDescending(p => p.Year).ThenByDescending(p => p.Month)
             .Select(p => new PeriodItem { Month = p.Month, Year = p.Year })
             .ToListAsync();
+        _cache.Set(AvailablePeriodsCacheKey, periods, TimeSpan.FromHours(6));
+        return periods;
     }
 
     public async Task<List<StoreComparisonRow>> GetStoreComparisonAsync(int month, int year, string role, string? assignedName,

@@ -127,7 +127,7 @@
   <data name="UL_StoreReferenceSub" xml:space="preserve"><value>مدير الفرع / استشاري العمليات / مدير التشغيل لكل فرع</value></data>
   <data name="UL_ExitInterviews" xml:space="preserve"><value>مقابلات الخروج</value></data>
   <data name="UL_ExitInterviewsSub" xml:space="preserve"><value>صدّر الردود من Microsoft Forms وارفعها زي ما هي — من غير أي تعديل</value></data>
-  <data name="UL_ExitInterviewsNote" xml:space="preserve"><value>غير مرتبطة بشهر معين — إعادة رفع كل الردود دايمًا أمان، الردود القديمة بتتحدّث لو موجودة بدل ما تتكرر.</value></data>
+  <data name="UL_ExitInterviewsNote" xml:space="preserve"><value>غير مرتبطة بشهر معين — كل رفع بيتضاف على الردود المخزّنة. الرد بيتتخطى كمكرر لو نفس الموظف عنده رد بنفس وقت الانتهاء. استخدم Update File على رفعة معينة لاستبدال ردودها.</value></data>
   <data name="UL_TemplateActiveEmployees" xml:space="preserve"><value>نموذج الأكتيف ليست</value></data>
   <data name="UL_TemplateResignations" xml:space="preserve"><value>نموذج الاستقالات</value></data>
   <data name="UL_TemplateStoreRef" xml:space="preserve"><value>نموذج مرجع الفروع</value></data>
@@ -1193,14 +1193,14 @@
   <data name="CMP_RetentionMilestonesSub" xml:space="preserve"><value>الاحتفاظ عند 6 أشهر وسنة والمراحل التالية للأفواج المؤهلة</value></data>
   <data name="CMP_BasisTurnover" xml:space="preserve"><value>الأساس: عدد الاستقالات ÷ متوسط عدد الموظفين النشطين خلال الشهور المختارة. عند عدم اختيار فرع، يعرض الشارت أعلى 8 فروع حسب المعدل المجمع للفترتين A وB.</value></data>
   <data name="CMP_BasisNinety" xml:space="preserve"><value>الأساس: الموظفون الذين تم تعيينهم في الأفواج المختارة وتركوا العمل خلال 90 يومًا ÷ إجمالي التعيينات في هذه الأفواج، مع تطبيق نفس الشهور والفلاتر.</value></data>
-  <data name="CMP_BasisWorkforce" xml:space="preserve"><value>الأساس: لقطات سجل الموظفين النشطين. يتم جمع عدد الموظفين عبر الشهور المختارة، ويعرض الشارت أعلى 8 فروع حسب إجمالي الفترتين A وB.</value></data>
-  <data name="CMP_BasisResignations" xml:space="preserve"><value>الأساس: سجلات الاستقالات المطابقة للشهور والفلاتر المختارة. الشارت يعرض أعدادًا وليس نسبة مئوية، مع ترتيب أعلى 8 فروع حسب الإجمالي المجمع.</value></data>
+  <data name="CMP_BasisWorkforce" xml:space="preserve"><value>الأساس: لقطات سجل الموظفين النشطين. يتم جمع عدد الموظفين عبر الشهور المختارة، وعند اختلاف عدد الشهور بين الجانبين يُعرض المتوسط الشهري بدلًا منه. يعرض الشارت أعلى 8 فروع حسب إجمالي الفترتين A وB.</value></data>
+  <data name="CMP_BasisResignations" xml:space="preserve"><value>الأساس: سجلات الاستقالات المطابقة للشهور والفلاتر المختارة. الشارت يعرض أعدادًا (متوسطًا شهريًا عند اختلاف عدد الشهور بين الجانبين) وليس نسبة مئوية، مع ترتيب أعلى 8 فروع حسب المجموع المجمع.</value></data>
   <data name="CMP_BasisRetention" xml:space="preserve"><value>الأساس: أفواج التعيين في كل فترة مختارة. كل مرحلة = الموظفون المستمرون ÷ أعضاء الفوج المؤهلين؛ يتم استبعاد الأفواج غير الناضجة حتى يصبح ناتجها قابلًا للتحديد.</value></data>
-  <data name="CMP_BasisExitReasons" xml:space="preserve"><value>الأساس: ردود مقابلات الخروج المطابقة للفترات والفلاتر التنظيمية المختارة، مجمعة حسب السبب. يتم عرض أكثر 8 أسباب تكرارًا بين A وB.</value></data>
+  <data name="CMP_BasisExitReasons" xml:space="preserve"><value>الأساس: ردود مقابلات الخروج المطابقة للفترات والفلاتر التنظيمية المختارة، مجمعة حسب السبب ومعروضة كنسبة من ردود كل جانب، فتبقى الفترات ذات الأعداد المختلفة قابلة للمقارنة. يتم عرض أكثر 8 أسباب تكرارًا بين A وB.</value></data>
   <data name="CMP_BasisExitSentiment" xml:space="preserve"><value>الأساس: الإجابات الإيجابية في سؤالَي الرغبة في العودة والانطباع العام ÷ كل الإجابات غير الفارغة. العدد أسفل الشارت يحسب نماذج المقابلات.</value></data>
   <data name="Comparisons_ExitSection" xml:space="preserve"><value>مقابلات إنهاء الخدمة</value></data>
   <data name="Chart_ExitReasonsCompare" xml:space="preserve"><value>أسباب الاستقالة — A مقابل B</value></data>
-  <data name="CMP_ExitReasonsSub" xml:space="preserve"><value>أكثر أسباب الاستقالة تكرارًا في مقابلات الخروج لكل فترة</value></data>
+  <data name="CMP_ExitReasonsSub" xml:space="preserve"><value>نسبة كل سبب من مقابلات الخروج في كل فترة (الأعداد في التلميح)</value></data>
   <data name="Chart_ExitSentimentCompare" xml:space="preserve"><value>انطباع مقابلات الخروج — A مقابل B</value></data>
   <data name="CMP_ExitSentimentSub" xml:space="preserve"><value>نسبة الانطباع الإيجابي وعدد مقابلات الخروج المسجلة</value></data>
   <data name="CMP_ExitPositive" xml:space="preserve"><value>نسبة الانطباع الإيجابي</value></data>
@@ -1210,6 +1210,56 @@
   <data name="Guide_Comparisons_Chart_Retention" xml:space="preserve"><value>الاحتفاظ عند 6 أشهر وسنة والمراحل التالية للأفواج المؤهلة في كل فترة. تُستبعد الأفواج التي لم يمض عليها وقت كافٍ للوصول إلى المرحلة.</value></data>
   <data name="Guide_Comparisons_Chart_Exit" xml:space="preserve"><value>أكثر أسباب الاستقالة تكرارًا والانطباع الإيجابي في مقابلات الخروج لكل فترة، مع عرض عدد الردود أسفل رسم الانطباع حتى يظهر أثر العينات الصغيرة.</value></data>
   <data name="CMP_DeltaSuffix" xml:space="preserve"><value>(A−B)</value></data>
+  <data name="CMP_PeriodNotice" xml:space="preserve"><value>الجانب A يغطي {0} شهر والجانب B يغطي {1}. الأعداد (الموظفون والتعيينات والاستقالات والمغادرون المبكرون) معروضة كمتوسط شهري لتصبح قابلة للمقارنة. أما معدل الدوران ومعدل الـ 90 يوم فهما إجمالي الفترة، فالفترة الأطول تُظهر معدلًا أعلى بطبيعتها.</value></data>
+  <data name="CMP_PerMonth" xml:space="preserve"><value>شهريًا</value></data>
+  <data name="CMP_AvgMonthly" xml:space="preserve"><value>متوسط شهري</value></data>
+  <data name="CMP_DriverCol" xml:space="preserve"><value>المحور</value></data>
+  <data name="CMP_LowSample" xml:space="preserve"><value>أقل من 10 إجابات في أحد الجانبين — اقرأها بحذر</value></data>
+  <data name="CMP_ResponsesShort" xml:space="preserve"><value>إجابة</value></data>
+  <data name="Chart_ExitDriversCompare" xml:space="preserve"><value>محاور الانخراط — A مقابل B</value></data>
+  <data name="CMP_ExitDriversSub" xml:space="preserve"><value>نسبة الإجابات الإيجابية لكل سؤال في مقابلات الخروج، مرتبة حسب التغيّر (A − B) من الأضعف</value></data>
+  <data name="CMP_BasisExitDrivers" xml:space="preserve"><value>الأساس: الإجابات الإيجابية ÷ كل الإجابات غير الفارغة لكل سؤال في مقابلات الخروج، للفترات والفلاتر المختارة (عدد الإجابات بين قوسين). الصفوف التي فيها أقل من 10 إجابات في أحد الجانبين تظهر باهتة.</value></data>
+  <data name="CMP_ChooseTitle" xml:space="preserve"><value>إيه اللي عايز تقارنه؟</value></data>
+  <data name="CMP_ChooseSub" xml:space="preserve"><value>حدّد الفلاتر اللي فوق (اختياري)، اختار موضوع واحد، وبعدين اضغط مقارنة. مفيش بيانات بتتحمّل قبل كده.</value></data>
+  <data name="CMP_Grp_turnover" xml:space="preserve"><value>معدل الدوران</value></data>
+  <data name="CMP_Grp_ninety" xml:space="preserve"><value>دوران الـ 90 يوم</value></data>
+  <data name="CMP_Grp_workforce" xml:space="preserve"><value>القوى العاملة</value></data>
+  <data name="CMP_Grp_retention" xml:space="preserve"><value>الاحتفاظ بالموظفين</value></data>
+  <data name="CMP_Grp_exit" xml:space="preserve"><value>مقابلات الخروج</value></data>
+  <data name="CMP_Grp_drivers" xml:space="preserve"><value>محاور الانخراط</value></data>
+  <data name="CMP_CompareBtn" xml:space="preserve"><value>مقارنة</value></data>
+  <data name="CMP_Comparing" xml:space="preserve"><value>جاري المقارنة…</value></data>
+  <data name="CMP_StaleNote" xml:space="preserve"><value>الفلاتر أو الموضوع اتغيّروا — اضغط مقارنة لتحديث النتائج.</value></data>
+  <data name="CMP_EmptyHint" xml:space="preserve"><value>اختار اللي عايز تقارنه وبعدين اضغط مقارنة عشان تظهر النتائج.</value></data>
+  <data name="CMP_NeedGroup" xml:space="preserve"><value>من فضلك اختار الأول إيه اللي عايز تقارنه (معدل الدوران، القوى العاملة، الاحتفاظ…) وبعدين اضغط مقارنة.</value></data>
+  <data name="CMP_NeedMonths" xml:space="preserve"><value>اختار شهر واحد على الأقل لكل من A وB قبل المقارنة.</value></data>
+  <data name="CMP_LoadFailed" xml:space="preserve"><value>مقدرناش نحمّل المقارنة. اتأكد من الاتصال وحاول تاني.</value></data>
+  <data name="CMP_Ok" xml:space="preserve"><value>حسنًا</value></data>
+  <data name="CMP_Grp_breakdown" xml:space="preserve"><value>تفصيل معدل الدوران</value></data>
+  <data name="CMP_Grp_scorecard" xml:space="preserve"><value>تقييم القادة (Scorecard)</value></data>
+  <data name="CMP_PresetLabel" xml:space="preserve"><value>اختيار سريع لـ B:</value></data>
+  <data name="CMP_Preset_month" xml:space="preserve"><value>الشهر قبل A</value></data>
+  <data name="CMP_Preset_quarter" xml:space="preserve"><value>الربع قبل A</value></data>
+  <data name="CMP_Preset_lastYear" xml:space="preserve"><value>نفس الشهور السنة اللي فاتت</value></data>
+  <data name="CMP_PresetNoData" xml:space="preserve"><value>مفيش بيانات مرفوعة للفترة دي.</value></data>
+  <data name="CMP_Unsupported" xml:space="preserve"><value>مش متاح مع الموضوع ده: {0}</value></data>
+  <data name="CMP_UnsupportedPopup" xml:space="preserve"><value>الموضوع ده مش بيشتغل بفلتر {0}. امسحه من A وB أو اختار موضوع تاني، وبعدين اضغط مقارنة.</value></data>
+  <data name="CMP_NoAccess" xml:space="preserve"><value>مفيش عندك صلاحية على بيانات الموضوع ده.</value></data>
+  <data name="CMP_KpiScTurnover" xml:space="preserve"><value>متوسط دوران القادة</value></data>
+  <data name="CMP_KpiScTurnoverDesc" xml:space="preserve"><value>متوسط معدل الدوران لقادة المطاعم</value></data>
+  <data name="CMP_KpiScFlagged" xml:space="preserve"><value>القادة المعلّمين</value></data>
+  <data name="CMP_KpiScFlaggedDesc" xml:space="preserve"><value>نسبة قادة المطاعم اللي دورانهم أعلى من المتوسط</value></data>
+  <data name="Comparisons_BreakdownSection" xml:space="preserve"><value>تفصيل معدل الدوران</value></data>
+  <data name="Chart_BkJobCompare" xml:space="preserve"><value>الاستقالات حسب الوظيفة — A مقابل B</value></data>
+  <data name="CMP_BkJobSub" xml:space="preserve"><value>الاستقالات جت من أنهي وظائف</value></data>
+  <data name="Chart_BkTenureCompare" xml:space="preserve"><value>الاستقالات حسب مدة الخدمة — A مقابل B</value></data>
+  <data name="CMP_BkTenureSub" xml:space="preserve"><value>اشتغل قد إيه الموظف قبل ما يستقيل</value></data>
+  <data name="Chart_BkPayrollCompare" xml:space="preserve"><value>الاستقالات حسب مجموعة الرواتب — A مقابل B</value></data>
+  <data name="CMP_BkPayrollSub" xml:space="preserve"><value>الاستقالات حسب مجموعة الرواتب</value></data>
+  <data name="CMP_BasisBreakdown" xml:space="preserve"><value>الأساس: سجلات الاستقالات في الشهور والفلاتر المختارة، مجمعة حسب الحقل المعروض. الأعداد متوسط شهري عند اختلاف عدد الشهور بين الجانبين. الوظائف ومجموعات الرواتب تعرض أعلى 8 حسب مجموع A+B.</value></data>
+  <data name="Comparisons_ScorecardSection" xml:space="preserve"><value>تقييم القادة — القادة المعلّمين</value></data>
+  <data name="CMP_ScSub" xml:space="preserve"><value>نسبة قادة المطاعم اللي دورانهم أعلى من المتوسط تحت كل مشرف (المعلّم/القادة في التلميح)</value></data>
+  <data name="CMP_BasisScorecard" xml:space="preserve"><value>الأساس: ملخص الـ Scorecard للسنة والشهور المختارة. القائد يتعلّم لو معدل دورانه أعلى من المتوسط. فلتر المطعم والوظيفة مش بيشتغلوا هنا. تظهر أعلى 8 أسماء حسب مجموع A+B.</value></data>
   <data name="CMP_Overall" xml:space="preserve"><value>الإجمالي العام</value></data>
   <data name="CMP_TitleNoChange" xml:space="preserve"><value>{0}: بدون تغيير</value></data>
   <data name="CMP_TitleImproved" xml:space="preserve"><value>تحسّن {0}</value></data>
@@ -1241,7 +1291,7 @@
   <data name="Rep_Section_Turnover" xml:space="preserve"><value>معدل الدوران</value></data>
   <data name="Rep_Section_Comparison" xml:space="preserve"><value>المقارنة</value></data>
   <data name="Rep_Title_Comparisons" xml:space="preserve"><value>المقارنة</value></data>
-  <data name="Rep_Desc_Comparisons" xml:space="preserve"><value>مقارنة جنبًا إلى جنب بين الفترة A والفترة B — عدد الموظفين، التعيينات الجديدة، الاستقالات، معدل الدوران، ومعدل ترك العمل خلال 90 يوم، على مستوى الشركة وكل فرع.</value></data>
+  <data name="Rep_Desc_Comparisons" xml:space="preserve"><value>مقارنة بين الفترة A والفترة B للموضوع اللي تختاره — معدل الدوران، تفصيل الدوران، الـ 90 يوم، القوى العاملة، الاحتفاظ، تقييم القادة، مقابلات الخروج أو محاور الانخراط — بنفس فلاتر صفحة المقارنة. كل موضوع له شيتات خاصة بيه.</value></data>
   <data name="Rep_Section_PerformanceRisk" xml:space="preserve"><value>الأداء والمخاطر</value></data>
   <data name="Rep_Section_ExitInterviews" xml:space="preserve"><value>مقابلات إنهاء الخدمة</value></data>
   <data name="Rep_Title_ActionCenter" xml:space="preserve"><value>مركز الإجراءات</value></data>
@@ -1275,6 +1325,8 @@
   <data name="Rep_Filters" xml:space="preserve"><value>الفلاتر</value></data>
   <data name="Rep_FiltersHint" xml:space="preserve"><value>— اترك الفلتر فارغًا لتحديد "الكل"</value></data>
   <data name="CMP_ReportFiltersHint" xml:space="preserve"><value>— حدد ما تتم مقارنته في كل جانب (A وB)؛ اترك الحقل فارغًا لتحديد "الكل"</value></data>
+  <data name="CMP_ReportChoose" xml:space="preserve"><value>اختار الموضوع…</value></data>
+  <data name="CMP_ReportNeedTopic" xml:space="preserve"><value>من فضلك اختار الأول إيه اللي عايز تقارنه (معدل الدوران، القوى العاملة، الاحتفاظ…) وبعدين نزّل التقرير.</value></data>
   <data name="Month_January" xml:space="preserve"><value>يناير</value></data>
   <data name="Month_February" xml:space="preserve"><value>فبراير</value></data>
   <data name="Month_March" xml:space="preserve"><value>مارس</value></data>
@@ -2289,6 +2341,7 @@
   <data name="ActLog_Act_settings_access_policy" xml:space="preserve"><value>تغيير سياسة الوصول</value></data>
   <data name="ActLog_Act_settings_page_visibility" xml:space="preserve"><value>تغيير ظهور الصفحات</value></data>
   <data name="ActLog_Act_activity_logs_clear" xml:space="preserve"><value>مسح السجل</value></data>
+  <data name="ActLog_Act_activity_logs_export" xml:space="preserve"><value>تصدير سجل النشاط</value></data>
   <data name="ActLog_Act_access_denied" xml:space="preserve"><value>إجراء أدمن غير مصرّح / محظور</value></data>
   <data name="ActLog_Flt_login" xml:space="preserve"><value>تسجيل دخول</value></data>
   <data name="ActLog_Flt_failed-login" xml:space="preserve"><value>دخول فاشل</value></data>
@@ -2305,7 +2358,39 @@
   <data name="ActLog_Flt_recovery-key" xml:space="preserve"><value>مفتاح الاسترداد</value></data>
   <data name="ActLog_Flt_settings" xml:space="preserve"><value>تغييرات الإعدادات</value></data>
   <data name="ActLog_Flt_clear-history" xml:space="preserve"><value>مسح السجل</value></data>
+  <data name="ActLog_Flt_export-logs" xml:space="preserve"><value>تصدير سجل النشاط</value></data>
   <data name="ActLog_Flt_denied" xml:space="preserve"><value>إجراء أدمن غير مصرّح / محظور</value></data>
+  <data name="ActLog_Act_report_download" xml:space="preserve"><value>تحميل تقرير</value></data>
+  <data name="ActLog_Act_action_plan_note" xml:space="preserve"><value>ملاحظة على خطة العمل</value></data>
+  <data name="ActLog_Act_action_plan_recommendation" xml:space="preserve"><value>مهمة في خطة العمل</value></data>
+  <data name="ActLog_Act_action_plan_assign" xml:space="preserve"><value>تكليف خطة العمل</value></data>
+  <data name="ActLog_Act_action_plan_close" xml:space="preserve"><value>إغلاق خطة العمل</value></data>
+  <data name="ActLog_Flt_report-download" xml:space="preserve"><value>تحميل تقرير</value></data>
+  <data name="ActLog_Flt_action-plan" xml:space="preserve"><value>تغييرات خطط العمل</value></data>
+  <data name="ActLog_Sec_Title" xml:space="preserve"><value>الأمان</value></data>
+  <data name="ActLog_Sec_Failed" xml:space="preserve"><value>محاولات دخول فاشلة (24 ساعة)</value></data>
+  <data name="ActLog_Sec_Blocked" xml:space="preserve"><value>محاولات دخول محظورة (24 ساعة)</value></data>
+  <data name="ActLog_Sec_Active" xml:space="preserve"><value>مستخدمين نشطين (7 أيام)</value></data>
+  <data name="ActLog_Export_Button" xml:space="preserve"><value>تصدير Excel</value></data>
+  <data name="ActLog_Alert_Title" xml:space="preserve"><value>نشاط مريب (آخر 24 ساعة)</value></data>
+  <data name="ActLog_Alert_View" xml:space="preserve"><value>عرض</value></data>
+  <data name="ActLog_Alert_BruteForce" xml:space="preserve"><value>{0} محاولة دخول فاشلة من العنوان {1}</value></data>
+  <data name="ActLog_Alert_TargetedAccount" xml:space="preserve"><value>{0} محاولة دخول فاشلة على الحساب {1}</value></data>
+  <data name="ActLog_Alert_NewAdminIp" xml:space="preserve"><value>حساب الأدمن {0} سجّل دخول من عنوان IP جديد ({1})</value></data>
+  <data name="ActLog_Alert_RepeatedDenied" xml:space="preserve"><value>{0} إجراء أدمن محظور من {1}</value></data>
+  <data name="ActLog_User_Title" xml:space="preserve"><value>نشاط المستخدم</value></data>
+  <data name="ActLog_User_Window" xml:space="preserve"><value>آخر 90 يوم</value></data>
+  <data name="ActLog_User_NoData" xml:space="preserve"><value>مفيش نشاط مسجّل للحساب ده في آخر 90 يوم.</value></data>
+  <data name="ActLog_User_LastLogin" xml:space="preserve"><value>آخر دخول</value></data>
+  <data name="ActLog_User_Logins" xml:space="preserve"><value>مرات الدخول</value></data>
+  <data name="ActLog_User_Failed" xml:space="preserve"><value>محاولات فاشلة</value></data>
+  <data name="ActLog_User_Uploads" xml:space="preserve"><value>مرات الرفع</value></data>
+  <data name="ActLog_User_Downloads" xml:space="preserve"><value>تحميلات التقارير</value></data>
+  <data name="ActLog_User_Changes" xml:space="preserve"><value>تغييرات خطط العمل</value></data>
+  <data name="ActLog_User_Ips" xml:space="preserve"><value>عناوين IP</value></data>
+  <data name="ActLog_User_Devices" xml:space="preserve"><value>الأجهزة</value></data>
+  <data name="ActLog_User_Recent" xml:space="preserve"><value>آخر النشاطات</value></data>
+  <data name="ActLog_User_Close" xml:space="preserve"><value>إغلاق</value></data>
   <data name="ActLog_Reason_wrong_password" xml:space="preserve"><value>كلمة مرور خاطئة</value></data>
   <data name="ActLog_Reason_no_password_set" xml:space="preserve"><value>لم تُعيَّن كلمة مرور بعد</value></data>
   <data name="ActLog_Reason_temp_password_expired" xml:space="preserve"><value>انتهت صلاحية كلمة المرور المؤقتة</value></data>
