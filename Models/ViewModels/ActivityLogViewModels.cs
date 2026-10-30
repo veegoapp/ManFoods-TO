@@ -75,6 +75,38 @@ public class ActivityAlert
     public string Search { get; set; } = "";
 }
 
+public class ActivityUserIp
+{
+    public string Ip { get; set; } = "";
+    public int Count { get; set; }
+    public string LastSeen { get; set; } = "";
+}
+
+public class ActivityUserDevice
+{
+    public string Device { get; set; } = "";
+    public int Count { get; set; }
+    public string LastSeen { get; set; } = "";
+}
+
+/// <summary>Everything one account did in the last <see cref="WindowDays"/> days — what the user drill-down panel shows.</summary>
+public class ActivityUserProfile
+{
+    public string Email { get; set; } = "";
+    public int WindowDays { get; set; }
+    public bool Found { get; set; }
+    public string? LastLogin { get; set; }
+    public int Logins { get; set; }
+    public int FailedAttempts { get; set; }
+    public int Uploads { get; set; }
+    public int ReportDownloads { get; set; }
+    public int ActionPlanChanges { get; set; }
+    public List<ActivityUserIp> Ips { get; set; } = new();
+    public List<ActivityUserDevice> Devices { get; set; } = new();
+    /// <summary>Newest first, at most <see cref="ActivityLogService.UserRecentRows"/> rows.</summary>
+    public List<ActivityLogItem> Recent { get; set; } = new();
+}
+
 public class ActivityLogPage
 {
     public List<ActivityLogItem> Items { get; set; } = new();

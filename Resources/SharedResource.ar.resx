@@ -2324,6 +2324,19 @@
   <data name="ActLog_Alert_TargetedAccount" xml:space="preserve"><value>{0} محاولة دخول فاشلة على الحساب {1}</value></data>
   <data name="ActLog_Alert_NewAdminIp" xml:space="preserve"><value>حساب الأدمن {0} سجّل دخول من عنوان IP جديد ({1})</value></data>
   <data name="ActLog_Alert_RepeatedDenied" xml:space="preserve"><value>{0} إجراء أدمن محظور من {1}</value></data>
+  <data name="ActLog_User_Title" xml:space="preserve"><value>نشاط المستخدم</value></data>
+  <data name="ActLog_User_Window" xml:space="preserve"><value>آخر 90 يوم</value></data>
+  <data name="ActLog_User_NoData" xml:space="preserve"><value>مفيش نشاط مسجّل للحساب ده في آخر 90 يوم.</value></data>
+  <data name="ActLog_User_LastLogin" xml:space="preserve"><value>آخر دخول</value></data>
+  <data name="ActLog_User_Logins" xml:space="preserve"><value>مرات الدخول</value></data>
+  <data name="ActLog_User_Failed" xml:space="preserve"><value>محاولات فاشلة</value></data>
+  <data name="ActLog_User_Uploads" xml:space="preserve"><value>مرات الرفع</value></data>
+  <data name="ActLog_User_Downloads" xml:space="preserve"><value>تحميلات التقارير</value></data>
+  <data name="ActLog_User_Changes" xml:space="preserve"><value>تغييرات خطط العمل</value></data>
+  <data name="ActLog_User_Ips" xml:space="preserve"><value>عناوين IP</value></data>
+  <data name="ActLog_User_Devices" xml:space="preserve"><value>الأجهزة</value></data>
+  <data name="ActLog_User_Recent" xml:space="preserve"><value>آخر النشاطات</value></data>
+  <data name="ActLog_User_Close" xml:space="preserve"><value>إغلاق</value></data>
   <data name="ActLog_Reason_wrong_password" xml:space="preserve"><value>كلمة مرور خاطئة</value></data>
   <data name="ActLog_Reason_no_password_set" xml:space="preserve"><value>لم تُعيَّن كلمة مرور بعد</value></data>
   <data name="ActLog_Reason_temp_password_expired" xml:space="preserve"><value>انتهت صلاحية كلمة المرور المؤقتة</value></data>

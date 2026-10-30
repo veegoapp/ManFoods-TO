@@ -9,6 +9,9 @@ public interface IActivityLogService
 
     Task<ActivityLogPage> GetAsync(ActivityLogQuery query);
 
+    /// <summary>One account's last 90 days: counts, IP addresses, devices and its latest activities. Cached for a minute.</summary>
+    Task<ActivityUserProfile> GetUserProfileAsync(string email);
+
     /// <summary>Failed/blocked sign-ins (24h) and active users (7d). Cached for a minute; cleared when history is cleared.</summary>
     Task<ActivitySecurityOverview> GetSecurityOverviewAsync();
 

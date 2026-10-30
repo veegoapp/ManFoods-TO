@@ -25,6 +25,9 @@ public class ActivityLogService : IActivityLogService
     /// <summary>Most rows one Excel export carries (same ceiling as the page's paging depth).</summary>
     public const int MaxExportRows = MaxDepth;
     private const string SecurityOverviewCacheKey = "activity-logs:security-overview";
+    private const int UserWindowDays = 90;
+    /// <summary>Latest activities shown in the user drill-down.</summary>
+    public const int UserRecentRows = 100;
 
     // Suspicious-pattern thresholds (last 24 hours unless noted).
     private const int FailedPerIpThreshold = 5;
@@ -123,6 +126,76 @@ public class ActivityLogService : IActivityLogService
 
         _cache.Set(SecurityOverviewCacheKey, overview, TimeSpan.FromMinutes(1));
         return overview;
+    }
+
+    public async Task<ActivityUserProfile> GetUserProfileAsync(string email)
+    {
+        var e = (email ?? "").Trim().ToLower();
+        if (e.Length > 256) e = e[..256];
+        var profile = new ActivityUserProfile { Email = e, WindowDays = UserWindowDays };
+        if (e.Length == 0) return profile;
+
+        var cacheKey = "activity-logs:user:" + e;
+        if (_cache.TryGetValue(cacheKey, out ActivityUserProfile? cached) && cached != null) return cached;
+
+        try
+        {
+            var since = DateTime.UtcNow.AddDays(-UserWindowDays);
+            // Bounded by the occurred_at index (90 days) and one account; four small queries, cached for a minute.
+            var mine = _db.ActivityLogs.AsNoTracking()
+                .Where(l => l.OccurredAt >= since && l.UserEmail != null && l.UserEmail.ToLower() == e);
+
+            var counts = await mine.GroupBy(l => l.Action)
+                .Select(g => new { Action = g.Key, Count = g.Count(), Last = g.Max(x => x.OccurredAt) })
+                .ToListAsync();
+            foreach (var c in counts)
+            {
+                switch (c.Action)
+                {
+                    case ActivityActions.LoginSuccess: profile.Logins += c.Count; profile.LastLogin = CairoTime.Format(c.Last); break;
+                    case ActivityActions.LoginFailed or ActivityActions.LoginUnknown or ActivityActions.LoginBlocked: profile.FailedAttempts += c.Count; break;
+                    case ActivityActions.Upload: profile.Uploads += c.Count; break;
+                    case ActivityActions.ReportDownload: profile.ReportDownloads += c.Count; break;
+                    case ActivityActions.ActionPlanNote or ActivityActions.ActionPlanRecommendation
+                        or ActivityActions.ActionPlanAssign or ActivityActions.ActionPlanClose: profile.ActionPlanChanges += c.Count; break;
+                }
+            }
+            profile.Found = counts.Count > 0;
+
+            if (profile.Found)
+            {
+                var ips = await mine.Where(l => l.IpAddress != null)
+                    .GroupBy(l => l.IpAddress!)
+                    .Select(g => new { Ip = g.Key, Count = g.Count(), Last = g.Max(x => x.OccurredAt) })
+                    .OrderByDescending(x => x.Last).Take(10).ToListAsync();
+                profile.Ips = ips.Select(x => new ActivityUserIp { Ip = x.Ip, Count = x.Count, LastSeen = CairoTime.Format(x.Last) }).ToList();
+
+                var agents = await mine.Where(l => l.UserAgent != null)
+                    .GroupBy(l => l.UserAgent!)
+                    .Select(g => new { Agent = g.Key, Count = g.Count(), Last = g.Max(x => x.OccurredAt) })
+                    .OrderByDescending(x => x.Last).Take(20).ToListAsync();
+                profile.Devices = agents
+                    .Select(a => { var (browser, os) = UserAgentParser.Parse(a.Agent); return (Device: $"{browser} · {os}", a.Count, a.Last); })
+                    .Where(a => a.Device != "Unknown · Unknown")
+                    .GroupBy(a => a.Device)
+                    .Select(g => new ActivityUserDevice { Device = g.Key, Count = g.Sum(a => a.Count), LastSeen = CairoTime.Format(g.Max(a => a.Last)) })
+                    .OrderByDescending(d => d.LastSeen).Take(5).ToList();
+
+                var rows = await mine.OrderByDescending(l => l.OccurredAt).ThenByDescending(l => l.Id).Take(UserRecentRows).ToListAsync();
+                var targetIds = rows.Where(r => r.TargetUserId != null).Select(r => r.TargetUserId!.Value).Distinct().ToList();
+                var targets = targetIds.Count == 0
+                    ? new Dictionary<int, string>()
+                    : await _db.Users.AsNoTracking().Where(u => targetIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, u => u.Email);
+                profile.Recent = rows.Select(r => ToItem(r, targets)).ToList();
+            }
+        }
+        catch (System.Data.Common.DbException)
+        {
+            return profile; // table not migrated yet — not cached
+        }
+
+        _cache.Set(cacheKey, profile, TimeSpan.FromMinutes(1));
+        return profile;
     }
 
     // Rule-based detection over the last 24 hours. Every query is bounded by occurred_at and returns only

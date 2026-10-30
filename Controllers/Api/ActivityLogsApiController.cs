@@ -39,6 +39,14 @@ public class ActivityLogsApiController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>Everything one account did in the last 90 days (drill-down panel).</summary>
+    [HttpGet("user"), RequireSuperAdmin]
+    public async Task<IActionResult> User([FromQuery] string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email) || email.Length > 256) return BadRequest(new { error = _L["ActLog_LoadFailed"].Value });
+        return Ok(await _logs.GetUserProfileAsync(email));
+    }
+
     /// <summary>Failed/blocked sign-ins in the last 24 hours and active users in the last 7 days (not affected by the table's filters).</summary>
     [HttpGet("security"), RequireSuperAdmin]
     public async Task<IActionResult> Security() => Ok(await _logs.GetSecurityOverviewAsync());
