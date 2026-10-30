@@ -196,6 +196,12 @@ public class DashboardService : IDashboardService
 
     public async Task<List<string>> GetJobTitlesAsync(int? month, int? year, string role, string? assignedName)
     {
+        // The all-periods lookup (Comparisons page and report) would otherwise read every roster row on each page open:
+        // distinct in SQL and cached like the other filter results (keyed on who is asking, so store scope is respected).
+        var allPeriods = !month.HasValue && !year.HasValue;
+        var cacheKey = FilterResultCache.BuildKey("job-titles-all", role, assignedName);
+        if (allPeriods && _filterCache.TryGet(cacheKey, out List<string>? cachedJobs)) return cachedJobs!;
+
         var accessible = await GetAccessibleStoresAsync(role, assignedName, month, year);
         var active = _db.ActiveEmployees.AsQueryable();
         var resignations = _db.Resignations.AsQueryable();
@@ -211,9 +217,11 @@ public class DashboardService : IDashboardService
             active = active.Where(e => accessible.Contains(e.Store));
             resignations = resignations.Where(e => accessible.Contains(e.Store));
         }
-        var activeJobs = await active.Where(e => e.JobTitle != "").Select(e => e.JobTitle).ToListAsync();
-        var resignedJobs = await resignations.Where(e => e.JobTitle != "").Select(e => e.JobTitle).ToListAsync();
-        return activeJobs.Concat(resignedJobs).Distinct().OrderBy(s => s).ToList();
+        var activeJobs = await active.Where(e => e.JobTitle != "").Select(e => e.JobTitle).Distinct().ToListAsync();
+        var resignedJobs = await resignations.Where(e => e.JobTitle != "").Select(e => e.JobTitle).Distinct().ToListAsync();
+        var jobTitles = activeJobs.Concat(resignedJobs).Distinct().OrderBy(s => s).ToList();
+        if (allPeriods) _filterCache.Set(cacheKey, jobTitles, CacheDuration, jobTitles.Count);
+        return jobTitles;
     }
 
     public async Task<DashboardKpiViewModel> GetKpisAsync(int? month, int? year, string? store, string role, string? assignedName,
