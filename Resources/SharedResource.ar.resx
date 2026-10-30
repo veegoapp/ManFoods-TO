@@ -1193,14 +1193,14 @@
   <data name="CMP_RetentionMilestonesSub" xml:space="preserve"><value>الاحتفاظ عند 6 أشهر وسنة والمراحل التالية للأفواج المؤهلة</value></data>
   <data name="CMP_BasisTurnover" xml:space="preserve"><value>الأساس: عدد الاستقالات ÷ متوسط عدد الموظفين النشطين خلال الشهور المختارة. عند عدم اختيار فرع، يعرض الشارت أعلى 8 فروع حسب المعدل المجمع للفترتين A وB.</value></data>
   <data name="CMP_BasisNinety" xml:space="preserve"><value>الأساس: الموظفون الذين تم تعيينهم في الأفواج المختارة وتركوا العمل خلال 90 يومًا ÷ إجمالي التعيينات في هذه الأفواج، مع تطبيق نفس الشهور والفلاتر.</value></data>
-  <data name="CMP_BasisWorkforce" xml:space="preserve"><value>الأساس: لقطات سجل الموظفين النشطين. يتم جمع عدد الموظفين عبر الشهور المختارة، ويعرض الشارت أعلى 8 فروع حسب إجمالي الفترتين A وB.</value></data>
-  <data name="CMP_BasisResignations" xml:space="preserve"><value>الأساس: سجلات الاستقالات المطابقة للشهور والفلاتر المختارة. الشارت يعرض أعدادًا وليس نسبة مئوية، مع ترتيب أعلى 8 فروع حسب الإجمالي المجمع.</value></data>
+  <data name="CMP_BasisWorkforce" xml:space="preserve"><value>الأساس: لقطات سجل الموظفين النشطين. يتم جمع عدد الموظفين عبر الشهور المختارة، وعند اختلاف عدد الشهور بين الجانبين يُعرض المتوسط الشهري بدلًا منه. يعرض الشارت أعلى 8 فروع حسب إجمالي الفترتين A وB.</value></data>
+  <data name="CMP_BasisResignations" xml:space="preserve"><value>الأساس: سجلات الاستقالات المطابقة للشهور والفلاتر المختارة. الشارت يعرض أعدادًا (متوسطًا شهريًا عند اختلاف عدد الشهور بين الجانبين) وليس نسبة مئوية، مع ترتيب أعلى 8 فروع حسب المجموع المجمع.</value></data>
   <data name="CMP_BasisRetention" xml:space="preserve"><value>الأساس: أفواج التعيين في كل فترة مختارة. كل مرحلة = الموظفون المستمرون ÷ أعضاء الفوج المؤهلين؛ يتم استبعاد الأفواج غير الناضجة حتى يصبح ناتجها قابلًا للتحديد.</value></data>
-  <data name="CMP_BasisExitReasons" xml:space="preserve"><value>الأساس: ردود مقابلات الخروج المطابقة للفترات والفلاتر التنظيمية المختارة، مجمعة حسب السبب. يتم عرض أكثر 8 أسباب تكرارًا بين A وB.</value></data>
+  <data name="CMP_BasisExitReasons" xml:space="preserve"><value>الأساس: ردود مقابلات الخروج المطابقة للفترات والفلاتر التنظيمية المختارة، مجمعة حسب السبب ومعروضة كنسبة من ردود كل جانب، فتبقى الفترات ذات الأعداد المختلفة قابلة للمقارنة. يتم عرض أكثر 8 أسباب تكرارًا بين A وB.</value></data>
   <data name="CMP_BasisExitSentiment" xml:space="preserve"><value>الأساس: الإجابات الإيجابية في سؤالَي الرغبة في العودة والانطباع العام ÷ كل الإجابات غير الفارغة. العدد أسفل الشارت يحسب نماذج المقابلات.</value></data>
   <data name="Comparisons_ExitSection" xml:space="preserve"><value>مقابلات إنهاء الخدمة</value></data>
   <data name="Chart_ExitReasonsCompare" xml:space="preserve"><value>أسباب الاستقالة — A مقابل B</value></data>
-  <data name="CMP_ExitReasonsSub" xml:space="preserve"><value>أكثر أسباب الاستقالة تكرارًا في مقابلات الخروج لكل فترة</value></data>
+  <data name="CMP_ExitReasonsSub" xml:space="preserve"><value>نسبة كل سبب من مقابلات الخروج في كل فترة (الأعداد في التلميح)</value></data>
   <data name="Chart_ExitSentimentCompare" xml:space="preserve"><value>انطباع مقابلات الخروج — A مقابل B</value></data>
   <data name="CMP_ExitSentimentSub" xml:space="preserve"><value>نسبة الانطباع الإيجابي وعدد مقابلات الخروج المسجلة</value></data>
   <data name="CMP_ExitPositive" xml:space="preserve"><value>نسبة الانطباع الإيجابي</value></data>
@@ -1210,6 +1210,15 @@
   <data name="Guide_Comparisons_Chart_Retention" xml:space="preserve"><value>الاحتفاظ عند 6 أشهر وسنة والمراحل التالية للأفواج المؤهلة في كل فترة. تُستبعد الأفواج التي لم يمض عليها وقت كافٍ للوصول إلى المرحلة.</value></data>
   <data name="Guide_Comparisons_Chart_Exit" xml:space="preserve"><value>أكثر أسباب الاستقالة تكرارًا والانطباع الإيجابي في مقابلات الخروج لكل فترة، مع عرض عدد الردود أسفل رسم الانطباع حتى يظهر أثر العينات الصغيرة.</value></data>
   <data name="CMP_DeltaSuffix" xml:space="preserve"><value>(A−B)</value></data>
+  <data name="CMP_PeriodNotice" xml:space="preserve"><value>الجانب A يغطي {0} شهر والجانب B يغطي {1}. الأعداد (الموظفون والتعيينات والاستقالات والمغادرون المبكرون) معروضة كمتوسط شهري لتصبح قابلة للمقارنة. أما معدل الدوران ومعدل الـ 90 يوم فهما إجمالي الفترة، فالفترة الأطول تُظهر معدلًا أعلى بطبيعتها.</value></data>
+  <data name="CMP_PerMonth" xml:space="preserve"><value>شهريًا</value></data>
+  <data name="CMP_AvgMonthly" xml:space="preserve"><value>متوسط شهري</value></data>
+  <data name="CMP_DriverCol" xml:space="preserve"><value>المحور</value></data>
+  <data name="CMP_LowSample" xml:space="preserve"><value>أقل من 10 إجابات في أحد الجانبين — اقرأها بحذر</value></data>
+  <data name="CMP_ResponsesShort" xml:space="preserve"><value>إجابة</value></data>
+  <data name="Chart_ExitDriversCompare" xml:space="preserve"><value>محاور الانخراط — A مقابل B</value></data>
+  <data name="CMP_ExitDriversSub" xml:space="preserve"><value>نسبة الإجابات الإيجابية لكل سؤال في مقابلات الخروج، مرتبة حسب التغيّر (A − B) من الأضعف</value></data>
+  <data name="CMP_BasisExitDrivers" xml:space="preserve"><value>الأساس: الإجابات الإيجابية ÷ كل الإجابات غير الفارغة لكل سؤال في مقابلات الخروج، للفترات والفلاتر المختارة (عدد الإجابات بين قوسين). الصفوف التي فيها أقل من 10 إجابات في أحد الجانبين تظهر باهتة.</value></data>
   <data name="CMP_Overall" xml:space="preserve"><value>الإجمالي العام</value></data>
   <data name="CMP_TitleNoChange" xml:space="preserve"><value>{0}: بدون تغيير</value></data>
   <data name="CMP_TitleImproved" xml:space="preserve"><value>تحسّن {0}</value></data>

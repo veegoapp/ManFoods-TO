@@ -89,6 +89,10 @@
 
 
 .cmp-table-hint { font-size:12px; color:var(--text-3); }
+.cmp-notice { display:flex; gap:10px; align-items:flex-start; padding:10px 14px; margin-bottom:16px; border-radius:var(--radius-sm); border:1px solid var(--warning); background:var(--warning-bg); color:var(--text); font-size:13px; line-height:1.5; }
+.cmp-notice[hidden] { display:none; }
+.cmp-notice i { color:var(--warning); margin-top:2px; flex:0 0 auto; }
+.cmp-driver-low { opacity:.55; }
 .cmp-chart-basis {
     display:flex; align-items:flex-start; gap:7px; margin:10px 0 0;
     padding:9px 11px; border:1px solid var(--card-border); border-radius:7px;
@@ -297,6 +301,8 @@
     </div>
 </div>
 
+<div class="cmp-notice" id="cmpPeriodNotice" hidden><i class="bi bi-exclamation-triangle-fill"></i><span id="cmpPeriodNoticeText"></span></div>
+
 <div class="d-flex align-items-center gap-2 mb-3">
     <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.44 0.18 25),oklch(0.6 0.16 25));border-radius:2px"></div>
     <h5 class="mb-0 fw-bold">@L["Common_SmartInsights"]</h5>
@@ -338,6 +344,12 @@
      data-mover-desc-worsened="@L["CMP_MoverDescWorsened"]"
       data-exit-positive="@L["CMP_ExitPositive"]"
       data-exit-responses="@L["CMP_ExitResponses"]"
+     data-period-notice="@L["CMP_PeriodNotice"]"
+     data-per-month="@L["CMP_PerMonth"]"
+     data-avg-monthly="@L["CMP_AvgMonthly"]"
+     data-driver-col="@L["CMP_DriverCol"]"
+     data-low-sample="@L["CMP_LowSample"]"
+     data-responses-short="@L["CMP_ResponsesShort"]"
      data-no-data-short="@L["Common_NoDataShort"]"></div>
 
 <div class="charts-grid mb-4">
@@ -410,6 +422,27 @@
         <div id="cmpExitSentimentMeta" class="cmp-table-hint text-center mt-2"></div>
         <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisExitSentiment"]</span></p>
     </div>
+</div>
+
+<div class="chart-card mb-4" id="cmpExitDriversCard">
+    <div class="chart-header"><h6>@L["Chart_ExitDriversCompare"]</h6><p>@L["CMP_ExitDriversSub"]</p></div>
+    <div class="chart-body" style="height:440px">
+        <canvas id="cmpExitDriversChart"></canvas>
+    </div>
+    <div class="table-responsive mt-3">
+        <table class="table table-sm mb-0" style="font-size:13px">
+            <thead style="background:var(--bg-2)">
+                <tr>
+                    <th class="px-3 py-2">@L["CMP_DriverCol"]</th>
+                    <th class="px-3 py-2 text-center">A %</th>
+                    <th class="px-3 py-2 text-center">B %</th>
+                    <th class="px-3 py-2 text-center">@L["CMP_ChangeAB"]</th>
+                </tr>
+            </thead>
+            <tbody id="cmpDriversBody"></tbody>
+        </table>
+    </div>
+    <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisExitDrivers"]</span></p>
 </div>
 
 <div class="d-flex align-items-center gap-2 mb-3">
@@ -697,12 +730,13 @@ async function cmpFetchSide(side) {
     if (p.soc) retentionQ.set('soc', p.soc);
     if (p.od) retentionQ.set('od', p.od);
     const exitQ = new URLSearchParams(q);
-    const [kpi, ninety, retention, exitReasons, exitSentiment] = await Promise.all([
+    const [kpi, ninety, retention, exitReasons, exitSentiment, exitDrivers] = await Promise.all([
         fetchJson(`/api/dashboard/kpis?${q}`),
         fetchJson(`/api/ninety-day-turnover/kpi?${q}`),
         fetchJson(`/api/retention/milestones?${retentionQ}`),
         fetchJson(`/api/exit-interviews/reasons?${exitQ}`),
-        fetchJson(`/api/exit-interviews/sentiment-summary?${exitQ}`)
+        fetchJson(`/api/exit-interviews/sentiment-summary?${exitQ}`),
+        fetchJson(`/api/exit-interviews/engagement-drivers?${exitQ}`)
     ]);
     let byStore = [], ninetyByStore = [];
     if (!panels[side].store) {
@@ -711,8 +745,25 @@ async function cmpFetchSide(side) {
             fetchJson(`/api/ninety-day-turnover/store-comparison?${q}`)
         ]);
     }
-    return { kpi, ninety, byStore, ninetyByStore, retention, exitReasons, exitSentiment };
+    return { kpi, ninety, byStore, ninetyByStore, retention, exitReasons, exitSentiment, exitDrivers };
 }
+
+/* Period-length normalization ---------------------------------------------
+   Counts (headcount, hires, resignations) are summed over the selected months, so a 12-month side
+   always looks "bigger" than a 1-month side. When the two sides cover a different number of
+   months those counts are shown as monthly averages. Turnover % and 90-day % keep the portal's
+   usual definition (period totals, with the colour rules built on it) — the notice says so. */
+let cmpNorm = { A: 1, B: 1, uneven: false };
+function cmpUpdateNorm() {
+    cmpNorm = { A: Math.max(1, panels.A.months.length), B: Math.max(1, panels.B.months.length), uneven: false };
+    cmpNorm.uneven = cmpNorm.A !== cmpNorm.B;
+    const note = document.getElementById('cmpPeriodNotice');
+    note.hidden = !cmpNorm.uneven;
+    if (cmpNorm.uneven)
+        document.getElementById('cmpPeriodNoticeText').textContent = cmpL.periodNotice.replace('{0}', cmpNorm.A).replace('{1}', cmpNorm.B);
+}
+const cmpPerMonth = (side, v) => cmpNorm.uneven ? Math.round(v / cmpNorm[side] * 10) / 10 : v;
+const cmpCount = v => cmpNorm.uneven ? Number(v).toFixed(1) : v;
 
 function cmpDeltaBadge(a, b, lowerIsBetter) {
     const delta = a - b;
@@ -725,12 +776,14 @@ function cmpDeltaBadge(a, b, lowerIsBetter) {
 }
 
 function cmpRenderKpis(dataA, dataB) {
+    const pm = cmpPerMonth;
+    const tag = (label, suffix) => cmpNorm.uneven ? `${label} (${suffix})` : label;
     const metrics = [
-        { label: cmpL.kpiHeadcount,     desc: cmpL.kpiHeadcountDesc,     a: dataA.kpi.totalHeadcount,      b: dataB.kpi.totalHeadcount,      fmt: v => v,                  lowerIsBetter: null },
-        { label: cmpL.kpiNewHires,      desc: cmpL.kpiNewHiresDesc,      a: dataA.kpi.newHires,            b: dataB.kpi.newHires,            fmt: v => v,                  lowerIsBetter: false },
-        { label: cmpL.kpiResignations,  desc: cmpL.kpiResignationsDesc,  a: dataA.kpi.totalResignations,   b: dataB.kpi.totalResignations,   fmt: v => v,                  lowerIsBetter: true },
+        { label: tag(cmpL.kpiHeadcount, cmpL.avgMonthly),   desc: cmpL.kpiHeadcountDesc,     a: pm('A', dataA.kpi.totalHeadcount),    b: pm('B', dataB.kpi.totalHeadcount),    fmt: cmpCount,                lowerIsBetter: null },
+        { label: tag(cmpL.kpiNewHires, cmpL.perMonth),      desc: cmpL.kpiNewHiresDesc,      a: pm('A', dataA.kpi.newHires),          b: pm('B', dataB.kpi.newHires),          fmt: cmpCount,                lowerIsBetter: false },
+        { label: tag(cmpL.kpiResignations, cmpL.perMonth),  desc: cmpL.kpiResignationsDesc,  a: pm('A', dataA.kpi.totalResignations), b: pm('B', dataB.kpi.totalResignations), fmt: cmpCount,                lowerIsBetter: true },
         { label: cmpL.kpiTurnover,      desc: cmpL.kpiTurnoverDesc,      a: dataA.kpi.turnoverRate,        b: dataB.kpi.turnoverRate,        fmt: v => v.toFixed(1) + '%', lowerIsBetter: true },
-        { label: cmpL.kpiEarlyLeavers,  desc: cmpL.kpiEarlyLeaversDesc,  a: dataA.ninety.earlyLeavers,     b: dataB.ninety.earlyLeavers,     fmt: v => v,                  lowerIsBetter: true },
+        { label: tag(cmpL.kpiEarlyLeavers, cmpL.perMonth),  desc: cmpL.kpiEarlyLeaversDesc,  a: pm('A', dataA.ninety.earlyLeavers),   b: pm('B', dataB.ninety.earlyLeavers),   fmt: cmpCount,                lowerIsBetter: true },
         { label: cmpL.kpiNinetyRate,    desc: cmpL.kpiNinetyRateDesc,    a: dataA.ninety.rate,             b: dataB.ninety.rate,             fmt: v => v.toFixed(1) + '%', lowerIsBetter: true }
     ];
 
@@ -812,19 +865,21 @@ function cmpRenderInsight(dataA, dataB) {
 
 let cmpTurnoverChart, cmpNinetyChart;
 let cmpWorkforceChart, cmpResignationsChart, cmpRetentionChart, cmpExitReasonsChart, cmpExitSentimentChart;
-function cmpBuildSeries(dataA, dataB, storeKey, overallA, overallB, metricKey = 'turnoverRate') {
+function cmpBuildSeries(dataA, dataB, storeKey, overallA, overallB, metricKey = 'turnoverRate', perMonth = false) {
     const allA = !panels.A.store, allB = !panels.B.store;
     if (allA && allB) {
         const mapA = {}, mapB = {};
-        const valueOf = r => metricKey === 'turnoverRate'
+        const base = r => metricKey === 'turnoverRate'
             ? (r.value ?? r.turnoverRate)
             : (r[metricKey] ?? 0);
-        (dataA[storeKey] || []).forEach(r => mapA[r.label ?? r.storeName] = valueOf(r));
-        (dataB[storeKey] || []).forEach(r => mapB[r.label ?? r.storeName] = valueOf(r));
+        const valueOf = (r, side) => perMonth ? cmpPerMonth(side, base(r)) : base(r);
+        (dataA[storeKey] || []).forEach(r => mapA[r.label ?? r.storeName] = valueOf(r, 'A'));
+        (dataB[storeKey] || []).forEach(r => mapB[r.label ?? r.storeName] = valueOf(r, 'B'));
         const stores = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)]))
             .sort((s1, s2) => ((mapA[s2] || 0) + (mapB[s2] || 0)) - ((mapA[s1] || 0) + (mapB[s1] || 0)))
             .slice(0, 8);
-        return { labels: stores, seriesA: stores.map(s => mapA[s] || 0), seriesB: stores.map(s => mapB[s] || 0) };
+        const r1 = v => Math.round((v || 0) * 10) / 10;
+        return { labels: stores, seriesA: stores.map(s => r1(mapA[s])), seriesB: stores.map(s => r1(mapB[s])) };
     }
     return { labels: [cmpL.overall], seriesA: [overallA], seriesB: [overallB] };
 }
@@ -860,7 +915,9 @@ function cmpRenderCharts(dataA, dataB) {
         }
     });
 
-    const workforce = cmpBuildSeries(dataA, dataB, 'byStore', dataA.kpi.totalHeadcount, dataB.kpi.totalHeadcount, 'headcount');
+    // Summed headcount normally; the per-store monthly average when the two sides cover a different number of months.
+    const workforce = cmpBuildSeries(dataA, dataB, 'byStore', cmpPerMonth('A', dataA.kpi.totalHeadcount), cmpPerMonth('B', dataB.kpi.totalHeadcount),
+        cmpNorm.uneven ? 'avgHeadcount' : 'headcount');
     cmpWorkforceChart = mkChart(cmpWorkforceChart, 'cmpWorkforceChart', {
         type: 'bar',
         data: { labels: workforce.labels, datasets: [
@@ -874,7 +931,7 @@ function cmpRenderCharts(dataA, dataB) {
         }
     });
 
-    const resignations = cmpBuildSeries(dataA, dataB, 'byStore', dataA.kpi.totalResignations, dataB.kpi.totalResignations, 'resignations');
+    const resignations = cmpBuildSeries(dataA, dataB, 'byStore', cmpPerMonth('A', dataA.kpi.totalResignations), cmpPerMonth('B', dataB.kpi.totalResignations), 'resignations', true);
     cmpResignationsChart = mkChart(cmpResignationsChart, 'cmpResignationsChart', {
         type: 'bar',
         data: { labels: resignations.labels, datasets: [
@@ -910,21 +967,25 @@ function cmpRenderCharts(dataA, dataB) {
         }
     });
 
-    const reasonMaps = [dataA.exitReasons || [], dataB.exitReasons || []].map(rows =>
-        Object.fromEntries(rows.map(x => [x.label, x.value])));
+    // Share of each side's own responses (a count would just reflect how many interviews each period had).
+    const reasonRows = [dataA.exitReasons || [], dataB.exitReasons || []];
+    const reasonTotals = reasonRows.map(rows => rows.reduce((s, x) => s + (x.value || 0), 0));
+    const reasonMaps = reasonRows.map(rows => Object.fromEntries(rows.map(x => [x.label, x.value])));
+    const share = (i, label) => reasonTotals[i] > 0 ? Math.round((reasonMaps[i][label] || 0) / reasonTotals[i] * 1000) / 10 : 0;
     const reasons = Array.from(new Set([
         ...Object.keys(reasonMaps[0]), ...Object.keys(reasonMaps[1])
-    ])).sort((a, b) => (reasonMaps[0][b] || 0) + (reasonMaps[1][b] || 0) - (reasonMaps[0][a] || 0) - (reasonMaps[1][a] || 0)).slice(0, 8);
+    ])).sort((a, b) => (share(0, b) + share(1, b)) - (share(0, a) + share(1, a))).slice(0, 8);
     cmpExitReasonsChart = mkChart(cmpExitReasonsChart, 'cmpExitReasonsChart', {
         type: 'bar',
         data: { labels: reasons, datasets: [
-            { label: cmpLabel('A'), data: reasons.map(x => reasonMaps[0][x] || 0), backgroundColor: ChartColors.SERIES.SECONDARY, borderRadius: 4 },
-            { label: cmpLabel('B'), data: reasons.map(x => reasonMaps[1][x] || 0), backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
+            { label: cmpLabel('A'), data: reasons.map(x => share(0, x)), backgroundColor: ChartColors.SERIES.SECONDARY, borderRadius: 4 },
+            { label: cmpLabel('B'), data: reasons.map(x => share(1, x)), backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
         ] },
         options: {
             indexAxis: 'y',
             interaction: { mode: 'index', intersect: true },
-            plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.formattedValue}` } } }
+            plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.formattedValue}% (${reasonMaps[c.datasetIndex][reasons[c.dataIndex]] || 0})` } } },
+            scales: { x: { ticks: { callback: v => v + '%' } } }
         }
     });
 
@@ -946,6 +1007,58 @@ function cmpRenderCharts(dataA, dataB) {
     document.getElementById('cmpExitSentimentMeta').innerHTML =
         `<span class="me-3">${sapEscape(cmpLabel('A'))}: ${dataA.exitSentiment?.totalResponses || 0} ${sapEscape(cmpL.exitResponses)}</span>` +
         `<span>${sapEscape(cmpLabel('B'))}: ${dataB.exitSentiment?.totalResponses || 0} ${sapEscape(cmpL.exitResponses)}</span>`;
+}
+
+/* Exit Interview drivers — positive-answer % per question, A vs B, ordered by change (A − B), weakest first. */
+let cmpExitDriversChart;
+const CMP_DRIVER_MIN_RESPONSES = 10;
+function cmpRenderDrivers(dataA, dataB) {
+    const mapOf = rows => Object.fromEntries((rows || []).map(d => [d.label, d]));
+    const mA = mapOf(dataA.exitDrivers), mB = mapOf(dataB.exitDrivers);
+    const rows = Array.from(new Set([...Object.keys(mA), ...Object.keys(mB)]))
+        .map(label => {
+            const a = mA[label] || { positivePercent: 0, totalResponses: 0 }, b = mB[label] || { positivePercent: 0, totalResponses: 0 };
+            return { label, a: a.positivePercent, b: b.positivePercent, na: a.totalResponses, nb: b.totalResponses,
+                     low: a.totalResponses < CMP_DRIVER_MIN_RESPONSES || b.totalResponses < CMP_DRIVER_MIN_RESPONSES };
+        })
+        .filter(r => r.na > 0 || r.nb > 0)
+        .sort((x, y) => (x.a - x.b) - (y.a - y.b));
+
+    const tbody = document.getElementById('cmpDriversBody');
+    if (!rows.length) {
+        cmpExitDriversChart = mkChart(cmpExitDriversChart, 'cmpExitDriversChart', { type: 'bar', data: { labels: [], datasets: [] } });
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-3 text-muted">${cmpL.noDataShort}</td></tr>`;
+        return;
+    }
+
+    cmpExitDriversChart = mkChart(cmpExitDriversChart, 'cmpExitDriversChart', {
+        type: 'bar',
+        data: { labels: rows.map(r => r.label), datasets: [
+            { label: cmpLabel('A'), data: rows.map(r => r.a), backgroundColor: ChartColors.SERIES.SECONDARY, borderRadius: 4 },
+            { label: cmpLabel('B'), data: rows.map(r => r.b), backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
+        ] },
+        options: {
+            indexAxis: 'y',
+            interaction: { mode: 'index', intersect: true },
+            plugins: { legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: c => { const r = rows[c.dataIndex]; return ` ${c.dataset.label}: ${c.formattedValue}% (${c.datasetIndex === 0 ? r.na : r.nb} ${cmpL.responsesShort})`; } } },
+                datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v > 0 ? v.toFixed(0) + '%' : '' } },
+            scales: { x: { min: 0, max: 100, ticks: { callback: v => v + '%' } } }
+        }
+    });
+
+    const ltr = v => `<span style="direction:ltr;unicode-bidi:isolate">${v > 0 ? '+' : ''}${v.toFixed(1)}</span>`;
+    tbody.innerHTML = rows.map(r => {
+        const d = r.a - r.b;
+        const color = Math.abs(d) < 0.05 ? 'var(--text-3)' : d > 0 ? 'var(--success)' : 'var(--danger)';
+        const title = r.low ? ` title="${sapEscape(cmpL.lowSample)}"` : '';
+        return `<tr class="${r.low ? 'cmp-driver-low' : ''}"${title}>
+            <td class="px-3 py-2 fw-semibold">${sapEscape(r.label)}</td>
+            <td class="px-3 py-2 text-center">${r.a.toFixed(1)}% <span class="text-muted">(${r.na})</span></td>
+            <td class="px-3 py-2 text-center">${r.b.toFixed(1)}% <span class="text-muted">(${r.nb})</span></td>
+            <td class="px-3 py-2 text-center fw-bold" style="color:${color}">${ltr(d)}</td>
+        </tr>`;
+    }).join('');
 }
 
 let cmpTableRows = [];
@@ -1012,9 +1125,11 @@ function cmpRenderTableRows() {
 async function cmpRefreshAll() {
     if (!panels.A.months.length || !panels.B.months.length) return;
     const [dataA, dataB] = await Promise.all([cmpFetchSide('A'), cmpFetchSide('B')]);
+    cmpUpdateNorm();
     cmpRenderKpis(dataA, dataB);
     cmpRenderInsight(dataA, dataB);
     cmpRenderCharts(dataA, dataB);
+    cmpRenderDrivers(dataA, dataB);
     cmpRenderTable(dataA, dataB);
 }
 

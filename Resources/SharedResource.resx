@@ -1191,19 +1191,28 @@
   <data name="CMP_RetentionMilestonesSub" xml:space="preserve"><value>Retention at 6 months, 1 year and later milestones for eligible hire cohorts</value></data>
   <data name="CMP_BasisTurnover" xml:space="preserve"><value>Basis: resignations divided by average active headcount across the selected months. When no store is selected, the chart shows the top 8 stores by combined A+B rate.</value></data>
   <data name="CMP_BasisNinety" xml:space="preserve"><value>Basis: employees hired in the selected cohorts who resigned within 90 days, divided by total hires in those cohorts. The chart uses the same months and filters as the comparison.</value></data>
-  <data name="CMP_BasisWorkforce" xml:space="preserve"><value>Basis: active employee roster snapshots. Headcount is summed across the selected months; the chart shows the top 8 stores by combined A+B headcount.</value></data>
-  <data name="CMP_BasisResignations" xml:space="preserve"><value>Basis: resignation records assigned to the selected months and filters. The chart shows counts, not a percentage; the top 8 stores are ranked by combined A+B count.</value></data>
+  <data name="CMP_BasisWorkforce" xml:space="preserve"><value>Basis: active employee roster snapshots. Headcount is summed across the selected months; when the two sides cover a different number of months it is shown as the monthly average instead. The chart shows the top 8 stores by combined A+B headcount.</value></data>
+  <data name="CMP_BasisResignations" xml:space="preserve"><value>Basis: resignation records assigned to the selected months and filters. The chart shows counts (monthly averages when the two sides cover a different number of months), not a percentage; the top 8 stores are ranked by combined A+B value.</value></data>
   <data name="CMP_BasisRetention" xml:space="preserve"><value>Basis: hire cohorts from each selected period. Each milestone is retained employees divided by eligible cohort members; immature cohorts are excluded until the outcome is knowable.</value></data>
-  <data name="CMP_BasisExitReasons" xml:space="preserve"><value>Basis: exit-interview responses matching the selected periods and organizational filters, grouped by reason. The 8 most frequent combined A+B reasons are displayed.</value></data>
+  <data name="CMP_BasisExitReasons" xml:space="preserve"><value>Basis: exit-interview responses matching the selected periods and organizational filters, grouped by reason and shown as a percentage of each side's own responses, so periods with a different number of interviews stay comparable. The 8 most frequent combined A+B reasons are displayed.</value></data>
   <data name="CMP_BasisExitSentiment" xml:space="preserve"><value>Basis: positive answers across the Would Return and Overall Experience questions divided by all non-empty answers. The response count below the chart counts forms.</value></data>
   <data name="Comparisons_ExitSection" xml:space="preserve"><value>Exit Interviews</value></data>
   <data name="Chart_ExitReasonsCompare" xml:space="preserve"><value>Reasons for Leaving — A vs B</value></data>
-  <data name="CMP_ExitReasonsSub" xml:space="preserve"><value>Most common reasons recorded in exit interviews for each period</value></data>
+  <data name="CMP_ExitReasonsSub" xml:space="preserve"><value>Share of each period's exit interviews by reason (counts in the tooltip)</value></data>
   <data name="Chart_ExitSentimentCompare" xml:space="preserve"><value>Exit Interview Sentiment — A vs B</value></data>
   <data name="CMP_ExitSentimentSub" xml:space="preserve"><value>Positive sentiment and the number of submitted exit interviews</value></data>
   <data name="CMP_ExitPositive" xml:space="preserve"><value>Positive sentiment %</value></data>
   <data name="CMP_ExitResponses" xml:space="preserve"><value>Interview responses</value></data>
   <data name="CMP_DeltaSuffix" xml:space="preserve"><value>(A−B)</value></data>
+  <data name="CMP_PeriodNotice" xml:space="preserve"><value>Side A covers {0} month(s) and side B covers {1}. Counts (headcount, hires, resignations, early leavers) are shown as monthly averages so they can be compared. Turnover % and 90-day % are period totals, so a longer period naturally shows a higher rate than a shorter one.</value></data>
+  <data name="CMP_PerMonth" xml:space="preserve"><value>per month</value></data>
+  <data name="CMP_AvgMonthly" xml:space="preserve"><value>monthly avg</value></data>
+  <data name="CMP_DriverCol" xml:space="preserve"><value>Driver</value></data>
+  <data name="CMP_LowSample" xml:space="preserve"><value>Fewer than 10 answers on one side — read with caution</value></data>
+  <data name="CMP_ResponsesShort" xml:space="preserve"><value>responses</value></data>
+  <data name="Chart_ExitDriversCompare" xml:space="preserve"><value>Engagement Drivers — A vs B</value></data>
+  <data name="CMP_ExitDriversSub" xml:space="preserve"><value>Positive answers per exit-interview question, ordered by change (A − B), weakest first</value></data>
+  <data name="CMP_BasisExitDrivers" xml:space="preserve"><value>Basis: positive answers divided by all non-empty answers to each exit-interview question, for the selected periods and filters (answer counts in brackets). Rows with fewer than 10 answers on either side are dimmed.</value></data>
   <data name="CMP_Overall" xml:space="preserve"><value>Overall</value></data>
   <data name="CMP_TitleNoChange" xml:space="preserve"><value>{0}: No Change</value></data>
   <data name="CMP_TitleImproved" xml:space="preserve"><value>{0} Improved</value></data>
