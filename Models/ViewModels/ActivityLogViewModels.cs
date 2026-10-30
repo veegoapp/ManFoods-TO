@@ -56,6 +56,23 @@ public class ActivitySecurityOverview
     public int BlockedLogins24h { get; set; }
     /// <summary>Distinct accounts that signed in successfully in the last 7 days.</summary>
     public int ActiveUsers7d { get; set; }
+    /// <summary>Suspicious patterns found in the last 24 hours, most serious first. Empty when there is nothing to flag.</summary>
+    public List<ActivityAlert> Alerts { get; set; } = new();
+}
+
+/// <summary>One flagged pattern. Action/Status/Search are the table filters that show the rows behind it.</summary>
+public class ActivityAlert
+{
+    /// <summary>"brute-force", "targeted-account", "new-admin-ip" or "repeated-denied".</summary>
+    public string Kind { get; set; } = "";
+    /// <summary>"high" or "medium".</summary>
+    public string Severity { get; set; } = "medium";
+    public string Message { get; set; } = "";
+    /// <summary>When the latest matching event happened (Cairo time).</summary>
+    public string LastSeen { get; set; } = "";
+    public string Action { get; set; } = "";
+    public string Status { get; set; } = "";
+    public string Search { get; set; } = "";
 }
 
 public class ActivityLogPage

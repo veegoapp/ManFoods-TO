@@ -26,6 +26,13 @@ public class ActivityLogService : IActivityLogService
     public const int MaxExportRows = MaxDepth;
     private const string SecurityOverviewCacheKey = "activity-logs:security-overview";
 
+    // Suspicious-pattern thresholds (last 24 hours unless noted).
+    private const int FailedPerIpThreshold = 5;
+    private const int FailedPerAccountThreshold = 5;
+    private const int DeniedPerUserThreshold = 3;
+    private const int KnownIpLookbackDays = 90;
+    private const int MaxAlerts = 10;
+
     /// <summary>Filter key → the stored action codes it selects.</summary>
     public static readonly IReadOnlyDictionary<string, string[]> ActionFilters = new Dictionary<string, string[]>
     {
@@ -106,6 +113,8 @@ public class ActivityLogService : IActivityLogService
                 .Select(l => l.UserEmail!.ToLower())
                 .Distinct()
                 .CountAsync();
+
+            overview.Alerts = await FindAlertsAsync(since24h);
         }
         catch (System.Data.Common.DbException)
         {
@@ -114,6 +123,94 @@ public class ActivityLogService : IActivityLogService
 
         _cache.Set(SecurityOverviewCacheKey, overview, TimeSpan.FromMinutes(1));
         return overview;
+    }
+
+    // Rule-based detection over the last 24 hours. Every query is bounded by occurred_at and returns only
+    // groups over a threshold (or a short distinct list), so the cost does not grow with the table.
+    private async Task<List<ActivityAlert>> FindAlertsAsync(DateTime since24h)
+    {
+        var alerts = new List<(int Rank, int Count, ActivityAlert Alert)>();
+        string Seen(DateTime t) => CairoTime.Format(t);
+        string Msg(string key, params object[] args) => string.Format(_L[key].Value, args);
+
+        // 1) many failed attempts from one IP address
+        var byIp = await _db.ActivityLogs.AsNoTracking()
+            .Where(l => l.OccurredAt >= since24h && l.IpAddress != null
+                        && (l.Action == ActivityActions.LoginFailed || l.Action == ActivityActions.LoginUnknown))
+            .GroupBy(l => l.IpAddress!)
+            .Select(g => new { Ip = g.Key, Count = g.Count(), Last = g.Max(x => x.OccurredAt) })
+            .Where(x => x.Count >= FailedPerIpThreshold)
+            .OrderByDescending(x => x.Count).Take(MaxAlerts)
+            .ToListAsync();
+        foreach (var x in byIp)
+            alerts.Add((0, x.Count, new ActivityAlert
+            {
+                Kind = "brute-force", Severity = "high", Message = Msg("ActLog_Alert_BruteForce", x.Count, x.Ip),
+                LastSeen = Seen(x.Last), Status = "failed", Search = x.Ip,
+            }));
+
+        // 2) many failed attempts against one account
+        var byAccount = await _db.ActivityLogs.AsNoTracking()
+            .Where(l => l.OccurredAt >= since24h && l.UserEmail != null
+                        && (l.Action == ActivityActions.LoginFailed || l.Action == ActivityActions.LoginBlocked))
+            .GroupBy(l => l.UserEmail!.ToLower())
+            .Select(g => new { Email = g.Key, Count = g.Count(), Last = g.Max(x => x.OccurredAt) })
+            .Where(x => x.Count >= FailedPerAccountThreshold)
+            .OrderByDescending(x => x.Count).Take(MaxAlerts)
+            .ToListAsync();
+        foreach (var x in byAccount)
+            alerts.Add((1, x.Count, new ActivityAlert
+            {
+                Kind = "targeted-account", Severity = "high", Message = Msg("ActLog_Alert_TargetedAccount", x.Count, x.Email),
+                LastSeen = Seen(x.Last), Status = "failed", Search = x.Email,
+            }));
+
+        // 3) the same person repeatedly refused an admin action
+        var denied = await _db.ActivityLogs.AsNoTracking()
+            .Where(l => l.OccurredAt >= since24h && l.UserEmail != null && l.Action == ActivityActions.AccessDenied)
+            .GroupBy(l => l.UserEmail!.ToLower())
+            .Select(g => new { Email = g.Key, Count = g.Count(), Last = g.Max(x => x.OccurredAt) })
+            .Where(x => x.Count >= DeniedPerUserThreshold)
+            .OrderByDescending(x => x.Count).Take(MaxAlerts)
+            .ToListAsync();
+        foreach (var x in denied)
+            alerts.Add((3, x.Count, new ActivityAlert
+            {
+                Kind = "repeated-denied", Severity = "medium", Message = Msg("ActLog_Alert_RepeatedDenied", x.Count, x.Email),
+                LastSeen = Seen(x.Last), Action = "denied", Search = x.Email,
+            }));
+
+        // 4) an admin portal sign-in from an IP that account has never used before
+        var recent = await _db.ActivityLogs.AsNoTracking()
+            .Where(l => l.OccurredAt >= since24h && l.Action == ActivityActions.LoginSuccess && l.Portal == "Admin"
+                        && l.UserEmail != null && l.IpAddress != null)
+            .Select(l => new { Email = l.UserEmail!.ToLower(), Ip = l.IpAddress!, At = l.OccurredAt })
+            .Take(500)
+            .ToListAsync();
+        if (recent.Count > 0)
+        {
+            var emails = recent.Select(r => r.Email).Distinct().ToList();
+            var lookback = DateTime.UtcNow.AddDays(-KnownIpLookbackDays);
+            var known = await _db.ActivityLogs.AsNoTracking()
+                .Where(l => l.OccurredAt >= lookback && l.OccurredAt < since24h && l.Action == ActivityActions.LoginSuccess
+                            && l.UserEmail != null && l.IpAddress != null && emails.Contains(l.UserEmail.ToLower()))
+                .Select(l => new { Email = l.UserEmail!.ToLower(), Ip = l.IpAddress! })
+                .Distinct()
+                .ToListAsync();
+            var knownByEmail = known.GroupBy(k => k.Email).ToDictionary(g => g.Key, g => g.Select(k => k.Ip).ToHashSet());
+            foreach (var g in recent.GroupBy(r => (r.Email, r.Ip)))
+            {
+                // No earlier history for the account = a first sign-in, not a "new" IP.
+                if (!knownByEmail.TryGetValue(g.Key.Email, out var ips) || ips.Contains(g.Key.Ip)) continue;
+                alerts.Add((2, g.Count(), new ActivityAlert
+                {
+                    Kind = "new-admin-ip", Severity = "medium", Message = Msg("ActLog_Alert_NewAdminIp", g.Key.Email, g.Key.Ip),
+                    LastSeen = Seen(g.Max(r => r.At)), Action = "login", Search = g.Key.Email,
+                }));
+            }
+        }
+
+        return alerts.OrderBy(a => a.Rank).ThenByDescending(a => a.Count).Take(MaxAlerts).Select(a => a.Alert).ToList();
     }
 
     public async Task<byte[]> ExportAsync(ActivityLogQuery query)
@@ -168,7 +265,9 @@ public class ActivityLogService : IActivityLogService
         if (search != "")
         {
             var needle = search.ToLower();
-            logs = logs.Where(l => l.UserEmail != null && l.UserEmail.ToLower().Contains(needle));
+            // The "User" box also finds an IP address, so an alert about an IP can open its rows.
+            logs = logs.Where(l => (l.UserEmail != null && l.UserEmail.ToLower().Contains(needle))
+                                || (l.IpAddress != null && l.IpAddress.Contains(needle)));
         }
         if (q.Action != null && ActionFilters.TryGetValue(q.Action, out var codes)) logs = logs.Where(l => codes.Contains(l.Action));
         if (includeStatus)

@@ -23,6 +23,15 @@
 .al-sec-item { color:var(--text-2); }
 .al-sec-item b { font-size:15px; color:var(--text); margin-inline-start:4px; }
 .al-sec-item.al-warn b { color:var(--danger); }
+.al-alerts { margin-bottom:16px; border:1px solid var(--danger); border-radius:10px; background:var(--danger-bg); padding:10px 16px; }
+.al-alerts[hidden] { display:none; }
+.al-alerts-title { font-weight:700; font-size:13px; color:var(--danger); margin-bottom:6px; }
+.al-alert { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:13px; border-top:1px solid var(--card-border); }
+.al-alert:first-of-type { border-top:0; }
+.al-alert-dot { width:8px; height:8px; border-radius:50%; flex:0 0 auto; background:var(--warning); }
+.al-alert.al-high .al-alert-dot { background:var(--danger); }
+.al-alert-msg { flex:1; color:var(--text); word-break:break-word; }
+.al-alert-time { color:var(--text-3); font-size:12px; white-space:nowrap; }
 </style>
 
 <div class="page-header">
@@ -40,6 +49,11 @@
     <span class="al-sec-item" id="alSecFailedWrap">@L["ActLog_Sec_Failed"]<b id="alSecFailed">–</b></span>
     <span class="al-sec-item" id="alSecBlockedWrap">@L["ActLog_Sec_Blocked"]<b id="alSecBlocked">–</b></span>
     <span class="al-sec-item">@L["ActLog_Sec_Active"]<b id="alSecActive">–</b></span>
+</div>
+
+<div class="al-alerts" id="alAlerts" hidden>
+    <div class="al-alerts-title"><i class="bi bi-exclamation-triangle-fill me-1"></i>@L["ActLog_Alert_Title"]</div>
+    <div id="alAlertList"></div>
 </div>
 
 <div class="kpi-grid mb-4">
@@ -297,6 +311,29 @@
         }
     }
 
+    // Each alert's "View" sets the table filters to the rows behind it (messages come from the server, inserted as text).
+    const cairoDay = d => new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(d);
+    function renderAlerts(alerts) {
+        const list = $('alAlertList'); list.replaceChildren();
+        $('alAlerts').hidden = alerts.length === 0;
+        alerts.forEach(a => {
+            const row = el('div', null, 'al-alert ' + (a.severity === 'high' ? 'al-high' : ''));
+            const view = el('button', @Json.Serialize(L["ActLog_Alert_View"].Value), 'btn btn-outline-secondary btn-sm');
+            view.type = 'button';
+            view.addEventListener('click', () => {
+                $('alSearch').value = a.search || '';
+                $('alAction').value = a.action || '';
+                $('alStatus').value = a.status || '';
+                $('alFrom').value = cairoDay(new Date(Date.now() - 24 * 3600 * 1000));
+                $('alTo').value = '';
+                reload();
+                $('alFilters').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+            row.append(el('span', null, 'al-alert-dot'), el('span', a.message, 'al-alert-msg'), el('span', a.lastSeen, 'al-alert-time'), view);
+            list.append(row);
+        });
+    }
+
     // Security strip: loaded once on open (server-cached for a minute), not on every filter change.
     async function loadSecurity() {
         try {
@@ -309,6 +346,7 @@
             $('alSecFailedWrap').classList.toggle('al-warn', s.failedLogins24h > 0);
             $('alSecBlockedWrap').classList.toggle('al-warn', s.blockedLogins24h > 0);
             $('alSecurity').hidden = false;
+            renderAlerts(s.alerts || []);
         } catch { /* the strip is optional — the table below still works */ }
     }
     loadSecurity();

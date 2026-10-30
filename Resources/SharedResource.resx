@@ -2312,6 +2312,12 @@
   <data name="ActLog_Sec_Blocked" xml:space="preserve"><value>Blocked sign-ins (24h)</value></data>
   <data name="ActLog_Sec_Active" xml:space="preserve"><value>Active users (7 days)</value></data>
   <data name="ActLog_Export_Button" xml:space="preserve"><value>Export Excel</value></data>
+  <data name="ActLog_Alert_Title" xml:space="preserve"><value>Suspicious activity (last 24 hours)</value></data>
+  <data name="ActLog_Alert_View" xml:space="preserve"><value>View</value></data>
+  <data name="ActLog_Alert_BruteForce" xml:space="preserve"><value>{0} failed sign-in attempts from IP {1}</value></data>
+  <data name="ActLog_Alert_TargetedAccount" xml:space="preserve"><value>{0} failed sign-in attempts on account {1}</value></data>
+  <data name="ActLog_Alert_NewAdminIp" xml:space="preserve"><value>Admin account {0} signed in from a new IP address ({1})</value></data>
+  <data name="ActLog_Alert_RepeatedDenied" xml:space="preserve"><value>{0} blocked admin actions by {1}</value></data>
   <data name="ActLog_Reason_wrong_password" xml:space="preserve"><value>Wrong password</value></data>
   <data name="ActLog_Reason_no_password_set" xml:space="preserve"><value>No password set yet</value></data>
   <data name="ActLog_Reason_temp_password_expired" xml:space="preserve"><value>Temporary password expired</value></data>

@@ -2318,6 +2318,12 @@
   <data name="ActLog_Sec_Blocked" xml:space="preserve"><value>محاولات دخول محظورة (24 ساعة)</value></data>
   <data name="ActLog_Sec_Active" xml:space="preserve"><value>مستخدمين نشطين (7 أيام)</value></data>
   <data name="ActLog_Export_Button" xml:space="preserve"><value>تصدير Excel</value></data>
+  <data name="ActLog_Alert_Title" xml:space="preserve"><value>نشاط مريب (آخر 24 ساعة)</value></data>
+  <data name="ActLog_Alert_View" xml:space="preserve"><value>عرض</value></data>
+  <data name="ActLog_Alert_BruteForce" xml:space="preserve"><value>{0} محاولة دخول فاشلة من العنوان {1}</value></data>
+  <data name="ActLog_Alert_TargetedAccount" xml:space="preserve"><value>{0} محاولة دخول فاشلة على الحساب {1}</value></data>
+  <data name="ActLog_Alert_NewAdminIp" xml:space="preserve"><value>حساب الأدمن {0} سجّل دخول من عنوان IP جديد ({1})</value></data>
+  <data name="ActLog_Alert_RepeatedDenied" xml:space="preserve"><value>{0} إجراء أدمن محظور من {1}</value></data>
   <data name="ActLog_Reason_wrong_password" xml:space="preserve"><value>كلمة مرور خاطئة</value></data>
   <data name="ActLog_Reason_no_password_set" xml:space="preserve"><value>لم تُعيَّن كلمة مرور بعد</value></data>
   <data name="ActLog_Reason_temp_password_expired" xml:space="preserve"><value>انتهت صلاحية كلمة المرور المؤقتة</value></data>
