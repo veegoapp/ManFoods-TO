@@ -33,6 +33,15 @@ public class DashboardApiController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("monthly-series")]
+    public async Task<IActionResult> MonthlySeries([FromQuery] int? month, [FromQuery] int? year, [FromQuery] string? store,
+        [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? soc, [FromQuery] string? od, [FromQuery] string? months, [FromQuery] string? jobs)
+    {
+        var role = HttpContext.Session.GetRole();
+        var assignedName = HttpContext.Session.GetEmail();
+        return Ok(await _dashboard.GetMonthlySeriesAsync(month, year, store, role, assignedName, fromMonth, fromYear, om, oc, soc, od, months, jobs));
+    }
+
     [HttpGet("turnover-by-job-title")]
     public async Task<IActionResult> TurnoverByJobTitle([FromQuery] int? month, [FromQuery] int? year, [FromQuery] string? store,
         [FromQuery] int? fromMonth, [FromQuery] int? fromYear, [FromQuery] string? om, [FromQuery] string? oc, [FromQuery] string? soc, [FromQuery] string? od, [FromQuery] string? months, [FromQuery] string? jobs)

@@ -10,6 +10,18 @@ public class DashboardKpiViewModel
     public int Year { get; set; }
 }
 
+/// <summary>One month of the company/filter scope: what the Comparisons page draws month by month.</summary>
+public class MonthlyPoint
+{
+    public int Year { get; set; }
+    public int Month { get; set; }
+    public int Headcount { get; set; }
+    public int NewHires { get; set; }
+    public int Resignations { get; set; }
+    /// <summary>Resignations ÷ the month's headcount, in percent.</summary>
+    public double TurnoverRate { get; set; }
+}
+
 public class ChartDataItem
 {
     public string Label { get; set; } = "";
