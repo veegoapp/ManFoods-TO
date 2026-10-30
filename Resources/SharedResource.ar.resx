@@ -1327,6 +1327,7 @@
   <data name="CMP_ReportFiltersHint" xml:space="preserve"><value>— حدد ما تتم مقارنته في كل جانب (A وB)؛ اترك الحقل فارغًا لتحديد "الكل"</value></data>
   <data name="CMP_ReportChoose" xml:space="preserve"><value>اختار الموضوع…</value></data>
   <data name="CMP_ReportNeedTopic" xml:space="preserve"><value>من فضلك اختار الأول إيه اللي عايز تقارنه (معدل الدوران، القوى العاملة، الاحتفاظ…) وبعدين نزّل التقرير.</value></data>
+  <data name="CMP_ReportUnsupported" xml:space="preserve"><value>الموضوع ده مش بيشتغل بفلتر {0}. امسحه من A وB أو اختار موضوع تاني، وبعدين نزّل التقرير تاني.</value></data>
   <data name="Month_January" xml:space="preserve"><value>يناير</value></data>
   <data name="Month_February" xml:space="preserve"><value>فبراير</value></data>
   <data name="Month_March" xml:space="preserve"><value>مارس</value></data>
