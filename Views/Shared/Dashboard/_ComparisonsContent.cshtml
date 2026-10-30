@@ -112,6 +112,10 @@
 .cmp-compare-btn:disabled { opacity:.6; cursor:not-allowed; }
 .cmp-stale { font-size:12.5px; color:var(--warning); font-weight:600; }
 .cmp-stale[hidden] { display:none; }
+.cmp-presets { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:8px; }
+.cmp-presets-label { font-size:11.5px; color:var(--text-3); font-weight:600; }
+.cmp-preset { background:var(--card-bg-2); border:1px solid var(--card-border); color:var(--text-2); border-radius:999px; font-size:12px; font-weight:600; padding:4px 11px; cursor:pointer; }
+.cmp-preset:hover { border-color:var(--card-border-h); color:var(--red); }
 .cmp-modal { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:2000; padding:16px; }
 .cmp-modal[hidden] { display:none; }
 .cmp-modal-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; padding:22px; width:100%; max-width:420px; box-shadow:0 12px 40px rgba(0,0,0,.3); text-align:center; }
@@ -237,6 +241,15 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-4">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_JobTitle"]</span>
+                        <div class="cmp-combobox" id="cmpJobComboA">
+                            <input type="text" class="cmp-combobox-input" id="cmpJobInputA" placeholder="@L["Common_JobTitle"]" autocomplete="off">
+                            <div class="cmp-combobox-panel" id="cmpJobPanelA"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -315,6 +328,23 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-4">
+                    <div class="cmp-field">
+                        <span class="cmp-field-label">@L["Common_JobTitle"]</span>
+                        <div class="cmp-combobox" id="cmpJobComboB">
+                            <input type="text" class="cmp-combobox-input" id="cmpJobInputB" placeholder="@L["Common_JobTitle"]" autocomplete="off">
+                            <div class="cmp-combobox-panel" id="cmpJobPanelB"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="cmp-presets">
+                        <span class="cmp-presets-label">@L["CMP_PresetLabel"]</span>
+                        <button type="button" class="cmp-preset" data-preset="month">@L["CMP_Preset_month"]</button>
+                        <button type="button" class="cmp-preset" data-preset="quarter">@L["CMP_Preset_quarter"]</button>
+                        <button type="button" class="cmp-preset" data-preset="lastYear">@L["CMP_Preset_lastYear"]</button>
+                    </div>
+                </div>
                 <div class="col-12">
                     <button type="button" class="cmp-copy-btn" id="cmpCopyToLastYear">
                         <i class="bi bi-arrow-repeat me-1"></i>@L["Comparisons_CopyToLastYear"]
@@ -330,12 +360,15 @@
     <div class="cmp-chooser-sub">@L["CMP_ChooseSub"]</div>
     <div class="cmp-chooser-options" role="radiogroup" aria-label="@L["CMP_ChooseTitle"]">
         <label class="cmp-opt"><input type="radio" name="cmpGroup" value="turnover"><span><i class="bi bi-graph-down-arrow"></i>@L["CMP_Grp_turnover"]</span></label>
+        <label class="cmp-opt"><input type="radio" name="cmpGroup" value="breakdown"><span><i class="bi bi-diagram-3"></i>@L["CMP_Grp_breakdown"]</span></label>
         <label class="cmp-opt"><input type="radio" name="cmpGroup" value="ninety"><span><i class="bi bi-person-x"></i>@L["CMP_Grp_ninety"]</span></label>
         <label class="cmp-opt"><input type="radio" name="cmpGroup" value="workforce"><span><i class="bi bi-people"></i>@L["CMP_Grp_workforce"]</span></label>
         <label class="cmp-opt"><input type="radio" name="cmpGroup" value="retention"><span><i class="bi bi-hourglass-split"></i>@L["CMP_Grp_retention"]</span></label>
+        <label class="cmp-opt"><input type="radio" name="cmpGroup" value="scorecard"><span><i class="bi bi-award"></i>@L["CMP_Grp_scorecard"]</span></label>
         <label class="cmp-opt"><input type="radio" name="cmpGroup" value="exit"><span><i class="bi bi-chat-square-text"></i>@L["CMP_Grp_exit"]</span></label>
         <label class="cmp-opt"><input type="radio" name="cmpGroup" value="drivers"><span><i class="bi bi-chat-heart"></i>@L["CMP_Grp_drivers"]</span></label>
     </div>
+    <div class="cmp-stale mt-2" id="cmpUnsupported" hidden><i class="bi bi-info-circle me-1"></i><span id="cmpUnsupportedText"></span></div>
     <div class="d-flex align-items-center gap-3 flex-wrap mt-3">
         <button type="button" id="cmpCompareBtn" class="cmp-compare-btn">
             <span class="spinner-border spinner-border-sm" id="cmpCompareSpin" hidden></span>
@@ -368,7 +401,7 @@
     </div>
 </div>
 
-<div class="cmp-kpi-grid mb-4" id="cmpKpiGrid" data-cmp-groups="turnover ninety workforce"
+<div class="cmp-kpi-grid mb-4" id="cmpKpiGrid" data-cmp-groups="turnover ninety workforce scorecard"
      data-kpi-headcount="@L["Common_Headcount"]"
      data-kpi-headcount-desc="@L["CMP_KpiHeadcountDesc"]"
      data-kpi-new-hires="@L["Common_NewHires"]"
@@ -399,6 +432,16 @@
       data-exit-positive="@L["CMP_ExitPositive"]"
       data-exit-responses="@L["CMP_ExitResponses"]"
      data-period-notice="@L["CMP_PeriodNotice"]"
+     data-unsupported="@L["CMP_Unsupported"]"
+     data-unsupported-popup="@L["CMP_UnsupportedPopup"]"
+     data-f-store="@L["Common_StoreName"]"
+     data-f-job="@L["Common_JobTitle"]"
+     data-no-access="@L["CMP_NoAccess"]"
+     data-preset-no-data="@L["CMP_PresetNoData"]"
+     data-kpi-sc-turnover="@L["CMP_KpiScTurnover"]"
+     data-kpi-sc-turnover-desc="@L["CMP_KpiScTurnoverDesc"]"
+     data-kpi-sc-flagged="@L["CMP_KpiScFlagged"]"
+     data-kpi-sc-flagged-desc="@L["CMP_KpiScFlaggedDesc"]"
      data-need-group="@L["CMP_NeedGroup"]"
      data-need-months="@L["CMP_NeedMonths"]"
      data-load-failed="@L["CMP_LoadFailed"]"
@@ -446,6 +489,55 @@
             <canvas id="cmpResignationsChart"></canvas>
         </div>
         <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisResignations"]</span></p>
+    </div>
+</div>
+
+<div class="d-flex align-items-center gap-2 mb-3" data-cmp-groups="breakdown">
+    <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.5 0.17 60),oklch(0.68 0.14 75));border-radius:2px"></div>
+    <h5 class="mb-0 fw-bold">@L["Comparisons_BreakdownSection"]</h5>
+</div>
+<div class="charts-grid mb-4" data-cmp-groups="breakdown">
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["Chart_BkJobCompare"]</h6><p>@L["CMP_BkJobSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpBkJobChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisBreakdown"]</span></p>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["Chart_BkTenureCompare"]</h6><p>@L["CMP_BkTenureSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpBkTenureChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisBreakdown"]</span></p>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["Chart_BkPayrollCompare"]</h6><p>@L["CMP_BkPayrollSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpBkPayrollChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisBreakdown"]</span></p>
+    </div>
+</div>
+
+<div class="d-flex align-items-center gap-2 mb-3" data-cmp-groups="scorecard">
+    <div style="width:4px;height:22px;background:linear-gradient(135deg,oklch(0.5 0.15 255),oklch(0.68 0.12 240));border-radius:2px"></div>
+    <h5 class="mb-0 fw-bold">@L["Comparisons_ScorecardSection"]</h5>
+</div>
+<div class="charts-grid mb-4" data-cmp-groups="scorecard">
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["SC_RollupByOc"]</h6><p>@L["CMP_ScSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpScOcChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisScorecard"]</span></p>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["SC_RollupByOm"]</h6><p>@L["CMP_ScSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpScOmChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisScorecard"]</span></p>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["SC_RollupBySoc"]</h6><p>@L["CMP_ScSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpScSocChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisScorecard"]</span></p>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header"><h6>@L["SC_RollupByOd"]</h6><p>@L["CMP_ScSub"]</p></div>
+        <div class="chart-body"><canvas id="cmpScOdChart"></canvas></div>
+        <p class="cmp-chart-basis"><i class="bi bi-info-circle-fill"></i><span>@L["CMP_BasisScorecard"]</span></p>
     </div>
 </div>
 
@@ -541,8 +633,8 @@
 
 const cmpL = document.getElementById('cmpKpiGrid').dataset;
 const panels = {
-    A: { year: null, months: [], store: '', om: '', oc: '', soc: '', od: '', yearMonthsMap: {} },
-    B: { year: null, months: [], store: '', om: '', oc: '', soc: '', od: '', yearMonthsMap: {} }
+    A: { year: null, months: [], store: '', om: '', oc: '', soc: '', od: '', job: '', yearMonthsMap: {} },
+    B: { year: null, months: [], store: '', om: '', oc: '', soc: '', od: '', job: '', yearMonthsMap: {} }
 };
 
 function cmpMonthShortName(m) { return new Date(2000, m - 1, 1).toLocaleString('default', { month: 'short' }); }
@@ -559,6 +651,7 @@ function cmpBuildQuery(side) {
     if (p.oc)    q.set('oc', p.oc);
     if (p.soc)   q.set('soc', p.soc);
     if (p.od)    q.set('od', p.od);
+    if (p.job)   q.set('jobs', p.job);
     return q.toString();
 }
 
@@ -613,6 +706,7 @@ const combos = {};
     combos[`oc${side}`]    = cmpCreateCombobox({ inputId: `cmpOcInput${side}`,    panelId: `cmpOcPanel${side}`,    onSelect: v => { panels[side].oc    = v; cmpMarkStale(); } });
     combos[`soc${side}`]   = cmpCreateCombobox({ inputId: `cmpSocInput${side}`,   panelId: `cmpSocPanel${side}`,   onSelect: v => { panels[side].soc   = v; cmpMarkStale(); } });
     combos[`od${side}`]    = cmpCreateCombobox({ inputId: `cmpOdInput${side}`,    panelId: `cmpOdPanel${side}`,    onSelect: v => { panels[side].od    = v; cmpMarkStale(); } });
+    combos[`job${side}`]   = cmpCreateCombobox({ inputId: `cmpJobInput${side}`,   panelId: `cmpJobPanel${side}`,   onSelect: v => { panels[side].job   = v; cmpMarkStale(); } });
 });
 
 /* Months multi-select ---------------------------------------------------- */
@@ -703,12 +797,43 @@ document.getElementById('cmpCopyToLastYear').addEventListener('click', async () 
     document.getElementById('cmpYearB').value = targetYear;
     const availableB = b.yearMonthsMap[targetYear] || [];
     b.months = a.months.filter(m => availableB.includes(m));
-    b.store = a.store; b.om = a.om; b.oc = a.oc; b.soc = a.soc; b.od = a.od;
-    combos.storeB.setValue(a.store); combos.omB.setValue(a.om); combos.ocB.setValue(a.oc); combos.socB.setValue(a.soc); combos.odB.setValue(a.od);
+    b.store = a.store; b.om = a.om; b.oc = a.oc; b.soc = a.soc; b.od = a.od; b.job = a.job;
+    combos.storeB.setValue(a.store); combos.omB.setValue(a.om); combos.ocB.setValue(a.oc); combos.socB.setValue(a.soc); combos.odB.setValue(a.od); combos.jobB.setValue(a.job);
     cmpBuildMonthsOptions('B'); cmpRenderMonthsChips('B');
     await cmpLoadDependentLists('B');
     cmpMarkStale();
 });
+
+/* Job titles — one request for both sides (not period-dependent), kept for Reset Filters. */
+let cmpJobTitles = null;
+async function cmpLoadJobTitles() {
+    if (!cmpJobTitles) cmpJobTitles = await fetchJson('/api/dashboard/job-titles');
+    combos.jobA.setOptions(cmpJobTitles); combos.jobB.setOptions(cmpJobTitles);
+}
+
+/* Quick picks for side B, relative to A: the month / quarter before A's first month, or A's months a year earlier. */
+async function cmpApplyPreset(kind) {
+    const a = panels.A, b = panels.B;
+    if (!a.months.length) { cmpPopup(cmpL.needMonths); return; }
+    const aMonths = a.months.slice().sort((x, y) => x - y);
+    let year, months;
+    if (kind === 'lastYear') { year = a.year - 1; months = aMonths; }
+    else {
+        const list = []; let y = a.year, m = aMonths[0];
+        for (let i = 0; i < (kind === 'quarter' ? 3 : 1); i++) { m--; if (m === 0) { m = 12; y--; } list.push({ y, m }); }
+        year = list[0].y;                                   // a quarter that crosses a year end keeps the latest year's months
+        months = list.filter(x => x.y === year).map(x => x.m);
+    }
+    const available = a.yearMonthsMap[year] || [];
+    months = months.filter(m => available.includes(m)).sort((x, y) => x - y);
+    if (!months.length) { cmpPopup(cmpL.presetNoData); return; }
+    b.year = year; b.months = months;
+    document.getElementById('cmpYearB').value = year;
+    cmpBuildMonthsOptions('B'); cmpRenderMonthsChips('B');
+    await cmpLoadDependentLists('B');
+    cmpMarkStale();
+}
+document.querySelectorAll('.cmp-preset').forEach(btn => btn.addEventListener('click', () => cmpApplyPreset(btn.dataset.preset)));
 
 /* Store / OM / OC option lists (scoped to each panel's latest month) ---- */
 async function cmpLoadDependentLists(side) {
@@ -747,7 +872,8 @@ async function cmpInit() {
         // picked before hitting Reset stayed selected (and kept the Store
         // Breakdown table hidden, since that table only shows when neither
         // panel has a store).
-        panels[side].store = ''; panels[side].om = ''; panels[side].oc = ''; panels[side].soc = ''; panels[side].od = '';
+        panels[side].store = ''; panels[side].om = ''; panels[side].oc = ''; panels[side].soc = ''; panels[side].od = ''; panels[side].job = '';
+        combos[`job${side}`].setValue('');
         combos[`store${side}`].setValue(''); combos[`om${side}`].setValue(''); combos[`oc${side}`].setValue(''); combos[`soc${side}`].setValue(''); combos[`od${side}`].setValue('');
     }
 
@@ -770,7 +896,7 @@ async function cmpInit() {
     cmpBuildMonthsOptions('A'); cmpRenderMonthsChips('A');
     cmpBuildMonthsOptions('B'); cmpRenderMonthsChips('B');
 
-    await Promise.all([cmpLoadDependentLists('A'), cmpLoadDependentLists('B')]);
+    await Promise.all([cmpLoadDependentLists('A'), cmpLoadDependentLists('B'), cmpLoadJobTitles()]);
     cmpResetResults();   // nothing is loaded until the user picks what to compare and presses Compare
 }
 
@@ -778,6 +904,7 @@ async function cmpInit() {
 // Unlike fetchJson (which returns [] on an error), a failed request here rejects so the page can tell the user.
 async function cmpGet(url) {
     const r = await fetch(url);
+    if (r.status === 403) throw new Error('403');
     if (!r.ok) throw new Error(String(r.status));
     return r.json();
 }
@@ -786,7 +913,7 @@ async function cmpGet(url) {
 async function cmpFetchSide(side, group) {
     const q = cmpBuildQuery(side);
     const p = panels[side];
-    const data = { kpi: null, ninety: null, byStore: [], ninetyByStore: [], retention: [], exitReasons: [], exitSentiment: null, exitDrivers: [] };
+    const data = { kpi: null, ninety: null, byStore: [], ninetyByStore: [], retention: [], exitReasons: [], exitSentiment: null, exitDrivers: [], bkJob: [], bkTenure: [], bkPayroll: [], scorecard: null };
     const jobs = [];
     const load = (key, url) => jobs.push(cmpGet(url).then(v => { data[key] = v; }));
     const companyWide = !p.store;   // the per-store breakdown only exists when no single store is picked
@@ -822,6 +949,19 @@ async function cmpFetchSide(side, group) {
         case 'drivers':
             load('exitDrivers', `/api/exit-interviews/engagement-drivers?${q}`);
             break;
+        case 'breakdown':
+            load('bkJob', `/api/dashboard/turnover-by-job-title?${q}`);
+            load('bkTenure', `/api/dashboard/turnover-by-tenure?${q}`);
+            load('bkPayroll', `/api/dashboard/turnover-by-payroll-group?${q}`);
+            break;
+        case 'scorecard': {
+            // The scorecard only knows year, months and the OM/OC/SOC/OD line — no store or job filter.
+            const sq = new URLSearchParams();
+            sq.set('year', p.year); sq.set('months', p.months.join(','));
+            ['om', 'oc', 'soc', 'od'].forEach(f => { if (p[f]) sq.set(f, p[f]); });
+            load('scorecard', `/api/scorecard/rollup?${sq}`);
+            break;
+        }
     }
     await Promise.all(jobs);
     return data;
@@ -837,7 +977,7 @@ function cmpUpdateNorm(group) {
     cmpNorm = { A: Math.max(1, panels.A.months.length), B: Math.max(1, panels.B.months.length), uneven: false };
     cmpNorm.uneven = cmpNorm.A !== cmpNorm.B;
     const note = document.getElementById('cmpPeriodNotice');
-    const showNote = cmpNorm.uneven && ['turnover', 'workforce', 'ninety'].includes(group);
+    const showNote = cmpNorm.uneven && ['turnover', 'workforce', 'ninety', 'breakdown'].includes(group);
     note.hidden = !showNote;
     if (showNote)
         document.getElementById('cmpPeriodNoticeText').textContent = cmpL.periodNotice.replace('{0}', cmpNorm.A).replace('{1}', cmpNorm.B);
@@ -864,7 +1004,9 @@ function cmpRenderKpis(dataA, dataB, group) {
         { groups: ['turnover', 'workforce'], label: tag(cmpL.kpiResignations, cmpL.perMonth), desc: cmpL.kpiResignationsDesc, a: () => pm('A', dataA.kpi.totalResignations), b: () => pm('B', dataB.kpi.totalResignations), fmt: cmpCount,                lowerIsBetter: true },
         { groups: ['turnover'],              label: cmpL.kpiTurnover,                         desc: cmpL.kpiTurnoverDesc,     a: () => dataA.kpi.turnoverRate,               b: () => dataB.kpi.turnoverRate,               fmt: v => v.toFixed(1) + '%', lowerIsBetter: true },
         { groups: ['ninety'],                label: tag(cmpL.kpiEarlyLeavers, cmpL.perMonth), desc: cmpL.kpiEarlyLeaversDesc, a: () => pm('A', dataA.ninety.earlyLeavers),   b: () => pm('B', dataB.ninety.earlyLeavers),   fmt: cmpCount,                lowerIsBetter: true },
-        { groups: ['ninety'],                label: cmpL.kpiNinetyRate,                       desc: cmpL.kpiNinetyRateDesc,   a: () => dataA.ninety.rate,                    b: () => dataB.ninety.rate,                    fmt: v => v.toFixed(1) + '%', lowerIsBetter: true }
+        { groups: ['ninety'],                label: cmpL.kpiNinetyRate,                       desc: cmpL.kpiNinetyRateDesc,   a: () => dataA.ninety.rate,                    b: () => dataB.ninety.rate,                    fmt: v => v.toFixed(1) + '%', lowerIsBetter: true },
+        { groups: ['scorecard'],             label: cmpL.kpiScTurnover,                       desc: cmpL.kpiScTurnoverDesc,   a: () => dataA.scorecard.averageTurnoverRate,  b: () => dataB.scorecard.averageTurnoverRate,  fmt: v => v.toFixed(1) + '%', lowerIsBetter: true },
+        { groups: ['scorecard'],             label: cmpL.kpiScFlagged,                        desc: cmpL.kpiScFlaggedDesc,    a: () => cmpFlaggedOverall(dataA.scorecard),   b: () => cmpFlaggedOverall(dataB.scorecard),   fmt: v => v.toFixed(1) + '%', lowerIsBetter: true }
     ];
     // Values are read only for the cards of the chosen group (the other groups' data was never loaded).
     const metrics = all.filter(m => m.groups.includes(group)).map(m => ({ ...m, a: m.a(), b: m.b() }));
@@ -1154,10 +1296,70 @@ function cmpRenderDrivers(dataA, dataB) {
     }).join('');
 }
 
+/* Grouped A/B bars used by the Turnover Breakdown and Scorecard topics. */
+const cmpExtraCharts = {};
+function cmpDrawBars(id, labels, seriesA, seriesB, { pct = false, tooltip } = {}) {
+    const fmt = v => pct ? v.toFixed(1) + '%' : (Number.isInteger(v) ? v : v.toFixed(1));
+    cmpExtraCharts[id] = mkChart(cmpExtraCharts[id], id, {
+        type: 'bar',
+        data: { labels, datasets: [
+            { label: cmpLabel('A'), data: seriesA, backgroundColor: ChartColors.SERIES.SECONDARY, borderRadius: 4 },
+            { label: cmpLabel('B'), data: seriesB, backgroundColor: ChartColors.SERIES.PRIMARY, borderRadius: 4 }
+        ] },
+        options: {
+            interaction: { mode: 'index', intersect: true },
+            plugins: { legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: c => tooltip ? tooltip(c) : ` ${c.dataset.label}: ${fmt(c.parsed.y)}` } },
+                datalabels: { anchor: 'center', align: 'center', color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v > 0 ? fmt(v) : '' } },
+            scales: pct ? { y: { min: 0, ticks: { callback: v => v + '%' } } } : {}
+        }
+    });
+}
+
+/* Turnover Breakdown: resignations by job / tenure / payroll group (counts; monthly averages when the sides differ in length). */
+function cmpRenderBreakdown(dataA, dataB) {
+    const draw = (id, rowsA, rowsB, keepOrder) => {
+        const mapA = {}, mapB = {};
+        (rowsA || []).forEach(r => mapA[r.label] = cmpPerMonth('A', r.value));
+        (rowsB || []).forEach(r => mapB[r.label] = cmpPerMonth('B', r.value));
+        let labels = Array.from(new Set([...(rowsA || []).map(r => r.label), ...(rowsB || []).map(r => r.label)]));
+        if (!keepOrder) labels = labels.sort((x, y) => ((mapA[y] || 0) + (mapB[y] || 0)) - ((mapA[x] || 0) + (mapB[x] || 0))).slice(0, 8);
+        cmpDrawBars(id, labels, labels.map(l => mapA[l] || 0), labels.map(l => mapB[l] || 0));
+    };
+    draw('cmpBkJobChart', dataA.bkJob, dataB.bkJob, false);
+    draw('cmpBkTenureChart', dataA.bkTenure, dataB.bkTenure, true);   // tenure buckets keep their natural order
+    draw('cmpBkPayrollChart', dataA.bkPayroll, dataB.bkPayroll, false);
+}
+
+/* Scorecard: share of each supervisor's store leaders that are flagged (above-average turnover). */
+function cmpFlaggedOverall(sc) {
+    // Each level lists every leader once, so the level with the most leaders gives the company-wide share.
+    const levels = [sc.byOperationConsultant, sc.byOperationManager, sc.bySeniorOperationConsultant, sc.byOperationDirector].map(l => l || []);
+    const best = levels.reduce((m, l) => (l.reduce((s, r) => s + r.totalLeaders, 0) > m.reduce((s, r) => s + r.totalLeaders, 0) ? l : m), []);
+    const total = best.reduce((s, r) => s + r.totalLeaders, 0), flagged = best.reduce((s, r) => s + r.flaggedLeaders, 0);
+    return total > 0 ? flagged * 100 / total : 0;
+}
+function cmpRenderScorecard(dataA, dataB) {
+    const draw = (id, rowsA, rowsB) => {
+        const mapA = Object.fromEntries((rowsA || []).map(r => [r.name, r])), mapB = Object.fromEntries((rowsB || []).map(r => [r.name, r]));
+        const pctOf = (m, n) => m[n] ? Math.round(m[n].flaggedPercent * 10) / 10 : 0;
+        const labels = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)]))
+            .sort((x, y) => (pctOf(mapA, y) + pctOf(mapB, y)) - (pctOf(mapA, x) + pctOf(mapB, x))).slice(0, 8);
+        cmpDrawBars(id, labels, labels.map(n => pctOf(mapA, n)), labels.map(n => pctOf(mapB, n)), {
+            pct: true,
+            tooltip: c => { const r = (c.datasetIndex === 0 ? mapA : mapB)[labels[c.dataIndex]]; return ` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` + (r ? ` (${r.flaggedLeaders}/${r.totalLeaders})` : ''); }
+        });
+    };
+    draw('cmpScOcChart', dataA.scorecard.byOperationConsultant, dataB.scorecard.byOperationConsultant);
+    draw('cmpScOmChart', dataA.scorecard.byOperationManager, dataB.scorecard.byOperationManager);
+    draw('cmpScSocChart', dataA.scorecard.bySeniorOperationConsultant, dataB.scorecard.bySeniorOperationConsultant);
+    draw('cmpScOdChart', dataA.scorecard.byOperationDirector, dataB.scorecard.byOperationDirector);
+}
+
 function cmpRenderCharts(dataA, dataB, group) {
     ({
         turnover: cmpRenderTurnoverChart, ninety: cmpRenderNinetyChart, workforce: cmpRenderWorkforceCharts,
-        retention: cmpRenderRetentionChart, exit: cmpRenderExitCharts,
+        retention: cmpRenderRetentionChart, exit: cmpRenderExitCharts, breakdown: cmpRenderBreakdown, scorecard: cmpRenderScorecard,
     })[group]?.(dataA, dataB);
 }
 
@@ -1226,6 +1428,16 @@ function cmpRenderTableRows() {
 
 /* Compare button, popup and "results are out of date" handling ------------- */
 let cmpBusy = false, cmpHasResults = false;
+/* Filters a topic cannot honour (its API has no such parameter) — better to say so than to compare unfiltered data. */
+const CMP_UNSUPPORTED = { ninety: ['job'], retention: ['job'], scorecard: ['store', 'job'] };
+function cmpUnsupportedSet(group) {
+    return (CMP_UNSUPPORTED[group] || []).filter(f => panels.A[f] || panels.B[f]).map(f => f === 'job' ? cmpL.fJob : cmpL.fStore);
+}
+function cmpUpdateUnsupportedHint() {
+    const names = (CMP_UNSUPPORTED[cmpSelectedGroup()] || []).map(f => f === 'job' ? cmpL.fJob : cmpL.fStore);
+    document.getElementById('cmpUnsupported').hidden = names.length === 0;
+    document.getElementById('cmpUnsupportedText').textContent = names.length ? cmpL.unsupported.replace('{0}', names.join(', ')) : '';
+}
 const cmpSelectedGroup = () => document.querySelector('input[name="cmpGroup"]:checked')?.value || '';
 
 function cmpShowGroup(group) {
@@ -1238,6 +1450,7 @@ function cmpResetResults() {
     cmpShowGroup('');
     document.getElementById('cmpPeriodNotice').hidden = true;
     document.getElementById('cmpStale').hidden = true;
+    cmpUpdateUnsupportedHint();
     document.getElementById('cmpEmptyState').style.display = '';
 }
 function cmpMarkStale() {
@@ -1252,7 +1465,7 @@ const cmpClosePopup = () => { document.getElementById('cmpModal').hidden = true;
 document.getElementById('cmpModalOk').addEventListener('click', cmpClosePopup);
 document.getElementById('cmpModal').addEventListener('click', e => { if (e.target.id === 'cmpModal') cmpClosePopup(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') cmpClosePopup(); });
-document.querySelectorAll('input[name="cmpGroup"]').forEach(r => r.addEventListener('change', cmpMarkStale));
+document.querySelectorAll('input[name="cmpGroup"]').forEach(r => r.addEventListener('change', () => { cmpUpdateUnsupportedHint(); cmpMarkStale(); }));
 
 function cmpSetBusy(on) {
     cmpBusy = on;
@@ -1268,7 +1481,7 @@ async function cmpRefreshAll(group) {
     // Show the group's sections first: Chart.js sizes a canvas from its container, which must be visible.
     cmpShowGroup(group);
     document.getElementById('cmpEmptyState').style.display = 'none';
-    if (['turnover', 'ninety', 'workforce'].includes(group)) cmpRenderKpis(dataA, dataB, group);
+    if (['turnover', 'ninety', 'workforce', 'scorecard'].includes(group)) cmpRenderKpis(dataA, dataB, group);
     if (['turnover', 'ninety'].includes(group)) { cmpRenderInsight(dataA, dataB, group); cmpRenderTable(dataA, dataB, group); }
     if (group === 'drivers') cmpRenderDrivers(dataA, dataB); else cmpRenderCharts(dataA, dataB, group);
     cmpHasResults = true;
@@ -1280,9 +1493,11 @@ document.getElementById('cmpCompareBtn').addEventListener('click', async () => {
     const group = cmpSelectedGroup();
     if (!group) { cmpPopup(cmpL.needGroup); return; }
     if (!panels.A.months.length || !panels.B.months.length) { cmpPopup(cmpL.needMonths); return; }
+    const blocked = cmpUnsupportedSet(group);
+    if (blocked.length) { cmpPopup(cmpL.unsupportedPopup.replace('{0}', blocked.join(', '))); return; }
     cmpSetBusy(true);
     try { await cmpRefreshAll(group); }
-    catch { cmpPopup(cmpL.loadFailed); }
+    catch (e) { cmpPopup(e && e.message === '403' ? cmpL.noAccess : cmpL.loadFailed); }
     finally { cmpSetBusy(false); }
 });
 

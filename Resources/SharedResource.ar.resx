@@ -1235,6 +1235,31 @@
   <data name="CMP_NeedMonths" xml:space="preserve"><value>اختار شهر واحد على الأقل لكل من A وB قبل المقارنة.</value></data>
   <data name="CMP_LoadFailed" xml:space="preserve"><value>مقدرناش نحمّل المقارنة. اتأكد من الاتصال وحاول تاني.</value></data>
   <data name="CMP_Ok" xml:space="preserve"><value>حسنًا</value></data>
+  <data name="CMP_Grp_breakdown" xml:space="preserve"><value>تفصيل معدل الدوران</value></data>
+  <data name="CMP_Grp_scorecard" xml:space="preserve"><value>تقييم القادة (Scorecard)</value></data>
+  <data name="CMP_PresetLabel" xml:space="preserve"><value>اختيار سريع لـ B:</value></data>
+  <data name="CMP_Preset_month" xml:space="preserve"><value>الشهر قبل A</value></data>
+  <data name="CMP_Preset_quarter" xml:space="preserve"><value>الربع قبل A</value></data>
+  <data name="CMP_Preset_lastYear" xml:space="preserve"><value>نفس الشهور السنة اللي فاتت</value></data>
+  <data name="CMP_PresetNoData" xml:space="preserve"><value>مفيش بيانات مرفوعة للفترة دي.</value></data>
+  <data name="CMP_Unsupported" xml:space="preserve"><value>مش متاح مع الموضوع ده: {0}</value></data>
+  <data name="CMP_UnsupportedPopup" xml:space="preserve"><value>الموضوع ده مش بيشتغل بفلتر {0}. امسحه من A وB أو اختار موضوع تاني، وبعدين اضغط مقارنة.</value></data>
+  <data name="CMP_NoAccess" xml:space="preserve"><value>مفيش عندك صلاحية على بيانات الموضوع ده.</value></data>
+  <data name="CMP_KpiScTurnover" xml:space="preserve"><value>متوسط دوران القادة</value></data>
+  <data name="CMP_KpiScTurnoverDesc" xml:space="preserve"><value>متوسط معدل الدوران لقادة المطاعم</value></data>
+  <data name="CMP_KpiScFlagged" xml:space="preserve"><value>القادة المعلّمين</value></data>
+  <data name="CMP_KpiScFlaggedDesc" xml:space="preserve"><value>نسبة قادة المطاعم اللي دورانهم أعلى من المتوسط</value></data>
+  <data name="Comparisons_BreakdownSection" xml:space="preserve"><value>تفصيل معدل الدوران</value></data>
+  <data name="Chart_BkJobCompare" xml:space="preserve"><value>الاستقالات حسب الوظيفة — A مقابل B</value></data>
+  <data name="CMP_BkJobSub" xml:space="preserve"><value>الاستقالات جت من أنهي وظائف</value></data>
+  <data name="Chart_BkTenureCompare" xml:space="preserve"><value>الاستقالات حسب مدة الخدمة — A مقابل B</value></data>
+  <data name="CMP_BkTenureSub" xml:space="preserve"><value>اشتغل قد إيه الموظف قبل ما يستقيل</value></data>
+  <data name="Chart_BkPayrollCompare" xml:space="preserve"><value>الاستقالات حسب مجموعة الرواتب — A مقابل B</value></data>
+  <data name="CMP_BkPayrollSub" xml:space="preserve"><value>الاستقالات حسب مجموعة الرواتب</value></data>
+  <data name="CMP_BasisBreakdown" xml:space="preserve"><value>الأساس: سجلات الاستقالات في الشهور والفلاتر المختارة، مجمعة حسب الحقل المعروض. الأعداد متوسط شهري عند اختلاف عدد الشهور بين الجانبين. الوظائف ومجموعات الرواتب تعرض أعلى 8 حسب مجموع A+B.</value></data>
+  <data name="Comparisons_ScorecardSection" xml:space="preserve"><value>تقييم القادة — القادة المعلّمين</value></data>
+  <data name="CMP_ScSub" xml:space="preserve"><value>نسبة قادة المطاعم اللي دورانهم أعلى من المتوسط تحت كل مشرف (المعلّم/القادة في التلميح)</value></data>
+  <data name="CMP_BasisScorecard" xml:space="preserve"><value>الأساس: ملخص الـ Scorecard للسنة والشهور المختارة. القائد يتعلّم لو معدل دورانه أعلى من المتوسط. فلتر المطعم والوظيفة مش بيشتغلوا هنا. تظهر أعلى 8 أسماء حسب مجموع A+B.</value></data>
   <data name="CMP_Overall" xml:space="preserve"><value>الإجمالي العام</value></data>
   <data name="CMP_TitleNoChange" xml:space="preserve"><value>{0}: بدون تغيير</value></data>
   <data name="CMP_TitleImproved" xml:space="preserve"><value>تحسّن {0}</value></data>

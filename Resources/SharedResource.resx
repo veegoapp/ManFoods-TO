@@ -1229,6 +1229,31 @@
   <data name="CMP_NeedMonths" xml:space="preserve"><value>Select at least one month for both A and B before comparing.</value></data>
   <data name="CMP_LoadFailed" xml:space="preserve"><value>The comparison could not be loaded. Please check your connection and try again.</value></data>
   <data name="CMP_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="CMP_Grp_breakdown" xml:space="preserve"><value>Turnover Breakdown</value></data>
+  <data name="CMP_Grp_scorecard" xml:space="preserve"><value>Scorecard</value></data>
+  <data name="CMP_PresetLabel" xml:space="preserve"><value>Quick pick for B:</value></data>
+  <data name="CMP_Preset_month" xml:space="preserve"><value>Month before A</value></data>
+  <data name="CMP_Preset_quarter" xml:space="preserve"><value>Quarter before A</value></data>
+  <data name="CMP_Preset_lastYear" xml:space="preserve"><value>Same months last year</value></data>
+  <data name="CMP_PresetNoData" xml:space="preserve"><value>There is no uploaded data for that period.</value></data>
+  <data name="CMP_Unsupported" xml:space="preserve"><value>Not available for this topic: {0}</value></data>
+  <data name="CMP_UnsupportedPopup" xml:space="preserve"><value>This topic cannot use the {0} filter. Clear it on A and B, or choose another topic, then press Compare.</value></data>
+  <data name="CMP_NoAccess" xml:space="preserve"><value>You do not have access to the data of this topic.</value></data>
+  <data name="CMP_KpiScTurnover" xml:space="preserve"><value>Average Leader Turnover</value></data>
+  <data name="CMP_KpiScTurnoverDesc" xml:space="preserve"><value>Average turnover rate of the store leaders</value></data>
+  <data name="CMP_KpiScFlagged" xml:space="preserve"><value>Flagged Leaders</value></data>
+  <data name="CMP_KpiScFlaggedDesc" xml:space="preserve"><value>Share of store leaders with above-average turnover</value></data>
+  <data name="Comparisons_BreakdownSection" xml:space="preserve"><value>Turnover Breakdown</value></data>
+  <data name="Chart_BkJobCompare" xml:space="preserve"><value>Resignations by Job Title — A vs B</value></data>
+  <data name="CMP_BkJobSub" xml:space="preserve"><value>Where the resignations came from, by job</value></data>
+  <data name="Chart_BkTenureCompare" xml:space="preserve"><value>Resignations by Tenure — A vs B</value></data>
+  <data name="CMP_BkTenureSub" xml:space="preserve"><value>How long leavers had worked before resigning</value></data>
+  <data name="Chart_BkPayrollCompare" xml:space="preserve"><value>Resignations by Payroll Group — A vs B</value></data>
+  <data name="CMP_BkPayrollSub" xml:space="preserve"><value>Resignations by payroll group</value></data>
+  <data name="CMP_BasisBreakdown" xml:space="preserve"><value>Basis: resignation records in the selected months and filters, grouped by the field shown. Counts are monthly averages when the two sides cover a different number of months. Jobs and payroll groups show the top 8 by combined A+B.</value></data>
+  <data name="Comparisons_ScorecardSection" xml:space="preserve"><value>Scorecard — Flagged Leaders</value></data>
+  <data name="CMP_ScSub" xml:space="preserve"><value>Share of each supervisor's store leaders with above-average turnover (flagged / leaders in the tooltip)</value></data>
+  <data name="CMP_BasisScorecard" xml:space="preserve"><value>Basis: the Scorecard rollup for the selected year and months. A leader is flagged when their turnover rate is above the average. The Store and Job Title filters do not apply here. The top 8 names by combined A+B are shown.</value></data>
   <data name="CMP_Overall" xml:space="preserve"><value>Overall</value></data>
   <data name="CMP_TitleNoChange" xml:space="preserve"><value>{0}: No Change</value></data>
   <data name="CMP_TitleImproved" xml:space="preserve"><value>{0} Improved</value></data>
