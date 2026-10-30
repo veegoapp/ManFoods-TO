@@ -1848,11 +1848,8 @@ public class ReportService : IReportService
         b.Job = string.IsNullOrWhiteSpace(jobB) ? null : jobB;
 
         // Same rule as the Comparisons page: a filter the topic's data cannot honour is refused, not silently dropped.
-        var ignored = new List<string>();
-        if (ComparisonTopics.IgnoresStore(topic) && (a.Store != null || b.Store != null)) ignored.Add("Store");
-        if (ComparisonTopics.IgnoresJob(topic) && (a.Job != null || b.Job != null)) ignored.Add("Job Title");
-        if (ignored.Count > 0)
-            throw new InvalidOperationException($"The {string.Join(" and ", ignored)} filter does not apply to this topic. Clear it on A and B, or choose another topic.");
+        if (ComparisonTopics.UnsupportedFilterMessage(topic, a.Store != null || b.Store != null, a.Job != null || b.Job != null) is { } refusal)
+            throw new InvalidOperationException(refusal);
 
         var wb = new XLWorkbook();
         switch (topic)

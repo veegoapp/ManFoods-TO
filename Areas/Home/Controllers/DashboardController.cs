@@ -144,6 +144,20 @@ public class DashboardController : Controller
             if (reportAccess != null && areaContext != null && await reportAccess.ResolveRestrictedAreaAsync(definition, role == UserManagementPolicy.TrainerRole) is { } restrictedArea)
                 areaContext.Area = restrictedArea;
         }
+        // The Comparison report also carries other pages' data (90-Day, Retention, Scorecard, Exit Interviews). Each topic follows
+        // the access rules of the page it comes from, exactly as that page's own API does — the report must not open more.
+        if (reportType == "comparisons" && ComparisonTopics.SourceReportId(ComparisonTopics.Normalize(topic)) is { } sourceId
+            && MvcApp.Models.ViewModels.ReportCatalog.Find(sourceId) is { } source)
+        {
+            // /api/scorecard answers only roles that can see the Scorecard or the Stores page.
+            if (sourceId == "scorecard")
+            {
+                var hiddenPages = await _visibility.GetHiddenAsync(role);
+                if (hiddenPages.Contains("scorecard") && hiddenPages.Contains("stores")) return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            if (reportAccess != null && areaContext != null && await reportAccess.ResolveRestrictedAreaAsync(source, role == UserManagementPolicy.TrainerRole) is { } topicArea)
+                areaContext.Area = topicArea;
+        }
         store = string.IsNullOrWhiteSpace(store) ? null : store;
         om = string.IsNullOrWhiteSpace(om) ? null : om;
         oc = string.IsNullOrWhiteSpace(oc) ? null : oc;
@@ -162,19 +176,16 @@ public class DashboardController : Controller
         switch (reportType)
         {
             case "comparisons":
-                try
-                {
-                    return await DownloadWorkbookAsync(
-                        await _reports.BuildComparisonReportAsync(role, assignedName,
-                            year > 0 ? year : null, months, store, om, oc, soc, od,
-                            yearB, monthsB, storeB, omB, ocB, socB, odB,
-                            topic, jobs, jobsB),
-                        $"Comparison_{ComparisonTopics.Normalize(topic)}.xlsx");
-                }
-                catch (InvalidOperationException ex)
-                {
-                    return BadRequest(ex.Message);   // a store / job filter the topic cannot honour
-                }
+                var comparisonTopic = ComparisonTopics.Normalize(topic);
+                // A store / job filter the topic's data cannot honour is refused, never silently dropped.
+                if (ComparisonTopics.UnsupportedFilterMessage(comparisonTopic, store != null || storeB != null, jobs != null || jobsB != null) is { } refusal)
+                    return BadRequest(refusal);
+                return await DownloadWorkbookAsync(
+                    await _reports.BuildComparisonReportAsync(role, assignedName,
+                        year > 0 ? year : null, months, store, om, oc, soc, od,
+                        yearB, monthsB, storeB, omB, ocB, socB, odB,
+                        comparisonTopic, jobs, jobsB),
+                    $"Comparison_{comparisonTopic}.xlsx");
             case "stores":
                 return await DownloadWorkbookAsync(
                     await _reports.BuildStoreComparisonReportAsync(month, year, role, assignedName, om, oc, soc, od),

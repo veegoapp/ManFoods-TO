@@ -24,4 +24,25 @@ public static class ComparisonTopics
     public static bool IgnoresStore(string topic) => topic == Scorecard;
 
     public static bool IgnoresJob(string topic) => topic is Ninety or Retention or Scorecard;
+
+    /// <summary>The refusal text when a store / job-title filter is set for a topic that cannot honour it; null when all is well.</summary>
+    public static string? UnsupportedFilterMessage(string topic, bool storeSet, bool jobSet)
+    {
+        var ignored = new List<string>();
+        if (storeSet && IgnoresStore(topic)) ignored.Add("Store");
+        if (jobSet && IgnoresJob(topic)) ignored.Add("Job Title");
+        return ignored.Count == 0 ? null
+            : $"The {string.Join(" and ", ignored)} filter does not apply to this topic. Clear it on A and B, or choose another topic.";
+    }
+
+    /// <summary>The Reports catalog id of the page a topic's data comes from, when that is not the Comparison page itself.
+    /// The report must follow that page's store scope (Settings → Access), as the page's own API does.</summary>
+    public static string? SourceReportId(string topic) => topic switch
+    {
+        Ninety => "ninety-day",
+        Retention => "retention",
+        Scorecard => "scorecard",
+        Exit or Drivers => "exit-interviews",
+        _ => null,
+    };
 }

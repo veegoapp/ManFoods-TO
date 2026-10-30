@@ -29,6 +29,29 @@ public class ComparisonReportTopicTests : IClassFixture<AppFactory>
         Assert.Equal(new[] { ComparisonTopics.Ninety, ComparisonTopics.Retention, ComparisonTopics.Scorecard }, ComparisonTopics.All.Where(ComparisonTopics.IgnoresJob));
     }
 
+    [Fact]
+    public void UnsupportedFilterMessage_NamesTheFilters_AndIsNullWhenAllIsFine()
+    {
+        Assert.Null(ComparisonTopics.UnsupportedFilterMessage(ComparisonTopics.Turnover, storeSet: true, jobSet: true));
+        Assert.Null(ComparisonTopics.UnsupportedFilterMessage(ComparisonTopics.Scorecard, storeSet: false, jobSet: false));
+        Assert.Contains("Store and Job Title", ComparisonTopics.UnsupportedFilterMessage(ComparisonTopics.Scorecard, storeSet: true, jobSet: true));
+        Assert.Contains("Job Title", ComparisonTopics.UnsupportedFilterMessage(ComparisonTopics.Retention, storeSet: false, jobSet: true));
+    }
+
+    [Fact]
+    public void TopicsFromAnotherPage_FollowThatPagesAccessRules()
+    {
+        Assert.Equal("scorecard", ComparisonTopics.SourceReportId(ComparisonTopics.Scorecard));
+        Assert.Equal("retention", ComparisonTopics.SourceReportId(ComparisonTopics.Retention));
+        Assert.Equal("ninety-day", ComparisonTopics.SourceReportId(ComparisonTopics.Ninety));
+        Assert.Equal("exit-interviews", ComparisonTopics.SourceReportId(ComparisonTopics.Exit));
+        Assert.Equal("exit-interviews", ComparisonTopics.SourceReportId(ComparisonTopics.Drivers));
+        Assert.Null(ComparisonTopics.SourceReportId(ComparisonTopics.Turnover));
+        // every source id is a real catalog report, so the access lookup can never silently find nothing
+        foreach (var topic in ComparisonTopics.All)
+            if (ComparisonTopics.SourceReportId(topic) is { } id) Assert.NotNull(MvcApp.Models.ViewModels.ReportCatalog.Find(id));
+    }
+
     [Theory]
     [InlineData("topic=scorecard&jobs=Crew")]
     [InlineData("topic=scorecard&store=Any")]
