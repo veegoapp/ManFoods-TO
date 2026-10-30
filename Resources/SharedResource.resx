@@ -127,7 +127,7 @@
   <data name="UL_StoreReferenceSub" xml:space="preserve"><value>Store Leader / OC / OM assignment per store</value></data>
   <data name="UL_ExitInterviews" xml:space="preserve"><value>Exit Interviews</value></data>
   <data name="UL_ExitInterviewsSub" xml:space="preserve"><value>Export responses from Microsoft Forms and upload as-is — no reformatting needed</value></data>
-  <data name="UL_ExitInterviewsNote" xml:space="preserve"><value>Not tied to a specific month — re-uploading the full export is always safe, existing responses are matched and updated, never duplicated.</value></data>
+  <data name="UL_ExitInterviewsNote" xml:space="preserve"><value>Not tied to a specific month — each upload adds to the responses already stored. A response is skipped as a duplicate when the same employee already has one with the same completion time. Use Update File on an upload to replace that upload's responses.</value></data>
   <data name="UL_TemplateActiveEmployees" xml:space="preserve"><value>Active Employees Template</value></data>
   <data name="UL_TemplateResignations" xml:space="preserve"><value>Resignations Template</value></data>
   <data name="UL_TemplateStoreRef" xml:space="preserve"><value>Store Reference Template</value></data>

@@ -127,7 +127,7 @@
   <data name="UL_StoreReferenceSub" xml:space="preserve"><value>مدير الفرع / استشاري العمليات / مدير التشغيل لكل فرع</value></data>
   <data name="UL_ExitInterviews" xml:space="preserve"><value>مقابلات الخروج</value></data>
   <data name="UL_ExitInterviewsSub" xml:space="preserve"><value>صدّر الردود من Microsoft Forms وارفعها زي ما هي — من غير أي تعديل</value></data>
-  <data name="UL_ExitInterviewsNote" xml:space="preserve"><value>غير مرتبطة بشهر معين — إعادة رفع كل الردود دايمًا أمان، الردود القديمة بتتحدّث لو موجودة بدل ما تتكرر.</value></data>
+  <data name="UL_ExitInterviewsNote" xml:space="preserve"><value>غير مرتبطة بشهر معين — كل رفع بيتضاف على الردود المخزّنة. الرد بيتتخطى كمكرر لو نفس الموظف عنده رد بنفس وقت الانتهاء. استخدم Update File على رفعة معينة لاستبدال ردودها.</value></data>
   <data name="UL_TemplateActiveEmployees" xml:space="preserve"><value>نموذج الأكتيف ليست</value></data>
   <data name="UL_TemplateResignations" xml:space="preserve"><value>نموذج الاستقالات</value></data>
   <data name="UL_TemplateStoreRef" xml:space="preserve"><value>نموذج مرجع الفروع</value></data>
