@@ -585,9 +585,8 @@
         const options = periods.map(p => `<option value="${periodValue(p)}">${esc(periodLabel(p))}</option>`).join('');
         from.innerHTML = options; to.innerHTML = options;
         if (periods.length) {
-            const currentYear = new Date().getFullYear();
-            const sameYear = periods.filter(p => p.year === currentYear);
-            const defaultPeriods = sameYear.length ? sameYear : periods.filter(p => p.year === periods[0].year);
+            // Latest year that has uploaded data (periods come newest-first), not the calendar year.
+            const defaultPeriods = periods.filter(p => p.year === periods[0].year);
             const ordered = defaultPeriods.slice().sort((a, b) => periodKey(a) - periodKey(b));
             fromPeriod = ordered[0];
             toPeriod = ordered[ordered.length - 1];

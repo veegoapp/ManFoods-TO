@@ -20,6 +20,10 @@ public class DashboardService : IDashboardService
     private readonly FilterResultCache _filterCache;
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
+    // Distinct (Month, Year) of ActiveEmployees — read by every page's period
+    // filter; cleared by UploadService when the roster changes.
+    public const string AvailablePeriodsCacheKey = "dashboard:available-periods";
+
     public DashboardService(AppDbContext db, IMemoryCache cache, IStoreAccessService storeAccess, IStringLocalizer<SharedResource> localizer, FilterResultCache? filterCache = null)
     {
         _db = db;
@@ -470,12 +474,17 @@ public class DashboardService : IDashboardService
 
     public async Task<List<PeriodItem>> GetAvailablePeriodsAsync()
     {
-        return await _db.ActiveEmployees
+        if (_cache.TryGetValue(AvailablePeriodsCacheKey, out List<PeriodItem>? cached) && cached != null)
+            return cached;
+
+        var periods = await _db.ActiveEmployees
             .Select(e => new { e.Month, e.Year })
             .Distinct()
             .OrderByDescending(p => p.Year).ThenByDescending(p => p.Month)
             .Select(p => new PeriodItem { Month = p.Month, Year = p.Year })
             .ToListAsync();
+        _cache.Set(AvailablePeriodsCacheKey, periods, TimeSpan.FromHours(6));
+        return periods;
     }
 
     public async Task<List<StoreComparisonRow>> GetStoreComparisonAsync(int month, int year, string role, string? assignedName,

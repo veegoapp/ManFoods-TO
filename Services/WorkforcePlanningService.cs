@@ -631,7 +631,12 @@ public class WorkforcePlanningService : IWorkforcePlanningService
         dto.HasData = true;
 
         var now = DateTime.Now;
-        var y = year.HasValue && years.Contains(year.Value) ? year.Value : (years.Contains(now.Year) ? now.Year : years[0]);
+        // Same default as the planning page: the year of the latest uploaded roster, not the calendar year.
+        var rosterKeys = await GetRosterPeriodKeysAsync();
+        var latestRosterYear = rosterKeys.Count > 0 ? rosterKeys[0] / 100 : 0;
+        var y = year.HasValue && years.Contains(year.Value) ? year.Value
+              : years.Contains(latestRosterYear) ? latestRosterYear
+              : (years.Contains(now.Year) ? now.Year : years[0]);
         dto.Year = y;
         var data = await GetYearDataAsync(y);
 
