@@ -24,6 +24,11 @@
     // are left out of the sidebar; the Admin portal always shows everything.
     var hiddenPages = userRole == "Admin" ? new HashSet<string>() : await PageVis.GetHiddenAsync(userRole);
     var latestDataPeriod = await DataFreshness.GetLatestDataPeriodAsync();
+    var latestUploadUtc = await DataFreshness.GetLatestUploadUtcAsync();
+    var latestUploadLabel = latestUploadUtc is null
+        ? ""
+        : MvcApp.Services.CairoTime.FromUtc(latestUploadUtc.Value)
+            .ToString("d MMMM yyyy", System.Globalization.CultureInfo.CurrentCulture);
     var latestDataPeriodLabel = latestDataPeriod is null
         ? ""
         : new DateTime(latestDataPeriod.Year, latestDataPeriod.Month, 1)
@@ -226,11 +231,16 @@
             @if (latestDataPeriod is not null)
             {
                 <div class="data-freshness-wrap">
-                    <span class="data-freshness-chip" role="status" title="@L["Layout_DataFreshnessCaption"]">
+                    <span class="data-freshness-chip" role="status">
                         <i class="bi bi-database-check"></i>
                         <span class="data-freshness-label">@L["Layout_DataFreshnessLabel"]:</span>
                         <strong class="data-freshness-period">@latestDataPeriodLabel</strong>
+                        @if (latestUploadUtc is not null)
+                        {
+                            <span class="data-freshness-uploaded">· @L["Layout_DataFreshnessUploaded"] @latestUploadLabel</span>
+                        }
                     </span>
+                    <span class="data-freshness-note">@L["Layout_DataFreshnessCaption"]</span>
                 </div>
             }
             <div class="page-content">

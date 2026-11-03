@@ -513,7 +513,9 @@ html[dir="rtl"] .page-guide-panel { border-inline-start: 0; border-inline-end: 1
 
 .data-freshness-wrap {
     display: flex;
-    justify-content: flex-end;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
     /* The page-guide orb (fixed, top-right, z-index:900) occupies this same
        corner on pages that have one — reserve space so this chip renders to
        its left instead of sitting underneath it before the page scrolls. */
@@ -551,6 +553,19 @@ html[dir="rtl"] .page-guide-panel { border-inline-start: 0; border-inline-end: 1
 .data-freshness-period {
     color: var(--text);
     font-weight: 800;
+}
+
+.data-freshness-uploaded {
+    color: var(--text-2);
+    font-weight: 600;
+}
+
+/* Always-visible explanation under the chip (was a hover tooltip). */
+.data-freshness-note {
+    max-width: 100%;
+    padding-inline-end: 12px;
+    color: var(--text-2);
+    font-size: 11px;
 }
 
 /* ══ KPI CARDS ════════════════════════════════════════ */

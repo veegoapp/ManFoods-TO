@@ -18,6 +18,7 @@
   <data name="Layout_FooterText" xml:space="preserve"><value>McDonald's Egypt Crew Insights Hub</value></data>
   <data name="Layout_DataFreshnessLabel" xml:space="preserve"><value>بيانات حتى</value></data>
   <data name="Layout_DataFreshnessCaption" xml:space="preserve"><value>البيانات بتتحدث اول اسبوع بعد اغلاق الشهر</value></data>
+  <data name="Layout_DataFreshnessUploaded" xml:space="preserve"><value>اترفعت</value></data>
 
   <!-- Page Guide -->
   <data name="Guide_TriggerLabel" xml:space="preserve"><value>دليل الصفحة</value></data>

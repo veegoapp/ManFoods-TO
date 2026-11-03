@@ -26,19 +26,23 @@ public sealed class DataFreshnessService : IDataFreshnessService
 
     // Read by the layout on every page; cached so it costs one DB request per upload, not per page.
     // The wrapper lets "no uploads yet" (null) be cached too.
-    public async Task<DataFreshnessPeriod?> GetLatestDataPeriodAsync()
+    public async Task<DataFreshnessPeriod?> GetLatestDataPeriodAsync() => (await GetOrLoadAsync()).Period;
+
+    public async Task<DateTime?> GetLatestUploadUtcAsync() => (await GetOrLoadAsync()).UploadedAtUtc;
+
+    private async Task<Cached> GetOrLoadAsync()
     {
         if (_cache.TryGetValue(LatestPeriodCacheKey, out Cached? hit) && hit != null)
-            return hit.Period;
+            return hit;
 
-        var period = await LoadLatestDataPeriodAsync();
-        _cache.Set(LatestPeriodCacheKey, new Cached(period), TimeSpan.FromMinutes(10));
-        return period;
+        var loaded = await LoadLatestAsync();
+        _cache.Set(LatestPeriodCacheKey, loaded, TimeSpan.FromMinutes(10));
+        return loaded;
     }
 
-    private sealed record Cached(DataFreshnessPeriod? Period);
+    private sealed record Cached(DataFreshnessPeriod? Period, DateTime? UploadedAtUtc);
 
-    private async Task<DataFreshnessPeriod?> LoadLatestDataPeriodAsync()
+    private async Task<Cached> LoadLatestAsync()
     {
         var latest = await _db.UploadLogs
             .AsNoTracking()
@@ -48,6 +52,14 @@ public sealed class DataFreshnessService : IDataFreshnessService
             .Select(log => new { log.Month, log.Year })
             .FirstOrDefaultAsync();
 
-        return latest is null ? null : new DataFreshnessPeriod(latest.Month, latest.Year);
+        if (latest is null) return new Cached(null, null);
+
+        // When the files of that latest period were uploaded (the newest of its logs).
+        var uploadedAt = await _db.UploadLogs
+            .AsNoTracking()
+            .Where(log => PeriodFileTypes.Contains(log.FileType) && log.Year == latest.Year && log.Month == latest.Month)
+            .MaxAsync(log => log.UploadDate);
+
+        return new Cached(new DataFreshnessPeriod(latest.Month, latest.Year), uploadedAt);
     }
 }
