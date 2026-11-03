@@ -47,6 +47,7 @@ public class UploadService : IUploadService
         WorkforcePlanningService.InvalidateCache(); // planning compares projected vs active employees
         StoreAccessService.InvalidateCache(); // store ownership comes from the Store Reference file
         _cache.Remove(DashboardService.AvailablePeriodsCacheKey);
+        _cache.Remove(DataFreshnessService.LatestPeriodCacheKey); // the "Last updated" chip in the layout
         _cache.Remove(ScorecardService.HistoricalRecordsCacheKey);
         _cache.Remove(NinetyDayTurnoverService.ActiveHiresCacheKey);
         _cache.Remove(NinetyDayTurnoverService.ResignationTenuresCacheKey);
@@ -1278,6 +1279,7 @@ public class UploadService : IUploadService
                 await _db.SaveChangesAsync();
                 await tx.CommitAsync();
                 StoreAccessService.InvalidateCache();
+                _cache.Remove(DataFreshnessService.LatestPeriodCacheKey); // store_reference logs feed the "Last updated" chip
                 WorkforcePlanningService.InvalidateCache(); // the consultant shown per store comes from this file
                 FireAndForgetDetection(month, year, string.Format(_L["Msg_JobStoreReference"].Value, new DateTime(year, month, 1).ToString("MMMM yyyy")));
                 var storeWarning = await BuildUnmatchedRoleEmailWarningAsync(storeRecords);
