@@ -16,8 +16,9 @@
   <data name="Layout_DarkMode" xml:space="preserve"><value>Dark Mode</value></data>
   <data name="Layout_LightMode" xml:space="preserve"><value>Light Mode</value></data>
   <data name="Layout_FooterText" xml:space="preserve"><value>McDonald's Egypt Crew Insights Hub</value></data>
-  <data name="Layout_DataFreshnessLabel" xml:space="preserve"><value>Last updated</value></data>
-  <data name="Layout_DataFreshnessCaption" xml:space="preserve"><value>Latest uploaded reporting period</value></data>
+  <data name="Layout_DataFreshnessLabel" xml:space="preserve"><value>Data through</value></data>
+  <data name="Layout_DataFreshnessCaption" xml:space="preserve"><value>Data is updated in the first week after the month closes</value></data>
+  <data name="Layout_DataFreshnessUploaded" xml:space="preserve"><value>Uploaded</value></data>
 
   <!-- Page Guide -->
   <data name="Guide_TriggerLabel" xml:space="preserve"><value>Page Guide</value></data>
