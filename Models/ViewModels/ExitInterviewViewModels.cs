@@ -11,6 +11,11 @@ public class ExitInterviewFilter
     public int? Year { get; set; }
     public string? Months { get; set; }
     public string? Jobs { get; set; }
+
+    /// <summary>Exact store names (server-side only, never bound from the request).
+    /// Used by the SOC/OD profile, whose exit interviews aren't snapshotted per person.</summary>
+    [Microsoft.AspNetCore.Mvc.ModelBinding.BindNever]
+    public List<string>? StoreNames { get; set; }
 }
 
 public class ExitInterviewFilterOptions

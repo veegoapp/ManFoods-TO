@@ -32,6 +32,7 @@ public class ExitInterviewService : IExitInterviewService
         if (accessible != null) q = q.Where(e => accessible.Contains(e.Store));
 
         if (MultiValueFilter.Split(filter.Store) is { } stores) q = q.Where(e => stores.Contains(e.Store));
+        if (filter.StoreNames is { } storeNames) q = q.Where(e => storeNames.Contains(e.Store));
         if (!string.IsNullOrWhiteSpace(filter.StoreLeader)) q = q.Where(e => e.StoreLeader == filter.StoreLeader);
         if (MultiValueFilter.Split(filter.OperationConsultant) is { } ocs) q = q.Where(e => ocs.Contains(e.OperationConsultant));
         if (MultiValueFilter.Split(filter.OperationManager) is { } oms) q = q.Where(e => oms.Contains(e.OperationManager));
@@ -375,6 +376,37 @@ public class ExitInterviewService : IExitInterviewService
             if (!result.ContainsKey(name))
                 result[name] = new ExitSentimentSummary();
 
+        return result;
+    }
+
+    public async Task<Dictionary<string, ExitSentimentSummary>> GetSentimentSummariesByStoresAsync(
+        IReadOnlyDictionary<string, IReadOnlyCollection<string>> storesByName, string role, string? assignedName)
+    {
+        if (storesByName.Count == 0) return new Dictionary<string, ExitSentimentSummary>();
+
+        var allStores = storesByName.Values.SelectMany(s => s).ToHashSet();
+        var accessible = await _storeAccess.GetAccessibleStoreNamesAsync(role, assignedName);
+        IQueryable<ExitInterview> q = _db.ExitInterviews.AsNoTracking().Where(e => allStores.Contains(e.Store));
+        if (accessible != null) q = q.Where(e => accessible.Contains(e.Store));
+
+        var rows = await q
+            .Select(e => new { e.Store, e.WouldReturn, e.OverallExperience })
+            .ToListAsync();
+        var rowsByStore = rows.ToLookup(r => r.Store);
+
+        var result = new Dictionary<string, ExitSentimentSummary>();
+        foreach (var (name, stores) in storesByName)
+        {
+            var groupRows = stores.Distinct().SelectMany(s => rowsByStore[s]).ToList();
+            var answers = groupRows.Select(r => r.WouldReturn).Concat(groupRows.Select(r => r.OverallExperience))
+                .Where(a => !string.IsNullOrWhiteSpace(a))
+                .ToList();
+            result[name] = new ExitSentimentSummary
+            {
+                TotalResponses = groupRows.Count,
+                PositivePercent = answers.Count == 0 ? 0 : Math.Round(answers.Count(a => Sentiment(a) > 0) * 100.0 / answers.Count, 1),
+            };
+        }
         return result;
     }
 

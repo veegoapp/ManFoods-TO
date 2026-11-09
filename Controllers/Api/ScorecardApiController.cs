@@ -18,7 +18,7 @@ public class ScorecardApiController : ControllerBase
 
     public ScorecardApiController(IScorecardService scorecard) => _scorecard = scorecard;
 
-    private static readonly HashSet<string> ValidDimensions = new() { "leader", "oc", "om" };
+    private static readonly HashSet<string> ValidDimensions = new() { "leader", "oc", "om", "soc", "od" };
 
     private (string role, string? assignedName) Identity() =>
         (HttpContext.Session.GetRole(), HttpContext.Session.GetEmail());

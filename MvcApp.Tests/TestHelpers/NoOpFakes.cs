@@ -126,6 +126,9 @@ public class NoOpExitInterviewService : IExitInterviewService
     public Task<Dictionary<string, ExitSentimentSummary>> GetSentimentSummariesByDimensionAsync(
         string dimension, IReadOnlyCollection<string> names, string role, string? assignedName) =>
         Task.FromResult(names.ToDictionary(n => n, _ => new ExitSentimentSummary()));
+    public Task<Dictionary<string, ExitSentimentSummary>> GetSentimentSummariesByStoresAsync(
+        IReadOnlyDictionary<string, IReadOnlyCollection<string>> storesByName, string role, string? assignedName) =>
+        Task.FromResult(storesByName.Keys.ToDictionary(n => n, _ => new ExitSentimentSummary()));
     public Task<List<ExitInterviewCommentItem>> GetCommentsAsync(ExitInterviewFilter filter, string role, string? assignedName) =>
         Task.FromResult(new List<ExitInterviewCommentItem>());
     public Task<List<ChartDataItem>> GetByJobTitleAsync(ExitInterviewFilter filter, string role, string? assignedName) =>

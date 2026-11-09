@@ -122,7 +122,7 @@
     const page = document.getElementById('slpPage');
     const params = new URLSearchParams(window.location.search);
     const leader = params.get('leader') || '';
-    const dimension = ['leader', 'oc', 'om'].includes(params.get('dimension')) ? params.get('dimension') : 'leader';
+    const dimension = ['leader', 'oc', 'om', 'soc', 'od'].includes(params.get('dimension')) ? params.get('dimension') : 'leader';
     const labels = {
         noData: page.dataset.noData, noExit: page.dataset.noExit, noComments: page.dataset.noComments,
         headcount: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["SLP_Headcount"].Value)),

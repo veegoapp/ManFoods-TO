@@ -785,6 +785,8 @@
   <!-- Scorecard -->
   <data name="SC_StoreLeaders" xml:space="preserve"><value>Store Leaders</value></data>
   <data name="SC_StoreLeader" xml:space="preserve"><value>Store Leader</value></data>
+  <data name="SC_SeniorOperationConsultant" xml:space="preserve"><value>Senior Operation Consultant</value></data>
+  <data name="SC_OperationDirector" xml:space="preserve"><value>Operation Director</value></data>
   <data name="SC_OC" xml:space="preserve"><value>Operation Consultants</value></data>
   <data name="SC_OM" xml:space="preserve"><value>Operation Managers</value></data>
   <data name="SC_TurnoverRate" xml:space="preserve"><value>Turnover Rate</value></data>

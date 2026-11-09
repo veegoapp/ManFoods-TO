@@ -48,13 +48,15 @@ public class ScorecardService : IScorecardService
     };
 
     private static string NormalizeProfileDimension(string dimension) =>
-        dimension is "leader" or "oc" or "om" ? dimension : "leader";
+        dimension is "leader" or "oc" or "om" or "soc" or "od" ? dimension : "leader";
 
     private static IQueryable<StoreReference> WhereDimension(
         IQueryable<StoreReference> query, string dimension, string name) => dimension switch
         {
             "oc" => query.Where(s => s.OperationConsultant == name),
             "om" => query.Where(s => s.OperationManager == name),
+            "soc" => query.Where(s => s.SeniorOperationConsultant == name),
+            "od" => query.Where(s => s.OperationDirector == name),
             _ => query.Where(s => s.StoreLeader == name),
         };
 
@@ -219,8 +221,13 @@ public class ScorecardService : IScorecardService
 
         // One batched query for every name's sentiment instead of one query per
         // name (was an N+1 — a separate ExitInterviews round trip per leader/OC/OM).
-        var sentimentByName = await _exitInterviews.GetSentimentSummariesByDimensionAsync(
-            dimension, aggregates.Keys.ToList(), role, assignedName);
+        // SOC/OD aren't stored on the exit interview, so they're resolved via each
+        // name's stores (still a single query for the whole column).
+        var sentimentByName = dimension is "soc" or "od"
+            ? await _exitInterviews.GetSentimentSummariesByStoresAsync(
+                aggregates.ToDictionary(a => a.Key, a => (IReadOnlyCollection<string>)a.Value.Stores), role, assignedName)
+            : await _exitInterviews.GetSentimentSummariesByDimensionAsync(
+                dimension, aggregates.Keys.ToList(), role, assignedName);
 
         var asOf = DateOnly.FromDateTime(DateTime.UtcNow);
         var result = new List<ScorecardRow>();
@@ -292,7 +299,17 @@ public class ScorecardService : IScorecardService
         };
         if (dimension == "leader") filter.StoreLeader = leaderName;
         else if (dimension == "oc") filter.OperationConsultant = leaderName;
-        else filter.OperationManager = leaderName;
+        else if (dimension == "om") filter.OperationManager = leaderName;
+        else
+        {
+            // SOC/OD aren't on the exit interview: scope by the stores this person
+            // covers in the selected window (one small query, reused by every call below).
+            var periodKeys = DashboardService.ResolvePeriods(null, effectiveYear, null, null, months)
+                .Select(p => p.Year * 100 + p.Month).ToHashSet();
+            var storeQuery = WhereDimension(
+                _db.StoreReferences.Where(s => periodKeys.Contains(s.Year * 100 + s.Month)), dimension, leaderName);
+            filter.StoreNames = await storeQuery.Select(s => s.StoreName).Distinct().ToListAsync();
+        }
 
         profile.ExitSentiment = await _exitInterviews.GetSentimentSummaryAsync(filter, role, assignedName);
         profile.ExitReasons = await _exitInterviews.GetReasonsForLeavingAsync(filter, role, assignedName);
