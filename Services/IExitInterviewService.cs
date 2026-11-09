@@ -28,6 +28,13 @@ public interface IExitInterviewService
     Task<Dictionary<string, ExitSentimentSummary>> GetSentimentSummariesByDimensionAsync(
         string dimension, IReadOnlyCollection<string> names, string role, string? assignedName);
 
+    /// <summary>Batched sentiment for dimensions whose names aren't snapshotted on the
+    /// exit interview (SOC/OD): each name is resolved to its stores by the caller, and
+    /// all names are answered with a single query. Every key in "storesByName" is
+    /// present in the result (empty summary when it has no exit interviews).</summary>
+    Task<Dictionary<string, ExitSentimentSummary>> GetSentimentSummariesByStoresAsync(
+        IReadOnlyDictionary<string, IReadOnlyCollection<string>> storesByName, string role, string? assignedName);
+
     Task<List<ExitInterviewCommentItem>> GetCommentsAsync(ExitInterviewFilter filter, string role, string? assignedName);
 
     /// <summary>Count of exit interviews per job title.</summary>

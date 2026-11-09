@@ -785,6 +785,8 @@
   <!-- Scorecard -->
   <data name="SC_StoreLeaders" xml:space="preserve"><value>مديرو الفروع</value></data>
   <data name="SC_StoreLeader" xml:space="preserve"><value>مدير الفرع</value></data>
+  <data name="SC_SeniorOperationConsultant" xml:space="preserve"><value>استشاري أول العمليات</value></data>
+  <data name="SC_OperationDirector" xml:space="preserve"><value>مدير أول التشغيل</value></data>
   <data name="SC_OC" xml:space="preserve"><value>استشاريو العمليات</value></data>
   <data name="SC_OM" xml:space="preserve"><value>مديرو التشغيل</value></data>
   <data name="SC_TurnoverRate" xml:space="preserve"><value>معدل الدوران</value></data>
