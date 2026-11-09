@@ -225,20 +225,18 @@
     <div id="scLeaderEmpty" class="text-muted text-center py-4" style="font-size:13px"
          data-no-selection-text="@L["SC_NoLeaderSelected"]" data-empty-text="@L["SC_LeaderHistoryEmpty"]">@L["SC_NoLeaderSelected"]</div>
 
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-        <div class="d-flex align-items-center gap-2">
-            <div class="section-accent"></div>
-            <h5 class="mb-0 fw-bold" id="scRankingTitle">@L["SC_Ranking"]</h5>
-        </div>
-        <div class="d-flex gap-2 flex-wrap" role="group">
-            <button class="btn btn-sm sc-dim-btn active" data-dim="leader" data-label="@L["SC_StoreLeader"]">@L["SC_StoreLeaders"]</button>
-            <button class="btn btn-sm sc-dim-btn" data-dim="oc" data-label="@L["Common_OperationConsultant"]">@L["Common_OperationConsultants"]</button>
-            <button class="btn btn-sm sc-dim-btn" data-dim="om" data-label="@L["Common_OperationManager"]">@L["Common_OperationManagers"]</button>
-            <button class="btn btn-sm sc-dim-btn" data-dim="soc" data-label="@L["SC_SeniorOperationConsultant"]">@L["Common_SeniorOperationConsultants"]</button>
-            <button class="btn btn-sm sc-dim-btn" data-dim="od" data-label="@L["SC_OperationDirector"]">@L["Common_OperationDirectors"]</button>
-        </div>
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="section-accent"></div>
+        <h5 class="mb-0 fw-bold" id="scRankingTitle">@L["SC_Ranking"]</h5>
     </div>
     <p class="text-muted-custom" style="font-size:13px;margin-top:-8px">@L["SC_RankingSub"]</p>
+    <div class="d-flex gap-2 flex-wrap mb-3" role="group">
+        <button class="btn btn-sm sc-dim-btn active" data-dim="leader" data-label="@L["SC_StoreLeader"]">@L["SC_StoreLeaders"]</button>
+        <button class="btn btn-sm sc-dim-btn" data-dim="oc" data-label="@L["Common_OperationConsultant"]">@L["Common_OperationConsultants"]</button>
+        <button class="btn btn-sm sc-dim-btn" data-dim="om" data-label="@L["Common_OperationManager"]">@L["Common_OperationManagers"]</button>
+        <button class="btn btn-sm sc-dim-btn" data-dim="soc" data-label="@L["SC_SeniorOperationConsultant"]">@L["Common_SeniorOperationConsultants"]</button>
+        <button class="btn btn-sm sc-dim-btn" data-dim="od" data-label="@L["SC_OperationDirector"]">@L["Common_OperationDirectors"]</button>
+    </div>
 
     <div class="chart-card mb-4 p-0" style="overflow:hidden">
         <div class="table-responsive" style="max-height:600px;overflow-y:auto">
